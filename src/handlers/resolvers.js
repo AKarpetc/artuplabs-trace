@@ -4,7 +4,7 @@ import * as repo from '../infra/repo';
 import * as baselineRepo from '../infra/baselineRepo';
 import * as settings from '../infra/settings';
 import { createJira, asUserRequest } from '../infra/jira';
-import { decide, isJiraId, isBaselineId } from '../core/access';
+import { decide, isJiraId, isBaselineId, isLicenseActive } from '../core/access';
 import { coverageSummary } from '../core/coverage';
 import { normalizeConfig, validateConfig, diffConfig } from '../core/config';
 import { capCsv } from '../core/csv';
@@ -49,10 +49,10 @@ async function requireBaselinesInProject(projectId, leftId, rightId) {
   }
 }
 
-/** Jira permission first, then license in production; context.license carries `active`, decide() expects `isActive`. */
+/** Jira permission first, then license in production; the license may carry `active` or `isActive`, decide() expects `isActive`. */
 async function guard(req, projectId, permission) {
   const havePermission = await jira.hasPermission(asUserRequest, projectId, permission);
-  const license = req.context.license ? { isActive: req.context.license.active === true } : undefined;
+  const license = req.context.license ? { isActive: isLicenseActive(req.context.license) } : undefined;
   const verdict = decide({ environmentType: req.context.environmentType, license, havePermission });
   if (!verdict.allowed) {
     throw new Error(verdict.reason);

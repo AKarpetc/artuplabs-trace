@@ -78,6 +78,15 @@ describe('define() guard', () => {
   });
 });
 
+describe('production license', () => {
+  it('accepts either license shape and rejects an inactive or missing license', async () => {
+    await expect(call('listBaselines', {}, { environmentType: 'PRODUCTION', license: { isActive: true } })).resolves.toEqual([]);
+    await expect(call('listBaselines', {}, { environmentType: 'PRODUCTION', license: { active: true } })).resolves.toEqual([]);
+    await expect(call('listBaselines', {}, { environmentType: 'PRODUCTION', license: { active: false } })).rejects.toThrow('unlicensed');
+    await expect(call('listBaselines', {}, { environmentType: 'PRODUCTION' })).rejects.toThrow('unlicensed');
+  });
+});
+
 describe('saveSettings', () => {
   const stored = normalizeConfig({ requirementTypeIds: ['10006'], verificationTypeIds: ['10007'], fingerprintFieldIds: ['summary', 'description'] });
 

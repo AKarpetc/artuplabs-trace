@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { decide, isJiraId, isBaselineId } from '../../src/core/access';
+import { decide, isJiraId, isBaselineId, isLicenseActive } from '../../src/core/access';
 
 describe('decide', () => {
   it('denies without Jira permission', () => {
@@ -83,5 +83,25 @@ describe('isBaselineId', () => {
     expect(isBaselineId(true)).toBe(false);
     expect(isBaselineId({ id: 1 })).toBe(false);
     expect(isBaselineId([1])).toBe(false);
+  });
+});
+
+describe('isLicenseActive', () => {
+  it('is true for the resolver context shape { active: true }', () => {
+    expect(isLicenseActive({ active: true })).toBe(true);
+  });
+
+  it('is true for the backend License shape { isActive: true }', () => {
+    expect(isLicenseActive({ isActive: true })).toBe(true);
+  });
+
+  it('is false when both flags are missing or the license is absent', () => {
+    expect(isLicenseActive({})).toBe(false);
+    expect(isLicenseActive(undefined)).toBe(false);
+  });
+
+  it('is false when the license is inactive', () => {
+    expect(isLicenseActive({ active: false })).toBe(false);
+    expect(isLicenseActive({ isActive: false })).toBe(false);
   });
 });

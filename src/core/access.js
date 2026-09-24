@@ -9,6 +9,11 @@ export function decide({ environmentType, license, havePermission }) {
   return { allowed: true, reason: 'ok' };
 }
 
+/** True when a license object says it is active; resolver context uses `active`, the backend License type `isActive`. */
+export function isLicenseActive(license) {
+  return (license?.active ?? license?.isActive) === true;
+}
+
 /** True when value is a Jira id: a 1-32 character digit string (numbers are coerced first). */
 export function isJiraId(value) {
   const text = typeof value === 'string' || typeof value === 'number' ? String(value) : '';
