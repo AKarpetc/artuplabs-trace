@@ -10,6 +10,31 @@ export function activeJob(jobs, nowMs, maxAgeMs) {
     && nowMs - Date.parse(job.updatedAt) < maxAgeMs) ?? null;
 }
 
+/** True when an active job already covers the requested sync, so starting a new one is unnecessary (R14). */
+export function shouldReuse(active, { full, reanchor }) {
+  if (!active) {
+    return false;
+  }
+  if (active.kind === 'full-sync') {
+    return !reanchor || active.state.reanchor;
+  }
+  return active.kind === 'incremental-sync' && !full && !reanchor;
+}
+
+/** True when a full sync is due: no meta, no lastFullSyncAt, or it is 7+ days old (R12). */
+export function needsFullSync(meta, nowMs) {
+  if (!meta || !meta.lastFullSyncAt) {
+    return true;
+  }
+  return nowMs - Date.parse(meta.lastFullSyncAt) > 7 * 24 * 3600 * 1000;
+}
+
+/** Minutes an incremental sync's JQL window should cover, including a 10-minute margin; at least 1 (R13). */
+export function incrementalWindowMinutes(lastSyncStartedAt, nowMs) {
+  const minutes = Math.ceil((nowMs - (lastSyncStartedAt - 10 * 60 * 1000)) / 60000);
+  return Math.max(1, minutes);
+}
+
 /** Jira fields requested for requirement issues. */
 export function issueFields(config) {
   return [...new Set(['summary', 'status', 'issuetype', 'issuelinks', 'updated', ...config.fingerprintFieldIds])];

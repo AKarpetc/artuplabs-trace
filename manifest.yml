@@ -8,6 +8,7 @@ modules:
     - key: issue-events
       function: on-issue-event
       events:
+        - avi:jira:created:issue
         - avi:jira:updated:issue
         - avi:jira:deleted:issue
         - avi:jira:created:issuelink

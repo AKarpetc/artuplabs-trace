@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { runSyncStep, toCacheRows, issueFields, activeJob } from '../../src/core/jobs';
+import {
+  runSyncStep, toCacheRows, issueFields, activeJob, shouldReuse, needsFullSync, incrementalWindowMinutes,
+} from '../../src/core/jobs';
 import { RateLimited } from '../../src/infra/jira';
 import { memoryRepo } from '../fakes/memoryRepo';
 
@@ -245,5 +247,83 @@ describe('activeJob', () => {
 
   it('returns null when no jobs are given', () => {
     expect(activeJob([], nowMs, maxAgeMs)).toBeNull();
+  });
+});
+
+describe('shouldReuse', () => {
+  it('an active full sync covers a plain incremental request', () => {
+    const active = { kind: 'full-sync', state: { reanchor: false } };
+    expect(shouldReuse(active, { full: false, reanchor: false })).toBe(true);
+  });
+
+  it('an active full sync without reanchor does not cover a reanchor request', () => {
+    const active = { kind: 'full-sync', state: { reanchor: false } };
+    expect(shouldReuse(active, { full: false, reanchor: true })).toBe(false);
+  });
+
+  it('an active full sync with reanchor covers a reanchor request', () => {
+    const active = { kind: 'full-sync', state: { reanchor: true } };
+    expect(shouldReuse(active, { full: false, reanchor: true })).toBe(true);
+  });
+
+  it('an active incremental sync does not cover a full request', () => {
+    const active = { kind: 'incremental-sync', state: {} };
+    expect(shouldReuse(active, { full: true, reanchor: false })).toBe(false);
+  });
+
+  it('an active incremental sync does not cover a reanchor request', () => {
+    const active = { kind: 'incremental-sync', state: {} };
+    expect(shouldReuse(active, { full: false, reanchor: true })).toBe(false);
+  });
+
+  it('an active incremental sync covers a plain incremental request', () => {
+    const active = { kind: 'incremental-sync', state: {} };
+    expect(shouldReuse(active, { full: false, reanchor: false })).toBe(true);
+  });
+
+  it('no active job is never reused', () => {
+    expect(shouldReuse(null, { full: false, reanchor: false })).toBe(false);
+  });
+});
+
+describe('needsFullSync', () => {
+  const nowMs = 1_700_000_000_000;
+  const dayMs = 24 * 3600 * 1000;
+
+  it('is due when there is no sync meta yet', () => {
+    expect(needsFullSync(undefined, nowMs)).toBe(true);
+  });
+
+  it('is due when the meta has a recent incremental sync but lastFullSyncAt is 8 days old', () => {
+    const meta = { lastSyncedAt: new Date(nowMs - 1000).toISOString(), lastFullSyncAt: new Date(nowMs - 8 * dayMs).toISOString() };
+    expect(needsFullSync(meta, nowMs)).toBe(true);
+  });
+
+  it('is not due when lastFullSyncAt is 1 day old', () => {
+    const meta = { lastSyncedAt: new Date(nowMs - 1000).toISOString(), lastFullSyncAt: new Date(nowMs - dayMs).toISOString() };
+    expect(needsFullSync(meta, nowMs)).toBe(false);
+  });
+});
+
+describe('incrementalWindowMinutes', () => {
+  const nowMs = 1_700_000_000_000;
+
+  it('covers the elapsed time plus the 10-minute margin, exactly', () => {
+    const lastSyncStartedAt = nowMs - 5 * 60 * 1000;
+    expect(incrementalWindowMinutes(lastSyncStartedAt, nowMs)).toBe(15);
+  });
+
+  it('rounds up a partial minute', () => {
+    const lastSyncStartedAt = nowMs - (5 * 60 * 1000 + 30 * 1000);
+    expect(incrementalWindowMinutes(lastSyncStartedAt, nowMs)).toBe(16);
+  });
+
+  it('never returns less than 1 minute even when the sync just started', () => {
+    expect(incrementalWindowMinutes(nowMs, nowMs)).toBe(10);
+  });
+
+  it('clamps to a minimum of 1 when the computed window would be zero or negative', () => {
+    const lastSyncStartedAt = nowMs + 11 * 60 * 1000;
+    expect(incrementalWindowMinutes(lastSyncStartedAt, nowMs)).toBe(1);
   });
 });
