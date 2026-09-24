@@ -34,6 +34,8 @@ modules:
     - key: reconcile
       handler: index.reconcile
       timeoutSeconds: 900
+    - key: resolver
+      handler: index.resolverHandler
   sql:
     - key: main
       engine: mysql

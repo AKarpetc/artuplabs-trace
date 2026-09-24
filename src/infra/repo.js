@@ -117,3 +117,42 @@ export async function latestJob(projectId, kind) {
   const res = await run('SELECT * FROM job WHERE project_id = ? AND kind = ? ORDER BY id DESC LIMIT 1', [projectId, kind]);
   return toJob(res.rows[0]);
 }
+
+/** Totals for coverage of a project. */
+export async function coverageCounts(projectId) {
+  const res = await run('SELECT COUNT(*) AS total, COALESCE(SUM(covered), 0) AS covered FROM req_issue WHERE project_id = ?', [projectId]);
+  return { total: Number(res.rows[0].total), covered: Number(res.rows[0].covered) };
+}
+
+/** Uncovered requirements page ordered by issue id. */
+export async function gapsPage(projectId, after, limit) {
+  const res = await run(`SELECT issue_id, issue_key, summary, status_name FROM req_issue
+    WHERE project_id = ? AND covered = 0 AND issue_id > ? ORDER BY issue_id LIMIT ${Number(limit)}`, [projectId, after ?? '']);
+  return res.rows.map((r) => ({ issueId: r.issue_id, issueKey: r.issue_key, summary: r.summary, statusName: r.status_name }));
+}
+
+/** Suspect links page ordered by link id. */
+export async function suspectsPage(projectId, after, limit) {
+  const res = await run(`SELECT t.link_id, r.issue_key, r.summary, t.other_key, t.link_type_name, t.other_status
+    FROM trace_link t JOIN req_issue r ON r.issue_id = t.req_issue_id
+    WHERE t.project_id = ? AND t.suspect = 1 AND t.link_id > ? ORDER BY t.link_id LIMIT ${Number(limit)}`, [projectId, after ?? '']);
+  return res.rows.map((r) => ({ linkId: r.link_id, reqKey: r.issue_key, reqSummary: r.summary, otherKey: r.other_key, linkTypeName: r.link_type_name, otherStatus: r.other_status }));
+}
+
+/** Confirms a link owned by the project (both the link row and its requirement must belong to it): anchors it to the requirement's current fingerprint. */
+export async function confirmLink(projectId, linkId, accountId, nowIso) {
+  await run(`UPDATE trace_link t JOIN req_issue r ON r.issue_id = t.req_issue_id
+    SET t.confirmed_fingerprint = r.fingerprint, t.suspect = 0, t.confirmed_by = ?, t.confirmed_at = ?
+    WHERE t.link_id = ? AND t.project_id = ? AND r.project_id = ?`, [accountId, nowIso, linkId, projectId, projectId]);
+}
+
+/** Cached trace info for one issue. */
+export async function issueTrace(issueId) {
+  const req = await run('SELECT covered FROM req_issue WHERE issue_id = ?', [issueId]);
+  const links = await run('SELECT link_id, other_key, link_type_name, other_status, suspect FROM trace_link WHERE req_issue_id = ? ORDER BY link_id', [issueId]);
+  return {
+    isRequirement: req.rows.length > 0,
+    covered: req.rows[0]?.covered === 1,
+    links: links.rows.map((l) => ({ linkId: l.link_id, otherKey: l.other_key, linkTypeName: l.link_type_name, otherStatus: l.other_status, suspect: Number(l.suspect) === 1 })),
+  };
+}

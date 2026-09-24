@@ -77,6 +77,12 @@ export async function listBaselines(projectId) {
   return res.rows.map((r) => ({ id: Number(r.id), name: r.name, createdBy: r.created_by, createdAt: r.created_at, status: r.status, memberCount: Number(r.member_count), checksum: r.checksum }));
 }
 
+/** Project id owning a baseline, or null when the baseline does not exist. */
+export async function baselineProject(id) {
+  const res = await run('SELECT project_id FROM baseline WHERE id = ?', [id]);
+  return res.rows[0]?.project_id ?? null;
+}
+
 /** Counts of added, removed, changed and link-changed issues between two baselines. */
 export async function diffCounts(leftId, rightId) {
   const both = await run(`SELECT
