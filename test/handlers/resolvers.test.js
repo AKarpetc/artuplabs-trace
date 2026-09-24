@@ -70,6 +70,36 @@ beforeEach(() => {
   h.hasPermission.mockResolvedValue(true);
 });
 
+describe('resolver permissions', () => {
+  const table = [
+    ['getOverview', 'BROWSE_PROJECTS'],
+    ['getGaps', 'BROWSE_PROJECTS'],
+    ['getSuspects', 'BROWSE_PROJECTS'],
+    ['confirmLink', 'EDIT_ISSUES'],
+    ['getIssueTrace', 'BROWSE_PROJECTS'],
+    ['listBaselines', 'BROWSE_PROJECTS'],
+    ['createBaseline', 'EDIT_ISSUES'],
+    ['getDiff', 'BROWSE_PROJECTS'],
+    ['exportCsv', 'BROWSE_PROJECTS'],
+    ['getIssueTypes', 'BROWSE_PROJECTS'],
+    ['getLinkTypes', 'BROWSE_PROJECTS'],
+    ['getSettings', 'ADMINISTER_PROJECTS'],
+    ['saveSettings', 'ADMINISTER_PROJECTS'],
+    ['startFullSync', 'ADMINISTER_PROJECTS'],
+  ];
+
+  it('every resolver is registered in the table', () => {
+    expect(Object.keys(resolverHandler).sort()).toEqual(table.map(([key]) => key).sort());
+  });
+
+  it.each(table)('%s asks Jira for %s and rejects with no-permission without it', async (key, permission) => {
+    h.hasPermission.mockResolvedValue(false);
+    await expect(call(key, { issueId: '1', linkId: '1', leftId: '1', rightId: '2', name: 'x', config: {} })).rejects.toThrow('no-permission');
+    expect(h.hasPermission).toHaveBeenCalledTimes(1);
+    expect(h.hasPermission.mock.calls[0].slice(1)).toEqual(['10001', permission]);
+  });
+});
+
 describe('define() guard', () => {
   it('rejects a non-numeric project id with bad-request before asking Jira for permissions', async () => {
     await expect(call('getOverview', { projectId: '10001 OR 1=1' })).rejects.toThrow('bad-request');

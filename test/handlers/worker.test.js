@@ -46,3 +46,51 @@ describe('startSync', () => {
     expect(queue.enqueueJob).toHaveBeenCalledWith(42, 0);
   });
 });
+
+describe('jobWorker', () => {
+  function job(kind) {
+    return { id: 42, kind, projectId: '10001', status: 'running', state: { syncId: 5, startedAt: 1000, pages: 0 } };
+  }
+
+  it('a finished full sync records lastSyncedAt and lastFullSyncAt', async () => {
+    repo.getJob.mockResolvedValue(job('full-sync'));
+    settings.getSyncMeta.mockResolvedValue({ lastFullSyncAt: 'old' });
+    jobs.runSyncStep.mockResolvedValue({ status: 'done', job: job('full-sync'), delaySeconds: 0 });
+    await jobWorker({ body: { jobId: 42 } });
+    expect(repo.saveJob).toHaveBeenCalledWith(expect.objectContaining({ id: 42 }), 'done', expect.any(String));
+    const meta = settings.saveSyncMeta.mock.calls[0][1];
+    expect(meta).toMatchObject({ lastSyncId: 5, lastSyncStartedAt: 1000 });
+    expect(meta.lastFullSyncAt).toBe(meta.lastSyncedAt);
+  });
+
+  it('a finished incremental sync keeps the previous lastFullSyncAt', async () => {
+    repo.getJob.mockResolvedValue(job('incremental-sync'));
+    settings.getSyncMeta.mockResolvedValue({ lastFullSyncAt: 'old' });
+    jobs.runSyncStep.mockResolvedValue({ status: 'done', job: job('incremental-sync'), delaySeconds: 0 });
+    await jobWorker({ body: { jobId: 42 } });
+    expect(settings.saveSyncMeta.mock.calls[0][1]).toMatchObject({ lastFullSyncAt: 'old', lastSyncId: 5 });
+  });
+
+  it('a waiting step is saved and re-enqueued with its delay', async () => {
+    repo.getJob.mockResolvedValue(job('full-sync'));
+    jobs.runSyncStep.mockResolvedValue({ status: 'waiting', job: job('full-sync'), delaySeconds: 60 });
+    await jobWorker({ body: { jobId: 42 } });
+    expect(repo.saveJob).toHaveBeenCalledWith(expect.objectContaining({ id: 42 }), 'waiting', expect.any(String));
+    expect(queue.enqueueJob).toHaveBeenCalledWith(42, 60);
+    expect(settings.saveSyncMeta).not.toHaveBeenCalled();
+  });
+
+  it('a thrown non-retryable error marks the job failed with the message', async () => {
+    repo.getJob.mockResolvedValue(job('full-sync'));
+    jobs.runSyncStep.mockRejectedValue(new Error('Jira search failed (400): bad jql'));
+    await expect(jobWorker({ body: { jobId: 42 } })).rejects.toThrow('bad jql');
+    expect(repo.saveJob).toHaveBeenCalledWith(expect.objectContaining({ id: 42 }), 'failed', expect.any(String), 'Jira search failed (400): bad jql');
+    expect(queue.enqueueJob).not.toHaveBeenCalled();
+  });
+
+  it('a job that is already done or failed is ignored', async () => {
+    repo.getJob.mockResolvedValue({ ...job('full-sync'), status: 'failed' });
+    await jobWorker({ body: { jobId: 42 } });
+    expect(jobs.runSyncStep).not.toHaveBeenCalled();
+  });
+});
