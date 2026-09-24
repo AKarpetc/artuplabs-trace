@@ -1,20 +1,26 @@
 {
-  "name": "jira-issue-panel-ui-kit",
+  "name": "artuplabs-trace",
   "version": "1.1.49-next.14",
   "main": "index.js",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "lint": "eslint src/**/*"
+    "lint": "eslint src/**/*",
+    "test": "vitest run"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-plugin-react-hooks": "^4.6.0"
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "vitest": "^5.0.1"
   },
   "dependencies": {
+    "@forge/api": "^8.1.0",
     "@forge/bridge": "7.0.0-next.11",
+    "@forge/events": "^3.0.6",
+    "@forge/kvs": "^2.0.6",
     "@forge/react": "12.2.0-next.4",
     "@forge/resolver": "2.0.0",
+    "@forge/sql": "^4.0.6",
     "react": "^18.2.0"
   }
 }

@@ -1,1 +1,1 @@
-export { handler } from './resolvers';
+export { onLifecycle } from './handlers/events';

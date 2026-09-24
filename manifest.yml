@@ -1,18 +1,22 @@
 modules:
-  jira:issuePanel:
-    - key: artup-trace-hello-world-issue-panel
-      resource: main
-      resolver:
-        function: resolver
-      render: native
-      title: ArtUp Trace
-      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+  trigger:
+    - key: lifecycle
+      function: on-lifecycle
+      events:
+        - avi:forge:installed:app
+        - avi:forge:upgraded:app
   function:
-    - key: resolver
-      handler: index.handler
-resources:
-  - key: main
-    path: src/frontend/index.jsx
+    - key: on-lifecycle
+      handler: index.onLifecycle
+  sql:
+    - key: main
+      engine: mysql
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - read:jira-user
+    - storage:app
 app:
   runtime:
     name: nodejs24.x
