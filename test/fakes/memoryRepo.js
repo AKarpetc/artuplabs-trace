@@ -11,7 +11,7 @@ export function memoryRepo() {
     links,
     jobs,
     async upsertRequirements(rows) {
-      rows.forEach((r) => reqs.set(r.issueId, { ...r }));
+      rows.forEach((r) => reqs.set(r.issueId, { ...r, seenSyncId: Math.max(r.seenSyncId ?? 0, reqs.get(r.issueId)?.seenSyncId ?? 0) }));
     },
     async replaceLinks(reqIssueIds, rows, fingerprintsByReq) {
       const keep = new Set(rows.map((l) => l.linkId));

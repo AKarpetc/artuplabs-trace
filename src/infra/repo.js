@@ -20,7 +20,7 @@ async function run(query, params = []) {
   return sql.prepare(query).bindParams(...params).execute();
 }
 
-/** Inserts or updates requirement cache rows. */
+/** Inserts or updates requirement cache rows; seen_sync_id only ever grows, so an older overlapping sync cannot expose a row to a newer full sync's cleanup. */
 export async function upsertRequirements(rows) {
   for (const part of chunks(rows)) {
     const params = part.flatMap((r) => [r.issueId, r.issueKey, r.projectId, r.issueTypeId, r.summary, r.statusName,
@@ -31,7 +31,7 @@ export async function upsertRequirements(rows) {
       ON DUPLICATE KEY UPDATE issue_key = VALUES(issue_key), project_id = VALUES(project_id),
         issue_type_id = VALUES(issue_type_id), summary = VALUES(summary), status_name = VALUES(status_name),
         fingerprint = VALUES(fingerprint), links_hash = VALUES(links_hash), covered = VALUES(covered),
-        fields_json = VALUES(fields_json), jira_updated_at = VALUES(jira_updated_at), seen_sync_id = VALUES(seen_sync_id)`, params);
+        fields_json = VALUES(fields_json), jira_updated_at = VALUES(jira_updated_at), seen_sync_id = GREATEST(seen_sync_id, VALUES(seen_sync_id))`, params);
   }
 }
 

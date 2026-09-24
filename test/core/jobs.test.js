@@ -265,6 +265,20 @@ describe('runSyncStep', () => {
   });
 });
 
+describe('overlapping syncs', () => {
+  it('an older incremental writing after a newer full sync does not lower seenSyncId, so the row survives the full sync cleanup', async () => {
+    const repo = memoryRepo();
+    const full = await newJob(repo, 'full-sync', { syncId: 20 });
+    const paused = await runSyncStep(full, deps(fakeJira([{ issues: [req('1', 'A')], next: 'p2' }, new RateLimited(30)]), repo));
+    expect(paused.status).toBe('waiting');
+    await runSyncStep(await newJob(repo, 'incremental-sync', { syncId: 10 }), deps(fakeJira([{ issues: [req('1', 'A')] }]), repo));
+    expect(repo.reqs.get('1').seenSyncId).toBe(20);
+    const done = await runSyncStep(paused.job, deps(fakeJira([{ issues: [req('2', 'B')] }]), repo));
+    expect(done.status).toBe('done');
+    expect(repo.reqs.has('1')).toBe(true);
+  });
+});
+
 describe('activeJob', () => {
   const nowMs = 1_700_000_000_000;
   const maxAgeMs = 30 * 60 * 1000;
