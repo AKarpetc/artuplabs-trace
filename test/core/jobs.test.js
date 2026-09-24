@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  runSyncStep, toCacheRows, issueFields, activeJob, shouldReuse, needsFullSync, incrementalWindowMinutes,
+  runSyncStep, toCacheRows, issueFields, activeJob, shouldReuse, needsFullSync, incrementalWindowMinutes, shouldKeepWaiting,
 } from '../../src/core/jobs';
 import { RateLimited } from '../../src/infra/jira';
 import { memoryRepo } from '../fakes/memoryRepo';
@@ -302,6 +302,31 @@ describe('needsFullSync', () => {
   it('is not due when lastFullSyncAt is 1 day old', () => {
     const meta = { lastSyncedAt: new Date(nowMs - 1000).toISOString(), lastFullSyncAt: new Date(nowMs - dayMs).toISOString() };
     expect(needsFullSync(meta, nowMs)).toBe(false);
+  });
+});
+
+describe('shouldKeepWaiting', () => {
+  const nowMs = 1_700_000_000_000;
+  const thirtyMinMs = 30 * 60 * 1000;
+
+  it('stops waiting once the sync is done', () => {
+    expect(shouldKeepWaiting({ status: 'done' }, nowMs - 1000, nowMs)).toBe(false);
+  });
+
+  it('stops waiting once the sync failed', () => {
+    expect(shouldKeepWaiting({ status: 'failed' }, nowMs - 1000, nowMs)).toBe(false);
+  });
+
+  it('stops waiting when the sync job is missing', () => {
+    expect(shouldKeepWaiting(null, nowMs - 1000, nowMs)).toBe(false);
+  });
+
+  it('keeps waiting while the sync is still running within 30 minutes', () => {
+    expect(shouldKeepWaiting({ status: 'running' }, nowMs - (thirtyMinMs - 1000), nowMs)).toBe(true);
+  });
+
+  it('stops waiting once 30 minutes have passed even though the sync is still running', () => {
+    expect(shouldKeepWaiting({ status: 'running' }, nowMs - (thirtyMinMs + 1000), nowMs)).toBe(false);
   });
 });
 

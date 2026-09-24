@@ -3,7 +3,9 @@ import * as settings from '../infra/settings';
 import * as baselineRepo from '../infra/baselineRepo';
 import { createJira, asAppRequest } from '../infra/jira';
 import { enqueueJob } from '../infra/queue';
-import { runSyncStep, activeJob, shouldReuse, incrementalWindowMinutes } from '../core/jobs';
+import {
+  runSyncStep, activeJob, shouldReuse, incrementalWindowMinutes, shouldKeepWaiting,
+} from '../core/jobs';
 import { isConfigured } from '../core/config';
 import { runMigrations } from '../infra/schema';
 
@@ -40,10 +42,10 @@ export async function startSync(projectIdInput, { full, reanchor = false }) {
   return id;
 }
 
-/** Creates a baseline after an incremental sync and enqueues its capture. */
+/** Creates a baseline after an incremental sync and enqueues its capture; starts the sync first so a failure there leaves no orphaned capturing baseline (R19). */
 export async function startBaseline(projectId, name, accountId) {
-  const baselineId = await baselineRepo.createBaseline({ projectId: String(projectId), name, createdBy: accountId, nowIso: new Date().toISOString() });
   const syncJobId = await startSync(String(projectId), { full: false });
+  const baselineId = await baselineRepo.createBaseline({ projectId: String(projectId), name, createdBy: accountId, nowIso: new Date().toISOString() });
   const id = await repo.createJob('baseline', String(projectId), { baselineId, afterIssueId: '', waitForJobId: syncJobId }, new Date().toISOString());
   await enqueueJob(id, 30);
   return baselineId;
@@ -51,8 +53,10 @@ export async function startBaseline(projectId, name, accountId) {
 
 async function runBaselineStep(job) {
   const sync = await repo.getJob(job.state.waitForJobId);
-  if (sync && !['done', 'failed'].includes(sync.status)) {
-    await repo.saveJob(job, 'waiting', new Date().toISOString());
+  const nowMs = Date.now();
+  const waitStartedAt = job.state.waitStartedAt ?? nowMs;
+  if (shouldKeepWaiting(sync, waitStartedAt, nowMs)) {
+    await repo.saveJob({ ...job, state: { ...job.state, waitStartedAt } }, 'waiting', new Date().toISOString());
     await enqueueJob(job.id, 60);
     return;
   }

@@ -29,6 +29,14 @@ export function needsFullSync(meta, nowMs) {
   return nowMs - Date.parse(meta.lastFullSyncAt) > 7 * 24 * 3600 * 1000;
 }
 
+/** True while a baseline should keep waiting on its sync job: only while the sync is still running/waiting and under 30 minutes have passed since the wait began (R18). */
+export function shouldKeepWaiting(syncJob, waitStartedAt, nowMs) {
+  if (!syncJob || ['done', 'failed'].includes(syncJob.status)) {
+    return false;
+  }
+  return nowMs - waitStartedAt < 30 * 60 * 1000;
+}
+
 /** Minutes an incremental sync's JQL window should cover, including a 10-minute margin; at least 1 (R13). */
 export function incrementalWindowMinutes(lastSyncStartedAt, nowMs) {
   const minutes = Math.ceil((nowMs - (lastSyncStartedAt - 10 * 60 * 1000)) / 60000);

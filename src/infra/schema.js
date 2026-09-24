@@ -75,5 +75,6 @@ export async function runMigrations() {
       updated_at VARCHAR(40) NOT NULL,
       INDEX idx_job_project (project_id, kind, id)
     )`)
+    .enqueue('v007_member_status', 'ALTER TABLE baseline_member ADD COLUMN status_name VARCHAR(255) NOT NULL DEFAULT \'\'')
     .run();
 }
