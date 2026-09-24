@@ -1,4 +1,11 @@
 modules:
+  jira:projectPage:
+    - key: trace-project-page
+      resource: project-page
+      resolver:
+        function: resolver
+      render: native
+      title: ArtUp Trace
   trigger:
     - key: lifecycle
       function: on-lifecycle
@@ -39,6 +46,9 @@ modules:
   sql:
     - key: main
       engine: mysql
+resources:
+  - key: project-page
+    path: src/frontend/projectPage.jsx
 permissions:
   scopes:
     - read:jira-work
