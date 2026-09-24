@@ -5,9 +5,34 @@ modules:
       events:
         - avi:forge:installed:app
         - avi:forge:upgraded:app
+    - key: issue-events
+      function: on-issue-event
+      events:
+        - avi:jira:updated:issue
+        - avi:jira:deleted:issue
+        - avi:jira:created:issuelink
+        - avi:jira:deleted:issuelink
+      filter:
+        ignoreSelf: true
+  consumer:
+    - key: trace-jobs-consumer
+      queue: trace-jobs
+      function: job-worker
+  scheduledTrigger:
+    - key: hourly-reconcile
+      function: reconcile
+      interval: hour
   function:
     - key: on-lifecycle
       handler: index.onLifecycle
+    - key: on-issue-event
+      handler: index.onIssueEvent
+    - key: job-worker
+      handler: index.jobWorker
+      timeoutSeconds: 900
+    - key: reconcile
+      handler: index.reconcile
+      timeoutSeconds: 900
   sql:
     - key: main
       engine: mysql

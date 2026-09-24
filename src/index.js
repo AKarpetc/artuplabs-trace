@@ -1,1 +1,3 @@
-export { onLifecycle } from './handlers/events';
+export { onLifecycle, onIssueEvent } from './handlers/events';
+export { jobWorker } from './handlers/worker';
+export { reconcile } from './handlers/reconcile';

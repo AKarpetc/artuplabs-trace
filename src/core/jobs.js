@@ -3,6 +3,13 @@ import { extractLinks, isCovered } from './links';
 import { takePoints } from './budget';
 import { RateLimited, SEARCH_PAGE } from '../infra/jira';
 
+/** The first running/waiting job updated within maxAgeMs, or null when none is active (R11). */
+export function activeJob(jobs, nowMs, maxAgeMs) {
+  return jobs.find((job) => job
+    && ['running', 'waiting'].includes(job.status)
+    && nowMs - Date.parse(job.updatedAt) < maxAgeMs) ?? null;
+}
+
 /** Jira fields requested for requirement issues. */
 export function issueFields(config) {
   return [...new Set(['summary', 'status', 'issuetype', 'issuelinks', 'updated', ...config.fingerprintFieldIds])];

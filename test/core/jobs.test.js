@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { runSyncStep, toCacheRows, issueFields } from '../../src/core/jobs';
+import { runSyncStep, toCacheRows, issueFields, activeJob } from '../../src/core/jobs';
 import { RateLimited } from '../../src/infra/jira';
 import { memoryRepo } from '../fakes/memoryRepo';
 
@@ -208,5 +208,42 @@ describe('runSyncStep', () => {
     await runSyncStep(jobA, deps(fakeJira([{ issues: [req('2', 'B')] }]), repo));
     expect(repo.reqs.has('1')).toBe(true);
     expect(repo.reqs.has('2')).toBe(true);
+  });
+});
+
+describe('activeJob', () => {
+  const nowMs = 1_700_000_000_000;
+  const maxAgeMs = 30 * 60 * 1000;
+  const recentIso = new Date(nowMs - 1000).toISOString();
+  const staleIso = new Date(nowMs - maxAgeMs - 1000).toISOString();
+
+  it('returns a running job updated recently', () => {
+    const job = { id: 1, status: 'running', updatedAt: recentIso };
+    expect(activeJob([job], nowMs, maxAgeMs)).toBe(job);
+  });
+
+  it('returns a waiting job updated recently', () => {
+    const job = { id: 2, status: 'waiting', updatedAt: recentIso };
+    expect(activeJob([job], nowMs, maxAgeMs)).toBe(job);
+  });
+
+  it('ignores a running job older than the max age', () => {
+    const job = { id: 3, status: 'running', updatedAt: staleIso };
+    expect(activeJob([job], nowMs, maxAgeMs)).toBeNull();
+  });
+
+  it('ignores done and failed jobs regardless of age', () => {
+    const done = { id: 4, status: 'done', updatedAt: recentIso };
+    const failed = { id: 5, status: 'failed', updatedAt: recentIso };
+    expect(activeJob([done, failed], nowMs, maxAgeMs)).toBeNull();
+  });
+
+  it('skips missing entries and returns the first active job found', () => {
+    const job = { id: 6, status: 'waiting', updatedAt: recentIso };
+    expect(activeJob([undefined, job], nowMs, maxAgeMs)).toBe(job);
+  });
+
+  it('returns null when no jobs are given', () => {
+    expect(activeJob([], nowMs, maxAgeMs)).toBeNull();
   });
 });
