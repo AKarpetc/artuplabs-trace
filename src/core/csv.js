@@ -20,3 +20,14 @@ export function toCsv(columns, rows) {
   const lines = rows.map((row) => columns.map((c) => cell(row[c.key])).join(','));
   return `﻿${[header, ...lines].join('\r\n')}\r\n`;
 }
+
+/** Builds CSV from rows, halving the row count until the text is at most maxChars; returns { csv, truncated }. */
+export function capCsv(columns, rows, maxChars) {
+  let count = rows.length;
+  let csv = toCsv(columns, rows);
+  while (csv.length > maxChars && count > 0) {
+    count = count === 1 ? 0 : Math.ceil(count / 2);
+    csv = toCsv(columns, rows.slice(0, count));
+  }
+  return { csv, truncated: count < rows.length };
+}

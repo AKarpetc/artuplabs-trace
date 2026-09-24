@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toCsv } from '../../src/core/csv';
+import { toCsv, capCsv } from '../../src/core/csv';
 
 const cols = [{ key: 'key', title: 'Key' }, { key: 'summary', title: 'Summary' }];
 
@@ -26,5 +26,35 @@ describe('toCsv', () => {
   it('keeps non-ASCII text and renders null as empty', () => {
     expect(toCsv(cols, [{ key: 'R-7', summary: null }, { key: 'R-8', summary: 'Требование ✓' }]))
       .toBe('﻿Key,Summary\r\nR-7,\r\nR-8,Требование ✓\r\n');
+  });
+});
+
+describe('capCsv', () => {
+  const rows = Array.from({ length: 100 }, (_, i) => ({ key: `R-${i}`, summary: 'x'.repeat(20) }));
+
+  it('returns the full CSV untouched when under the limit', () => {
+    const { csv, truncated } = capCsv(cols, rows, 1_000_000);
+    expect(csv).toBe(toCsv(cols, rows));
+    expect(truncated).toBe(false);
+  });
+
+  it('halves rows until the text fits and reports truncated', () => {
+    const fullLength = toCsv(cols, rows).length;
+    const { csv, truncated } = capCsv(cols, rows, Math.floor(fullLength / 2));
+    expect(csv.length).toBeLessThanOrEqual(Math.floor(fullLength / 2));
+    expect(truncated).toBe(true);
+  });
+
+  it('falls back to header-only when even one row is too big', () => {
+    const bigRows = [{ key: 'R-1', summary: 'x'.repeat(1000) }];
+    const { csv, truncated } = capCsv(cols, bigRows, 10);
+    expect(csv).toBe(toCsv(cols, []));
+    expect(truncated).toBe(true);
+  });
+
+  it('reports not truncated for an empty row set', () => {
+    const { csv, truncated } = capCsv(cols, [], 1_000_000);
+    expect(csv).toBe(toCsv(cols, []));
+    expect(truncated).toBe(false);
   });
 });

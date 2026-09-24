@@ -7,12 +7,13 @@ import { createJira, asUserRequest } from '../infra/jira';
 import { decide, isJiraId, isBaselineId } from '../core/access';
 import { coverageSummary } from '../core/coverage';
 import { normalizeConfig, validateConfig, diffConfig } from '../core/config';
-import { toCsv } from '../core/csv';
+import { capCsv } from '../core/csv';
 import { runMigrations } from '../infra/schema';
 import { startSync, startBaseline } from './worker';
 
 const PAGE = 200;
 const CSV_MAX = 5000;
+const CSV_MAX_CHARS = 4_000_000;
 const resolver = new Resolver();
 const jira = createJira(() => { throw new Error('app requests are not used in resolvers'); });
 
@@ -105,11 +106,11 @@ define('getSuspects', 'BROWSE_PROJECTS', async ({ projectId, after }) => {
 });
 
 define('confirmLink', 'EDIT_ISSUES', async ({ projectId, linkId }, context) => {
-  await repo.confirmLink(projectId, requireJiraId(linkId), context.accountId, new Date().toISOString());
-  return { ok: true };
+  const affected = await repo.confirmLink(projectId, requireJiraId(linkId), context.accountId, new Date().toISOString());
+  return { ok: affected > 0 };
 });
 
-define('getIssueTrace', 'BROWSE_PROJECTS', async ({ issueId }, context) => repo.issueTrace(requireJiraId(issueId ?? context.extension?.issue?.id)));
+define('getIssueTrace', 'BROWSE_PROJECTS', async ({ issueId, projectId }, context) => repo.issueTrace(requireJiraId(issueId ?? context.extension?.issue?.id), projectId));
 
 define('listBaselines', 'BROWSE_PROJECTS', async ({ projectId }) => baselineRepo.listBaselines(projectId));
 
@@ -134,27 +135,36 @@ define('getDiff', 'BROWSE_PROJECTS', async ({ projectId, leftId, rightId, after 
 define('exportCsv', 'BROWSE_PROJECTS', async ({ projectId, kind, leftId, rightId }) => {
   if (kind === 'gaps') {
     const { rows, truncated } = await pageAll((a) => repo.gapsPage(projectId, a, 500), (r) => r.issueId);
-    return { csv: toCsv([{ key: 'issueKey', title: 'Requirement' }, { key: 'summary', title: 'Summary' }, { key: 'statusName', title: 'Status' }], rows), truncated };
+    const capped = capCsv([{ key: 'issueKey', title: 'Requirement' }, { key: 'summary', title: 'Summary' }, { key: 'statusName', title: 'Status' }], rows, CSV_MAX_CHARS);
+    return { csv: capped.csv, truncated: truncated || capped.truncated };
   }
   if (kind === 'suspects') {
     const { rows, truncated } = await pageAll((a) => repo.suspectsPage(projectId, a, 500), (r) => r.linkId);
-    return { csv: toCsv([{ key: 'reqKey', title: 'Requirement' }, { key: 'reqSummary', title: 'Summary' }, { key: 'linkTypeName', title: 'Link' }, { key: 'otherKey', title: 'Linked issue' }, { key: 'otherStatus', title: 'Linked status' }], rows), truncated };
+    const capped = capCsv([{ key: 'reqKey', title: 'Requirement' }, { key: 'reqSummary', title: 'Summary' }, { key: 'linkTypeName', title: 'Link' }, { key: 'otherKey', title: 'Linked issue' }, { key: 'otherStatus', title: 'Linked status' }], rows, CSV_MAX_CHARS);
+    return { csv: capped.csv, truncated: truncated || capped.truncated };
   }
   const left = requireBaselineId(leftId);
   const right = requireBaselineId(rightId);
   await requireBaselinesInProject(projectId, left, right);
   const { rows, truncated } = await pageAll((a) => baselineRepo.diffPage(left, right, a, 500), (r) => r.issueId);
-  return { csv: toCsv([{ key: 'issueKey', title: 'Requirement' }, { key: 'summary', title: 'Summary' }, { key: 'change', title: 'Change' }, { key: 'leftStatus', title: 'Status before' }, { key: 'rightStatus', title: 'Status after' }], rows), truncated };
+  const capped = capCsv([{ key: 'issueKey', title: 'Requirement' }, { key: 'summary', title: 'Summary' }, { key: 'change', title: 'Change' }, { key: 'leftStatus', title: 'Status before' }, { key: 'rightStatus', title: 'Status after' }], rows, CSV_MAX_CHARS);
+  return { csv: capped.csv, truncated: truncated || capped.truncated };
 });
 
 define('getIssueTypes', 'BROWSE_PROJECTS', async ({ projectId }) => {
   const res = await asUserRequest(`/rest/api/3/issuetype/project?projectId=${encodeURIComponent(projectId)}`);
+  if (res.status !== 200) {
+    throw new Error(`Jira request failed (${res.status})`);
+  }
   const types = await res.json();
   return types.filter((t) => !t.subtask).map((t) => ({ id: String(t.id), name: t.name }));
 });
 
 define('getLinkTypes', 'BROWSE_PROJECTS', async () => {
   const res = await asUserRequest('/rest/api/3/issueLinkType');
+  if (res.status !== 200) {
+    throw new Error(`Jira request failed (${res.status})`);
+  }
   const json = await res.json();
   return (json.issueLinkTypes ?? []).map((t) => ({ id: String(t.id), name: t.name }));
 });
@@ -181,7 +191,5 @@ define('saveSettings', 'ADMINISTER_PROJECTS', async ({ projectId, config }) => {
 });
 
 define('startFullSync', 'ADMINISTER_PROJECTS', async ({ projectId }) => ({ jobId: await startSync(projectId, { full: true }) }));
-
-resolver.define('access.decide', async (req) => decide(req.payload ?? {}));
 
 export const resolverHandler = resolver.getDefinitions();

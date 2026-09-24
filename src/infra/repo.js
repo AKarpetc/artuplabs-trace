@@ -139,17 +139,18 @@ export async function suspectsPage(projectId, after, limit) {
   return res.rows.map((r) => ({ linkId: r.link_id, reqKey: r.issue_key, reqSummary: r.summary, otherKey: r.other_key, linkTypeName: r.link_type_name, otherStatus: r.other_status }));
 }
 
-/** Confirms a link owned by the project (both the link row and its requirement must belong to it): anchors it to the requirement's current fingerprint. */
+/** Confirms a link owned by the project (both the link row and its requirement must belong to it): anchors it to the requirement's current fingerprint. Returns the number of rows changed so a no-op is visible to the caller. */
 export async function confirmLink(projectId, linkId, accountId, nowIso) {
-  await run(`UPDATE trace_link t JOIN req_issue r ON r.issue_id = t.req_issue_id
+  const res = await run(`UPDATE trace_link t JOIN req_issue r ON r.issue_id = t.req_issue_id
     SET t.confirmed_fingerprint = r.fingerprint, t.suspect = 0, t.confirmed_by = ?, t.confirmed_at = ?
     WHERE t.link_id = ? AND t.project_id = ? AND r.project_id = ?`, [accountId, nowIso, linkId, projectId, projectId]);
+  return Number(res.rows.affectedRows ?? 0);
 }
 
-/** Cached trace info for one issue. */
-export async function issueTrace(issueId) {
-  const req = await run('SELECT covered FROM req_issue WHERE issue_id = ?', [issueId]);
-  const links = await run('SELECT link_id, other_key, link_type_name, other_status, suspect FROM trace_link WHERE req_issue_id = ? ORDER BY link_id', [issueId]);
+/** Cached trace info for one issue, scoped to the caller's guarded project so a user cannot see another project's data. */
+export async function issueTrace(issueId, projectId) {
+  const req = await run('SELECT covered FROM req_issue WHERE issue_id = ? AND project_id = ?', [issueId, projectId]);
+  const links = await run('SELECT link_id, other_key, link_type_name, other_status, suspect FROM trace_link WHERE req_issue_id = ? AND project_id = ? ORDER BY link_id', [issueId, projectId]);
   return {
     isRequirement: req.rows.length > 0,
     covered: req.rows[0]?.covered === 1,
