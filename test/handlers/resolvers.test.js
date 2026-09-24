@@ -77,3 +77,38 @@ describe('define() guard', () => {
     expect(h.hasPermission).not.toHaveBeenCalled();
   });
 });
+
+describe('saveSettings', () => {
+  const stored = normalizeConfig({ requirementTypeIds: ['10006'], verificationTypeIds: ['10007'], fingerprintFieldIds: ['summary', 'description'] });
+
+  it('first save starts a full sync without re-anchoring and registers the project', async () => {
+    settings.getConfig.mockResolvedValue(normalizeConfig(undefined));
+    const res = await call('saveSettings', { config: { requirementTypeIds: ['10006'], verificationTypeIds: ['10007'] } });
+    expect(res).toEqual({ errors: [] });
+    expect(worker.startSync).toHaveBeenCalledWith('10001', { full: true, reanchor: false });
+    expect(h.kvsStore.get('projects')).toEqual(['10001']);
+  });
+
+  it('changed requirement types start a full sync', async () => {
+    settings.getConfig.mockResolvedValue(stored);
+    await call('saveSettings', { config: { ...stored, requirementTypeIds: ['10006', '10008'] } });
+    expect(worker.startSync).toHaveBeenCalledWith('10001', { full: true, reanchor: false });
+  });
+
+  it('ignores incoming fingerprint fields: keeps the stored ones and never re-anchors (R26)', async () => {
+    settings.getConfig.mockResolvedValue(stored);
+    const res = await call('saveSettings', { config: { ...stored, fingerprintFieldIds: ['summary', 'customfield_1'] } });
+    expect(res).toEqual({ errors: [] });
+    expect(settings.saveConfig).toHaveBeenCalledWith('10001', expect.objectContaining({ fingerprintFieldIds: ['summary', 'description'] }));
+    expect(worker.startSync).not.toHaveBeenCalled();
+  });
+
+  it('invalid ids return errors and save nothing', async () => {
+    settings.getConfig.mockResolvedValue(stored);
+    const res = await call('saveSettings', { config: { requirementTypeIds: ['1) OR project = 99 OR issuetype in (1'], verificationTypeIds: ['10007'] } });
+    expect(res.errors).toContain('Issue type and link type ids must be numeric Jira ids.');
+    expect(settings.saveConfig).not.toHaveBeenCalled();
+    expect(worker.startSync).not.toHaveBeenCalled();
+    expect(h.kvsStore.has('projects')).toBe(false);
+  });
+});

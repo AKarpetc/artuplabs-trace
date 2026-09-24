@@ -174,13 +174,14 @@ define('getLinkTypes', 'BROWSE_PROJECTS', async () => {
 
 define('getSettings', 'ADMINISTER_PROJECTS', async ({ projectId }) => settings.getConfig(projectId));
 
+/** Saves project config; fingerprint fields are not editable in v1 (R26), so the stored ones are always kept and no re-anchor is ever requested. */
 define('saveSettings', 'ADMINISTER_PROJECTS', async ({ projectId, config }) => {
-  const next = normalizeConfig(config);
+  const previous = await settings.getConfig(projectId);
+  const next = normalizeConfig({ ...config, fingerprintFieldIds: previous.fingerprintFieldIds });
   const errors = validateConfig(next);
   if (errors.length) {
     return { errors };
   }
-  const previous = await settings.getConfig(projectId);
   await settings.saveConfig(projectId, next);
   const projects = new Set((await kvs.get('projects')) ?? []);
   projects.add(projectId);
