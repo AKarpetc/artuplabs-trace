@@ -6,11 +6,8 @@ function jiraIds(values) {
   return [...new Set(values.filter(isJiraId).map(String))];
 }
 
-/**
- * Reads what a Jira trigger event is about. Issue events carry event.issue (id, fields.project.id); link events carry
- * top-level sourceIssueId/destinationIssueId (both observed on the dev site). The deleted:issue payload could not be
- * observed there (issue delete is forbidden on the dev site), so both event.issue.id and event.id are accepted.
- */
+/** Reads what a Jira trigger event is about: issue events carry event.issue, link events top-level sourceIssueId/destinationIssueId (both seen on the dev site).
+ * deleted:issue could not be observed there, so both event.issue.id and event.id are accepted. */
 export function classifyEvent(event) {
   const type = String(event?.eventType ?? '');
   const projectId = event?.issue?.fields?.project?.id;

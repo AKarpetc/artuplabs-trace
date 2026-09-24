@@ -21,10 +21,8 @@ async function syncIfConfigured(projectId) {
   }
 }
 
-/**
- * Issue deletions are applied to the cache immediately. Link events sync every project with a cached requirement on
- * either side (the payload has no issue project). Other issue events sync the issue's project when it is configured.
- */
+/** Applies issue deletions to the cache at once; link events sync every project with a cached requirement on either side;
+ * other issue events sync the issue's project when it is configured. */
 export async function onIssueEvent(event) {
   const info = classifyEvent(event);
   if (info.kind === 'issue-deleted') {
