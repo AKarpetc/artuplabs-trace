@@ -5,7 +5,7 @@ import { memoryRepo } from '../fakes/memoryRepo';
 
 const config = { requirementTypeIds: ['10'], verificationTypeIds: ['20'], linkTypeIds: [], fingerprintFieldIds: ['summary', 'description'] };
 
-function req(id, summary, linked = true) {
+function req(id, summary, linked = true, extraLinks = []) {
   return {
     id,
     key: `REQ-${id}`,
@@ -15,16 +15,19 @@ function req(id, summary, linked = true) {
       status: { name: 'To Do' },
       issuetype: { id: '10' },
       updated: '2026-09-24T10:00:00.000+0000',
-      issuelinks: linked ? [{ id: `L${id}`, type: { id: '1', name: 'Tests' }, inwardIssue: { id: `T${id}`, key: `QA-${id}`, fields: { issuetype: { id: '20' }, status: { name: 'Passed' } } } }] : [],
+      issuelinks: (linked ? [{ id: `L${id}`, type: { id: '1', name: 'Tests' }, inwardIssue: { id: `T${id}`, key: `QA-${id}`, fields: { issuetype: { id: '20' }, status: { name: 'Passed' } } } }] : []).concat(extraLinks),
     },
   };
 }
 
 function fakeJira(pages) {
   let call = 0;
+  const argsReceived = [];
   return {
     calls: () => call,
-    async searchPage() {
+    argsReceived,
+    async searchPage(args) {
+      argsReceived.push(args);
       const page = pages[call++];
       if (page instanceof Error) {
         throw page;
@@ -62,6 +65,28 @@ describe('toCacheRows', () => {
     expect(row).toMatchObject({ issueId: '1', issueKey: 'REQ-1', projectId: '1', covered: 1, seenSyncId: 7, statusName: 'To Do' });
     expect(row.fingerprint).toMatch(/^[0-9a-f]{64}$/);
     expect(links).toHaveLength(1);
+  });
+
+  it('stores extra fingerprint fields as bounded hashes that change with the value (R10)', () => {
+    const bigConfig = { ...config, fingerprintFieldIds: ['summary', 'description', 'customfield_1'] };
+    const bigValue = 'x'.repeat(10000);
+    const issueA = req('1', 'A');
+    issueA.fields.customfield_1 = bigValue;
+    const { req: rowA } = toCacheRows(issueA, bigConfig, 7, '1');
+    expect(rowA.fieldsJson.length).toBeLessThan(200);
+    expect(rowA.fieldsJson).toMatch(/"customfield_1":"[0-9a-f]{64}"/);
+    const issueB = req('1', 'A');
+    issueB.fields.customfield_1 = `${bigValue}Z`;
+    const { req: rowB } = toCacheRows(issueB, bigConfig, 7, '1');
+    expect(rowB.fieldsJson).not.toBe(rowA.fieldsJson);
+  });
+
+  it('truncates summary by code points, never splitting a surrogate pair (R10)', () => {
+    const longSummary = `${'a'.repeat(1023)}\u{1F600}${'b'.repeat(50)}`;
+    const { req: row } = toCacheRows(req('1', longSummary), config, 7, '1');
+    const lastCode = row.summary.charCodeAt(row.summary.length - 1);
+    expect(lastCode < 0xD800 || lastCode > 0xDBFF).toBe(true);
+    expect(Array.from(row.summary)).toHaveLength(1024);
   });
 });
 
@@ -105,9 +130,11 @@ describe('runSyncStep', () => {
     expect(first.job.state.nextPageToken).toBe('p2');
     expect(repo.reqs.has('1')).toBe(true);
 
-    const resumed = await runSyncStep(first.job, deps(fakeJira([{ issues: [req('2', 'B')] }]), repo));
+    const resumeJira = fakeJira([{ issues: [req('2', 'B')] }]);
+    const resumed = await runSyncStep(first.job, deps(resumeJira, repo));
     expect(resumed.status).toBe('done');
     expect([...repo.reqs.keys()].sort()).toEqual(['1', '2']);
+    expect(resumeJira.argsReceived[0]).toMatchObject({ nextPageToken: 'p2' });
   });
 
   it('does not delete unseen rows when a full sync stops early', async () => {
@@ -144,5 +171,42 @@ describe('runSyncStep', () => {
     retyped.fields.issuetype.id = '99';
     await runSyncStep(await newJob(repo, 'incremental-sync', { syncId: 9 }), deps(fakeJira([{ issues: [retyped] }]), repo));
     expect([...repo.reqs.keys()]).toEqual(['1']);
+  });
+
+  it('drops requirement-to-requirement link rows; verification links are kept and stay clean (R8)', async () => {
+    const repo = memoryRepo();
+    const rr1to2 = { id: 'RR12', type: { id: '5', name: 'Relates' }, outwardIssue: { id: '2', key: 'REQ-2', fields: { issuetype: { id: '10' }, status: { name: 'To Do' } } } };
+    const rr2to1 = { id: 'RR12', type: { id: '5', name: 'Relates' }, inwardIssue: { id: '1', key: 'REQ-1', fields: { issuetype: { id: '10' }, status: { name: 'To Do' } } } };
+    const issue1 = req('1', 'A', true, [rr1to2]);
+    const issue2 = req('2', 'B', true, [rr2to1]);
+    await runSyncStep(await newJob(repo), deps(fakeJira([{ issues: [issue1, issue2] }]), repo));
+    expect(repo.links.has('RR12')).toBe(false);
+    expect(repo.links.get('L1')).toMatchObject({ suspect: 0, reqIssueId: '1' });
+    expect(repo.links.get('L2')).toMatchObject({ suspect: 0, reqIssueId: '2' });
+  });
+
+  it('re-anchor only touches clean links; an already-suspect link stays suspect (R9)', async () => {
+    const repo = memoryRepo();
+    await runSyncStep(await newJob(repo), deps(fakeJira([{ issues: [req('1', 'A'), req('2', 'B')] }]), repo));
+    await runSyncStep(await newJob(repo, 'full-sync', { syncId: 8 }), deps(fakeJira([{ issues: [req('1', 'A changed'), req('2', 'B')] }]), repo));
+    expect(repo.links.get('L1').suspect).toBe(1);
+    expect(repo.links.get('L2').suspect).toBe(0);
+
+    const summaryOnly = { ...config, fingerprintFieldIds: ['summary'] };
+    const job = await newJob(repo, 'full-sync', { syncId: 9, reanchor: true });
+    await runSyncStep(job, deps(fakeJira([{ issues: [req('1', 'A changed'), req('2', 'B')] }]), repo, { config: summaryOnly }));
+    expect(repo.links.get('L1').suspect).toBe(1);
+    expect(repo.links.get('L2').suspect).toBe(0);
+    expect(repo.links.get('L2').confirmedFingerprint).toBe(repo.reqs.get('2').fingerprint);
+  });
+
+  it('an overlapping later sync is not undone when an earlier-started sync finishes its cleanup (R10)', async () => {
+    const repo = memoryRepo();
+    const jobA = await newJob(repo, 'full-sync', { syncId: 1 });
+    const jobB = await newJob(repo, 'full-sync', { syncId: 2 });
+    await runSyncStep(jobB, deps(fakeJira([{ issues: [req('1', 'A')] }]), repo));
+    await runSyncStep(jobA, deps(fakeJira([{ issues: [req('2', 'B')] }]), repo));
+    expect(repo.reqs.has('1')).toBe(true);
+    expect(repo.reqs.has('2')).toBe(true);
   });
 });

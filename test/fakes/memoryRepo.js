@@ -27,13 +27,13 @@ export function memoryRepo() {
       });
     },
     async reanchor(reqIssueIds) {
-      [...links.values()].filter((l) => reqIssueIds.includes(l.reqIssueId)).forEach((l) => {
+      [...links.values()].filter((l) => reqIssueIds.includes(l.reqIssueId) && l.suspect === 0).forEach((l) => {
         l.confirmedFingerprint = reqs.get(l.reqIssueId).fingerprint;
         l.suspect = 0;
       });
     },
     async deleteRequirementsNotSeen(projectId, syncId) {
-      [...reqs.values()].filter((r) => r.projectId === projectId && r.seenSyncId !== syncId).forEach((r) => {
+      [...reqs.values()].filter((r) => r.projectId === projectId && r.seenSyncId < syncId).forEach((r) => {
         reqs.delete(r.issueId);
         [...links.values()].filter((l) => l.reqIssueId === r.issueId).forEach((l) => links.delete(l.linkId));
       });

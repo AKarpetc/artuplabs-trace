@@ -65,19 +65,19 @@ export async function refreshSuspect(reqIssueIds) {
   }
 }
 
-/** Anchors links to the current requirement fingerprint and clears suspicion. */
+/** Anchors links to the current requirement fingerprint and clears suspicion; leaves already-suspect links untouched. */
 export async function reanchor(reqIssueIds) {
   for (const part of chunks(reqIssueIds)) {
     await run(`UPDATE trace_link t JOIN req_issue r ON r.issue_id = t.req_issue_id
       SET t.confirmed_fingerprint = r.fingerprint, t.suspect = 0
-      WHERE t.req_issue_id IN (${part.map(() => '?').join(',')})`, part);
+      WHERE t.req_issue_id IN (${part.map(() => '?').join(',')}) AND t.suspect = 0`, part);
   }
 }
 
-/** Removes requirements (and their links) that a completed full sync did not see. */
+/** Removes requirements (and their links) not seen by a sync at or after syncId, so a later overlapping sync's rows survive. */
 export async function deleteRequirementsNotSeen(projectId, syncId) {
-  await run('DELETE FROM trace_link WHERE req_issue_id IN (SELECT issue_id FROM req_issue WHERE project_id = ? AND seen_sync_id <> ?)', [projectId, syncId]);
-  await run('DELETE FROM req_issue WHERE project_id = ? AND seen_sync_id <> ?', [projectId, syncId]);
+  await run('DELETE FROM trace_link WHERE req_issue_id IN (SELECT issue_id FROM req_issue WHERE project_id = ? AND seen_sync_id < ?)', [projectId, syncId]);
+  await run('DELETE FROM req_issue WHERE project_id = ? AND seen_sync_id < ?', [projectId, syncId]);
 }
 
 /** Removes the given requirements and their links. */

@@ -15,7 +15,8 @@ export function stableStringify(value) {
   return JSON.stringify(value);
 }
 
-function sha256(text) {
+/** SHA-256 hex digest of a UTF-8 string. */
+export function sha256(text) {
   return createHash('sha256').update(text, 'utf8').digest('hex');
 }
 

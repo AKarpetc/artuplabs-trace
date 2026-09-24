@@ -1,4 +1,4 @@
-import { fingerprint, linksHash } from './fingerprint';
+import { fingerprint, linksHash, stableStringify, sha256 } from './fingerprint';
 import { extractLinks, isCovered } from './links';
 import { takePoints } from './budget';
 import { RateLimited, SEARCH_PAGE } from '../infra/jira';
@@ -13,14 +13,14 @@ export function toCacheRows(issue, config, syncId, projectId) {
   const links = extractLinks(issue);
   const extra = Object.fromEntries(config.fingerprintFieldIds
     .filter((id) => !['summary', 'description'].includes(id))
-    .map((id) => [id, issue.fields?.[id] ?? null]));
+    .map((id) => [id, sha256(stableStringify(issue.fields?.[id] ?? null))]));
   return {
     req: {
       issueId: String(issue.id),
       issueKey: issue.key,
       projectId: String(projectId),
       issueTypeId: String(issue.fields?.issuetype?.id ?? ''),
-      summary: String(issue.fields?.summary ?? '').slice(0, 1024),
+      summary: Array.from(String(issue.fields?.summary ?? '')).slice(0, 1024).join(''),
       statusName: issue.fields?.status?.name ?? '',
       fingerprint: fingerprint(issue, config.fingerprintFieldIds),
       linksHash: linksHash(links),
@@ -42,7 +42,9 @@ async function applyPage(issues, job, deps) {
   if (rows.length) {
     await deps.repo.upsertRequirements(rows.map((r) => r.req));
     const fingerprints = Object.fromEntries(rows.map((r) => [r.req.issueId, r.req.fingerprint]));
-    await deps.repo.replaceLinks(reqIds, rows.flatMap((r) => r.links.map((l) => ({ ...l, projectId: job.projectId }))), fingerprints);
+    const linkRows = rows.flatMap((r) => r.links.map((l) => ({ ...l, projectId: job.projectId })))
+      .filter((l) => !deps.config.requirementTypeIds.includes(l.otherTypeId));
+    await deps.repo.replaceLinks(reqIds, linkRows, fingerprints);
     if (job.state.reanchor) {
       await deps.repo.reanchor(reqIds);
     }
