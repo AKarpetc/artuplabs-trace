@@ -1,0 +1,22 @@
+const FORMULA_PREFIX = /^[=+\-@\t\r]/;
+
+function cell(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  let text = String(value);
+  if (FORMULA_PREFIX.test(text)) {
+    text = `'${text}`;
+  }
+  if (/[",\r\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+/** RFC 4180 CSV with BOM; cells that look like spreadsheet formulas are prefixed with a quote. */
+export function toCsv(columns, rows) {
+  const header = columns.map((c) => cell(c.title)).join(',');
+  const lines = rows.map((row) => columns.map((c) => cell(row[c.key])).join(','));
+  return `﻿${[header, ...lines].join('\r\n')}\r\n`;
+}
