@@ -11,11 +11,13 @@ export async function onLifecycle() {
   console.log(`migrations applied: ${applied.length}`);
 }
 
-/** Schedules an incremental sync for a project when it is configured. */
+const EVENT_SYNC_DELAY_SECONDS = 60;
+
+/** Schedules an incremental sync for a configured project, delayed so Jira search has indexed the change first. */
 async function syncIfConfigured(projectId) {
   const config = await settings.getConfig(projectId);
   if (isConfigured(config)) {
-    await startSync(projectId, { full: false });
+    await startSync(projectId, { full: false, delaySeconds: EVENT_SYNC_DELAY_SECONDS });
   }
 }
 

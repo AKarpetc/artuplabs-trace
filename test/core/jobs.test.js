@@ -328,9 +328,14 @@ describe('shouldReuse', () => {
     expect(shouldReuse(active, { full: false, reanchor: true })).toBe(false);
   });
 
-  it('an active incremental sync covers a plain incremental request', () => {
-    const active = { kind: 'incremental-sync', state: {} };
+  it('an active incremental sync that has not read a page yet covers a plain incremental request', () => {
+    const active = { kind: 'incremental-sync', state: { pages: 0 } };
     expect(shouldReuse(active, { full: false, reanchor: false })).toBe(true);
+  });
+
+  it('an active incremental sync that already read a page does not cover a new edit', () => {
+    const active = { kind: 'incremental-sync', state: { pages: 1 } };
+    expect(shouldReuse(active, { full: false, reanchor: false })).toBe(false);
   });
 
   it('no active job is never reused', () => {

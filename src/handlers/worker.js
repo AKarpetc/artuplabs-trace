@@ -12,8 +12,8 @@ import { runMigrations } from '../infra/schema';
 const DEADLINE_MS = 700 * 1000;
 const ACTIVE_JOB_MAX_AGE_MS = 30 * 60 * 1000;
 
-/** Creates a sync job for a project and enqueues its first step; reuses an already-active job when it covers the request (R11, R14). */
-export async function startSync(projectIdInput, { full, reanchor = false }) {
+/** Creates a sync job for a project and enqueues its first step after delaySeconds; reuses an already-active job when it covers the request (R11, R14). */
+export async function startSync(projectIdInput, { full, reanchor = false, delaySeconds = 0 }) {
   const projectId = String(projectIdInput);
   const [latestFull, latestIncremental] = await Promise.all([
     repo.latestJob(projectId, 'full-sync'),
@@ -30,7 +30,7 @@ export async function startSync(projectIdInput, { full, reanchor = false }) {
   const windowMinutes = isFull ? null : incrementalWindowMinutes(meta.lastSyncStartedAt, Date.now());
   const state = { syncId: Date.now(), jql: jqlFor(projectId, config, isFull, windowMinutes), nextPageToken: null, pages: 0, reanchor, startedAt: Date.now() };
   const id = await repo.createJob(kind, projectId, state, new Date().toISOString());
-  await enqueueJob(id);
+  await enqueueJob(id, delaySeconds);
   return id;
 }
 

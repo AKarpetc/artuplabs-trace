@@ -26,7 +26,7 @@ beforeEach(async () => {
 describe('onIssueEvent', () => {
   it('an issue event syncs the configured project of the issue', async () => {
     await onIssueEvent({ eventType: 'avi:jira:updated:issue', issue: { id: '10015', fields: { project: { id: '10001' } } } });
-    expect(worker.startSync).toHaveBeenCalledWith('10001', expect.objectContaining({ full: false }));
+    expect(worker.startSync).toHaveBeenCalledWith('10001', { full: false, delaySeconds: 60 });
   });
 
   it('an issue event of an unconfigured project does nothing', async () => {

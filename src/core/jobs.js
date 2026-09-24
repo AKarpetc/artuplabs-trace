@@ -13,7 +13,7 @@ export function activeJob(jobs, nowMs, maxAgeMs) {
     && nowMs - Date.parse(job.updatedAt) < maxAgeMs) ?? null;
 }
 
-/** True when an active job already covers the requested sync, so starting a new one is unnecessary (R14). */
+/** True when an active job already covers the requested sync (R14); an incremental only while it has read no page yet, so a new edit is never handed to a job that already passed it. */
 export function shouldReuse(active, { full, reanchor }) {
   if (!active) {
     return false;
@@ -21,7 +21,7 @@ export function shouldReuse(active, { full, reanchor }) {
   if (active.kind === 'full-sync') {
     return !reanchor || active.state.reanchor;
   }
-  return active.kind === 'incremental-sync' && !full && !reanchor;
+  return active.kind === 'incremental-sync' && !full && !reanchor && (active.state?.pages ?? 0) === 0;
 }
 
 /** True when a full sync is due: no meta, no lastFullSyncAt, or it is 7+ days old (R12). */
