@@ -13,7 +13,7 @@ modules:
         function: resolver
       render: native
       title: ArtUp Trace
-      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+      icon: resources/icon.svg
   trigger:
     - key: lifecycle
       function: on-lifecycle
@@ -71,3 +71,5 @@ app:
     memoryMB: 256
     architecture: arm64
   id: ari:cloud:ecosystem::app/6f24b898-5a6c-4b8b-92b2-d218cfeb1a6c
+  licensing:
+    enabled: true
