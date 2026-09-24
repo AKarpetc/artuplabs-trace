@@ -173,6 +173,12 @@ export async function latestJob(projectId, kind) {
   return toJob(res.rows[0]);
 }
 
+/** Deletes up to limit done/failed jobs last updated before olderThanIso (ISO UTC strings compare in time order); returns the number deleted. */
+export async function pruneJobs(olderThanIso, limit = 1000) {
+  const res = await run(`DELETE FROM job WHERE status IN ('done', 'failed') AND updated_at < ? LIMIT ${Math.max(1, Math.trunc(Number(limit)) || 1000)}`, [olderThanIso]);
+  return Number(res.rows.affectedRows ?? 0);
+}
+
 /** Totals for coverage of a project. */
 export async function coverageCounts(projectId) {
   const res = await run('SELECT COUNT(*) AS total, COALESCE(SUM(covered), 0) AS covered FROM req_issue WHERE project_id = ?', [projectId]);

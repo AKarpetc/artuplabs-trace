@@ -69,16 +69,21 @@ export function memoryRepo() {
     async projectsOfIssues(issueIds) {
       return [...new Set(issueIds.map((id) => reqs.get(id)?.projectId).filter(Boolean))];
     },
-    async createJob(kind, projectId, state) {
+    async createJob(kind, projectId, state, nowIso) {
       const id = nextJob++;
-      jobs.set(id, { id, kind, projectId, state, status: 'running' });
+      jobs.set(id, { id, kind, projectId, state, status: 'running', updatedAt: nowIso });
       return id;
     },
     async getJob(id) {
       return jobs.get(id);
     },
-    async saveJob(job, status, _nowIso, error) {
-      jobs.set(job.id, { ...job, status, error: error ?? null });
+    async saveJob(job, status, nowIso, error) {
+      jobs.set(job.id, { ...job, status, error: error ?? null, updatedAt: nowIso });
+    },
+    async pruneJobs(olderThanIso, limit = 1000) {
+      const old = [...jobs.values()].filter((j) => ['done', 'failed'].includes(j.status) && j.updatedAt < olderThanIso).slice(0, limit);
+      old.forEach((j) => jobs.delete(j.id));
+      return old.length;
     },
     async latestJob(projectId, kind) {
       return [...jobs.values()].filter((j) => j.projectId === projectId && j.kind === kind).pop();

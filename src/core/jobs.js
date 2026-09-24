@@ -24,6 +24,21 @@ export function shouldReuse(active, { full, reanchor }) {
   return active.kind === 'incremental-sync' && !full && !reanchor && (active.state?.pages ?? 0) === 0;
 }
 
+const JOB_RETENTION_MS = 7 * 24 * 3600 * 1000;
+const PRUNE_BATCH = 1000;
+const PRUNE_MAX_BATCHES = 10;
+
+/** Deletes done/failed jobs older than 7 days in bounded batches, so the job table cannot grow without limit. */
+export async function pruneOldJobs(repo, nowMs) {
+  const olderThanIso = new Date(nowMs - JOB_RETENTION_MS).toISOString();
+  for (let batch = 0; batch < PRUNE_MAX_BATCHES; batch += 1) {
+    const deleted = await repo.pruneJobs(olderThanIso, PRUNE_BATCH);
+    if (deleted < PRUNE_BATCH) {
+      return;
+    }
+  }
+}
+
 /** True when a full sync is due: no meta, no lastFullSyncAt, or it is 7+ days old (R12). */
 export function needsFullSync(meta, nowMs) {
   if (!meta || !meta.lastFullSyncAt) {

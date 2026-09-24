@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  runSyncStep, toCacheRows, issueFields, jqlFor, activeJob, shouldReuse, needsFullSync, incrementalWindowMinutes, shouldKeepWaiting,
+  runSyncStep, toCacheRows, issueFields, jqlFor, pruneOldJobs, activeJob, shouldReuse, needsFullSync, incrementalWindowMinutes, shouldKeepWaiting,
 } from '../../src/core/jobs';
 import { RateLimited, TransientJiraError } from '../../src/infra/jira';
 import { memoryRepo } from '../fakes/memoryRepo';
@@ -421,5 +421,35 @@ describe('incrementalWindowMinutes', () => {
   it('clamps to a minimum of 1 when the computed window would be zero or negative', () => {
     const lastSyncStartedAt = nowMs + 11 * 60 * 1000;
     expect(incrementalWindowMinutes(lastSyncStartedAt, nowMs)).toBe(1);
+  });
+});
+
+describe('pruneOldJobs', () => {
+  const nowMs = Date.parse('2026-09-25T00:00:00.000Z');
+  const daysAgo = (d) => new Date(nowMs - d * 24 * 3600 * 1000).toISOString();
+
+  it('deletes done and failed jobs older than 7 days and keeps active or recent ones', async () => {
+    const repo = memoryRepo();
+    const ids = {};
+    for (const [name, status, age] of [['oldDone', 'done', 8], ['oldFailed', 'failed', 30], ['oldRunning', 'running', 8], ['recentDone', 'done', 6]]) {
+      ids[name] = await repo.createJob('full-sync', '1', {}, daysAgo(age));
+      await repo.saveJob(await repo.getJob(ids[name]), status, daysAgo(age));
+    }
+    await pruneOldJobs(repo, nowMs);
+    expect([...repo.jobs.keys()].sort()).toEqual([ids.oldRunning, ids.recentDone].sort());
+  });
+
+  it('deletes in batches of 1000 and stops after 10 batches', async () => {
+    const calls = [];
+    const repo = { pruneJobs: async (iso, limit) => { calls.push({ iso, limit }); return limit; } };
+    await pruneOldJobs(repo, nowMs);
+    expect(calls).toHaveLength(10);
+    expect(calls[0]).toEqual({ iso: daysAgo(7), limit: 1000 });
+  });
+
+  it('stops as soon as a batch deletes fewer rows than the limit', async () => {
+    let calls = 0;
+    await pruneOldJobs({ pruneJobs: async () => { calls += 1; return calls === 1 ? 1000 : 3; } }, nowMs);
+    expect(calls).toBe(2);
   });
 });
