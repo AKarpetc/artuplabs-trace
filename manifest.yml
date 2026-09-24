@@ -1,0 +1,21 @@
+modules:
+  jira:issuePanel:
+    - key: artup-trace-hello-world-issue-panel
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      title: ArtUp Trace
+      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/6f24b898-5a6c-4b8b-92b2-d218cfeb1a6c
