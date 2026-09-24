@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   runSyncStep, toCacheRows, issueFields, jqlFor, activeJob, shouldReuse, needsFullSync, incrementalWindowMinutes, shouldKeepWaiting,
 } from '../../src/core/jobs';
-import { RateLimited } from '../../src/infra/jira';
+import { RateLimited, TransientJiraError } from '../../src/infra/jira';
 import { memoryRepo } from '../fakes/memoryRepo';
 
 const config = { requirementTypeIds: ['10'], verificationTypeIds: ['20'], linkTypeIds: [], fingerprintFieldIds: ['summary', 'description'] };
@@ -156,6 +156,29 @@ describe('runSyncStep', () => {
     expect(resumed.status).toBe('done');
     expect([...repo.reqs.keys()].sort()).toEqual(['1', '2']);
     expect(resumeJira.argsReceived[0]).toMatchObject({ nextPageToken: 'p2' });
+  });
+
+  it('a transient Jira failure waits 60 s from the checkpoint and counts the retry', async () => {
+    const repo = memoryRepo();
+    const jira = fakeJira([{ issues: [req('1', 'A')], next: 'p2' }, new TransientJiraError('Jira search failed (503)')]);
+    const result = await runSyncStep(await newJob(repo), deps(jira, repo));
+    expect(result).toMatchObject({ status: 'waiting', delaySeconds: 60 });
+    expect(result.job.state).toMatchObject({ nextPageToken: 'p2', transientRetries: 1 });
+  });
+
+  it('fails the job on the 5th consecutive transient failure', async () => {
+    const repo = memoryRepo();
+    const job = await newJob(repo, 'full-sync', { transientRetries: 4 });
+    await expect(runSyncStep(job, deps(fakeJira([new TransientJiraError('Jira search failed (502)')]), repo))).rejects.toThrow('Jira search failed (502)');
+  });
+
+  it('a successful page resets the transient retry counter', async () => {
+    const repo = memoryRepo();
+    const job = await newJob(repo, 'full-sync', { transientRetries: 4 });
+    const jira = fakeJira([{ issues: [req('1', 'A')], next: 'p2' }, new TransientJiraError('Jira search failed (500)')]);
+    const result = await runSyncStep(job, deps(jira, repo));
+    expect(result).toMatchObject({ status: 'waiting', delaySeconds: 60 });
+    expect(result.job.state.transientRetries).toBe(1);
   });
 
   it('does not delete unseen rows when a full sync stops early', async () => {

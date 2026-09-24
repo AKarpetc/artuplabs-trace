@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createJira, RateLimited } from '../../src/infra/jira';
+import { createJira, RateLimited, TransientJiraError } from '../../src/infra/jira';
 
 function response(status, body, headers = {}) {
   return { status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, json: async () => body };
@@ -39,6 +39,19 @@ describe('searchPage', () => {
   it('throws a descriptive error on other failures', async () => {
     const jira = createJira(async () => response(400, { errorMessages: ['bad jql'] }));
     await expect(jira.searchPage({ jql: 'x', fields: [], maxResults: 100 })).rejects.toThrow('Jira search failed (400): bad jql');
+  });
+});
+
+describe('searchPage transient failures', () => {
+  it('maps a 5xx answer to a retryable TransientJiraError', async () => {
+    const jira = createJira(async () => response(503, { errorMessages: ['unavailable'] }));
+    await expect(jira.searchPage({ jql: 'x', fields: [], maxResults: 100 })).rejects.toBeInstanceOf(TransientJiraError);
+    await expect(jira.searchPage({ jql: 'x', fields: [], maxResults: 100 })).rejects.toMatchObject({ retryAfterSeconds: 60 });
+  });
+
+  it('maps a network failure to a retryable TransientJiraError', async () => {
+    const jira = createJira(async () => { throw new TypeError('fetch failed'); });
+    await expect(jira.searchPage({ jql: 'x', fields: [], maxResults: 100 })).rejects.toMatchObject({ name: 'TransientJiraError', retryAfterSeconds: 60 });
   });
 });
 

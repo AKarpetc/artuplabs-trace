@@ -2,7 +2,9 @@ import { fingerprint, linksHash, stableStringify, sha256 } from './fingerprint';
 import { extractLinks, isCovered } from './links';
 import { takePoints } from './budget';
 import { isJiraId } from './access';
-import { RateLimited, SEARCH_PAGE } from '../infra/jira';
+import { RateLimited, TransientJiraError, SEARCH_PAGE } from '../infra/jira';
+
+export const MAX_TRANSIENT_FAILURES = 5;
 
 /** The first running/waiting job updated within maxAgeMs, or null when none is active (R11). */
 export function activeJob(jobs, nowMs, maxAgeMs) {
@@ -111,7 +113,7 @@ async function applyPage(issues, job, deps) {
   }
 }
 
-/** Runs sync pages until done, deadline, budget exhaustion or a 429; returns how to continue. */
+/** Runs sync pages until done, deadline, budget exhaustion, a 429 or a transient Jira failure (retried up to MAX_TRANSIENT_FAILURES in a row); returns how to continue. */
 export async function runSyncStep(job, deps) {
   const started = deps.now();
   let current = { ...job, state: { ...job.state } };
@@ -133,10 +135,14 @@ export async function runSyncStep(job, deps) {
       if (error instanceof RateLimited) {
         return { status: 'waiting', job: current, delaySeconds: error.retryAfterSeconds };
       }
+      const transientRetries = (current.state.transientRetries ?? 0) + 1;
+      if (error instanceof TransientJiraError && transientRetries < MAX_TRANSIENT_FAILURES) {
+        return { status: 'waiting', job: { ...current, state: { ...current.state, transientRetries } }, delaySeconds: error.retryAfterSeconds };
+      }
       throw error;
     }
     await applyPage(page.issues, current, deps);
-    current = { ...current, state: { ...current.state, nextPageToken: page.nextPageToken, pages: current.state.pages + 1 } };
+    current = { ...current, state: { ...current.state, nextPageToken: page.nextPageToken, pages: current.state.pages + 1, transientRetries: 0 } };
     if (!page.nextPageToken) {
       if (current.kind === 'full-sync') {
         await deps.repo.deleteRequirementsNotSeen(current.projectId, current.state.syncId);

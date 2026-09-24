@@ -11,6 +11,15 @@ export class RateLimited extends Error {
   }
 }
 
+/** Raised on a Jira 5xx answer or a network failure; the caller retries after retryAfterSeconds, a bounded number of times. */
+export class TransientJiraError extends Error {
+  constructor(message, retryAfterSeconds = 60) {
+    super(message);
+    this.name = 'TransientJiraError';
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
 async function failure(res, what) {
   let detail = '';
   try {
@@ -30,13 +39,21 @@ export function createJira(request) {
       if (nextPageToken) {
         body.nextPageToken = nextPageToken;
       }
-      const res = await request('/rest/api/3/search/jql', {
-        method: 'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      let res;
+      try {
+        res = await request('/rest/api/3/search/jql', {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      } catch (error) {
+        throw new TransientJiraError(`Jira search failed (network): ${error?.message ?? error}`);
+      }
       if (res.status === 429) {
         throw new RateLimited(Number(res.headers.get('retry-after')) || 60);
+      }
+      if (res.status >= 500) {
+        throw new TransientJiraError((await failure(res, 'Jira search')).message);
       }
       if (res.status !== 200) {
         throw await failure(res, 'Jira search');
