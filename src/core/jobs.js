@@ -1,6 +1,7 @@
 import { fingerprint, linksHash, stableStringify, sha256 } from './fingerprint';
 import { extractLinks, isCovered } from './links';
 import { takePoints } from './budget';
+import { isJiraId } from './access';
 import { RateLimited, SEARCH_PAGE } from '../infra/jira';
 
 /** The first running/waiting job updated within maxAgeMs, or null when none is active (R11). */
@@ -41,6 +42,21 @@ export function shouldKeepWaiting(syncJob, waitStartedAt, nowMs) {
 export function incrementalWindowMinutes(lastSyncStartedAt, nowMs) {
   const minutes = Math.ceil((nowMs - (lastSyncStartedAt - 10 * 60 * 1000)) / 60000);
   return Math.max(1, minutes);
+}
+
+/** Sync JQL built only from numeric Jira ids, so config values can never inject JQL; throws when no usable id is left. */
+export function jqlFor(projectId, config, full, windowMinutes) {
+  if (!isJiraId(projectId)) {
+    throw new Error('bad-request');
+  }
+  if (!full && windowMinutes) {
+    return `project = ${projectId} AND updated >= -${Math.max(1, Math.ceil(Number(windowMinutes)))}m ORDER BY id ASC`;
+  }
+  const types = config.requirementTypeIds.filter(isJiraId);
+  if (!types.length) {
+    throw new Error('No valid requirement issue type ids are configured.');
+  }
+  return `project = ${projectId} AND issuetype in (${types.join(',')}) ORDER BY id ASC`;
 }
 
 /** Jira fields requested for requirement issues. */

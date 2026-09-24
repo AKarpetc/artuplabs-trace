@@ -4,21 +4,13 @@ import * as baselineRepo from '../infra/baselineRepo';
 import { createJira, asAppRequest } from '../infra/jira';
 import { enqueueJob } from '../infra/queue';
 import {
-  runSyncStep, activeJob, shouldReuse, incrementalWindowMinutes, shouldKeepWaiting,
+  runSyncStep, activeJob, shouldReuse, incrementalWindowMinutes, shouldKeepWaiting, jqlFor,
 } from '../core/jobs';
 import { isConfigured } from '../core/config';
 import { runMigrations } from '../infra/schema';
 
 const DEADLINE_MS = 700 * 1000;
 const ACTIVE_JOB_MAX_AGE_MS = 30 * 60 * 1000;
-
-function jqlFor(projectId, config, full, windowMinutes) {
-  const types = config.requirementTypeIds.join(',');
-  if (full || !windowMinutes) {
-    return `project = ${projectId} AND issuetype in (${types}) ORDER BY id ASC`;
-  }
-  return `project = ${projectId} AND updated >= -${windowMinutes}m ORDER BY id ASC`;
-}
 
 /** Creates a sync job for a project and enqueues its first step; reuses an already-active job when it covers the request (R11, R14). */
 export async function startSync(projectIdInput, { full, reanchor = false }) {

@@ -33,6 +33,14 @@ describe('validateConfig', () => {
     const errors = validateConfig(normalizeConfig({ requirementTypeIds: ['1'], verificationTypeIds: ['2'], fingerprintFieldIds: ['description'] }));
     expect(errors).toEqual(['Fingerprint fields must include summary.']);
   });
+
+  it('rejects a type or link id that is not a numeric Jira id (JQL injection guard)', () => {
+    const injected = normalizeConfig({ requirementTypeIds: ['1) OR project = 99 OR issuetype in (1'], verificationTypeIds: ['2'] });
+    expect(validateConfig(injected)).toContain('Issue type and link type ids must be numeric Jira ids.');
+    expect(validateConfig(normalizeConfig({ requirementTypeIds: ['1'], verificationTypeIds: ['2 '] }))).toContain('Issue type and link type ids must be numeric Jira ids.');
+    expect(validateConfig(normalizeConfig({ requirementTypeIds: ['1'], verificationTypeIds: ['2'], linkTypeIds: ['x'] }))).toContain('Issue type and link type ids must be numeric Jira ids.');
+    expect(isConfigured(injected)).toBe(false);
+  });
 });
 
 describe('isConfigured', () => {

@@ -1,3 +1,5 @@
+import { isJiraId } from './access';
+
 export const DEFAULT_FINGERPRINT_FIELDS = ['summary', 'description'];
 
 function ids(list) {
@@ -27,6 +29,9 @@ export function validateConfig(config) {
   }
   if (config.requirementTypeIds.some((id) => config.verificationTypeIds.includes(id))) {
     errors.push('An issue type cannot be both requirement and verification.');
+  }
+  if ([...config.requirementTypeIds, ...config.verificationTypeIds, ...config.linkTypeIds].some((id) => !isJiraId(id))) {
+    errors.push('Issue type and link type ids must be numeric Jira ids.');
   }
   if (!config.fingerprintFieldIds.includes('summary')) {
     errors.push('Fingerprint fields must include summary.');

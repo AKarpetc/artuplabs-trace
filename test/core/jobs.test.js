@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  runSyncStep, toCacheRows, issueFields, activeJob, shouldReuse, needsFullSync, incrementalWindowMinutes, shouldKeepWaiting,
+  runSyncStep, toCacheRows, issueFields, jqlFor, activeJob, shouldReuse, needsFullSync, incrementalWindowMinutes, shouldKeepWaiting,
 } from '../../src/core/jobs';
 import { RateLimited } from '../../src/infra/jira';
 import { memoryRepo } from '../fakes/memoryRepo';
@@ -58,6 +58,25 @@ async function newJob(repo, kind = 'full-sync', extra = {}) {
 describe('issueFields', () => {
   it('always includes structural fields and dedupes', () => {
     expect(issueFields(config)).toEqual(['summary', 'status', 'issuetype', 'issuelinks', 'updated', 'description']);
+  });
+});
+
+describe('jqlFor', () => {
+  it('builds the full-sync JQL from numeric ids only', () => {
+    expect(jqlFor('10001', { requirementTypeIds: ['10006', '10007'] }, true, null)).toBe('project = 10001 AND issuetype in (10006,10007) ORDER BY id ASC');
+  });
+
+  it('builds the incremental JQL with a whole-minute window', () => {
+    expect(jqlFor('10001', { requirementTypeIds: ['10006'] }, false, 15)).toBe('project = 10001 AND updated >= -15m ORDER BY id ASC');
+  });
+
+  it('drops type ids that are not Jira ids (defence in depth)', () => {
+    expect(jqlFor('10001', { requirementTypeIds: ['10006', '1) OR project = 99 OR issuetype in (1'] }, true, null)).toBe('project = 10001 AND issuetype in (10006) ORDER BY id ASC');
+  });
+
+  it('throws when the project id or every type id is not a Jira id', () => {
+    expect(() => jqlFor('1 OR 1=1', { requirementTypeIds: ['10006'] }, true, null)).toThrow('bad-request');
+    expect(() => jqlFor('10001', { requirementTypeIds: ['x'] }, true, null)).toThrow('No valid requirement issue type ids');
   });
 });
 

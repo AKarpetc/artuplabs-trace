@@ -59,10 +59,13 @@ async function guard(req, projectId, permission) {
   }
 }
 
-/** Registers a resolver that authorizes the call before running fn with the resolved payload and context. */
+/** Registers a resolver that rejects a non-numeric project id, authorizes the call, then runs fn with the resolved payload and context. */
 function define(key, permission, fn) {
   resolver.define(key, async (req) => {
-    const projectId = String(req.payload.projectId ?? req.context.extension?.project?.id ?? '');
+    const projectId = String(req.payload?.projectId ?? req.context.extension?.project?.id ?? '');
+    if (!isJiraId(projectId)) {
+      throw new Error('bad-request');
+    }
     await guard(req, projectId, permission);
     return fn({ ...req.payload, projectId }, req.context);
   });
