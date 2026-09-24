@@ -94,7 +94,6 @@ export function toCacheRows(issue, config, syncId, projectId) {
 async function applyPage(issues, job, deps) {
   const isRequirement = (i) => deps.config.requirementTypeIds.includes(String(i.fields?.issuetype?.id));
   const reqIssues = issues.filter(isRequirement);
-  const dropped = issues.filter((i) => !isRequirement(i)).map((i) => String(i.id));
   const rows = reqIssues.map((i) => toCacheRows(i, deps.config, job.state.syncId, job.projectId));
   const reqIds = rows.map((r) => r.req.issueId);
   if (rows.length) {
@@ -108,8 +107,19 @@ async function applyPage(issues, job, deps) {
     }
     await deps.repo.refreshSuspect(reqIds);
   }
-  if (dropped.length) {
-    await deps.repo.deleteRequirements(dropped);
+  const others = issues.filter((i) => !isRequirement(i));
+  if (others.length) {
+    await deps.repo.deleteRequirements(others.map((i) => String(i.id)));
+    const affected = await deps.repo.updateLinkedIssues(others.map((i) => ({
+      otherIssueId: String(i.id),
+      otherKey: i.key,
+      otherTypeId: String(i.fields?.issuetype?.id ?? ''),
+      otherStatus: i.fields?.status?.name ?? '',
+    })));
+    const sameProject = [...new Set(affected.filter((a) => a.projectId === job.projectId).map((a) => a.reqIssueId))];
+    if (sameProject.length) {
+      await deps.repo.recomputeCovered(job.projectId, sameProject, deps.config);
+    }
   }
 }
 

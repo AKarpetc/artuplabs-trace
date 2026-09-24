@@ -1,4 +1,5 @@
 import { sql } from '@forge/sql';
+import { isJiraId } from '../core/access';
 
 const CHUNK = 500;
 
@@ -87,6 +88,60 @@ export async function deleteRequirements(issueIds) {
     await run(`DELETE FROM trace_link WHERE req_issue_id IN (${marks})`, part);
     await run(`DELETE FROM req_issue WHERE issue_id IN (${marks})`, part);
   }
+}
+
+/** Deletes links whose other side is this issue; returns the requirement and project of each deleted link. */
+export async function deleteLinksToIssue(issueId) {
+  const found = await run('SELECT req_issue_id, project_id FROM trace_link WHERE other_issue_id = ?', [String(issueId)]);
+  if (!found.rows.length) {
+    return [];
+  }
+  await run('DELETE FROM trace_link WHERE other_issue_id = ?', [String(issueId)]);
+  return found.rows.map((r) => ({ reqIssueId: r.req_issue_id, projectId: r.project_id }));
+}
+
+/** Refreshes key, type and status of linked (non-requirement) issues on every link row pointing at them; returns the requirement and project of each touched link. */
+export async function updateLinkedIssues(rows) {
+  const affected = [];
+  for (const part of chunks(rows)) {
+    const found = await run(`SELECT DISTINCT other_issue_id FROM trace_link WHERE other_issue_id IN (${part.map(() => '?').join(',')})`, part.map((r) => r.otherIssueId));
+    const present = new Set(found.rows.map((r) => r.other_issue_id));
+    for (const row of part.filter((r) => present.has(r.otherIssueId))) {
+      await run('UPDATE trace_link SET other_key = ?, other_type_id = ?, other_status = ? WHERE other_issue_id = ?',
+        [row.otherKey, row.otherTypeId, row.otherStatus, row.otherIssueId]);
+      const touched = await run('SELECT req_issue_id, project_id FROM trace_link WHERE other_issue_id = ?', [row.otherIssueId]);
+      affected.push(...touched.rows.map((r) => ({ reqIssueId: r.req_issue_id, projectId: r.project_id })));
+    }
+  }
+  return affected;
+}
+
+/** Recomputes req_issue.covered in SQL for these requirements of a project: covered when a link reaches a verification type through an allowed link type. */
+export async function recomputeCovered(projectId, reqIssueIds, config) {
+  const verificationTypeIds = config.verificationTypeIds.filter(isJiraId);
+  const linkTypeIds = config.linkTypeIds.filter(isJiraId);
+  const ids = reqIssueIds.filter(isJiraId);
+  if (!verificationTypeIds.length || !ids.length) {
+    return;
+  }
+  const typeMarks = verificationTypeIds.map(() => '?').join(',');
+  const linkFilter = linkTypeIds.length ? `AND t.link_type_id IN (${linkTypeIds.map(() => '?').join(',')})` : '';
+  for (const part of chunks(ids)) {
+    await run(`UPDATE req_issue r SET r.covered = IF(EXISTS(SELECT 1 FROM trace_link t
+        WHERE t.req_issue_id = r.issue_id AND t.other_type_id IN (${typeMarks}) ${linkFilter}), 1, 0)
+      WHERE r.project_id = ? AND r.issue_id IN (${part.map(() => '?').join(',')})`,
+    [...verificationTypeIds, ...linkTypeIds, projectId, ...part]);
+  }
+}
+
+/** Distinct projects of the given issues that are cached requirements. */
+export async function projectsOfIssues(issueIds) {
+  const ids = issueIds.filter(isJiraId);
+  if (!ids.length) {
+    return [];
+  }
+  const res = await run(`SELECT DISTINCT project_id FROM req_issue WHERE issue_id IN (${ids.map(() => '?').join(',')})`, ids);
+  return res.rows.map((r) => r.project_id);
 }
 
 /** Creates a job row and returns its id. */

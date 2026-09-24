@@ -1,3 +1,5 @@
+import { isCovered } from '../../src/core/links';
+
 /** In-memory repo mirroring src/infra/repo.js semantics for job tests. */
 export function memoryRepo() {
   const reqs = new Map();
@@ -43,6 +45,29 @@ export function memoryRepo() {
         reqs.delete(id);
         [...links.values()].filter((l) => l.reqIssueId === id).forEach((l) => links.delete(l.linkId));
       });
+    },
+    async deleteLinksToIssue(issueId) {
+      const gone = [...links.values()].filter((l) => l.otherIssueId === String(issueId));
+      gone.forEach((l) => links.delete(l.linkId));
+      return gone.map((l) => ({ reqIssueId: l.reqIssueId, projectId: l.projectId }));
+    },
+    async updateLinkedIssues(rows) {
+      const affected = [];
+      rows.forEach((row) => {
+        [...links.values()].filter((l) => l.otherIssueId === row.otherIssueId).forEach((l) => {
+          Object.assign(l, { otherKey: row.otherKey, otherTypeId: row.otherTypeId, otherStatus: row.otherStatus });
+          affected.push({ reqIssueId: l.reqIssueId, projectId: l.projectId });
+        });
+      });
+      return affected;
+    },
+    async recomputeCovered(projectId, reqIssueIds, config) {
+      reqIssueIds.map((id) => reqs.get(id)).filter((r) => r && r.projectId === projectId).forEach((r) => {
+        r.covered = isCovered([...links.values()].filter((l) => l.reqIssueId === r.issueId), config) ? 1 : 0;
+      });
+    },
+    async projectsOfIssues(issueIds) {
+      return [...new Set(issueIds.map((id) => reqs.get(id)?.projectId).filter(Boolean))];
     },
     async createJob(kind, projectId, state) {
       const id = nextJob++;

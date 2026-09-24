@@ -217,6 +217,16 @@ describe('runSyncStep', () => {
     expect([...repo.reqs.keys()]).toEqual(['1']);
   });
 
+  it('a verification issue in an incremental page updates its link rows and the requirement coverage', async () => {
+    const repo = memoryRepo();
+    await runSyncStep(await newJob(repo), deps(fakeJira([{ issues: [req('1', 'A')] }]), repo));
+    expect(repo.reqs.get('1').covered).toBe(1);
+    const verification = { id: 'T1', key: 'QA-1b', fields: { summary: 'test', status: { name: 'Failed' }, issuetype: { id: '30' }, issuelinks: [] } };
+    await runSyncStep(await newJob(repo, 'incremental-sync', { syncId: 9 }), deps(fakeJira([{ issues: [verification] }]), repo));
+    expect(repo.links.get('L1')).toMatchObject({ otherStatus: 'Failed', otherKey: 'QA-1b', otherTypeId: '30' });
+    expect(repo.reqs.get('1').covered).toBe(0);
+  });
+
   it('drops requirement-to-requirement link rows; verification links are kept and stay clean (R8)', async () => {
     const repo = memoryRepo();
     const rr1to2 = { id: 'RR12', type: { id: '5', name: 'Relates' }, outwardIssue: { id: '2', key: 'REQ-2', fields: { issuetype: { id: '10' }, status: { name: 'To Do' } } } };
