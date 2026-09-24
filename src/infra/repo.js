@@ -214,7 +214,7 @@ export async function issueTrace(issueId, projectId) {
   const links = await run('SELECT link_id, other_key, link_type_name, other_status, suspect FROM trace_link WHERE req_issue_id = ? AND project_id = ? ORDER BY link_id', [issueId, projectId]);
   return {
     isRequirement: req.rows.length > 0,
-    covered: req.rows[0]?.covered === 1,
+    covered: Number(req.rows[0]?.covered) === 1,
     links: links.rows.map((l) => ({ linkId: l.link_id, otherKey: l.other_key, linkTypeName: l.link_type_name, otherStatus: l.other_status, suspect: Number(l.suspect) === 1 })),
   };
 }

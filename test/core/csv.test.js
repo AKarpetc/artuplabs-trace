@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toCsv, capCsv } from '../../src/core/csv';
+import { toCsv, capCsv, collectPages } from '../../src/core/csv';
 
 const cols = [{ key: 'key', title: 'Key' }, { key: 'summary', title: 'Summary' }];
 
@@ -56,5 +56,29 @@ describe('capCsv', () => {
     const { csv, truncated } = capCsv(cols, [], 1_000_000);
     expect(csv).toBe(toCsv(cols, []));
     expect(truncated).toBe(false);
+  });
+});
+
+describe('collectPages', () => {
+  function pager(total, size) {
+    const all = Array.from({ length: total }, (_, i) => ({ id: i + 1 }));
+    return async (after) => all.filter((r) => r.id > Number(after || 0)).slice(0, size);
+  }
+
+  it('exactly the cap is not truncated', async () => {
+    const res = await collectPages(pager(10, 5), (r) => r.id, 10);
+    expect(res.rows).toHaveLength(10);
+    expect(res.truncated).toBe(false);
+  });
+
+  it('more rows than the cap are cut to the cap and marked truncated', async () => {
+    const res = await collectPages(pager(11, 5), (r) => r.id, 10);
+    expect(res.rows.map((r) => r.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(res.truncated).toBe(true);
+  });
+
+  it('fewer rows than the cap are returned whole', async () => {
+    const res = await collectPages(pager(3, 5), (r) => r.id, 10);
+    expect(res).toEqual({ rows: [{ id: 1 }, { id: 2 }, { id: 3 }], truncated: false });
   });
 });

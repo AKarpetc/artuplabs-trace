@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import ForgeReconciler, { Button, DynamicTable, Lozenge, SectionMessage, Spinner, Stack, Text, useProductContext } from '@forge/react';
 import { invoke } from '@forge/bridge';
+import { errorText } from './errorText';
 
 const App = () => {
   const context = useProductContext();
@@ -13,7 +14,7 @@ const App = () => {
     try {
       setTrace(await invoke('getIssueTrace', { issueId, projectId }));
     } catch (e) {
-      setError(String(e?.message ?? e));
+      setError(errorText(e));
     }
   }, [issueId, projectId]);
   useEffect(() => {
@@ -36,7 +37,7 @@ const App = () => {
       setNotice(res.ok ? null : 'This link no longer exists; the list was refreshed.');
       await load();
     } catch (e) {
-      setError(String(e?.message ?? e));
+      setError(errorText(e));
     }
   };
   return (

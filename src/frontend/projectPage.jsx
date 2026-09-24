@@ -5,17 +5,7 @@ import ForgeReconciler, {
   Select, Spinner, Stack, Tab, TabList, TabPanel, Tabs, Text, Textfield, useProductContext,
 } from '@forge/react';
 import { invoke } from '@forge/bridge';
-
-function errorText(error) {
-  const message = String(error?.message ?? error);
-  if (message.includes('no-permission')) {
-    return 'You do not have permission for this action in this project.';
-  }
-  if (message.includes('unlicensed')) {
-    return 'ArtUp Trace license is not active on this site.';
-  }
-  return message;
-}
+import { errorText } from './errorText';
 
 function CsvModal({ csv, truncated, onClose }) {
   return (

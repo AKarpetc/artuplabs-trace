@@ -31,3 +31,18 @@ export function capCsv(columns, rows, maxChars) {
   }
   return { csv, truncated: count < rows.length };
 }
+
+/** Pages through fetchPage(after) until exhausted or more than max rows are seen; truncated only when rows beyond max exist. */
+export async function collectPages(fetchPage, cursorOf, max) {
+  const rows = [];
+  let after = '';
+  while (rows.length <= max) {
+    const page = await fetchPage(after);
+    if (!page.length) {
+      break;
+    }
+    rows.push(...page);
+    after = cursorOf(page[page.length - 1]);
+  }
+  return { rows: rows.slice(0, max), truncated: rows.length > max };
+}

@@ -10,6 +10,11 @@ describe('coverageSummary', () => {
     expect(coverageSummary(0, 0)).toEqual({ total: 0, covered: 0, uncovered: 0, percent: null });
   });
 
+  it('never shows 100 while a requirement is uncovered', () => {
+    expect(coverageSummary(100000, 99999).percent).toBe(99.9);
+    expect(coverageSummary(2001, 2000).percent).toBe(99.9);
+  });
+
   it('full coverage is 100', () => {
     expect(coverageSummary(5, 5).percent).toBe(100);
   });

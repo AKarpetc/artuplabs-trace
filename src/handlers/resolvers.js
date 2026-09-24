@@ -7,7 +7,7 @@ import { createJira, asUserRequest } from '../infra/jira';
 import { decide, isJiraId, isBaselineId, isLicenseActive } from '../core/access';
 import { coverageSummary } from '../core/coverage';
 import { normalizeConfig, validateConfig, diffConfig } from '../core/config';
-import { capCsv } from '../core/csv';
+import { capCsv, collectPages } from '../core/csv';
 import { runMigrations } from '../infra/schema';
 import { startSync, startBaseline } from './worker';
 
@@ -71,19 +71,9 @@ function define(key, permission, fn) {
   });
 }
 
-/** Pages through fetchPage until exhausted or CSV_MAX rows collected. */
-async function pageAll(fetchPage, cursorOf) {
-  const rows = [];
-  let after = '';
-  while (rows.length < CSV_MAX) {
-    const page = await fetchPage(after);
-    if (!page.length) {
-      break;
-    }
-    rows.push(...page);
-    after = cursorOf(page[page.length - 1]);
-  }
-  return { rows: rows.slice(0, CSV_MAX), truncated: rows.length >= CSV_MAX };
+/** Pages through fetchPage until exhausted or more than CSV_MAX rows are seen. */
+function pageAll(fetchPage, cursorOf) {
+  return collectPages(fetchPage, cursorOf, CSV_MAX);
 }
 
 define('getOverview', 'BROWSE_PROJECTS', async ({ projectId }) => {
