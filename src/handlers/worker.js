@@ -1,5 +1,6 @@
 import * as repo from '../infra/repo';
 import * as settings from '../infra/settings';
+import * as baselineRepo from '../infra/baselineRepo';
 import { createJira, asAppRequest } from '../infra/jira';
 import { enqueueJob } from '../infra/queue';
 import { runSyncStep, activeJob, shouldReuse, incrementalWindowMinutes } from '../core/jobs';
@@ -39,11 +40,51 @@ export async function startSync(projectIdInput, { full, reanchor = false }) {
   return id;
 }
 
+/** Creates a baseline after an incremental sync and enqueues its capture. */
+export async function startBaseline(projectId, name, accountId) {
+  const baselineId = await baselineRepo.createBaseline({ projectId: String(projectId), name, createdBy: accountId, nowIso: new Date().toISOString() });
+  const syncJobId = await startSync(String(projectId), { full: false });
+  const id = await repo.createJob('baseline', String(projectId), { baselineId, afterIssueId: '', waitForJobId: syncJobId }, new Date().toISOString());
+  await enqueueJob(id, 30);
+  return baselineId;
+}
+
+async function runBaselineStep(job) {
+  const sync = await repo.getJob(job.state.waitForJobId);
+  if (sync && !['done', 'failed'].includes(sync.status)) {
+    await repo.saveJob(job, 'waiting', new Date().toISOString());
+    await enqueueJob(job.id, 60);
+    return;
+  }
+  const started = Date.now();
+  let state = { ...job.state };
+  while (Date.now() - started < DEADLINE_MS) {
+    const batch = await baselineRepo.snapshotBatch(state.baselineId, job.projectId, state.afterIssueId, 500);
+    if (!batch.lastIssueId) {
+      await baselineRepo.completeBaseline(state.baselineId);
+      await repo.saveJob({ ...job, state }, 'done', new Date().toISOString());
+      return;
+    }
+    state = { ...state, afterIssueId: batch.lastIssueId };
+  }
+  await repo.saveJob({ ...job, state }, 'running', new Date().toISOString());
+  await enqueueJob(job.id);
+}
+
 /** Async consumer: runs one bounded step of a job and re-enqueues until done. */
 export async function jobWorker(event) {
   await runMigrations();
   const job = await repo.getJob(event.body.jobId);
   if (!job || job.status === 'done' || job.status === 'failed') {
+    return;
+  }
+  if (job.kind === 'baseline') {
+    try {
+      await runBaselineStep(job);
+    } catch (error) {
+      await baselineRepo.failBaseline(job.state.baselineId, error.message ?? error);
+      await repo.saveJob(job, 'failed', new Date().toISOString(), String(error.message ?? error));
+    }
     return;
   }
   const config = await settings.getConfig(job.projectId);
