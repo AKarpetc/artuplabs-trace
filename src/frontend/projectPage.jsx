@@ -40,22 +40,36 @@ function CsvModal({ csv, truncated, onClose }) {
 function useExport(projectId) {
   const [csv, setCsv] = useState(null);
   const [truncated, setTruncated] = useState(false);
+  const [error, setError] = useState(null);
   const run = async (payload) => {
-    const res = await invoke('exportCsv', { projectId, ...payload });
-    setTruncated(res.truncated);
-    setCsv(res.csv);
+    try {
+      const res = await invoke('exportCsv', { projectId, ...payload });
+      setTruncated(res.truncated);
+      setCsv(res.csv);
+      setError(null);
+    } catch (e) {
+      setError(errorText(e));
+    }
   };
-  return { csv, truncated, run, close: () => setCsv(null) };
+  return { csv, truncated, error, run, close: () => setCsv(null) };
 }
 
 function CoverageTab({ projectId, overview }) {
   const [rows, setRows] = useState([]);
   const [next, setNext] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const exporter = useExport(projectId);
   const load = useCallback(async (after) => {
-    const res = await invoke('getGaps', { projectId, after });
-    setRows((prev) => (after ? [...prev, ...res.rows] : res.rows));
-    setNext(res.next);
+    try {
+      const res = await invoke('getGaps', { projectId, after });
+      setRows((prev) => (after ? [...prev, ...res.rows] : res.rows));
+      setNext(res.next);
+      setLoadError(null);
+      setLoaded(true);
+    } catch (e) {
+      setLoadError(errorText(e));
+    }
   }, [projectId]);
   useEffect(() => { load(''); }, [load]);
   const c = overview.coverage;
@@ -67,11 +81,16 @@ function CoverageTab({ projectId, overview }) {
       <Heading as="h3">{`${c.percent}% covered — ${c.covered} of ${c.total} requirements`}</Heading>
       <ProgressBar value={c.total ? c.covered / c.total : 0} />
       <Inline space="space.100"><Text>{`${c.uncovered} without a verification link`}</Text><Button onClick={() => exporter.run({ kind: 'gaps' })}>Export CSV</Button></Inline>
-      <DynamicTable
-        head={{ cells: [{ key: 'k', content: 'Requirement' }, { key: 's', content: 'Summary' }, { key: 't', content: 'Status' }] }}
-        rows={rows.map((r) => ({ key: r.issueId, cells: [{ key: 'k', content: r.issueKey }, { key: 's', content: r.summary }, { key: 't', content: r.statusName }] }))}
-      />
-      {next && <Button onClick={() => load(next)}>Load more</Button>}
+      {exporter.error && <SectionMessage appearance="error"><Text>{exporter.error}</Text></SectionMessage>}
+      {loadError && <SectionMessage appearance="error"><Text>{loadError}</Text></SectionMessage>}
+      {!loadError && !loaded && <Spinner />}
+      {!loadError && loaded && (
+        <DynamicTable
+          head={{ cells: [{ key: 'k', content: 'Requirement' }, { key: 's', content: 'Summary' }, { key: 't', content: 'Status' }] }}
+          rows={rows.map((r) => ({ key: r.issueId, cells: [{ key: 'k', content: r.issueKey }, { key: 's', content: r.summary }, { key: 't', content: r.statusName }] }))}
+        />
+      )}
+      {!loadError && loaded && next && <Button onClick={() => load(next)}>Load more</Button>}
       <CsvModal csv={exporter.csv} truncated={exporter.truncated} onClose={exporter.close} />
     </Stack>
   );
@@ -80,13 +99,21 @@ function CoverageTab({ projectId, overview }) {
 function SuspectTab({ projectId }) {
   const [rows, setRows] = useState([]);
   const [next, setNext] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const exporter = useExport(projectId);
   const load = useCallback(async (after) => {
-    const res = await invoke('getSuspects', { projectId, after });
-    setRows((prev) => (after ? [...prev, ...res.rows] : res.rows));
-    setNext(res.next);
+    try {
+      const res = await invoke('getSuspects', { projectId, after });
+      setRows((prev) => (after ? [...prev, ...res.rows] : res.rows));
+      setNext(res.next);
+      setLoadError(null);
+      setLoaded(true);
+    } catch (e) {
+      setLoadError(errorText(e));
+    }
   }, [projectId]);
   useEffect(() => { load(''); }, [load]);
   const confirm = async (linkId) => {
@@ -103,6 +130,12 @@ function SuspectTab({ projectId }) {
       setError(errorText(e));
     }
   };
+  if (loadError) {
+    return <SectionMessage appearance="error"><Text>{loadError}</Text></SectionMessage>;
+  }
+  if (!loaded) {
+    return <Spinner />;
+  }
   if (!rows.length) {
     return <EmptyState header="No suspect links" description="A link becomes suspect when its requirement's summary or description changes after the link was confirmed." />;
   }
@@ -110,6 +143,7 @@ function SuspectTab({ projectId }) {
     <Stack space="space.200">
       {error && <SectionMessage appearance="error"><Text>{error}</Text></SectionMessage>}
       {notice && <SectionMessage appearance="information"><Text>{notice}</Text></SectionMessage>}
+      {exporter.error && <SectionMessage appearance="error"><Text>{exporter.error}</Text></SectionMessage>}
       <Inline space="space.100"><Text>{`${rows.length}${next ? '+' : ''} suspect links`}</Text><Button onClick={() => exporter.run({ kind: 'suspects' })}>Export CSV</Button></Inline>
       <DynamicTable
         head={{ cells: [{ key: 'r', content: 'Requirement' }, { key: 's', content: 'Summary' }, { key: 'l', content: 'Link' }, { key: 'o', content: 'Linked issue' }, { key: 'a', content: '' }] }}
@@ -138,8 +172,22 @@ function BaselinesTab({ projectId }) {
   const [diff, setDiff] = useState(null);
   const [error, setError] = useState(null);
   const exporter = useExport(projectId);
-  const refresh = useCallback(async () => setList(await invoke('listBaselines', { projectId })), [projectId]);
+  const options = list.filter((b) => b.status === 'complete').map((b) => ({ label: `${b.name} — ${b.createdAt.slice(0, 10)} (${b.memberCount})`, value: b.id }));
+  const refresh = useCallback(async () => {
+    try {
+      const nextList = await invoke('listBaselines', { projectId });
+      setList(nextList);
+      setError(null);
+    } catch (e) {
+      setError(errorText(e));
+    }
+  }, [projectId]);
   useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    const ids = new Set(list.filter((b) => b.status === 'complete').map((b) => b.id));
+    setLeft((prev) => (prev && !ids.has(prev.value) ? null : prev));
+    setRight((prev) => (prev && !ids.has(prev.value) ? null : prev));
+  }, [list]);
   const create = async () => {
     try {
       await invoke('createBaseline', { projectId, name });
@@ -149,11 +197,28 @@ function BaselinesTab({ projectId }) {
       setError(errorText(e));
     }
   };
-  const compare = async () => setDiff(await invoke('getDiff', { projectId, leftId: left.value, rightId: right.value, after: '' }));
-  const options = list.filter((b) => b.status === 'complete').map((b) => ({ label: `${b.name} — ${b.createdAt.slice(0, 10)} (${b.memberCount})`, value: b.id }));
+  const compare = async () => {
+    try {
+      const res = await invoke('getDiff', { projectId, leftId: left.value, rightId: right.value, after: '' });
+      setDiff(res);
+      setError(null);
+    } catch (e) {
+      setError(errorText(e));
+    }
+  };
+  const loadMoreDiff = async () => {
+    try {
+      const res = await invoke('getDiff', { projectId, leftId: left.value, rightId: right.value, after: diff.next });
+      setDiff((prev) => ({ counts: prev.counts, rows: [...prev.rows, ...res.rows], next: res.next }));
+      setError(null);
+    } catch (e) {
+      setError(errorText(e));
+    }
+  };
   return (
     <Stack space="space.300">
       {error && <SectionMessage appearance="error"><Text>{error}</Text></SectionMessage>}
+      {exporter.error && <SectionMessage appearance="error"><Text>{exporter.error}</Text></SectionMessage>}
       <Inline space="space.100" alignBlock="end">
         <Box><Label labelFor="bl-name">New baseline name</Label><Textfield id="bl-name" value={name} onChange={(e) => setName(e.target.value)} /></Box>
         <Button appearance="primary" isDisabled={!name.trim()} onClick={create}>Create baseline</Button>
@@ -173,8 +238,8 @@ function BaselinesTab({ projectId }) {
       />
       <Heading as="h4">Compare two baselines</Heading>
       <Inline space="space.100" alignBlock="end">
-        <Box><Label labelFor="bl-left">Before</Label><Select inputId="bl-left" options={options} onChange={setLeft} /></Box>
-        <Box><Label labelFor="bl-right">After</Label><Select inputId="bl-right" options={options} onChange={setRight} /></Box>
+        <Box><Label labelFor="bl-left">Before</Label><Select inputId="bl-left" options={options} value={left} onChange={setLeft} /></Box>
+        <Box><Label labelFor="bl-right">After</Label><Select inputId="bl-right" options={options} value={right} onChange={setRight} /></Box>
         <Button isDisabled={!left || !right || left.value === right.value} onClick={compare}>Compare</Button>
       </Inline>
       {diff && (
@@ -185,6 +250,7 @@ function BaselinesTab({ projectId }) {
             head={{ cells: [{ key: 'k', content: 'Requirement' }, { key: 's', content: 'Summary' }, { key: 'c', content: 'Change' }, { key: 'b', content: 'Status before → after' }] }}
             rows={diff.rows.map((r) => ({ key: r.issueId, cells: [{ key: 'k', content: r.issueKey }, { key: 's', content: r.summary }, { key: 'c', content: r.change }, { key: 'b', content: `${r.leftStatus || '—'} → ${r.rightStatus || '—'}` }] }))}
           />
+          {diff.next && <Button onClick={loadMoreDiff}>Load more</Button>}
         </Stack>
       )}
       <CsvModal csv={exporter.csv} truncated={exporter.truncated} onClose={exporter.close} />
@@ -219,11 +285,16 @@ function SettingsTab({ projectId, onSaved }) {
   const pick = (list, ids) => opts(list).filter((o) => ids.includes(o.value));
   const setIds = (key) => (selected) => setConfig({ ...config, [key]: (selected ?? []).map((s) => s.value) });
   const save = async () => {
-    const res = await invoke('saveSettings', { projectId, config });
-    setErrors(res.errors);
-    setSaved(res.errors.length === 0);
-    if (!res.errors.length) {
-      onSaved();
+    try {
+      const res = await invoke('saveSettings', { projectId, config });
+      setErrors(res.errors);
+      setSaved(res.errors.length === 0);
+      if (!res.errors.length) {
+        onSaved();
+      }
+    } catch (e) {
+      setErrors([errorText(e)]);
+      setSaved(false);
     }
   };
   return (
