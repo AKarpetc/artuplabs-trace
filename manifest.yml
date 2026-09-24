@@ -13,7 +13,7 @@ modules:
         function: resolver
       render: native
       title: ArtUp Trace
-      icon: resources/icon.svg
+      icon: resource:icons;icon.svg
   trigger:
     - key: lifecycle
       function: on-lifecycle
@@ -59,6 +59,8 @@ resources:
     path: src/frontend/projectPage.jsx
   - key: issue-panel
     path: src/frontend/issuePanel.jsx
+  - key: icons
+    path: resources
 permissions:
   scopes:
     - read:jira-work

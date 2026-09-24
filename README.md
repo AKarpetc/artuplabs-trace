@@ -31,8 +31,8 @@ The app stores no issue descriptions or other free text beyond what is listed be
 
 - **Requirement issues** (`req_issue`): issue id, issue key, project id, issue type id, summary, status name, a SHA-256 **fingerprint** hash of the configured fingerprint fields (never the field values or description text), a SHA-256 **links hash**, and sync bookkeeping (last-seen sync id).
 - **Trace links** (`trace_link`): the link id, the requirement's issue id, the linked issue's id/key/type/status, the link type, direction, the SHA-256 fingerprint the link was last confirmed against, who confirmed it and when, and whether it is currently suspect.
-- **Issue versions** (`issue_version`): one row per distinct fingerprint seen for an issue, used to re-anchor confirmed links when the fingerprint configuration changes.
-- **Baselines** (`baseline`, `baseline_member`): a named, timestamped snapshot of a project's requirements (issue id, version, links hash, status) plus a checksum, used to diff two points in time.
+- **Issue versions** (`issue_version`): one row per distinct fingerprint seen for an issue — issue id, issue key, summary, status name, and the SHA-256 fingerprint (never the field values or description text) — used to re-anchor confirmed links when the fingerprint configuration changes.
+- **Baselines** (`baseline`, `baseline_member`): a named, timestamped snapshot of a project's requirements (issue id, version id, links hash, status name) plus a checksum, used to diff two points in time.
 - **Jobs** (`job`): checkpointed state for full-sync and baseline-capture background jobs.
 - **Project config** (Forge KVS): which issue types count as requirements/verification, which link type indicates coverage, and which fields make up the fingerprint.
 

@@ -24,6 +24,7 @@ const verifyType = process.env.VERIFY_TYPE ?? 'Task';
 const linkType = process.env.LINK_TYPE ?? 'Relates';
 
 const BATCH_SIZE = 50;
+const MAX_RETRIES = 10;
 const BASE_URL = `https://${site}`;
 
 if (!email || !token || !projectKey) {
@@ -38,8 +39,9 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Issues a Jira REST request, honouring HTTP 429 by sleeping for Retry-After seconds and retrying. */
+/** Issues a Jira REST request, honouring HTTP 429 by sleeping for Retry-After seconds and retrying, up to MAX_RETRIES times before throwing. */
 async function jiraFetch(path, options) {
+  let attempt = 0;
   for (;;) {
     const res = await fetch(`${BASE_URL}${path}`, {
       ...options,
@@ -50,13 +52,16 @@ async function jiraFetch(path, options) {
         ...(options?.headers ?? {}),
       },
     });
-    if (res.status === 429) {
-      const retryAfterSeconds = Number(res.headers.get('retry-after') ?? '5');
-      console.log(`429 received, sleeping ${retryAfterSeconds}s before retry...`);
-      await sleep(retryAfterSeconds * 1000);
-      continue;
+    if (res.status !== 429) {
+      return res;
     }
-    return res;
+    attempt += 1;
+    if (attempt > MAX_RETRIES) {
+      throw new Error(`Exceeded ${MAX_RETRIES} retries for ${path} after repeated HTTP 429 responses.`);
+    }
+    const retryAfterSeconds = Number(res.headers.get('retry-after') ?? '5');
+    console.log(`429 received, sleeping ${retryAfterSeconds}s before retry (attempt ${attempt}/${MAX_RETRIES})...`);
+    await sleep(retryAfterSeconds * 1000);
   }
 }
 
@@ -85,6 +90,11 @@ async function bulkCreate(typeName, summaries) {
       throw new Error(`Bulk create failed (${res.status}): ${body}`);
     }
     const json = await res.json();
+    if (Array.isArray(json.errors) && json.errors.length > 0) {
+      console.error(`Bulk create returned ${json.errors.length} error(s):`);
+      console.error(JSON.stringify(json.errors, null, 2));
+      process.exit(1);
+    }
     for (const issue of json.issues) {
       keys.push(issue.key);
     }
