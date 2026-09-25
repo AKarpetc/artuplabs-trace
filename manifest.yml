@@ -4,14 +4,12 @@ modules:
       resource: project-page
       resolver:
         function: resolver
-      render: native
       title: ArtUp Trace
   jira:issuePanel:
     - key: trace-issue-panel
       resource: issue-panel
       resolver:
         function: resolver
-      render: native
       title: ArtUp Trace
       icon: resource:icons;icon.svg
   trigger:
@@ -56,9 +54,9 @@ modules:
       engine: mysql
 resources:
   - key: project-page
-    path: src/frontend/projectPage.jsx
+    path: static/app/dist/project-page
   - key: issue-panel
-    path: src/frontend/issuePanel.jsx
+    path: static/app/dist/issue-panel
   - key: icons
     path: resources
 permissions:

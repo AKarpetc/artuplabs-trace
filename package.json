@@ -6,7 +6,9 @@
   "private": true,
   "scripts": {
     "lint": "eslint src/**/*",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:ui": "npm --prefix static/app run build",
+    "test:ui": "npm --prefix static/app test"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
