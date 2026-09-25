@@ -75,5 +75,6 @@
   "errors.unlicensed": "ArtUp Trace license is not active on this site.",
   "errors.bad-request": "The request was not valid. Refresh the page and try again.",
   "errors.generic": "Something went wrong: {message}",
-  "common.retry": "Try again"
+  "common.retry": "Try again",
+  "common.dismiss": "Dismiss"
 }
