@@ -11,7 +11,7 @@
     "test:ui": "npm --prefix static/app test"
   },
   "devDependencies": {
-    "eslint": "^8.56.0",
+    "eslint": "^10.11.0",
     "vitest": "^5.0.1"
   },
   "dependencies": {
