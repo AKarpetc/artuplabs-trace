@@ -7,15 +7,15 @@ You are building apps designed to be installed into a single customer site. The 
 # Code Style
 
 You should write apps using vanilla, idiomatic JavaScript.
-You should use verbose commentary in the code. Your comments should be such that an intermediate level JavaScript developers with limited Forge experience to understand.
+Use short JSDoc only (1-2 lines on exported helpers/components); do not add comments inside function bodies.
 
 # Imports & Libraries
 
 You may import packages from reputable npm libraries when needed.
-You MUST only use UI Kit components available in @forge/react. Forge ONLY supports components from @forge/react. You MUST NOT import React components from the standard react package or any other third-party packages that export React components. Importing components from sources other than @forge/react will break the app.
+This app's frontend is Custom UI, not UI Kit: `static/app` is a standalone React 18 app talking to the Forge runtime only through `@forge/bridge`. Do not import `@forge/react` (UI Kit) anywhere in this app.
 The @forge/ui package is deprecated and MUST NOT be used. Importing from this package will break the app.
 
-You must install packages using the project's package manager after creating the app and every time you add or update a dependency.
+You must install packages using the project's package manager (root, and `static/app` for the frontend) after creating the app and every time you add or update a dependency.
 
 # Security
 
@@ -38,19 +38,18 @@ Before creating a new app, ALWAYS check whether a directory with that name alrea
 When creating a new app, ALWAYS use the command `forge create -t <template-name> <app-name>`.
 Always use one of the following templates when creating apps: action-rovo,confluence-content-action-ui-kit,confluence-content-byline-ui-kit,confluence-context-menu-ui-kit,confluence-global-page-ui-kit,confluence-global-settings-ui-kit,confluence-homepage-feed-ui-kit,confluence-macro-ui-kit,confluence-macro-with-custom-configuration-ui-kit,confluence-space-page-ui-kit,confluence-space-settings-ui-kit,jira-admin-page-ui-kit,jira-backlog-action-ui-kit,jira-board-action-ui-kit,jira-command-ui-kit,jira-custom-field-type-ui-kit,jira-custom-field-ui-kit,jira-dashboard-background-script-ui-kit,jira-dashboard-gadget-ui-kit,jira-entity-property,jira-global-page-ui-kit,jira-global-permission,jira-issue-action-ui-kit,jira-issue-activity-ui-kit,jira-issue-context-ui-kit,jira-issue-glance-ui-kit,jira-issue-navigator-action-ui-kit,jira-issue-panel-ui-kit,jira-issue-view-background-script-ui-kit,jira-jql-function,jira-personal-settings-page-ui-kit,jira-project-page-ui-kit,jira-project-permission,jira-project-settings-page-ui-kit,jira-service-management-assets-import-type-ui-kit,jira-service-management-organization-panel-ui-kit,jira-service-management-portal-footer-ui-kit,jira-service-management-portal-header-ui-kit,jira-service-management-portal-profile-panel-ui-kit,jira-service-management-portal-request-create-property-panel-ui-kit,jira-service-management-portal-request-detail-panel-ui-kit,jira-service-management-portal-request-detail-ui-kit,jira-service-management-portal-request-view-action-ui-kit,jira-service-management-portal-subheader-ui-kit,jira-service-management-portal-user-menu-action-ui-kit,jira-service-management-queue-page-ui-kit,jira-sprint-action-ui-kit,jira-time-tracking-provider,jira-workflow-condition,jira-workflow-postfunction,jira-workflow-validator,product-trigger,rovo-agent-rovo,scheduled-trigger,webtrigger
 Never use an empty template, always use one of the templates listed above.
-You are not authorised to use to custom-ui for creating apps, only ui-kit.
+This app already uses Custom UI (see the "UI Development" section below). For a brand-new app created from scratch, default to a ui-kit template unless Custom UI is specifically required.
 If you don't think there is a suitable template, check the list again, and choose the closest one. You can modify it after creation.
 
 After creating the app ALWAYS review the contents of the app directory before editing or creating files. DO NOT assume particular files were automatically created before you have reviewed the directory content.
 
 # UI Development
 
-The front-end of you app is built on Atlassian UI Kit, which has some similarities to React, but does not support all React features.
-You MUST NOT use common React components such as <div>, <strong>, etc. This will cause the app not to render.
-Instead, you MUST ONLY use components exported by UI Kit, which are: Badge, BarChart, Box, Button, ButtonGroup, Calendar, Checkbox, Code, CodeBlock, DatePicker, EmptyState, ErrorMessage, Form, FormFooter, FormHeader, FormSection, Heading, HelperMessage, HorizontalBarChart, HorizontalStackBarChart, Icon, Inline, Label, LineChart, LinkButton, List, ListItem, LoadingButton, Lozenge, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition, PieChart, ProgressBar, ProgressTracker, Radio, RadioGroup, Range, Select, SectionMessage, SectionMessageAction, SingleValueChart, Spinner, Stack, StackBarChart, Tab, TabList, TabPanel, Tabs, Tag, TagGroup, TextArea, Textfield, TimePicker, Toggle, Tooltip, Text, ValidMessage, RequiredAsterisk, Image, Link, UserPicker, User, UserGroup, Em, Strike, Strong, Frame, DynamicTable, InlineEdit, Popup, AdfRenderer
+The front-end is Custom UI, living in `static/app`: a React 18 app using Atlaskit components and design tokens (`token('...')`, `xcss`) for styling. Never hard-code colours (no hex/rgb/named colours) so both light and dark Jira themes work.
+Vite builds each module to `static/app/dist/<module>/index.html`, matching the `resources` paths declared in `manifest.yml`. Always run `npm run build:ui` (from the repo root) before every `forge deploy`.
+Every user-visible string goes through `t('key')`; `static/app/src/i18n/locales/en-US.json` is the source of truth for keys, and all 26 locale files must stay in sync with it. A missing key falls back to the en-US text, never the raw key.
+No external egress and no remote fonts or CDNs — everything the UI needs must be bundled, so `forge eligibility` stays eligible for Runs on Atlassian.
 If your resolver no longer contains any definitions, you may delete it and remove it from the manifest.
-
-Note that THERE IS NOT UI KIT COMPONENT NAMED "Table" - always use "DynamicTable" instead! Using "Table" will cause the app not to render.
 
 # Storing Data
 

@@ -9,6 +9,20 @@ A Forge app for Jira Cloud that gives a project a lightweight requirements-trace
 - Issue deletions are applied to the cache immediately. Other issue and link changes reach it through an incremental sync that starts about a minute after the Jira event, plus an hourly reconcile and a weekly full sync.
 - The fingerprint that decides when a link becomes suspect covers the requirement's summary and description. In v1 these fields are fixed and cannot be configured.
 
+## Frontend
+
+The UI is Custom UI, in `static/app`: a React 18 app built with Vite and styled with Atlaskit components and design tokens (no hard-coded colours, so it works in both light and dark Jira themes). It talks to the backend only through the existing resolvers, over `@forge/bridge`.
+
+The app follows the viewer's Jira language, with translations for 26 locales (`static/app/src/i18n/locales`); a string missing from a locale falls back to the English (`en-US`) text. Exporting coverage or a baseline diff downloads a CSV file (`artup-trace-<kind>-<projectKey>-<YYYY-MM-DD>.csv`) directly in the browser.
+
+```
+npm --prefix static/app install
+npm run test:ui
+npm run build:ui
+```
+
+`npm run build:ui` runs the Vite build for both modules and must be run before every `forge deploy` — it produces `static/app/dist/project-page` and `static/app/dist/issue-panel`, which `manifest.yml` points at.
+
 ## Tests
 
 ```
@@ -17,9 +31,12 @@ npm test
 
 Runs the Vitest suite (`vitest run`) against `test/**/*.test.js`. 182 tests currently pass, covering fingerprinting, coverage/suspect-link rules, CSV escaping, the Jira client's rate-limit and transient-failure handling, checkpointed sync jobs, event handling, baseline diffing, access control, and resolver/worker orchestration (with mocked Forge modules).
 
+`npm run test:ui` runs the frontend's own Vitest suite (125 tests) against `static/app/test/**/*.test.jsx`.
+
 ## Deploy
 
 ```
+npm run build:ui
 forge lint
 forge deploy --non-interactive -e development
 forge eligibility -e development
