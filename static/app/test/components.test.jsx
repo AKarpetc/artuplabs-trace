@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { router } from '@forge/bridge';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { router, showFlag } from '@forge/bridge';
 import { IssueLink } from '../src/components/IssueLink.jsx';
 import { PageSection } from '../src/components/PageSection.jsx';
 import { SummaryCards } from '../src/components/SummaryCards.jsx';
@@ -10,6 +10,7 @@ vi.mock('@forge/bridge', () => ({
   view: { theme: { enable: vi.fn() }, getContext: vi.fn() },
   invoke: vi.fn(),
   router: { navigate: vi.fn() },
+  showFlag: vi.fn(() => ({ close: vi.fn(() => Promise.resolve(true)) })),
 }));
 
 afterEach(() => {
@@ -59,26 +60,66 @@ describe('PageSection', () => {
   });
 });
 
-function ToastTrigger() {
-  const { show } = useToasts();
+function ToastTrigger({ toast }) {
+  const { show, dismiss } = useToasts();
   return (
-    <button type="button" onClick={() => show({ title: 'Saved', appearance: 'success' })}>
-      Trigger
-    </button>
+    <>
+      <button type="button" onClick={() => { window.lastToastId = show(toast); }}>Trigger</button>
+      <button type="button" onClick={() => dismiss(window.lastToastId)}>Close</button>
+    </>
   );
 }
 
 describe('ToastProvider / useToasts', () => {
-  it('shows a flag when show() is called and it can be dismissed with a single click', async () => {
+  it('shows a native auto-dismissing Jira flag with the matching type', () => {
     render(
       <ToastProvider>
-        <ToastTrigger />
+        <ToastTrigger toast={{ title: 'Saved', description: 'All good', appearance: 'success' }} />
       </ToastProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Trigger' }));
-    expect(await screen.findByText('Saved')).toBeInTheDocument();
+    expect(showFlag).toHaveBeenCalledTimes(1);
+    const options = showFlag.mock.calls[0][0];
+    expect(options).toMatchObject({ title: 'Saved', description: 'All good', type: 'success', isAutoDismiss: true });
+    expect(options.id).toEqual(expect.any(String));
+    expect(options.id).not.toBe('');
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    await waitFor(() => expect(screen.queryByText('Saved')).not.toBeInTheDocument());
+  it.each([
+    ['error', 'error'],
+    ['warning', 'warning'],
+    [undefined, 'info'],
+  ])('maps appearance %s to flag type %s', (appearance, type) => {
+    render(
+      <ToastProvider>
+        <ToastTrigger toast={{ title: 'Message', appearance }} />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Trigger' }));
+    expect(showFlag).toHaveBeenCalledWith(expect.objectContaining({ title: 'Message', type }));
+  });
+
+  it('closes the flag returned by showFlag when dismiss is called with its id', () => {
+    const close = vi.fn(() => Promise.resolve(true));
+    showFlag.mockReturnValueOnce({ close });
+    render(
+      <ToastProvider>
+        <ToastTrigger toast={{ title: 'Saved', appearance: 'success' }} />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Trigger' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes actions to the flag as text and onClick', () => {
+    const onClick = vi.fn();
+    render(
+      <ToastProvider>
+        <ToastTrigger toast={{ title: 'Saved', actions: [{ content: 'Undo', onClick }] }} />
+      </ToastProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Trigger' }));
+    expect(showFlag.mock.calls[0][0].actions).toEqual([{ text: 'Undo', onClick }]);
   });
 });

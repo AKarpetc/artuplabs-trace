@@ -12,7 +12,9 @@ import { ExportButton } from '../components/ExportButton.jsx';
 import { IssueLink } from '../components/IssueLink.jsx';
 import { useToasts } from '../components/Toasts.jsx';
 import { filterRows, useRows } from './useRows.js';
-import { LoadError, LoadMoreButton, TableToolbar, WrapText } from './tableParts.jsx';
+import { LoadError, LoadMoreButton, sortable, TableToolbar, WrapText } from './tableParts.jsx';
+
+const SEARCH_FIELDS = ['reqKey', 'reqSummary', 'otherKey'];
 
 /** Confirms links one by one; resolves with how many were confirmed and whether any no longer existed. */
 async function confirmAll(projectId, linkIds) {
@@ -40,7 +42,7 @@ export function SuspectTab({ projectId, projectKey, onChanged }) {
   const inFlight = useRef(false);
   const fetchPage = useCallback((after) => call('getSuspects', { projectId, after }), [projectId]);
   const suspects = useRows(fetchPage);
-  const visible = useMemo(() => filterRows(suspects.rows, query, ['reqKey', 'reqSummary', 'otherKey']), [suspects.rows, query]);
+  const visible = useMemo(() => filterRows(suspects.rows, query, SEARCH_FIELDS), [suspects.rows, query]);
   const busy = pending.size > 0;
 
   async function confirm(linkIds) {
@@ -49,6 +51,18 @@ export function SuspectTab({ projectId, projectKey, onChanged }) {
     }
     inFlight.current = true;
     setPending(new Set(linkIds));
+    try {
+      await confirmAndNotify(linkIds);
+      await suspects.reload();
+      onChanged?.();
+    } finally {
+      inFlight.current = false;
+      setPending(new Set());
+      setSelected(new Set());
+    }
+  }
+
+  async function confirmAndNotify(linkIds) {
     try {
       const { confirmed, gone } = await confirmAll(projectId, linkIds);
       if (confirmed === 1) {
@@ -61,13 +75,13 @@ export function SuspectTab({ projectId, projectKey, onChanged }) {
       }
     } catch (error) {
       show({ title: errorMessage(t, error), appearance: 'error' });
-    } finally {
-      inFlight.current = false;
-      setPending(new Set());
-      setSelected(new Set());
     }
-    await suspects.reload();
-    onChanged?.();
+  }
+
+  function changeQuery(nextQuery) {
+    setQuery(nextQuery);
+    const shown = new Set(filterRows(suspects.rows, nextQuery, SEARCH_FIELDS).map((row) => row.linkId));
+    setSelected((prev) => new Set([...prev].filter((linkId) => shown.has(linkId))));
   }
 
   function toggle(linkId) {
@@ -91,13 +105,14 @@ export function SuspectTab({ projectId, projectKey, onChanged }) {
     return <EmptyState header={t('suspects.empty.title')} description={t('suspects.empty.body')} />;
   }
 
+  const sort = sortable(t);
   const head = {
     cells: [
       { key: 'select', content: <Checkbox isChecked={allSelected} isDisabled={busy || !visible.length} onChange={toggleAll} aria-label={t('suspects.selectAll')} />, width: 4 },
-      { key: 'req', content: t('table.requirement'), isSortable: true, width: 12 },
-      { key: 'summary', content: t('table.summary'), isSortable: true, width: 38 },
-      { key: 'link', content: t('table.link'), isSortable: true, width: 14 },
-      { key: 'other', content: t('table.linkedIssue'), isSortable: true, width: 20 },
+      { key: 'req', content: t('table.requirement'), ...sort, width: 12 },
+      { key: 'summary', content: t('table.summary'), ...sort, width: 38 },
+      { key: 'link', content: t('table.link'), ...sort, width: 14 },
+      { key: 'other', content: t('table.linkedIssue'), ...sort, width: 20 },
       { key: 'action', content: '', width: 12 },
     ],
   };
@@ -127,7 +142,7 @@ export function SuspectTab({ projectId, projectKey, onChanged }) {
       },
     ],
   }));
-  const selectedIds = suspects.rows.filter((row) => selected.has(row.linkId)).map((row) => row.linkId);
+  const selectedIds = visible.filter((row) => selected.has(row.linkId)).map((row) => row.linkId);
 
   return (
     <Stack space="space.300">
@@ -138,7 +153,7 @@ export function SuspectTab({ projectId, projectKey, onChanged }) {
       ) : null}
       <TableToolbar
         query={query}
-        onQueryChange={setQuery}
+        onQueryChange={changeQuery}
         actions={(
           <>
             <Button appearance="primary" onClick={() => confirm(selectedIds)} isDisabled={busy || !selectedIds.length} isLoading={busy && pending.size > 1}>

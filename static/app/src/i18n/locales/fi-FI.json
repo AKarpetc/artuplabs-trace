@@ -22,6 +22,9 @@
   "table.change": "Muutos",
   "table.statusBeforeAfter": "Tila ennen → jälkeen",
   "table.search": "Hae avaimella tai yhteenvedolla",
+  "table.sortAscending": "Lajittele nousevasti",
+  "table.sortDescending": "Lajittele laskevasti",
+  "table.sortButton": "Lajittelupainike",
   "table.loadMore": "Lataa lisää",
   "suspects.empty.title": "Ei epäilyttäviä linkkejä",
   "suspects.empty.body": "Linkistä tulee epäilyttävä, kun sen vaatimuksen yhteenveto tai kuvaus muuttuu linkin vahvistamisen jälkeen.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Linkit muuttuneet",
   "export.button": "Vie CSV",
   "export.done": "Tiedosto {fileName} ladattu",
-  "export.truncated": "Vain ensimmäiset 5 000 riviä vietiin.",
+  "export.truncated": "Vienti oli liian suuri, joten vain osa riveistä tallennettiin.",
   "settings.title": "Asetukset",
   "settings.reqTypes": "Vaatimusten tehtävätyypit",
   "settings.verTypes": "Verifioinnin tehtävätyypit (testit tai tehtävät, jotka osoittavat vaatimuksen täyttyvän)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Tehtävätyyppi ei voi olla sekä vaatimus että verifiointi.",
   "settings.errors.badIds": "Tehtävätyyppien ja linkkityyppien tunnusten on oltava numeerisia Jira-tunnuksia.",
   "settings.errors.fingerprint": "Sormenjälkikenttien on sisällettävä yhteenveto.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Ei vaihtoehtoja"
 }

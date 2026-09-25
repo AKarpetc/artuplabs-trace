@@ -22,6 +22,9 @@
   "table.change": "Změna",
   "table.statusBeforeAfter": "Stav před → po",
   "table.search": "Hledat podle klíče nebo shrnutí",
+  "table.sortAscending": "Seřadit vzestupně",
+  "table.sortDescending": "Seřadit sestupně",
+  "table.sortButton": "Tlačítko řazení",
   "table.loadMore": "Načíst další",
   "suspects.empty.title": "Žádná podezřelá propojení",
   "suspects.empty.body": "Propojení se stane podezřelým, když se po jeho potvrzení změní shrnutí nebo popis požadavku.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Změněná propojení",
   "export.button": "Exportovat CSV",
   "export.done": "Soubor {fileName} byl stažen",
-  "export.truncated": "Exportováno bylo pouze prvních 5 000 řádků.",
+  "export.truncated": "Export byl příliš velký, proto byla uložena jen část řádků.",
   "settings.title": "Nastavení",
   "settings.reqTypes": "Typy úkolů pro požadavky",
   "settings.verTypes": "Typy úkolů pro ověření (testy nebo úkoly, které prokazují splnění požadavku)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Typ úkolu nemůže být zároveň požadavkem i ověřením.",
   "settings.errors.badIds": "ID typů úkolů a typů propojení musí být číselná ID Jira.",
   "settings.errors.fingerprint": "Pole otisku musí obsahovat shrnutí.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Žádné možnosti"
 }

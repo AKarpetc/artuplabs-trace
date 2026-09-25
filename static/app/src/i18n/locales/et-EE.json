@@ -22,6 +22,9 @@
   "table.change": "Muudatus",
   "table.statusBeforeAfter": "Olek enne → pärast",
   "table.search": "Otsi võtme või kokkuvõtte järgi",
+  "table.sortAscending": "Sordi kasvavalt",
+  "table.sortDescending": "Sordi kahanevalt",
+  "table.sortButton": "Sortimisnupp",
   "table.loadMore": "Laadi veel",
   "suspects.empty.title": "Kahtlasi linke pole",
   "suspects.empty.body": "Link muutub kahtlaseks, kui selle nõude kokkuvõte või kirjeldus muutub pärast lingi kinnitamist.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Muudetud lingid",
   "export.button": "Ekspordi CSV",
   "export.done": "Fail {fileName} on alla laaditud",
-  "export.truncated": "Eksporditi ainult esimesed 5000 rida.",
+  "export.truncated": "Eksport oli liiga suur, seega salvestati ainult osa ridadest.",
   "settings.title": "Sätted",
   "settings.reqTypes": "Nõuete ülesandetüübid",
   "settings.verTypes": "Verifitseerimise ülesandetüübid (testid või ülesanded, mis tõendavad nõuet)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Ülesandetüüp ei saa olla korraga nõue ja verifitseerimine.",
   "settings.errors.badIds": "Ülesandetüüpide ja lingitüüpide ID-d peavad olema numbrilised Jira ID-d.",
   "settings.errors.fingerprint": "Sõrmejäljeväljad peavad sisaldama kokkuvõtet.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Valikuid pole"
 }

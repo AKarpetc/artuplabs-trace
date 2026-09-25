@@ -18,6 +18,16 @@ const searchStyles = xcss({
   minWidth: '200px',
 });
 
+/** Head-cell props that make a DynamicTable column sortable with translated sort tooltips. */
+export function sortable(t) {
+  return {
+    isSortable: true,
+    ascendingSortTooltip: t('table.sortAscending'),
+    descendingSortTooltip: t('table.sortDescending'),
+    buttonAriaRoleDescription: t('table.sortButton'),
+  };
+}
+
 /** Cell content that wraps long text (any script, emoji, unbroken strings) instead of widening the table. */
 export function WrapText({ children }) {
   return <Box xcss={wrapStyles}>{children}</Box>;

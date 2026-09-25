@@ -102,6 +102,8 @@ export function SettingsTab({ projectId, onSaved }) {
             <Select
               inputId={`settings-${field.key}`}
               isMulti
+              menuPlacement="auto"
+              noOptionsMessage={() => t('common.noOptions')}
               options={optionsOf(data[field.source])}
               value={pick(data[field.source], config[field.key])}
               onChange={(selected) => setConfig((prev) => ({ ...prev, [field.key]: (selected ?? []).map((s) => s.value) }))}

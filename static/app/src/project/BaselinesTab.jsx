@@ -12,7 +12,7 @@ import { call, errorMessage } from '../api.js';
 import { formatDate, formatNumber, useLocale, useT } from '../i18n/index.js';
 import { useToasts } from '../components/Toasts.jsx';
 import { BaselineDiff } from './BaselineDiff.jsx';
-import { LoadError, WrapText } from './tableParts.jsx';
+import { LoadError, sortable, WrapText } from './tableParts.jsx';
 
 const STATUS_APPEARANCE = { complete: 'success', failed: 'removed', capturing: 'inprogress' };
 
@@ -79,13 +79,15 @@ export function BaselinesTab({ projectId, projectKey }) {
     }
   }
 
+  const noOptions = () => t('common.noOptions');
   const canCompare = Boolean(left && right && left.value !== right.value);
+  const sort = sortable(t);
   const head = {
     cells: [
-      { key: 'name', content: t('baselines.name'), isSortable: true, width: 40 },
-      { key: 'created', content: t('baselines.createdAt'), isSortable: true, width: 25 },
-      { key: 'count', content: t('baselines.count'), isSortable: true, width: 15 },
-      { key: 'status', content: t('baselines.status'), isSortable: true, width: 20 },
+      { key: 'name', content: t('baselines.name'), ...sort, width: 40 },
+      { key: 'created', content: t('baselines.createdAt'), ...sort, width: 25 },
+      { key: 'count', content: t('baselines.count'), ...sort, width: 15 },
+      { key: 'status', content: t('baselines.status'), ...sort, width: 20 },
     ],
   };
   const rows = (list ?? []).map((b) => ({
@@ -131,11 +133,11 @@ export function BaselinesTab({ projectId, projectKey }) {
         <Flex gap="space.200" alignItems="end" wrap="wrap">
           <Box xcss={fieldStyles}>
             <Label htmlFor="baseline-left">{t('baselines.before')}</Label>
-            <Select inputId="baseline-left" options={options} value={left} onChange={setLeft} />
+            <Select inputId="baseline-left" options={options} value={left} onChange={setLeft} menuPlacement="auto" noOptionsMessage={noOptions} />
           </Box>
           <Box xcss={fieldStyles}>
             <Label htmlFor="baseline-right">{t('baselines.after')}</Label>
-            <Select inputId="baseline-right" options={options} value={right} onChange={setRight} />
+            <Select inputId="baseline-right" options={options} value={right} onChange={setRight} menuPlacement="auto" noOptionsMessage={noOptions} />
           </Box>
           <Button
             appearance="primary"

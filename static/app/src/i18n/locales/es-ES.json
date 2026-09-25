@@ -22,6 +22,9 @@
   "table.change": "Cambio",
   "table.statusBeforeAfter": "Estado antes → después",
   "table.search": "Buscar por clave o resumen",
+  "table.sortAscending": "Orden ascendente",
+  "table.sortDescending": "Orden descendente",
+  "table.sortButton": "Botón de ordenación",
   "table.loadMore": "Cargar más",
   "suspects.empty.title": "No hay vínculos sospechosos",
   "suspects.empty.body": "Un vínculo pasa a ser sospechoso cuando el resumen o la descripción de su requisito cambian después de confirmarse el vínculo.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Vínculos modificados",
   "export.button": "Exportar CSV",
   "export.done": "Archivo {fileName} descargado",
-  "export.truncated": "Solo se han exportado las primeras 5000 filas.",
+  "export.truncated": "La exportación era demasiado grande, por lo que solo se ha guardado una parte de las filas.",
   "settings.title": "Configuración",
   "settings.reqTypes": "Tipos de incidencia de requisito",
   "settings.verTypes": "Tipos de incidencia de verificación (pruebas o tareas que demuestran un requisito)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Un tipo de incidencia no puede ser a la vez requisito y verificación.",
   "settings.errors.badIds": "Los ID de tipos de incidencia y de vínculo deben ser ID numéricos de Jira.",
   "settings.errors.fingerprint": "Los campos de huella deben incluir el resumen.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "No hay opciones"
 }

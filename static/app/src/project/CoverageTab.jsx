@@ -11,7 +11,7 @@ import { formatNumber, useLocale, useT } from '../i18n/index.js';
 import { ExportButton } from '../components/ExportButton.jsx';
 import { IssueLink } from '../components/IssueLink.jsx';
 import { filterRows, useRows } from './useRows.js';
-import { LoadError, LoadMoreButton, TableToolbar, WrapText } from './tableParts.jsx';
+import { LoadError, LoadMoreButton, sortable, TableToolbar, WrapText } from './tableParts.jsx';
 
 /** Coverage tab: coverage headline and progress, then the searchable, sortable table of uncovered requirements. */
 export function CoverageTab({ projectId, projectKey, coverage }) {
@@ -28,11 +28,12 @@ export function CoverageTab({ projectId, projectKey, coverage }) {
     return <EmptyState header={t('coverage.empty.title')} description={t('coverage.empty.body')} />;
   }
 
+  const sort = sortable(t);
   const head = {
     cells: [
-      { key: 'key', content: t('table.requirement'), isSortable: true, width: 15 },
-      { key: 'summary', content: t('table.summary'), isSortable: true, width: 60 },
-      { key: 'status', content: t('table.status'), isSortable: true, width: 25 },
+      { key: 'key', content: t('table.requirement'), ...sort, width: 15 },
+      { key: 'summary', content: t('table.summary'), ...sort, width: 60 },
+      { key: 'status', content: t('table.status'), ...sort, width: 25 },
     ],
   };
   const rows = visible.map((row) => ({

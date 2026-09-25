@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
-import { invoke } from '@forge/bridge';
+import { invoke, showFlag } from '@forge/bridge';
 import { csvFileName, saveTextFile, withBom } from '../src/download.js';
 import { ExportButton } from '../src/components/ExportButton.jsx';
 import { I18nProvider } from '../src/i18n/index.js';
@@ -11,6 +11,7 @@ vi.mock('@forge/bridge', () => ({
   invoke: vi.fn(),
   view: { theme: { enable: vi.fn() }, getContext: vi.fn() },
   router: { navigate: vi.fn() },
+  showFlag: vi.fn(() => ({ close: vi.fn(() => Promise.resolve(true)) })),
 }));
 
 function renderExportButton(props) {
@@ -23,6 +24,10 @@ function renderExportButton(props) {
   );
 }
 
+function expectFlag(title, type) {
+  return waitFor(() => expect(showFlag).toHaveBeenCalledWith(expect.objectContaining({ title, type, isAutoDismiss: true })));
+}
+
 afterEach(() => {
   cleanup();
   document.body.innerHTML = '';
@@ -31,17 +36,22 @@ afterEach(() => {
 
 describe('csvFileName', () => {
   it('builds the artup-trace-<kind>-<projectKey>-<date> name', () => {
-    const now = new Date('2026-09-25T12:00:00Z');
+    const now = new Date(2026, 8, 25, 12, 0);
     expect(csvFileName('coverage', 'REQ', now)).toBe('artup-trace-coverage-REQ-2026-09-25.csv');
   });
 
+  it('uses the local calendar date, not the UTC one, at both ends of the day', () => {
+    expect(csvFileName('coverage', 'REQ', new Date(2026, 0, 1, 0, 5))).toBe('artup-trace-coverage-REQ-2026-01-01.csv');
+    expect(csvFileName('coverage', 'REQ', new Date(2026, 11, 31, 23, 55))).toBe('artup-trace-coverage-REQ-2026-12-31.csv');
+  });
+
   it('strips characters outside A-Za-z0-9_- from the project key', () => {
-    const now = new Date('2026-09-25T12:00:00Z');
+    const now = new Date(2026, 8, 25, 12, 0);
     expect(csvFileName('suspects', 'RE Q/1!', now)).toBe('artup-trace-suspects-REQ1-2026-09-25.csv');
   });
 
   it('falls back to "project" when the project key is missing', () => {
-    const now = new Date('2026-09-25T12:00:00Z');
+    const now = new Date(2026, 8, 25, 12, 0);
     expect(csvFileName('baseline-diff', '', now)).toBe('artup-trace-baseline-diff-project-2026-09-25.csv');
   });
 });
@@ -104,7 +114,7 @@ describe('ExportButton', () => {
 
     await waitFor(() => expect(invoke).toHaveBeenCalledWith('exportCsv', { kind: 'gaps' }));
     await waitFor(() => expect(createObjectURL).toHaveBeenCalled());
-    expect(await screen.findByText('File artup-trace-coverage-REQ-2026-09-25.csv downloaded')).toBeInTheDocument();
+    await expectFlag(`File ${csvFileName('coverage', 'REQ')} downloaded`, 'success');
   });
 
   it('prepends a BOM defensively when the resolver result is missing one', async () => {
@@ -138,8 +148,8 @@ describe('ExportButton', () => {
     renderExportButton({ kind: 'suspects', projectKey: 'REQ', payload: {} });
     fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
 
-    expect(await screen.findByText('File artup-trace-suspects-REQ-2026-09-25.csv downloaded')).toBeInTheDocument();
-    expect(await screen.findByText('Only the first 5 000 rows were exported.')).toBeInTheDocument();
+    await expectFlag(`File ${csvFileName('suspects', 'REQ')} downloaded`, 'success');
+    await expectFlag('The export was too large, so only part of the rows were saved.', 'warning');
   });
 
   it('sends the baseline-diff payload and file-name kind for kind="diff"', async () => {
@@ -151,7 +161,7 @@ describe('ExportButton', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
 
     await waitFor(() => expect(invoke).toHaveBeenCalledWith('exportCsv', { leftId: '1', rightId: '2', kind: 'diff' }));
-    expect(await screen.findByText('File artup-trace-baseline-diff-REQ-2026-09-25.csv downloaded')).toBeInTheDocument();
+    await expectFlag(`File ${csvFileName('baseline-diff', 'REQ')} downloaded`, 'success');
   });
 
   it('shows an error toast and saves no file when the resolver call fails', async () => {
@@ -163,7 +173,7 @@ describe('ExportButton', () => {
     renderExportButton({ kind: 'gaps', projectKey: 'REQ', payload: {} });
     fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
 
-    expect(await screen.findByText('You do not have permission for this action in this project.')).toBeInTheDocument();
+    await expectFlag('You do not have permission for this action in this project.', 'error');
     expect(createObjectURL).not.toHaveBeenCalled();
   });
 

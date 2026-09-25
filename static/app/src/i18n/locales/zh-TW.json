@@ -8,7 +8,7 @@
   "tabs.baselines": "基準線",
   "tabs.settings": "設定",
   "cards.coverage": "覆蓋率",
-  "cards.uncovered": "未驗證",
+  "cards.uncovered": "無驗證",
   "cards.suspects": "可疑連結",
   "cards.requirements": "需求",
   "coverage.headline": "覆蓋率 {percent}% — {total} 個需求中已覆蓋 {covered} 個",
@@ -22,6 +22,9 @@
   "table.change": "變更",
   "table.statusBeforeAfter": "狀態（變更前 → 變更後）",
   "table.search": "依索引鍵或摘要搜尋",
+  "table.sortAscending": "遞增排序",
+  "table.sortDescending": "遞減排序",
+  "table.sortButton": "排序按鈕",
   "table.loadMore": "載入更多",
   "suspects.empty.title": "沒有可疑連結",
   "suspects.empty.body": "連結確認後，若其需求的摘要或描述有所變更，該連結即成為可疑連結。",
@@ -52,7 +55,7 @@
   "change.links-changed": "連結變更",
   "export.button": "匯出 CSV",
   "export.done": "已下載檔案 {fileName}",
-  "export.truncated": "僅匯出了前 5,000 列。",
+  "export.truncated": "匯出內容過大，因此僅儲存了部分列。",
   "settings.title": "設定",
   "settings.reqTypes": "需求議題類型",
   "settings.verTypes": "驗證議題類型（證明需求的測試或任務）",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "議題類型不能同時作為需求與驗證。",
   "settings.errors.badIds": "議題類型和連結類型 ID 必須是數字形式的 Jira ID。",
   "settings.errors.fingerprint": "指紋欄位必須包含摘要。",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "沒有選項"
 }

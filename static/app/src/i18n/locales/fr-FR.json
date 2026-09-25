@@ -22,6 +22,9 @@
   "table.change": "Modification",
   "table.statusBeforeAfter": "État avant → après",
   "table.search": "Rechercher par clé ou résumé",
+  "table.sortAscending": "Trier par ordre croissant",
+  "table.sortDescending": "Trier par ordre décroissant",
+  "table.sortButton": "Bouton de tri",
   "table.loadMore": "Afficher plus",
   "suspects.empty.title": "Aucun lien suspect",
   "suspects.empty.body": "Un lien devient suspect lorsque le résumé ou la description de son exigence change après la confirmation du lien.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Liens modifiés",
   "export.button": "Exporter en CSV",
   "export.done": "Fichier {fileName} téléchargé",
-  "export.truncated": "Seules les 5 000 premières lignes ont été exportées.",
+  "export.truncated": "L'export était trop volumineux : seule une partie des lignes a été enregistrée.",
   "settings.title": "Paramètres",
   "settings.reqTypes": "Types de ticket des exigences",
   "settings.verTypes": "Types de ticket de vérification (tests ou tâches qui prouvent une exigence)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Un type de ticket ne peut pas être à la fois exigence et vérification.",
   "settings.errors.badIds": "Les ID de type de ticket et de type de lien doivent être des ID Jira numériques.",
   "settings.errors.fingerprint": "Les champs d'empreinte doivent inclure le résumé.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Aucune option"
 }

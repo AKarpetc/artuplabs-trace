@@ -22,6 +22,9 @@
   "table.change": "Alteração",
   "table.statusBeforeAfter": "Status antes → depois",
   "table.search": "Pesquisar por chave ou resumo",
+  "table.sortAscending": "Classificar em ordem crescente",
+  "table.sortDescending": "Classificar em ordem decrescente",
+  "table.sortButton": "Botão de classificação",
   "table.loadMore": "Carregar mais",
   "suspects.empty.title": "Nenhum vínculo suspeito",
   "suspects.empty.body": "Um vínculo se torna suspeito quando o resumo ou a descrição do requisito muda depois que o vínculo foi confirmado.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Vínculos alterados",
   "export.button": "Exportar CSV",
   "export.done": "Arquivo {fileName} baixado",
-  "export.truncated": "Somente as primeiras 5.000 linhas foram exportadas.",
+  "export.truncated": "A exportação era grande demais, então apenas parte das linhas foi salva.",
   "settings.title": "Configurações",
   "settings.reqTypes": "Tipos de item de requisito",
   "settings.verTypes": "Tipos de item de verificação (testes ou tarefas que comprovam um requisito)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Um tipo de item não pode ser requisito e verificação ao mesmo tempo.",
   "settings.errors.badIds": "Os IDs de tipos de item e de vínculo devem ser IDs numéricos do Jira.",
   "settings.errors.fingerprint": "Os campos de impressão digital devem incluir o resumo.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Nenhuma opção"
 }

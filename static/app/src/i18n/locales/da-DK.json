@@ -22,6 +22,9 @@
   "table.change": "Ændring",
   "table.statusBeforeAfter": "Status før → efter",
   "table.search": "Søg efter nøgle eller resumé",
+  "table.sortAscending": "Sortér stigende",
+  "table.sortDescending": "Sortér faldende",
+  "table.sortButton": "Sorteringsknap",
   "table.loadMore": "Indlæs flere",
   "suspects.empty.title": "Ingen mistænkelige links",
   "suspects.empty.body": "Et link bliver mistænkeligt, når kravets resumé eller beskrivelse ændres, efter at linket er bekræftet.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Links ændret",
   "export.button": "Eksportér CSV",
   "export.done": "Filen {fileName} er downloadet",
-  "export.truncated": "Kun de første 5.000 rækker blev eksporteret.",
+  "export.truncated": "Eksporten var for stor, så kun en del af rækkerne blev gemt.",
   "settings.title": "Indstillinger",
   "settings.reqTypes": "Sagstyper for krav",
   "settings.verTypes": "Sagstyper for verifikation (test eller opgaver, der beviser et krav)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "En sagstype kan ikke både være krav og verifikation.",
   "settings.errors.badIds": "Id'er for sagstyper og linktyper skal være numeriske Jira-id'er.",
   "settings.errors.fingerprint": "Fingeraftryksfelterne skal indeholde resumé.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Ingen muligheder"
 }

@@ -22,6 +22,9 @@
   "table.change": "변경",
   "table.statusBeforeAfter": "상태 이전 → 이후",
   "table.search": "키 또는 요약으로 검색",
+  "table.sortAscending": "오름차순 정렬",
+  "table.sortDescending": "내림차순 정렬",
+  "table.sortButton": "정렬 버튼",
   "table.loadMore": "더 불러오기",
   "suspects.empty.title": "의심 링크 없음",
   "suspects.empty.body": "링크가 확인된 후 요구사항의 요약이나 설명이 변경되면 해당 링크는 의심 링크가 됩니다.",
@@ -52,7 +55,7 @@
   "change.links-changed": "링크 변경됨",
   "export.button": "CSV 내보내기",
   "export.done": "{fileName} 파일을 다운로드했습니다",
-  "export.truncated": "처음 5,000개 행만 내보냈습니다.",
+  "export.truncated": "내보내기 크기가 너무 커서 일부 행만 저장되었습니다.",
   "settings.title": "설정",
   "settings.reqTypes": "요구사항 이슈 유형",
   "settings.verTypes": "검증 이슈 유형(요구사항을 입증하는 테스트 또는 작업)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "하나의 이슈 유형을 요구사항과 검증에 동시에 사용할 수 없습니다.",
   "settings.errors.badIds": "이슈 유형 및 링크 유형 ID는 숫자로 된 Jira ID여야 합니다.",
   "settings.errors.fingerprint": "핑거프린트 필드에는 요약이 포함되어야 합니다.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "옵션 없음"
 }

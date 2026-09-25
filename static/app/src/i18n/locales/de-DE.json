@@ -22,6 +22,9 @@
   "table.change": "Änderung",
   "table.statusBeforeAfter": "Status vorher → nachher",
   "table.search": "Nach Schlüssel oder Zusammenfassung suchen",
+  "table.sortAscending": "Aufsteigend sortieren",
+  "table.sortDescending": "Absteigend sortieren",
+  "table.sortButton": "Sortierschaltfläche",
   "table.loadMore": "Mehr laden",
   "suspects.empty.title": "Keine verdächtigen Links",
   "suspects.empty.body": "Ein Link wird verdächtig, wenn sich die Zusammenfassung oder Beschreibung seiner Anforderung ändert, nachdem der Link bestätigt wurde.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Links geändert",
   "export.button": "CSV exportieren",
   "export.done": "Datei {fileName} heruntergeladen",
-  "export.truncated": "Nur die ersten 5.000 Zeilen wurden exportiert.",
+  "export.truncated": "Der Export war zu groß, daher wurde nur ein Teil der Zeilen gespeichert.",
   "settings.title": "Einstellungen",
   "settings.reqTypes": "Vorgangstypen für Anforderungen",
   "settings.verTypes": "Vorgangstypen für die Verifizierung (Tests oder Aufgaben, die eine Anforderung nachweisen)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Ein Vorgangstyp kann nicht gleichzeitig Anforderung und Verifizierung sein.",
   "settings.errors.badIds": "IDs von Vorgangstypen und Linktypen müssen numerische Jira-IDs sein.",
   "settings.errors.fingerprint": "Die Fingerprint-Felder müssen die Zusammenfassung enthalten.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Keine Optionen"
 }

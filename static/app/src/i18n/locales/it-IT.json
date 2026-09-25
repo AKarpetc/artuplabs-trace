@@ -22,6 +22,9 @@
   "table.change": "Modifica",
   "table.statusBeforeAfter": "Stato prima → dopo",
   "table.search": "Cerca per chiave o riepilogo",
+  "table.sortAscending": "Ordine crescente",
+  "table.sortDescending": "Ordine decrescente",
+  "table.sortButton": "Pulsante di ordinamento",
   "table.loadMore": "Carica altro",
   "suspects.empty.title": "Nessun collegamento sospetto",
   "suspects.empty.body": "Un collegamento diventa sospetto quando il riepilogo o la descrizione del suo requisito cambiano dopo la conferma del collegamento.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Collegamenti modificati",
   "export.button": "Esporta CSV",
   "export.done": "File {fileName} scaricato",
-  "export.truncated": "Sono state esportate solo le prime 5.000 righe.",
+  "export.truncated": "L'esportazione era troppo grande, quindi è stata salvata solo una parte delle righe.",
   "settings.title": "Impostazioni",
   "settings.reqTypes": "Tipi di ticket dei requisiti",
   "settings.verTypes": "Tipi di ticket di verifica (test o attività che dimostrano un requisito)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Un tipo di ticket non può essere contemporaneamente requisito e verifica.",
   "settings.errors.badIds": "Gli ID dei tipi di ticket e dei tipi di collegamento devono essere ID Jira numerici.",
   "settings.errors.fingerprint": "I campi di impronta devono includere il riepilogo.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Nessuna opzione"
 }

@@ -1,8 +1,9 @@
 const BOM = '﻿';
 
-/** File name for an export: artup-trace-<kind>-<projectKey>-<YYYY-MM-DD>.csv */
+/** File name for an export: artup-trace-<kind>-<projectKey>-<YYYY-MM-DD>.csv, dated in the user's local time. */
 export function csvFileName(kind, projectKey, now = new Date()) {
-  const date = now.toISOString().slice(0, 10);
+  const pad = (n) => String(n).padStart(2, '0');
+  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
   const safeKey = String(projectKey || 'project').replace(/[^A-Za-z0-9_-]/g, '');
   return `artup-trace-${kind}-${safeKey}-${date}.csv`;
 }

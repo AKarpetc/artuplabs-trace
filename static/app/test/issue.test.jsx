@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
-import { invoke } from '@forge/bridge';
+import { invoke, showFlag } from '@forge/bridge';
 import { I18nProvider } from '../src/i18n/index.js';
 import { ToastProvider } from '../src/components/Toasts.jsx';
 import { IssueApp } from '../src/issue/IssueApp.jsx';
@@ -9,6 +9,7 @@ vi.mock('@forge/bridge', () => ({
   invoke: vi.fn(),
   view: { theme: { enable: vi.fn() }, getContext: vi.fn() },
   router: { navigate: vi.fn() },
+  showFlag: vi.fn(() => ({ close: vi.fn(() => Promise.resolve(true)) })),
 }));
 
 function trace(overrides = {}) {
@@ -52,6 +53,10 @@ function renderWithProviders(ui) {
   );
 }
 
+function expectFlag(title, type) {
+  return waitFor(() => expect(showFlag).toHaveBeenCalledWith(expect.objectContaining({ title, type, isAutoDismiss: true })));
+}
+
 afterEach(() => {
   cleanup();
   document.body.innerHTML = '';
@@ -90,7 +95,7 @@ describe('IssueApp', () => {
     renderWithProviders(<IssueApp issueId="1" projectId="10002" />);
     expect(await screen.findByText('Not covered')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Suspect — confirm' }));
-    expect(await screen.findByText('Link confirmed')).toBeInTheDocument();
+    await expectFlag('Link confirmed', 'success');
     expect(calls('confirmLink')[0][1]).toEqual({ projectId: '10002', linkId: '9001' });
     await waitFor(() => expect(calls('getIssueTrace')).toHaveLength(2));
     expect(await screen.findByText('OK')).toBeInTheDocument();
@@ -100,7 +105,7 @@ describe('IssueApp', () => {
     mockResolvers({ getIssueTrace: trace({ covered: false, links: [suspectLink(1)] }), confirmLink: { ok: false } });
     renderWithProviders(<IssueApp issueId="1" projectId="10002" />);
     fireEvent.click(await screen.findByRole('button', { name: 'Suspect — confirm' }));
-    expect(await screen.findByText('This link no longer exists; the list was refreshed.')).toBeInTheDocument();
+    await expectFlag('This link no longer exists; the list was refreshed.', 'warning');
     await waitFor(() => expect(calls('getIssueTrace')).toHaveLength(2));
   });
 
@@ -114,6 +119,6 @@ describe('IssueApp', () => {
     fireEvent.click(button);
     expect(calls('confirmLink')).toHaveLength(1);
     pending.resolve({ ok: true });
-    expect(await screen.findByText('Link confirmed')).toBeInTheDocument();
+    await expectFlag('Link confirmed', 'success');
   });
 });

@@ -1,11 +1,17 @@
-import Heading from '@atlaskit/heading';
-import { Box, Grid, Stack, Text } from '@atlaskit/primitives';
+import { Box, Grid, Stack, Text, xcss } from '@atlaskit/primitives';
 import { token } from '@atlaskit/tokens';
 
 const APPEARANCE_COLOR = {
   success: 'color.text.success',
   warning: 'color.text.warning',
   danger: 'color.text.danger',
+};
+
+const valueStyles = {
+  default: xcss({ font: 'font.heading.large', color: 'color.text' }),
+  success: xcss({ font: 'font.heading.large', color: 'color.text.success' }),
+  warning: xcss({ font: 'font.heading.large', color: 'color.text.warning' }),
+  danger: xcss({ font: 'font.heading.large', color: 'color.text.danger' }),
 };
 
 /**
@@ -26,9 +32,7 @@ export function SummaryCards({ items }) {
           >
             <Stack space="space.050">
               <Text size="small" color={colorToken ?? 'color.text.subtlest'}>{item.label}</Text>
-              <Box style={colorToken ? { color: token(colorToken) } : undefined}>
-                <Heading size="large">{item.value}</Heading>
-              </Box>
+              <Box xcss={valueStyles[item.appearance] ?? valueStyles.default}>{item.value}</Box>
             </Stack>
           </Box>
         );

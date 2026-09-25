@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, within, cleanup } from '@testing-library/react';
-import { invoke } from '@forge/bridge';
+import { invoke, showFlag } from '@forge/bridge';
 import { I18nProvider } from '../src/i18n/index.js';
 import { ToastProvider } from '../src/components/Toasts.jsx';
 import { ProjectApp } from '../src/project/ProjectApp.jsx';
@@ -12,6 +12,7 @@ vi.mock('@forge/bridge', () => ({
   invoke: vi.fn(),
   view: { theme: { enable: vi.fn() }, getContext: vi.fn() },
   router: { navigate: vi.fn() },
+  showFlag: vi.fn(() => ({ close: vi.fn(() => Promise.resolve(true)) })),
 }));
 
 const CONFIG = { requirementTypeIds: ['1'], verificationTypeIds: ['2'], linkTypeIds: [], fingerprintFieldIds: ['summary', 'description'] };
@@ -60,6 +61,10 @@ function renderWithProviders(ui) {
       <ToastProvider>{ui}</ToastProvider>
     </I18nProvider>,
   );
+}
+
+function expectFlag(title, type) {
+  return waitFor(() => expect(showFlag).toHaveBeenCalledWith(expect.objectContaining({ title, type, isAutoDismiss: true })));
 }
 
 afterEach(() => {
@@ -111,6 +116,41 @@ describe('ProjectApp', () => {
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
+  it('shows a neutral marker instead of a spinner when the suspect count fails to load', async () => {
+    mockResolvers({
+      getOverview: overview(),
+      getSuspects: () => { throw new Error('boom'); },
+      getGaps: { rows: [gap(1)], next: null },
+    });
+    renderWithProviders(<ProjectApp projectId="10002" projectKey="REQ" />);
+    await screen.findByRole('button', { name: 'REQ-1' });
+    const label = screen.getAllByText('Suspect links').find((el) => !el.closest('[role="tab"]'));
+    const card = label.parentElement;
+    await waitFor(() => expect(within(card).getByText('—')).toBeInTheDocument());
+    expect(within(card).queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it('refreshes the suspect count after settings are saved', async () => {
+    let suspectRows = [suspect(1)];
+    mockResolvers({
+      getOverview: overview(),
+      getSuspects: () => ({ rows: suspectRows, next: null }),
+      getGaps: { rows: [gap(1)], next: null },
+      getIssueTypes: [{ id: '1', name: 'Story' }, { id: '2', name: 'Test' }],
+      getLinkTypes: [],
+      getSettings: CONFIG,
+      saveSettings: () => {
+        suspectRows = [suspect(1), suspect(2), suspect(3), suspect(4)];
+        return { errors: [] };
+      },
+    });
+    renderWithProviders(<ProjectApp projectId="10002" projectKey="REQ" />);
+    await waitFor(() => expect(calls('getSuspects')).toHaveLength(1));
+    fireEvent.click(screen.getByRole('tab', { name: 'Settings' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('4')).toBeInTheDocument();
+  });
+
   it('shows a translated permission error in the Settings tab without breaking other tabs', async () => {
     mockResolvers({
       getOverview: overview(),
@@ -145,7 +185,7 @@ describe('ProjectApp', () => {
     renderWithProviders(<ProjectApp projectId="10002" projectKey="REQ" />);
     fireEvent.click(await screen.findByRole('button', { name: 'Open settings' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
-    expect(await screen.findByText('Saved. Sync started in the background.')).toBeInTheDocument();
+    await expectFlag('Saved. Sync started in the background.', 'success');
     await waitFor(() => expect(calls('getOverview')).toHaveLength(2));
     await waitFor(() => expect(screen.queryByText('Set up ArtUp Trace in three steps')).not.toBeInTheDocument());
   });
@@ -220,7 +260,7 @@ describe('SuspectTab', () => {
     const onChanged = vi.fn();
     renderWithProviders(<SuspectTab projectId="10002" projectKey="REQ" onChanged={onChanged} />);
     fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
-    expect(await screen.findByText('This link no longer exists; the list was refreshed.')).toBeInTheDocument();
+    await expectFlag('This link no longer exists; the list was refreshed.', 'warning');
     await waitFor(() => expect(calls('getSuspects')).toHaveLength(2));
     expect(calls('confirmLink')[0][1]).toEqual({ projectId: '10002', linkId: '2001' });
     await waitFor(() => expect(onChanged).toHaveBeenCalled());
@@ -239,7 +279,7 @@ describe('SuspectTab', () => {
     fireEvent.click(await screen.findByLabelText('Select link of REQ-1'));
     fireEvent.click(screen.getByLabelText('Select link of REQ-3'));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm selected (2)' }));
-    expect(await screen.findByText('2 links confirmed')).toBeInTheDocument();
+    await expectFlag('2 links confirmed', 'success');
     expect(calls('confirmLink').map(([, p]) => p.linkId)).toEqual(['2001', '2003']);
     await waitFor(() => expect(screen.queryByRole('button', { name: 'REQ-1' })).not.toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'REQ-2' })).toBeInTheDocument();
@@ -254,7 +294,43 @@ describe('SuspectTab', () => {
     await waitFor(() => screen.getAllByRole('button', { name: /Confirm/ }).forEach((b) => expect(b).toBeDisabled()));
     expect(calls('confirmLink')).toHaveLength(1);
     pending.resolve({ ok: true });
-    expect(await screen.findByText('Link confirmed')).toBeInTheDocument();
+    await expectFlag('Link confirmed', 'success');
+  });
+
+  it('does not confirm or count a selected row that the search hides', async () => {
+    mockResolvers({ getSuspects: { rows: [suspect(1), suspect(2)], next: null }, confirmLink: { ok: true } });
+    renderWithProviders(<SuspectTab projectId="10002" projectKey="REQ" />);
+    fireEvent.click(await screen.findByLabelText('Select link of REQ-1'));
+    fireEvent.click(screen.getByLabelText('Select link of REQ-2'));
+    expect(screen.getByRole('button', { name: 'Confirm selected (2)' })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText('Search by key or summary'), { target: { value: 'Summary 2' } });
+    expect(screen.getByRole('button', { name: 'Confirm selected (1)' })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText('Search by key or summary'), { target: { value: '' } });
+    expect(screen.getByRole('button', { name: 'Confirm selected (1)' })).toBeEnabled();
+    expect(screen.getByLabelText('Select link of REQ-1')).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm selected (1)' }));
+    await expectFlag('Link confirmed', 'success');
+    expect(calls('confirmLink').map(([, p]) => p.linkId)).toEqual(['2002']);
+  });
+
+  it('keeps the Confirm buttons disabled until the reload after confirming finishes', async () => {
+    const reload = deferred();
+    mockResolvers({
+      getSuspects: () => (calls('getSuspects').length > 1 ? reload.promise : { rows: [suspect(1), suspect(2)], next: null }),
+      confirmLink: { ok: true },
+    });
+    renderWithProviders(<SuspectTab projectId="10002" projectKey="REQ" />);
+    const [first, second] = await screen.findAllByRole('button', { name: 'Confirm' });
+    fireEvent.click(first);
+    await expectFlag('Link confirmed', 'success');
+    await waitFor(() => expect(calls('getSuspects')).toHaveLength(2));
+    expect(first).toBeDisabled();
+    expect(second).toBeDisabled();
+    fireEvent.click(second);
+    expect(calls('confirmLink')).toHaveLength(1);
+    expect(showFlag).toHaveBeenCalledTimes(1);
+    reload.resolve({ rows: [suspect(2)], next: null });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled());
   });
 
   it('shows the empty state only after a successful empty load', async () => {
@@ -279,9 +355,27 @@ describe('BaselinesTab', () => {
     expect(create).toBeDisabled();
     fireEvent.change(screen.getByLabelText('New baseline name'), { target: { value: '  Release 1 ' } });
     fireEvent.click(create);
-    expect(await screen.findByText('Baseline Release 1 is being captured')).toBeInTheDocument();
+    await expectFlag('Baseline Release 1 is being captured', 'success');
     expect(calls('createBaseline')[0][1]).toEqual({ projectId: '10002', name: 'Release 1' });
     await waitFor(() => expect(calls('listBaselines')).toHaveLength(2));
+  });
+
+  it('translates the sort tooltips, sort button description and empty select menu', async () => {
+    mockResolvers({ listBaselines: [] });
+    render(
+      <I18nProvider locale="ru-RU">
+        <ToastProvider><BaselinesTab projectId="10002" projectKey="REQ" /></ToastProvider>
+      </I18nProvider>,
+    );
+    await screen.findByRole('table');
+    const sortButtons = document.querySelectorAll('[aria-roledescription]');
+    expect(sortButtons.length).toBeGreaterThan(0);
+    sortButtons.forEach((b) => expect(b).toHaveAttribute('aria-roledescription', 'Кнопка сортировки'));
+    expect(document.body.textContent).not.toMatch(/Sort (ascending|descending)|Sort button/);
+    const input = document.getElementById('baseline-left');
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
+    expect(await screen.findByText('Нет вариантов')).toBeInTheDocument();
   });
 
   it('keeps Compare disabled until two different complete baselines are chosen', async () => {

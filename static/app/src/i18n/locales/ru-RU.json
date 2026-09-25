@@ -22,6 +22,9 @@
   "table.change": "Изменение",
   "table.statusBeforeAfter": "Статус до → после",
   "table.search": "Поиск по ключу или теме",
+  "table.sortAscending": "Сортировать по возрастанию",
+  "table.sortDescending": "Сортировать по убыванию",
+  "table.sortButton": "Кнопка сортировки",
   "table.loadMore": "Загрузить ещё",
   "suspects.empty.title": "Подозрительных связей нет",
   "suspects.empty.body": "Связь становится подозрительной, если тема или описание требования изменились после её подтверждения.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Изменены связи",
   "export.button": "Экспорт в CSV",
   "export.done": "Файл {fileName} скачан",
-  "export.truncated": "Экспортированы только первые 5 000 строк.",
+  "export.truncated": "Экспорт оказался слишком большим, поэтому сохранена только часть строк.",
   "settings.title": "Настройки",
   "settings.reqTypes": "Типы задач для требований",
   "settings.verTypes": "Типы задач для проверки (тесты или задачи, подтверждающие требование)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Тип задачи не может быть одновременно требованием и проверкой.",
   "settings.errors.badIds": "ID типов задач и типов связей должны быть числовыми идентификаторами Jira.",
   "settings.errors.fingerprint": "Отслеживаемые поля должны включать тему.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Нет вариантов"
 }

@@ -22,6 +22,9 @@
   "table.change": "Breyting",
   "table.statusBeforeAfter": "Staða fyrir → eftir",
   "table.search": "Leita eftir lykli eða samantekt",
+  "table.sortAscending": "Raða hækkandi",
+  "table.sortDescending": "Raða lækkandi",
+  "table.sortButton": "Röðunarhnappur",
   "table.loadMore": "Hlaða fleiri",
   "suspects.empty.title": "Engir grunsamlegir tenglar",
   "suspects.empty.body": "Tengill verður grunsamlegur þegar samantekt eða lýsing kröfunnar breytist eftir að tengillinn var staðfestur.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Tenglum breytt",
   "export.button": "Flytja út CSV",
   "export.done": "Skráin {fileName} var sótt",
-  "export.truncated": "Aðeins fyrstu 5.000 línurnar voru fluttar út.",
+  "export.truncated": "Útflutningurinn var of stór og því var aðeins hluti línanna vistaður.",
   "settings.title": "Stillingar",
   "settings.reqTypes": "Málagerðir fyrir kröfur",
   "settings.verTypes": "Málagerðir fyrir sannprófun (prófanir eða verk sem sanna kröfu)",
@@ -66,8 +69,8 @@
   "onboarding.step3": "Vistaðu – fyrsta samstillingin keyrir í bakgrunni.",
   "onboarding.cta": "Opna stillingar",
   "issue.notRequirement": "Þetta mál er ekki rakið sem krafa. Stilltu kröfugerðir á síðu ArtUp Trace í verkefninu.",
-  "issue.covered": "Þakið",
-  "issue.notCovered": "Ekki þakið",
+  "issue.covered": "Með þekju",
+  "issue.notCovered": "Án þekju",
   "issue.ok": "Í lagi",
   "issue.suspect": "Grunsamlegt – staðfestu",
   "issue.refreshNote": "Gögn uppfærast innan fárra mínútna frá breytingum.",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Málagerð getur ekki bæði verið krafa og sannprófun.",
   "settings.errors.badIds": "Auðkenni málagerða og tenglagerða verða að vera töluleg Jira-auðkenni.",
   "settings.errors.fingerprint": "Fingrafarsreitir verða að innihalda samantekt.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Engir valkostir"
 }

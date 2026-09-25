@@ -22,6 +22,9 @@
   "table.change": "Change",
   "table.statusBeforeAfter": "Status before → after",
   "table.search": "Search by key or summary",
+  "table.sortAscending": "Sort ascending",
+  "table.sortDescending": "Sort descending",
+  "table.sortButton": "Sort button",
   "table.loadMore": "Load more",
   "suspects.empty.title": "No suspect links",
   "suspects.empty.body": "A link becomes suspect when its requirement's summary or description changes after the link was confirmed.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Links changed",
   "export.button": "Export CSV",
   "export.done": "File {fileName} downloaded",
-  "export.truncated": "Only the first 5,000 rows were exported.",
+  "export.truncated": "The export was too large, so only part of the rows were saved.",
   "settings.title": "Settings",
   "settings.reqTypes": "Requirement issue types",
   "settings.verTypes": "Verification issue types (tests or tasks that prove a requirement)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "An issue type cannot be both requirement and verification.",
   "settings.errors.badIds": "Issue type and link type ids must be numeric Jira ids.",
   "settings.errors.fingerprint": "Fingerprint fields must include summary.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "No options"
 }

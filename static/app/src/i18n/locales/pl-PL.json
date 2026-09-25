@@ -22,6 +22,9 @@
   "table.change": "Zmiana",
   "table.statusBeforeAfter": "Status przed → po",
   "table.search": "Szukaj według klucza lub podsumowania",
+  "table.sortAscending": "Sortuj rosnąco",
+  "table.sortDescending": "Sortuj malejąco",
+  "table.sortButton": "Przycisk sortowania",
   "table.loadMore": "Wczytaj więcej",
   "suspects.empty.title": "Brak podejrzanych powiązań",
   "suspects.empty.body": "Powiązanie staje się podejrzane, gdy podsumowanie lub opis wymagania zmieni się po potwierdzeniu powiązania.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Zmienione powiązania",
   "export.button": "Eksportuj CSV",
   "export.done": "Pobrano plik {fileName}",
-  "export.truncated": "Wyeksportowano tylko pierwsze 5000 wierszy.",
+  "export.truncated": "Eksport był zbyt duży, dlatego zapisano tylko część wierszy.",
   "settings.title": "Ustawienia",
   "settings.reqTypes": "Typy zgłoszeń wymagań",
   "settings.verTypes": "Typy zgłoszeń weryfikacji (testy lub zadania potwierdzające wymaganie)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Typ zgłoszenia nie może być jednocześnie wymaganiem i weryfikacją.",
   "settings.errors.badIds": "Identyfikatory typów zgłoszeń i typów powiązań muszą być numerycznymi identyfikatorami Jira.",
   "settings.errors.fingerprint": "Pola odcisku muszą obejmować podsumowanie.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Brak opcji"
 }

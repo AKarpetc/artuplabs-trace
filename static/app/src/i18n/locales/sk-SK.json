@@ -22,6 +22,9 @@
   "table.change": "Zmena",
   "table.statusBeforeAfter": "Stav pred → po",
   "table.search": "Hľadať podľa kľúča alebo zhrnutia",
+  "table.sortAscending": "Zoradiť vzostupne",
+  "table.sortDescending": "Zoradiť zostupne",
+  "table.sortButton": "Tlačidlo zoradenia",
   "table.loadMore": "Načítať ďalšie",
   "suspects.empty.title": "Žiadne podozrivé prepojenia",
   "suspects.empty.body": "Prepojenie sa stane podozrivým, keď sa po jeho potvrdení zmení zhrnutie alebo popis požiadavky.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Zmenené prepojenia",
   "export.button": "Exportovať CSV",
   "export.done": "Súbor {fileName} bol stiahnutý",
-  "export.truncated": "Exportovaných bolo iba prvých 5 000 riadkov.",
+  "export.truncated": "Export bol príliš veľký, preto sa uložila iba časť riadkov.",
   "settings.title": "Nastavenia",
   "settings.reqTypes": "Typy úloh pre požiadavky",
   "settings.verTypes": "Typy úloh pre overenie (testy alebo úlohy, ktoré preukazujú splnenie požiadavky)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Typ úlohy nemôže byť zároveň požiadavkou aj overením.",
   "settings.errors.badIds": "ID typov úloh a typov prepojení musia byť číselné ID Jira.",
   "settings.errors.fingerprint": "Polia odtlačku musia obsahovať zhrnutie.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Žiadne možnosti"
 }

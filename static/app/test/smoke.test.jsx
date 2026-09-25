@@ -11,6 +11,7 @@ vi.mock('@forge/bridge', () => ({
   },
   invoke: vi.fn(),
   router: { navigate: vi.fn() },
+  showFlag: vi.fn(() => ({ close: vi.fn(() => Promise.resolve(true)) })),
 }));
 
 describe('project page shell', () => {

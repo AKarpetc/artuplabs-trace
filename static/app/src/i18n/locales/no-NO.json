@@ -22,6 +22,9 @@
   "table.change": "Endring",
   "table.statusBeforeAfter": "Status før → etter",
   "table.search": "Søk etter nøkkel eller sammendrag",
+  "table.sortAscending": "Sorter stigende",
+  "table.sortDescending": "Sorter synkende",
+  "table.sortButton": "Sorteringsknapp",
   "table.loadMore": "Last inn flere",
   "suspects.empty.title": "Ingen mistenkelige koblinger",
   "suspects.empty.body": "En kobling blir mistenkelig når kravets sammendrag eller beskrivelse endres etter at koblingen ble bekreftet.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Koblinger endret",
   "export.button": "Eksporter CSV",
   "export.done": "Filen {fileName} er lastet ned",
-  "export.truncated": "Bare de første 5 000 radene ble eksportert.",
+  "export.truncated": "Eksporten var for stor, så bare en del av radene ble lagret.",
   "settings.title": "Innstillinger",
   "settings.reqTypes": "Sakstyper for krav",
   "settings.verTypes": "Sakstyper for verifisering (tester eller oppgaver som beviser et krav)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "En sakstype kan ikke være både krav og verifisering.",
   "settings.errors.badIds": "ID-er for sakstyper og koblingstyper må være numeriske Jira-ID-er.",
   "settings.errors.fingerprint": "Fingeravtrykksfeltene må inneholde sammendrag.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Ingen alternativer"
 }

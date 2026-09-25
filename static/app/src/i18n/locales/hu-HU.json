@@ -22,6 +22,9 @@
   "table.change": "Változás",
   "table.statusBeforeAfter": "Állapot előtte → utána",
   "table.search": "Keresés kulcs vagy összefoglaló alapján",
+  "table.sortAscending": "Rendezés növekvő sorrendben",
+  "table.sortDescending": "Rendezés csökkenő sorrendben",
+  "table.sortButton": "Rendezés gomb",
   "table.loadMore": "Továbbiak betöltése",
   "suspects.empty.title": "Nincsenek gyanús kapcsolatok",
   "suspects.empty.body": "Egy kapcsolat akkor válik gyanússá, ha a követelmény összefoglalója vagy leírása a kapcsolat megerősítése után megváltozik.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Módosult kapcsolatok",
   "export.button": "CSV exportálása",
   "export.done": "A(z) {fileName} fájl letöltve",
-  "export.truncated": "Csak az első 5000 sor lett exportálva.",
+  "export.truncated": "Az exportálás túl nagy volt, ezért csak a sorok egy része lett mentve.",
   "settings.title": "Beállítások",
   "settings.reqTypes": "Követelmény-ügytípusok",
   "settings.verTypes": "Ellenőrző ügytípusok (tesztek vagy feladatok, amelyek igazolják a követelményt)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Egy ügytípus nem lehet egyszerre követelmény és ellenőrzés.",
   "settings.errors.badIds": "Az ügytípusok és kapcsolattípusok azonosítóinak numerikus Jira-azonosítóknak kell lenniük.",
   "settings.errors.fingerprint": "Az ujjlenyomatmezőknek tartalmazniuk kell az összefoglalót.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Nincsenek lehetőségek"
 }

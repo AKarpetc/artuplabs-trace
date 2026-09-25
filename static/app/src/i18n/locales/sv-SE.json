@@ -22,6 +22,9 @@
   "table.change": "Ändring",
   "table.statusBeforeAfter": "Status före → efter",
   "table.search": "Sök på nyckel eller sammanfattning",
+  "table.sortAscending": "Sortera stigande",
+  "table.sortDescending": "Sortera fallande",
+  "table.sortButton": "Sorteringsknapp",
   "table.loadMore": "Läs in fler",
   "suspects.empty.title": "Inga misstänkta länkar",
   "suspects.empty.body": "En länk blir misstänkt när kravets sammanfattning eller beskrivning ändras efter att länken har bekräftats.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Ändrade länkar",
   "export.button": "Exportera CSV",
   "export.done": "Filen {fileName} har laddats ned",
-  "export.truncated": "Endast de första 5 000 raderna exporterades.",
+  "export.truncated": "Exporten var för stor, så bara en del av raderna sparades.",
   "settings.title": "Inställningar",
   "settings.reqTypes": "Ärendetyper för krav",
   "settings.verTypes": "Ärendetyper för verifiering (tester eller uppgifter som styrker ett krav)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "En ärendetyp kan inte vara både krav och verifiering.",
   "settings.errors.badIds": "ID:n för ärendetyper och länktyper måste vara numeriska Jira-ID:n.",
   "settings.errors.fingerprint": "Fingeravtrycksfälten måste innehålla sammanfattning.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Inga alternativ"
 }

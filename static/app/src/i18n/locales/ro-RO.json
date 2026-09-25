@@ -22,6 +22,9 @@
   "table.change": "Modificare",
   "table.statusBeforeAfter": "Stare înainte → după",
   "table.search": "Căutați după cheie sau rezumat",
+  "table.sortAscending": "Sortare crescătoare",
+  "table.sortDescending": "Sortare descrescătoare",
+  "table.sortButton": "Buton de sortare",
   "table.loadMore": "Încărcați mai multe",
   "suspects.empty.title": "Nicio legătură suspectă",
   "suspects.empty.body": "O legătură devine suspectă când rezumatul sau descrierea cerinței se modifică după confirmarea legăturii.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Legături modificate",
   "export.button": "Exportați CSV",
   "export.done": "Fișierul {fileName} a fost descărcat",
-  "export.truncated": "Au fost exportate doar primele 5.000 de rânduri.",
+  "export.truncated": "Exportul a fost prea mare, așa că a fost salvată doar o parte din rânduri.",
   "settings.title": "Setări",
   "settings.reqTypes": "Tipuri de tichete pentru cerințe",
   "settings.verTypes": "Tipuri de tichete pentru verificare (teste sau sarcini care dovedesc o cerință)",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Un tip de tichet nu poate fi simultan cerință și verificare.",
   "settings.errors.badIds": "ID-urile tipurilor de tichete și ale tipurilor de legături trebuie să fie ID-uri Jira numerice.",
   "settings.errors.fingerprint": "Câmpurile de amprentă trebuie să includă rezumatul.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Nicio opțiune"
 }

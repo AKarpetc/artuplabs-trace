@@ -22,6 +22,9 @@
   "table.change": "Değişiklik",
   "table.statusBeforeAfter": "Durum önce → sonra",
   "table.search": "Anahtar veya özete göre ara",
+  "table.sortAscending": "Artan sırala",
+  "table.sortDescending": "Azalan sırala",
+  "table.sortButton": "Sıralama düğmesi",
   "table.loadMore": "Daha fazla yükle",
   "suspects.empty.title": "Şüpheli bağlantı yok",
   "suspects.empty.body": "Bir bağlantı onaylandıktan sonra gereksiniminin özeti veya açıklaması değişirse bağlantı şüpheli hale gelir.",
@@ -52,7 +55,7 @@
   "change.links-changed": "Bağlantılar değişti",
   "export.button": "CSV dışa aktar",
   "export.done": "{fileName} dosyası indirildi",
-  "export.truncated": "Yalnızca ilk 5.000 satır dışa aktarıldı.",
+  "export.truncated": "Dışa aktarma çok büyük olduğundan satırların yalnızca bir kısmı kaydedildi.",
   "settings.title": "Ayarlar",
   "settings.reqTypes": "Gereksinim konu türleri",
   "settings.verTypes": "Doğrulama konu türleri (bir gereksinimi kanıtlayan testler veya görevler)",
@@ -66,8 +69,8 @@
   "onboarding.step3": "Kaydedin — ilk eşitleme arka planda çalışır.",
   "onboarding.cta": "Ayarları aç",
   "issue.notRequirement": "Bu konu gereksinim olarak izlenmiyor. Gereksinim türlerini projenin ArtUp Trace sayfasında yapılandırın.",
-  "issue.covered": "Kapsandı",
-  "issue.notCovered": "Kapsanmadı",
+  "issue.covered": "Kapsamda",
+  "issue.notCovered": "Kapsam dışı",
   "issue.ok": "Tamam",
   "issue.suspect": "Şüpheli — onaylayın",
   "issue.refreshNote": "Veriler, değişikliklerden sonra birkaç dakika içinde yenilenir.",
@@ -91,5 +94,6 @@
   "settings.errors.overlap": "Bir konu türü hem gereksinim hem doğrulama olamaz.",
   "settings.errors.badIds": "Konu türü ve bağlantı türü kimlikleri sayısal Jira kimlikleri olmalıdır.",
   "settings.errors.fingerprint": "Parmak izi alanları özeti içermelidir.",
-  "common.none": "—"
+  "common.none": "—",
+  "common.noOptions": "Seçenek yok"
 }

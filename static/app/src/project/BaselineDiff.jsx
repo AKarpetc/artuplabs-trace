@@ -8,7 +8,7 @@ import { formatNumber, useLocale, useT } from '../i18n/index.js';
 import { ExportButton } from '../components/ExportButton.jsx';
 import { IssueLink } from '../components/IssueLink.jsx';
 import { useRows } from './useRows.js';
-import { LoadError, LoadMoreButton, WrapText } from './tableParts.jsx';
+import { LoadError, LoadMoreButton, sortable, WrapText } from './tableParts.jsx';
 
 const CHANGE_APPEARANCE = {
   added: 'success',
@@ -32,11 +32,12 @@ export function BaselineDiff({ projectId, projectKey, leftId, rightId }) {
   }
 
   const none = t('common.none');
+  const sort = sortable(t);
   const head = {
     cells: [
-      { key: 'key', content: t('table.requirement'), isSortable: true, width: 15 },
-      { key: 'summary', content: t('table.summary'), isSortable: true, width: 45 },
-      { key: 'change', content: t('table.change'), isSortable: true, width: 15 },
+      { key: 'key', content: t('table.requirement'), ...sort, width: 15 },
+      { key: 'summary', content: t('table.summary'), ...sort, width: 45 },
+      { key: 'change', content: t('table.change'), ...sort, width: 15 },
       { key: 'status', content: t('table.statusBeforeAfter'), width: 25 },
     ],
   };

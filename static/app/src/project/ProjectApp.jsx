@@ -18,9 +18,10 @@ const SETTINGS_TAB = 3;
 
 const panelStyles = xcss({ paddingBlockStart: 'space.300', width: '100%' });
 
-/** Loads the suspect-link count from the first suspects page; `null` while loading or when it failed. */
+/** Loads the suspect-link count from the first suspects page; `count` is `null` while loading, `failed` is set on error. */
 function useSuspectCount(projectId, enabled) {
   const [count, setCount] = useState(null);
+  const [failed, setFailed] = useState(false);
   const refresh = useCallback(async () => {
     if (!enabled) {
       return;
@@ -28,23 +29,30 @@ function useSuspectCount(projectId, enabled) {
     try {
       const res = await call('getSuspects', { projectId, after: '' });
       setCount({ n: res?.rows?.length ?? 0, more: Boolean(res?.next) });
+      setFailed(false);
     } catch {
       setCount(null);
+      setFailed(true);
     }
   }, [projectId, enabled]);
   useEffect(() => {
     refresh();
   }, [refresh]);
-  return { count, refresh };
+  return { count, failed, refresh };
 }
 
 /** Builds the summary card items from the coverage summary and the suspect count, never showing NaN. */
-function cardItems(t, locale, coverage, suspects) {
+function cardItems(t, locale, coverage, suspects, suspectsFailed) {
   const total = Number(coverage?.total) || 0;
   const covered = Number(coverage?.covered) || 0;
   const uncovered = Math.max(total - covered, 0);
   const percent = total ? Number(coverage?.percent) || 0 : 0;
-  const suspectValue = suspects ? `${formatNumber(locale, suspects.n)}${suspects.more ? '+' : ''}` : <Spinner size="small" />;
+  let suspectValue = <Spinner size="small" />;
+  if (suspects) {
+    suspectValue = `${formatNumber(locale, suspects.n)}${suspects.more ? '+' : ''}`;
+  } else if (suspectsFailed) {
+    suspectValue = t('common.none');
+  }
   return [
     { label: t('cards.coverage'), value: t('cards.percent', { value: formatNumber(locale, percent) }), appearance: total && !uncovered ? 'success' : undefined },
     { label: t('cards.uncovered'), value: formatNumber(locale, uncovered), appearance: uncovered ? 'danger' : undefined },
@@ -76,6 +84,12 @@ export function ProjectApp({ projectId, projectKey }) {
     load();
   }, [load]);
 
+  const refreshSuspects = suspects.refresh;
+  const onSettingsSaved = useCallback(() => {
+    load();
+    refreshSuspects();
+  }, [load, refreshSuspects]);
+
   if (!overview) {
     return (
       <Stack space="space.400">
@@ -91,7 +105,7 @@ export function ProjectApp({ projectId, projectKey }) {
     <Stack space="space.400">
       <ProjectHeader overview={overview} />
       {error ? <LoadError error={error} onRetry={load} /> : null}
-      {configured ? <SummaryCards items={cardItems(t, locale, overview.coverage, suspects.count)} /> : null}
+      {configured ? <SummaryCards items={cardItems(t, locale, overview.coverage, suspects.count, suspects.failed)} /> : null}
       <Tabs id="artup-trace-tabs" selected={selected} onChange={setSelected}>
         <TabList>
           <Tab>{t('tabs.coverage')}</Tab>
@@ -116,7 +130,7 @@ export function ProjectApp({ projectId, projectKey }) {
         </TabPanel>
         <TabPanel>
           <Box xcss={panelStyles}>
-            <SettingsTab projectId={projectId} onSaved={load} />
+            <SettingsTab projectId={projectId} onSaved={onSettingsSaved} />
           </Box>
         </TabPanel>
       </Tabs>
