@@ -3,12 +3,14 @@ import '@atlaskit/css-reset';
 import { Box } from '@atlaskit/primitives';
 import Heading from '@atlaskit/heading';
 import { bootstrap } from '../theme';
+import { I18nProvider, resolveLocale, useT } from '../i18n/index.js';
 
 /** Placeholder ArtUp Trace issue panel shell, full width with themed padding. */
 export function IssueApp({ context }) {
+  const t = useT();
   return (
     <Box padding="space.300">
-      <Heading size="medium">ArtUp Trace</Heading>
+      <Heading size="medium">{t('app.title')}</Heading>
     </Box>
   );
 }
@@ -16,7 +18,11 @@ export function IssueApp({ context }) {
 async function main() {
   const { context } = await bootstrap();
   const root = createRoot(document.getElementById('root'));
-  root.render(<IssueApp context={context} />);
+  root.render(
+    <I18nProvider locale={resolveLocale(context.locale)}>
+      <IssueApp context={context} />
+    </I18nProvider>,
+  );
 }
 
 main();
