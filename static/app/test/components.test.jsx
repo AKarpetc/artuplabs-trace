@@ -5,7 +5,6 @@ import { IssueLink } from '../src/components/IssueLink.jsx';
 import { PageSection } from '../src/components/PageSection.jsx';
 import { SummaryCards } from '../src/components/SummaryCards.jsx';
 import { ToastProvider, useToasts } from '../src/components/Toasts.jsx';
-import { I18nProvider } from '../src/i18n/index.js';
 
 vi.mock('@forge/bridge', () => ({
   view: { theme: { enable: vi.fn() }, getContext: vi.fn() },
@@ -70,19 +69,16 @@ function ToastTrigger() {
 }
 
 describe('ToastProvider / useToasts', () => {
-  it('shows a flag when show() is called and it can be dismissed manually', async () => {
+  it('shows a flag when show() is called and it can be dismissed with a single click', async () => {
     render(
-      <I18nProvider locale="en-US">
-        <ToastProvider>
-          <ToastTrigger />
-        </ToastProvider>
-      </I18nProvider>,
+      <ToastProvider>
+        <ToastTrigger />
+      </ToastProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Trigger' }));
     expect(await screen.findByText('Saved')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Expand' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Dismiss' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     await waitFor(() => expect(screen.queryByText('Saved')).not.toBeInTheDocument());
   });
 });

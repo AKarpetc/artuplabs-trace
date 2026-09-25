@@ -1,17 +1,27 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { FlagGroup } from '@atlaskit/flag';
 import AutoDismissFlag from '@atlaskit/flag/auto-dismiss-flag';
-import { useT } from '../i18n/index.js';
+import StatusSuccessIcon from '@atlaskit/icon/core/status-success';
+import StatusWarningIcon from '@atlaskit/icon/core/status-warning';
+import StatusErrorIcon from '@atlaskit/icon/core/status-error';
+import StatusInformationIcon from '@atlaskit/icon/core/status-information';
+
+const STATUS_BY_APPEARANCE = {
+  success: { Icon: StatusSuccessIcon, color: 'color.icon.success' },
+  warning: { Icon: StatusWarningIcon, color: 'color.icon.warning' },
+  error: { Icon: StatusErrorIcon, color: 'color.icon.danger' },
+  info: { Icon: StatusInformationIcon, color: 'color.icon.information' },
+};
 
 const ToastContext = createContext(null);
 
 /**
  * Provides a `show({ title, description, appearance })` toast API to
- * descendants, rendering active toasts as an Atlaskit flag group; flags
- * auto-dismiss after a few seconds and can be dismissed manually.
+ * descendants, rendering active toasts as `normal`-appearance Atlaskit
+ * flags with a status-coloured icon, so the built-in close button is
+ * always available; flags also auto-dismiss after a few seconds.
  */
 export function ToastProvider({ children }) {
-  const t = useT();
   const [toasts, setToasts] = useState([]);
   const nextId = useRef(0);
 
@@ -32,17 +42,22 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={value}>
       {children}
       <FlagGroup onDismissed={dismiss}>
-        {toasts.map((toast) => (
-          <AutoDismissFlag
-            key={toast.id}
-            id={toast.id}
-            title={toast.title}
-            description={toast.description}
-            appearance={toast.appearance}
-            actions={[...(toast.actions ?? []), { content: t('common.dismiss'), onClick: () => dismiss(toast.id) }]}
-            onDismissed={dismiss}
-          />
-        ))}
+        {toasts.map((toast) => {
+          const status = STATUS_BY_APPEARANCE[toast.appearance] ?? STATUS_BY_APPEARANCE.info;
+          const StatusIcon = status.Icon;
+          return (
+            <AutoDismissFlag
+              key={toast.id}
+              id={toast.id}
+              title={toast.title}
+              description={toast.description}
+              appearance="normal"
+              icon={<StatusIcon label="" color={status.color} />}
+              actions={toast.actions}
+              onDismissed={dismiss}
+            />
+          );
+        })}
       </FlagGroup>
     </ToastContext.Provider>
   );

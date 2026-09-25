@@ -15,14 +15,14 @@ const APPEARANCE_COLOR = {
 export function SummaryCards({ items }) {
   return (
     <Grid gap="space.200" templateColumns="repeat(auto-fit, minmax(180px, 1fr))">
-      {items.map((item) => {
+      {items.map((item, index) => {
         const colorToken = APPEARANCE_COLOR[item.appearance];
         return (
           <Box
-            key={item.label}
+            key={`${item.label}-${index}`}
             backgroundColor="elevation.surface.raised"
             padding="space.200"
-            style={{ borderRadius: token('border.radius.200', '3px') }}
+            style={{ borderRadius: token('radius.small') }}
           >
             <Stack space="space.050">
               <Text size="small" color={colorToken ?? 'color.text.subtlest'}>{item.label}</Text>
