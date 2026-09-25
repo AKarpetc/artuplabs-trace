@@ -1,26 +1,22 @@
 import { createRoot } from 'react-dom/client';
 import '@atlaskit/css-reset';
 import { Box } from '@atlaskit/primitives';
-import Heading from '@atlaskit/heading';
 import { bootstrap } from '../theme';
-import { I18nProvider, resolveLocale, useT } from '../i18n/index.js';
-
-/** Placeholder ArtUp Trace project page shell, full width with themed padding. */
-export function ProjectApp({ context }) {
-  const t = useT();
-  return (
-    <Box padding="space.300">
-      <Heading size="large">{t('app.title')}</Heading>
-    </Box>
-  );
-}
+import { I18nProvider, resolveLocale } from '../i18n/index.js';
+import { ToastProvider } from '../components/Toasts.jsx';
+import { ProjectApp } from './ProjectApp.jsx';
 
 async function main() {
   const { context } = await bootstrap();
+  const project = context.extension?.project ?? {};
   const root = createRoot(document.getElementById('root'));
   root.render(
     <I18nProvider locale={resolveLocale(context.locale)}>
-      <ProjectApp context={context} />
+      <ToastProvider>
+        <Box padding="space.300">
+          <ProjectApp projectId={String(project.id ?? '')} projectKey={project.key ?? ''} />
+        </Box>
+      </ToastProvider>
     </I18nProvider>,
   );
 }

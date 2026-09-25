@@ -75,5 +75,21 @@
   "errors.unlicensed": "ArtUp Trace license is not active on this site.",
   "errors.bad-request": "The request was not valid. Refresh the page and try again.",
   "errors.generic": "Something went wrong: {message}",
-  "common.retry": "Try again"
+  "common.retry": "Try again",
+  "cards.percent": "{value}%",
+  "coverage.allCovered": "Every loaded requirement has a verification link.",
+  "table.noMatches": "No rows match your search.",
+  "suspects.count": "{count} suspect links",
+  "suspects.confirmedMany": "{count} links confirmed",
+  "suspects.select": "Select link of {key}",
+  "suspects.selectAll": "Select all shown links",
+  "baselines.option": "{name} — {date} ({count})",
+  "baselines.statusChange": "{before} → {after}",
+  "baselines.noDifferences": "No differences between these baselines.",
+  "settings.errors.noReqTypes": "Choose at least one requirement issue type.",
+  "settings.errors.noVerTypes": "Choose at least one verification issue type.",
+  "settings.errors.overlap": "An issue type cannot be both requirement and verification.",
+  "settings.errors.badIds": "Issue type and link type ids must be numeric Jira ids.",
+  "settings.errors.fingerprint": "Fingerprint fields must include summary.",
+  "common.none": "—"
 }

@@ -96,6 +96,15 @@ export function useT() {
   return context.t;
 }
 
+/** Returns the resolved locale code from the nearest I18nProvider. */
+export function useLocale() {
+  const context = useContext(I18nContext);
+  if (!context) {
+    throw new Error('useLocale must be used within an I18nProvider');
+  }
+  return context.locale;
+}
+
 /** Formats a number for display using the resolved locale. */
 export function formatNumber(locale, n) {
   return new Intl.NumberFormat(resolveLocale(locale)).format(n);
