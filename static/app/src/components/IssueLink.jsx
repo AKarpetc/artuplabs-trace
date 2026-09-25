@@ -15,7 +15,6 @@ const linkStyles = xcss({
 /**
  * Renders an issue key as a keyboard-accessible, link-styled button that
  * opens the issue in Jira via `router.navigate`, never inside the iframe.
- * Relies on Pressable's built-in focus ring (`color.border.focused`).
  */
 export function IssueLink({ issueKey }) {
   return (
