@@ -58,7 +58,7 @@
   "export.truncated": "Vienti oli liian suuri, joten vain osa riveistä tallennettiin.",
   "settings.title": "Asetukset",
   "settings.reqTypes": "Vaatimusten tehtävätyypit",
-  "settings.verTypes": "Verifioinnin tehtävätyypit (testit tai tehtävät, jotka osoittavat vaatimuksen täyttyvän)",
+  "settings.verTypes": "Verifioinnin tehtävätyypit (testit tai muut tehtävät, jotka osoittavat vaatimuksen täyttyvän)",
   "settings.linkTypes": "Huomioitavat linkkityypit (tyhjä = kaikki)",
   "settings.fingerprintNote": "Linkeistä tulee epäilyttäviä, kun vaatimuksen yhteenveto tai kuvaus muuttuu.",
   "settings.save": "Tallenna",

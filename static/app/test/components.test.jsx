@@ -19,11 +19,24 @@ afterEach(() => {
 });
 
 describe('IssueLink', () => {
-  it('renders the issue key and navigates to it on click without leaving a real link href', () => {
+  it('renders the issue key as a button, never an anchor into the iframe origin', () => {
     render(<IssueLink issueKey="REQ-42" />);
     const link = screen.getByRole('button', { name: 'REQ-42' });
-    fireEvent.click(link);
+    expect(link.tagName).toBe('BUTTON');
+    expect(document.querySelector('a')).not.toBeInTheDocument();
+  });
+
+  it('navigates to the issue via router.navigate on click', () => {
+    render(<IssueLink issueKey="REQ-42" />);
+    fireEvent.click(screen.getByRole('button', { name: 'REQ-42' }));
     expect(router.navigate).toHaveBeenCalledWith('/browse/REQ-42');
+  });
+
+  it('is reachable by keyboard as a native button', () => {
+    render(<IssueLink issueKey="REQ-42" />);
+    const link = screen.getByRole('button', { name: 'REQ-42' });
+    link.focus();
+    expect(link).toHaveFocus();
   });
 });
 

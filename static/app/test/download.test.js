@@ -98,9 +98,17 @@ describe('saveTextFile', () => {
 });
 
 describe('ExportButton', () => {
+  let anchorClick;
+
+  /** Stubs the real download anchor's click so jsdom's unimplemented navigation never logs. */
   beforeEach(() => {
     global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
     global.URL.revokeObjectURL = vi.fn();
+    anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    anchorClick.mockRestore();
   });
 
   it('saves a file even when the export has 0 rows', async () => {

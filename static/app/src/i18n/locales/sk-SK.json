@@ -58,7 +58,7 @@
   "export.truncated": "Export bol príliš veľký, preto sa uložila iba časť riadkov.",
   "settings.title": "Nastavenia",
   "settings.reqTypes": "Typy úloh pre požiadavky",
-  "settings.verTypes": "Typy úloh pre overenie (testy alebo úlohy, ktoré preukazujú splnenie požiadavky)",
+  "settings.verTypes": "Typy úloh pre overenie (testy alebo iné úlohy, ktoré preukazujú splnenie požiadavky)",
   "settings.linkTypes": "Započítavané typy prepojení (prázdne = všetky)",
   "settings.fingerprintNote": "Prepojenia sa stanú podozrivými, keď sa zmení zhrnutie alebo popis požiadavky.",
   "settings.save": "Uložiť",

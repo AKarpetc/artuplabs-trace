@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import Heading from '@atlaskit/heading';
 import Spinner from '@atlaskit/spinner';
 import Tabs, { Tab, TabList, TabPanel } from '@atlaskit/tabs';
@@ -6,17 +6,27 @@ import { Box, Flex, Stack, xcss } from '@atlaskit/primitives';
 import { call } from '../api.js';
 import { formatNumber, useLocale, useT } from '../i18n/index.js';
 import { SummaryCards } from '../components/SummaryCards.jsx';
-import { BaselinesTab } from './BaselinesTab.jsx';
 import { CoverageTab } from './CoverageTab.jsx';
 import { Onboarding } from './Onboarding.jsx';
 import { ProjectHeader } from './ProjectHeader.jsx';
-import { SettingsTab } from './SettingsTab.jsx';
-import { SuspectTab } from './SuspectTab.jsx';
 import { LoadError } from './tableParts.jsx';
+
+const SuspectTab = lazy(() => import('./SuspectTab.jsx').then((m) => ({ default: m.SuspectTab })));
+const BaselinesTab = lazy(() => import('./BaselinesTab.jsx').then((m) => ({ default: m.BaselinesTab })));
+const SettingsTab = lazy(() => import('./SettingsTab.jsx').then((m) => ({ default: m.SettingsTab })));
 
 const SETTINGS_TAB = 3;
 
 const panelStyles = xcss({ paddingBlockStart: 'space.300', width: '100%' });
+
+/** Loading fallback shown while a tab's own chunk is being fetched. */
+function TabFallback() {
+  return (
+    <Flex justifyContent="center">
+      <Spinner size="large" />
+    </Flex>
+  );
+}
 
 /** Loads the suspect-link count from the first suspects page; `count` is `null` while loading, `failed` is set on error. */
 function useSuspectCount(projectId, enabled) {
@@ -120,17 +130,27 @@ export function ProjectApp({ projectId, projectKey }) {
         </TabPanel>
         <TabPanel>
           <Box xcss={panelStyles}>
-            {configured ? <SuspectTab projectId={projectId} projectKey={projectKey} onChanged={suspects.refresh} /> : onboarding}
+            {configured ? (
+              <Suspense fallback={<TabFallback />}>
+                <SuspectTab projectId={projectId} projectKey={projectKey} onChanged={suspects.refresh} />
+              </Suspense>
+            ) : onboarding}
           </Box>
         </TabPanel>
         <TabPanel>
           <Box xcss={panelStyles}>
-            {configured ? <BaselinesTab projectId={projectId} projectKey={projectKey} /> : onboarding}
+            {configured ? (
+              <Suspense fallback={<TabFallback />}>
+                <BaselinesTab projectId={projectId} projectKey={projectKey} />
+              </Suspense>
+            ) : onboarding}
           </Box>
         </TabPanel>
         <TabPanel>
           <Box xcss={panelStyles}>
-            <SettingsTab projectId={projectId} onSaved={onSettingsSaved} />
+            <Suspense fallback={<TabFallback />}>
+              <SettingsTab projectId={projectId} onSaved={onSettingsSaved} />
+            </Suspense>
           </Box>
         </TabPanel>
       </Tabs>

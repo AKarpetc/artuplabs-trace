@@ -58,7 +58,7 @@
   "export.truncated": "Der Export war zu groß, daher wurde nur ein Teil der Zeilen gespeichert.",
   "settings.title": "Einstellungen",
   "settings.reqTypes": "Vorgangstypen für Anforderungen",
-  "settings.verTypes": "Vorgangstypen für die Verifizierung (Tests oder Aufgaben, die eine Anforderung nachweisen)",
+  "settings.verTypes": "Vorgangstypen für die Verifizierung (Tests oder andere Vorgänge, die eine Anforderung nachweisen)",
   "settings.linkTypes": "Berücksichtigte Linktypen (leer = alle)",
   "settings.fingerprintNote": "Links werden verdächtig, wenn sich die Zusammenfassung oder Beschreibung der Anforderung ändert.",
   "settings.save": "Speichern",

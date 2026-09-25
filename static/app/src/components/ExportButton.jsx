@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Button from '@atlaskit/button/default/button';
+import Button from '@atlaskit/button/new';
 import { call, errorMessage } from '../api.js';
 import { useT } from '../i18n/index.js';
 import { useToasts } from './Toasts.jsx';

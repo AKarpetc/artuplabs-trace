@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createElement } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   SUPPORTED_LOCALES,
   createT,
@@ -150,10 +150,18 @@ describe('I18nProvider / useT', () => {
   });
 
   it('throws when useT is called outside an I18nProvider', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const swallowReactDevError = (event) => event.preventDefault();
+    window.addEventListener('error', swallowReactDevError);
     const Broken = () => {
       useT();
       return null;
     };
-    expect(() => render(createElement(Broken))).toThrow();
+    try {
+      expect(() => render(createElement(Broken))).toThrow();
+    } finally {
+      window.removeEventListener('error', swallowReactDevError);
+      consoleError.mockRestore();
+    }
   });
 });

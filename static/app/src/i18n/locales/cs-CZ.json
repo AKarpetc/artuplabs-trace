@@ -58,7 +58,7 @@
   "export.truncated": "Export byl příliš velký, proto byla uložena jen část řádků.",
   "settings.title": "Nastavení",
   "settings.reqTypes": "Typy úkolů pro požadavky",
-  "settings.verTypes": "Typy úkolů pro ověření (testy nebo úkoly, které prokazují splnění požadavku)",
+  "settings.verTypes": "Typy úkolů pro ověření (testy nebo jiné úkoly, které prokazují splnění požadavku)",
   "settings.linkTypes": "Započítávané typy propojení (prázdné = všechny)",
   "settings.fingerprintNote": "Propojení se stanou podezřelými, když se změní shrnutí nebo popis požadavku.",
   "settings.save": "Uložit",
