@@ -64,4 +64,19 @@ describe('hasPermission', () => {
     };
     expect(await jira.hasPermission(asUser, '10000', 'BROWSE_PROJECTS')).toBe(true);
   });
+
+  it('grants project administration to a Jira administrator without the project permission', async () => {
+    const jira = createJira(async () => response(200, {}));
+    const asUser = async (path) => {
+      expect(path).toBe('/rest/api/3/mypermissions?projectId=10000&permissions=ADMINISTER_PROJECTS,ADMINISTER');
+      return response(200, { permissions: { ADMINISTER_PROJECTS: { havePermission: false }, ADMINISTER: { havePermission: true } } });
+    };
+    expect(await jira.hasPermission(asUser, '10000', 'ADMINISTER_PROJECTS')).toBe(true);
+  });
+
+  it('denies project administration when neither permission is held', async () => {
+    const jira = createJira(async () => response(200, {}));
+    const asUser = async () => response(200, { permissions: { ADMINISTER_PROJECTS: { havePermission: false }, ADMINISTER: { havePermission: false } } });
+    expect(await jira.hasPermission(asUser, '10000', 'ADMINISTER_PROJECTS')).toBe(false);
+  });
 });

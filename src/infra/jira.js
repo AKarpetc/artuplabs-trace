@@ -64,12 +64,13 @@ export function createJira(request) {
     },
 
     async hasPermission(asUserRequest, projectId, permission) {
-      const res = await asUserRequest(`/rest/api/3/mypermissions?projectId=${encodeURIComponent(projectId)}&permissions=${permission}`);
+      const keys = permission === 'ADMINISTER_PROJECTS' ? [permission, 'ADMINISTER'] : [permission];
+      const res = await asUserRequest(`/rest/api/3/mypermissions?projectId=${encodeURIComponent(projectId)}&permissions=${keys.join(',')}`);
       if (res.status !== 200) {
         return false;
       }
       const json = await res.json();
-      return json.permissions?.[permission]?.havePermission === true;
+      return keys.some((key) => json.permissions?.[key]?.havePermission === true);
     },
   };
 }
