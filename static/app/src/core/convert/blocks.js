@@ -1,4 +1,4 @@
-import { attr, elements, textOf } from './parse.js';
+import { attr, elements, extractEdgeBreak, textOf } from './parse.js';
 import { escapeLineStart, fence, quote } from './escape.js';
 import { renderInline } from './inline.js';
 import { isInlineMacro, isMacroTag, renderMacro } from './macros.js';
@@ -9,36 +9,38 @@ const BLOCK_TAGS = new Set([
   'ac:layout', 'ac:layout-section', 'ac:layout-cell', 'ac:task-list', 'ac:adf-extension', 'ac:rich-text-body', 'tbody',
 ]);
 
+const blockCache = new WeakMap();
+
+/** True when a direct child is itself block-level; each node's isBlock() result is computed once. */
 function containsBlock(node) {
-  return elements(node).some((c) => isBlock(c) || containsBlock(c));
+  return elements(node).some(isBlock);
 }
 
 function isBlock(node) {
   if (node.type !== 'tag') return false;
-  if (isMacroTag(node.name)) return !isInlineMacro(node);
-  if (BLOCK_TAGS.has(node.name)) return true;
-  return containsBlock(node);
+  if (blockCache.has(node)) return blockCache.get(node);
+  const result = isMacroTag(node.name) ? !isInlineMacro(node) : BLOCK_TAGS.has(node.name) || containsBlock(node);
+  blockCache.set(node, result);
+  return result;
 }
 
-function isHardBreak(node) {
-  return node.type === 'tag' && node.name === 'br';
+/** Drops a leading (dir 1) or trailing (dir -1) hard break, descending through empty or whitespace-only elements. */
+function trimSide(nodes, dir) {
+  let current = nodes;
+  for (;;) {
+    const result = extractEdgeBreak(current, dir);
+    if (!result.removed) return current;
+    current = result.nodes;
+  }
 }
 
-function isBlankText(node) {
-  return node.type === 'text' && !node.data.trim();
-}
-
-/** Drops leading/trailing hard breaks and surrounding blank text, which have no line to break to or from. */
+/** Drops leading/trailing hard breaks (and the empty or blank elements around them), which have no line to break to or from. */
 function trimBoundaryBreaks(nodes) {
-  let start = 0;
-  let end = nodes.length;
-  while (start < end && (isHardBreak(nodes[start]) || isBlankText(nodes[start]))) start += 1;
-  while (end > start && (isHardBreak(nodes[end - 1]) || isBlankText(nodes[end - 1]))) end -= 1;
-  return nodes.slice(start, end);
+  return trimSide(trimSide(nodes ?? [], 1), -1);
 }
 
 function paragraph(nodes, ctx) {
-  const text = renderInline(trimBoundaryBreaks(nodes ?? []), ctx).trim();
+  const text = renderInline(trimBoundaryBreaks(nodes), ctx).trim();
   return text ? text.split('\n').map(escapeLineStart).join('\n') : '';
 }
 

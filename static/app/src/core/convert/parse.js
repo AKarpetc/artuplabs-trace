@@ -34,3 +34,40 @@ export function param(macro, name) {
   const found = elements(macro).find((c) => c.name === 'ac:parameter' && attr(c, 'ac:name') === name);
   return found ? textOf(found).trim() : '';
 }
+
+function isHardBreakNode(node) {
+  return node.type === 'tag' && node.name === 'br';
+}
+
+function isBlankNode(node) {
+  if (node.type === 'text') return !node.data.trim();
+  if (node.type !== 'tag') return false;
+  if (node.name === 'br') return false;
+  return (node.children ?? []).every(isBlankNode);
+}
+
+/**
+ * Removes a <br> sitting at the start (dir 1) or end (dir -1) of an inline node list, descending
+ * through whitespace-only or empty elements to find it. Returns the original list, unchanged,
+ * when there is nothing to remove.
+ */
+export function extractEdgeBreak(nodes, dir) {
+  const list = nodes ?? [];
+  const index = dir === 1 ? 0 : list.length - 1;
+  if (index < 0 || index >= list.length) return { nodes: list, removed: false };
+  const node = list[index];
+  const withoutEdge = () => (dir === 1 ? list.slice(1) : list.slice(0, -1));
+  if (isHardBreakNode(node)) return { nodes: withoutEdge(), removed: true };
+  if (isBlankNode(node)) {
+    const inner = extractEdgeBreak(withoutEdge(), dir);
+    return inner.removed ? inner : { nodes: list, removed: false };
+  }
+  if (node.type === 'tag') {
+    const inner = extractEdgeBreak(node.children, dir);
+    if (!inner.removed) return { nodes: list, removed: false };
+    const updated = { ...node, children: inner.nodes };
+    const rest = dir === 1 ? [updated, ...list.slice(1)] : [...list.slice(0, -1), updated];
+    return { nodes: rest, removed: true };
+  }
+  return { nodes: list, removed: false };
+}

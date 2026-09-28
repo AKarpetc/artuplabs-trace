@@ -37,7 +37,7 @@ export function renderTable(node, ctx) {
     ctx.warn('complex-table', '');
     return htmlTable(rows, ctx);
   }
-  const grid = rows.map((row) => cellsOf(row).map((c) => renderBlockArray(c.children, { ...ctx, inTable: true }).join('<br>').replace(/\n/g, ' ')));
+  const grid = rows.map((row) => cellsOf(row).map((c) => renderBlockArray(c.children, { ...ctx, inTable: true }).join('<br>').replace(/\n{2,}/g, '<br>').replace(/\n/g, ' ')));
   const width = Math.max(...grid.map((r) => r.length));
   const line = (cells) => `| ${[...cells, ...Array(width - cells.length).fill('')].join(' | ')} |`;
   return [line(grid[0]), line(Array(width).fill('---')), ...grid.slice(1).map(line)].join('\n');

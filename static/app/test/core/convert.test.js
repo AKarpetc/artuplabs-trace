@@ -246,6 +246,36 @@ describe('fix round 1 (R18/R19)', () => {
   });
 });
 
+describe('fix round 2', () => {
+  it('1. deeply nested <span> converts in well under 200ms and keeps the text', () => {
+    const input = `<p>${'<span>'.repeat(200)}x${'</span>'.repeat(200)}</p>`;
+    const start = performance.now();
+    expect(md(input)).toBe('x\n');
+    expect(performance.now() - start).toBeLessThan(200);
+  });
+
+  it('1. deeply nested <strong> converts in well under 200ms and keeps the text', () => {
+    const input = `<p>${'<strong>'.repeat(200)}x${'</strong>'.repeat(200)}</p>`;
+    const start = performance.now();
+    const result = md(input);
+    expect(performance.now() - start).toBeLessThan(200);
+    expect(result).toContain('x');
+  });
+
+  it.each([
+    ['a hard break at the end of a mark moves outside it, not into its core', '<p><strong>a<br/></strong>b</p>', '**a**\\\nb\n'],
+    ['a hard break nested inside an inline wrapper at the paragraph edge is still stripped', '<p><span>a<br/></span></p>', 'a\n'],
+    ['a hard break before a trailing whitespace-only wrapper is still stripped', '<p>a<br/><span> </span></p>', 'a\n'],
+    ['a hard break before a trailing empty mark is still stripped', '<p>a<br/><strong></strong></p>', 'a\n'],
+    ['a mark holding only a hard break renders nothing, not stray marks', '<p><strong><br/></strong></p>', '\n'],
+  ])('2. edge hard breaks: %s', (name, input, expected) => expect(md(input)).toBe(expected));
+
+  it('3. paragraphs inside a wrapper element in a simple table cell still join with <br>, not a double space', () => {
+    expect(md('<table><tbody><tr><td><span><p>x</p><p>y</p></span></td></tr></tbody></table>')).toBe('| x<br>y |\n| --- |\n');
+    expect(md('<table><tbody><tr><td><div><p>x</p><p>y</p></div></td></tr></tbody></table>')).toBe('| x<br>y |\n| --- |\n');
+  });
+});
+
 describe('fixtures', () => {
   const dir = new URL('../fixtures/storage/', import.meta.url).pathname;
   const names = readdirSync(dir).filter((f) => f.endsWith('.xml')).map((f) => f.replace(/\.xml$/, ''));

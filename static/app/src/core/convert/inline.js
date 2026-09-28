@@ -1,5 +1,5 @@
 import { encodeLinkTarget } from '../links.js';
-import { attr, childTag, textOf } from './parse.js';
+import { attr, childTag, extractEdgeBreak, textOf } from './parse.js';
 import { codeSpan, escapeText } from './escape.js';
 import { isMacroTag, renderInlineMacro } from './macros.js';
 
@@ -55,16 +55,25 @@ function siblingChar(nodes, index, step) {
   return undefined;
 }
 
-/** Wraps emphasis content in Markdown marks, falling back to an HTML tag when GFM flanking rules would break the marks. */
+function hardBreakToken(ctx) {
+  return ctx.inTable ? '<br>' : ctx.inHeading ? ' ' : '\\\n';
+}
+
+/** Wraps emphasis content in Markdown marks, falling back to an HTML tag when GFM flanking rules would break the marks; a hard break at the mark's own edge moves outside it instead of becoming the mark's last/first character. */
 function renderMark(node, kind, before, after, ctx) {
-  const rendered = renderInline(node.children, ctx);
+  const leading = extractEdgeBreak(node.children, 1);
+  const trailing = extractEdgeBreak(leading.nodes, -1);
+  const leadBreak = leading.removed ? hardBreakToken(ctx) : '';
+  const trailBreak = trailing.removed ? hardBreakToken(ctx) : '';
+  const rendered = renderInline(trailing.nodes, ctx);
   const match = rendered.match(/^(\s*)([\s\S]*?)(\s*)$/);
   const core = match[2];
-  if (!core) return rendered;
+  if (!core) return `${leadBreak}${rendered}${trailBreak}`;
   const safe = canOpen(before, core[0]) && canClose(core[core.length - 1], after);
-  return safe
+  const wrapped = safe
     ? `${match[1]}${MARK_TOKEN[kind]}${core}${MARK_TOKEN[kind]}${match[3]}`
     : `${match[1]}<${kind}>${core}</${kind}>${match[3]}`;
+  return `${leadBreak}${wrapped}${trailBreak}`;
 }
 
 /** Markdown link with an encoded target. */
@@ -151,7 +160,7 @@ function inlineNode(node, ctx) {
   const inner = () => renderInline(node.children, ctx);
   switch (node.name) {
     case 'code': return codeSpan(textOf(node), ctx.inTable);
-    case 'br': return ctx.inTable ? '<br>' : ctx.inHeading ? ' ' : '\\\n';
+    case 'br': return hardBreakToken(ctx);
     case 'sub': case 'sup': return `<${node.name}>${inner()}</${node.name}>`;
     case 'a': return attr(node, 'href') ? link(inner() || escapeText(attr(node, 'href')), attr(node, 'href')) : inner();
     case 'ac:link': return acLink(node, ctx);
