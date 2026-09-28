@@ -15,30 +15,49 @@ export const PIPELINE_WARNING_KINDS = ['attachment-too-large', 'convert-failed']
 
 const CONVERT_FAILED = '<!-- confluence:convert-failed -->\n';
 const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const abortError = () => new DOMException('Aborted', 'AbortError');
 
 function throwIfAborted(signal) {
-  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  if (signal?.aborted) throw abortError();
 }
 
 function guard(signal) {
+  const aborted = new Promise((resolve, reject) => {
+    if (signal?.aborted) reject(abortError());
+    else signal?.addEventListener('abort', () => reject(abortError()), { once: true });
+  });
+  aborted.catch(() => {});
   return async (promise) => {
-    const value = await promise;
+    const value = await Promise.race([promise, aborted]);
     throwIfAborted(signal);
     return value;
   };
 }
 
+function dropNodes(job, ids) {
+  const { nodes, rootIds } = job.tree;
+  for (const id of ids) {
+    const node = nodes.get(id);
+    if (!node) continue;
+    const parent = nodes.get(node.parentId);
+    const siblings = parent ? parent.childIds : rootIds;
+    siblings.splice(siblings.indexOf(id), 1, ...node.childIds);
+    node.childIds.forEach((c) => {
+      nodes.get(c).parentId = node.parentId;
+    });
+    nodes.delete(id);
+    job.meta.delete(id);
+    job.vanished.add(id);
+  }
+}
+
 async function loadMetadata(job) {
   const ids = [...job.tree.nodes.keys()];
-  const rows = await job.wait(job.client.getPages(ids, { withBody: false }));
-  const byId = new Map(rows.map((p) => [p.id, p]));
-  const meta = new Map();
-  for (const [id, node] of job.tree.nodes) {
-    const page = byId.get(id) ?? { id, title: node.title, parentId: node.parentId, version: { number: 0, createdAt: '', authorId: null } };
-    node.title = page.title;
-    meta.set(id, page);
-  }
-  return meta;
+  const rows = ids.length ? await job.wait(job.client.getPages(ids, { withBody: false })) : [];
+  job.tick(rows.length);
+  job.meta = new Map(rows.map((p) => [p.id, p]));
+  dropNodes(job, ids.filter((id) => !job.meta.has(id)));
+  for (const [id, node] of job.tree.nodes) node.title = job.meta.get(id).title;
 }
 
 /** Update when the previous manifest has the same source and path options; otherwise full, with the reason. */
@@ -55,21 +74,26 @@ function sizeLimit(options) {
   return Number.isFinite(mb) && mb > 0 ? mb * 1024 * 1024 : Infinity;
 }
 
-async function collectAttachments(job) {
-  const ids = [...job.tree.nodes.keys()];
-  const lists = job.options.attachments === 'none'
-    ? ids.map(() => [])
-    : await job.wait(Promise.all(ids.map((id) => job.client.listAttachments(id))));
+async function listAttachmentsOnce(job) {
+  if (job.options.attachments === 'none') return;
+  const ids = [...job.tree.nodes.keys()].filter((id) => !job.lists.has(id));
+  await job.wait(Promise.all(ids.map(async (id) => {
+    job.lists.set(id, await job.client.listAttachments(id));
+    job.tick(1);
+  })));
+}
+
+function collectAttachments(job) {
   const limit = sizeLimit(job.options);
   const candidates = new Map();
   const paths = new Map();
   const skipped = [];
-  ids.forEach((id, index) => {
-    const list = lists[index];
+  for (const id of job.tree.nodes.keys()) {
+    const list = job.lists.get(id) ?? [];
     paths.set(id, planAttachments(job.plan.get(id).path, list, job.options));
     candidates.set(id, list.filter((a) => a.fileSize <= limit));
     list.filter((a) => a.fileSize > limit).forEach((a) => skipped.push({ pageId: id, kind: 'attachment-too-large', detail: a.title }));
-  });
+  }
   return { candidates, paths, skipped };
 }
 
@@ -77,19 +101,53 @@ function restrictPaths(job, kept) {
   return new Map([...kept].map(([id, list]) => [id, new Map(list.map((a) => [a.id, job.attachments.paths.get(id).get(a.id)]))]));
 }
 
-function planChanges(job, kept) {
+function planFull(job, kept) {
   const ids = [...job.tree.nodes.keys()];
-  if (job.decision.mode === 'full') {
-    const stats = { added: ids.length, changed: 0, moved: 0, relinked: 0, missing: 0, unchanged: 0 };
-    return { fetchIds: new Set(ids), downloadIds: new Set([...kept.values()].flat().map((a) => a.id)), deletePaths: [], stats };
+  const stats = { added: ids.length, changed: 0, moved: 0, relinked: 0, missing: 0, unchanged: 0 };
+  const result = { fetchIds: new Set(ids), downloadIds: new Set([...kept.values()].flat().map((a) => a.id)), deletePaths: [], stats };
+  if (job.decision.fullReason !== 'options-changed') return result;
+  const written = new Set([...job.plan.values()].map((p) => p.path));
+  restrictPaths(job, kept).forEach((map) => map.forEach((path) => written.add(path)));
+  const previous = job.previousManifest.pages;
+  const old = new Set(previous.flatMap((p) => [p.path, ...p.attachments.map((a) => a.path)]));
+  stats.missing = previous.filter((p) => !job.tree.nodes.has(p.id)).length;
+  return { ...result, deletePaths: [...old].filter((p) => !written.has(p)).sort() };
+}
+
+function refetchChangedChildLists(job, result) {
+  const previous = new Map();
+  [...job.previousManifest.pages].sort((a, b) => a.weight - b.weight).forEach((p) => {
+    if (p.parentId) previous.set(p.parentId, [...(previous.get(p.parentId) ?? []), p.id]);
+  });
+  const fetchIds = new Set(result.fetchIds);
+  const stats = { ...result.stats };
+  for (const [id, node] of job.tree.nodes) {
+    if (fetchIds.has(id) || (previous.get(id) ?? []).join(',') === node.childIds.join(',')) continue;
+    fetchIds.add(id);
+    stats.relinked += 1;
+    stats.unchanged -= 1;
   }
-  return planUpdate({
+  return { ...result, fetchIds, stats };
+}
+
+function planChanges(job, kept) {
+  if (job.decision.mode === 'full') return planFull(job, kept);
+  const ids = [...job.tree.nodes.keys()];
+  return refetchChangedChildLists(job, planUpdate({
     previous: job.previousManifest,
     versions: new Map(ids.map((id) => [id, job.meta.get(id).version.number])),
     plan: job.plan,
     attachments: kept,
     attachmentPlan: restrictPaths(job, kept),
-  });
+  }));
+}
+
+async function prepare(job) {
+  job.titles = new Map([...job.tree.nodes.values()].reverse().map((n) => [n.title, n.id]));
+  job.plan = planPaths(job.tree, job.options, job.decision.names);
+  await listAttachmentsOnce(job);
+  job.attachments = collectAttachments(job);
+  return planChanges(job, job.attachments.candidates);
 }
 
 async function fetchContent(job, fetchIds) {
@@ -97,8 +155,12 @@ async function fetchContent(job, fetchIds) {
   const total = ids.length;
   job.onProgress({ stage: 'pages', done: 0, total });
   const rows = total ? await job.wait(job.client.getPages(ids, { withBody: true })) : [];
-  const fetched = new Map(rows.map((p) => [p.id, p]));
-  const pages = new Map(ids.map((id) => [id, fetched.get(id) ?? { ...job.meta.get(id), body: '' }]));
+  const pages = new Map(rows.map((p) => [p.id, p]));
+  const vanished = ids.filter((id) => !pages.has(id));
+  if (vanished.length) {
+    dropNodes(job, vanished);
+    return null;
+  }
   let done = 0;
   const labels = await job.wait(Promise.all(ids.map(async (id) => {
     const list = await job.client.getLabels(id);
@@ -112,8 +174,8 @@ async function fetchContent(job, fetchIds) {
   return { ids, pages, labels: new Map(ids.map((id, i) => [id, labels[i]])), users };
 }
 
-/** ConvertContext for one page: in-export links become relative paths, the rest point at Confluence. */
-export function makeConvertContext(job, id, content, used) {
+/** ConvertContext for one page: in-export links become relative paths, the rest point at Confluence; child and attachment-owner ids go to `linked`. */
+export function makeConvertContext(job, id, content, used, linked) {
   const { plan, tree, siteUrl, spaceKey, titles, attachments } = job;
   const from = plan.get(id).path;
   const inExport = (ref) => (!ref.spaceKey || ref.spaceKey === spaceKey ? titles.get(ref.title) ?? null : null);
@@ -126,21 +188,27 @@ export function makeConvertContext(job, id, content, used) {
     },
     resolveAttachment(filename, owner) {
       const ownerId = owner ? inExport(owner) : id;
+      if (ownerId && ownerId !== id) linked.add(ownerId);
       const found = ownerId ? attachments.candidates.get(ownerId).find((a) => a.title === filename) : null;
       if (!found) return null;
       used.add(found.id);
       return relativePath(from, attachments.paths.get(ownerId).get(found.id));
     },
     resolveUser: (userId) => content.users.get(userId) ?? null,
-    childLinks: () => tree.nodes.get(id).childIds.map((c) => ({ title: tree.nodes.get(c).title, href: relativePath(from, plan.get(c).path) })),
+    childLinks: () => tree.nodes.get(id).childIds.map((c) => {
+      linked.add(c);
+      return { title: tree.nodes.get(c).title, href: relativePath(from, plan.get(c).path) };
+    }),
   };
 }
 
 function convertOne(job, id, content, used) {
+  const linked = new Set();
   try {
-    return job.convert(content.pages.get(id).body ?? '', makeConvertContext(job, id, content, used));
+    const result = job.convert(content.pages.get(id).body ?? '', makeConvertContext(job, id, content, used, linked));
+    return { ...result, links: [...result.links, ...linked] };
   } catch (error) {
-    return { markdown: CONVERT_FAILED, links: [], warnings: [{ kind: 'convert-failed', detail: String(error?.message ?? error) }] };
+    return { markdown: CONVERT_FAILED, links: [...linked], warnings: [{ kind: 'convert-failed', detail: String(error?.message ?? error) }] };
   }
 }
 
@@ -166,11 +234,15 @@ function writePages(job, content, used) {
 }
 
 function keptAttachments(job, used, fetchIds) {
-  const previousSets = new Map((job.previousManifest?.pages ?? []).map((p) => [p.id, new Set(p.attachments.map((a) => a.id))]));
-  const referenced = job.options.attachments === 'referenced';
-  return new Map([...job.attachments.candidates].map(([id, list]) => [id, referenced
-    ? list.filter((a) => used.has(a.id) || (!fetchIds.has(id) && previousSets.get(id)?.has(a.id)))
-    : list]));
+  if (job.options.attachments !== 'referenced') return job.attachments.candidates;
+  const previous = new Map((job.previousManifest?.pages ?? []).map((p) => [p.id, p]));
+  const unchanged = [...job.tree.nodes.keys()].filter((id) => !fetchIds.has(id));
+  const linkedByUnchanged = new Set(unchanged.flatMap((id) => previous.get(id)?.links ?? []));
+  return new Map([...job.attachments.candidates].map(([id, list]) => {
+    const keepPrevious = !fetchIds.has(id) || linkedByUnchanged.has(id);
+    const old = new Set(keepPrevious ? (previous.get(id)?.attachments ?? []).map((a) => a.id) : []);
+    return [id, list.filter((a) => used.has(a.id) || old.has(a.id))];
+  }));
 }
 
 async function writeAttachments(job, kept, downloadIds) {
@@ -178,6 +250,7 @@ async function writeAttachments(job, kept, downloadIds) {
   const total = items.length;
   let done = 0;
   job.onProgress({ stage: 'attachments', done, total });
+  throwIfAborted(job.signal);
   const blobs = await job.wait(Promise.all(items.map(async ({ attachment }) => {
     const bytes = await job.client.download(attachment.downloadLink);
     done += 1;
@@ -231,33 +304,61 @@ function fileNameOf(job, now) {
   return exportFileName({ spaceKey: target.spaceKey, rootSlug: root, mode: decision.mode, now });
 }
 
-/** Runs a full or update export in the browser and returns the zip with stats and warnings. */
+function statsOf(job, stats, extra) {
+  const planned = job.decision.mode === 'update' || job.decision.fullReason === 'options-changed';
+  const known = new Set(planned ? job.previousManifest.pages.map((p) => p.id) : []);
+  const vanished = [...job.vanished].filter((id) => !known.has(id)).length;
+  return { pages: job.tree.nodes.size, ...extra, ...stats, missing: stats.missing + vanished };
+}
+
+function createJob({ client, target, options, previousManifest, siteUrl, signal, onProgress, convert }) {
+  const source = { siteUrl, spaceKey: target.spaceKey, rootPageId: target.kind === 'space' ? null : target.pageId };
+  const emit = (progress) => {
+    if (!signal?.aborted) onProgress(progress);
+  };
+  const job = { client, target, options, previousManifest, siteUrl, spaceKey: target.spaceKey, source, signal, onProgress: emit, convert };
+  let scanned = 0;
+  job.startTicks = () => {
+    scanned = job.tree.nodes.size;
+  };
+  job.tick = (n) => {
+    scanned += n;
+    emit({ stage: 'scan', done: scanned, total: 0 });
+  };
+  return Object.assign(job, { wait: guard(signal), vanished: new Set(), lists: new Map(), decision: decideMode(previousManifest, source, options) });
+}
+
+/**
+ * Runs a full or update export in the browser and returns the zip with stats and warnings.
+ * `client` must be created with the same `signal` so in-flight requests stop on cancel.
+ */
 export async function runExport({ client, target, options, previousManifest, siteUrl, signal, onProgress, now, convert = storageToMarkdown }) {
   throwIfAborted(signal);
-  const source = { siteUrl, spaceKey: target.spaceKey, rootPageId: target.kind === 'space' ? null : target.pageId };
-  const job = { client, target, options, previousManifest, siteUrl, spaceKey: target.spaceKey, source, onProgress, convert, wait: guard(signal) };
-  job.tree = await job.wait(scanTree(client, target, onProgress, signal));
-  job.meta = await loadMetadata(job);
-  job.titles = new Map([...job.tree.nodes.values()].reverse().map((n) => [n.title, n.id]));
-  job.decision = decideMode(previousManifest, source, options);
-  job.plan = planPaths(job.tree, options, job.decision.names);
-  job.attachments = await collectAttachments(job);
-  const { fetchIds, stats } = planChanges(job, job.attachments.candidates);
-  const content = await fetchContent(job, fetchIds);
+  const job = createJob({ client, target, options, previousManifest, siteUrl, signal, onProgress, convert });
+  job.tree = await job.wait(scanTree(client, target, job.onProgress, signal));
+  job.startTicks();
+  await loadMetadata(job);
+  let changes;
+  let content = null;
+  while (!content) {
+    changes = await prepare(job);
+    content = await fetchContent(job, changes.fetchIds);
+  }
   job.zip = createZipWriter();
   const used = new Set();
   const converted = writePages(job, content, used);
-  const kept = keptAttachments(job, used, fetchIds);
+  const kept = keptAttachments(job, used, changes.fetchIds);
   const { downloadIds, deletePaths } = planChanges(job, kept);
   const attachments = await writeAttachments(job, kept, downloadIds);
   const warnings = collectWarnings(job, converted);
   const blob = await pack(job, finalManifestPages(job, content, converted, kept), warnings, deletePaths);
+  const extra = { written: converted.size, attachments, skippedAttachments: job.attachments.skipped.length, deleted: deletePaths.length, bytes: blob.size };
   return {
     blob,
     fileName: fileNameOf(job, now),
     mode: job.decision.mode,
     fullReason: job.decision.fullReason,
-    stats: { pages: job.tree.nodes.size, written: converted.size, attachments, skippedAttachments: job.attachments.skipped.length, deleted: deletePaths.length, ...stats, bytes: blob.size },
+    stats: statsOf(job, changes.stats, extra),
     warnings: reportWarnings(job, warnings),
     deletePaths,
   };

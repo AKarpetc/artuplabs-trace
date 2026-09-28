@@ -237,3 +237,134 @@ describe('scanTree', () => {
     expect(single.nodes.get('13')).toEqual({ id: '13', title: 'A1', parentId: '10', childIds: [] });
   });
 });
+
+describe('runExport fix round 1', () => {
+  const eng = { id: '5', key: 'ENG', name: 'Eng' };
+  const CHILDREN = '<p>Hub</p><ac:structured-macro ac:name="children"/>';
+  const OWNED = '<p><ac:image><ri:attachment ri:filename="d.png"><ri:page ri:content-title="API"/></ri:attachment></ac:image></p>';
+  const withHome = (body) => {
+    const list = pages();
+    list[0].body = body;
+    return list;
+  };
+  const previousOf = async (fake, over = {}) => JSON.parse((await files(await run(fake, over)))['export-manifest.json']);
+
+  it('rewrites a parent with a children macro when a child is renamed', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: withHome(CHILDREN), users: {} });
+    const previousManifest = await previousOf(fake);
+    fake.update('3', { title: 'Cafe Renamed', version: 2 });
+    const out = await files(await run(fake, { previousManifest }));
+    expect(out['home/index.md']).toContain('[Cafe Renamed](cafe-renamed.md)');
+    expect(out['home/index.md']).not.toContain('(cafe.md)');
+    expect(out['export-deleted.txt']).toBe('home/cafe.md\n');
+  });
+
+  it('rewrites a parent when a child is added', async () => {
+    const previousManifest = await previousOf(createFakeConfluence({ space: eng, pages: withHome(CHILDREN), users: {} }));
+    const more = [...withHome(CHILDREN), { id: '4', title: 'Zeta', parentId: '1', position: 2, version: 1, authorId: 'u1', labels: [], body: '<p>z</p>', attachments: [] }];
+    const result = await run(createFakeConfluence({ space: eng, pages: more, users: {} }), { previousManifest });
+    const out = await files(result);
+    expect(Object.keys(out).sort()).toEqual(['export-manifest.json', 'home/index.md', 'home/zeta.md']);
+    expect(out['home/index.md']).toContain('[Zeta](zeta.md)');
+    expect(result.stats).toMatchObject({ added: 1, relinked: 1, unchanged: 2 });
+  });
+
+  it('rewrites a parent when its children are reordered', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: withHome(CHILDREN), users: {} });
+    const previousManifest = await previousOf(fake);
+    fake.update('3', { position: -1 });
+    const out = await files(await run(fake, { previousManifest }));
+    const index = out['home/index.md'];
+    expect(index.indexOf('[Café](cafe.md)')).toBeGreaterThan(-1);
+    expect(index.indexOf('[Café](cafe.md)')).toBeLessThan(index.indexOf('[API](api.md)'));
+  });
+
+  it('keeps an attachment embedded by an unchanged page when its owner changes in referenced mode', async () => {
+    const list = withHome(OWNED);
+    list[1].body = '<p>api</p>';
+    const fake = createFakeConfluence({ space: eng, pages: list, users: {} });
+    const options = { ...DEFAULT_OPTIONS, attachments: 'referenced' };
+    const previousManifest = await previousOf(fake, { options });
+    expect(previousManifest.pages.find((p) => p.id === '2').attachments.map((a) => a.id)).toEqual(['a1']);
+    fake.update('2', { version: 2 });
+    const result = await run(fake, { previousManifest, options });
+    const out = await files(result);
+    expect(result.deletePaths).toEqual([]);
+    expect(Object.keys(out)).not.toContain('export-deleted.txt');
+    expect(JSON.parse(out['export-manifest.json']).pages.find((p) => p.id === '2').attachments.map((a) => a.id)).toEqual(['a1']);
+  });
+
+  it('rewrites a page that embeds another page\'s attachment when the owner moves', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: withHome(OWNED), users: {} });
+    const first = await files(await run(fake));
+    expect(first['home/index.md']).toContain('![](api.assets/d.png)');
+    fake.update('2', { parentId: '3', version: 2 });
+    const out = await files(await run(fake, { previousManifest: JSON.parse(first['export-manifest.json']) }));
+    expect(out['home/index.md']).toContain('![](cafe/api.assets/d.png)');
+    expect(out['home/cafe/api.assets/d.png']).toEqual([...PNG]);
+    expect(out['export-deleted.txt']).toBe('home/api.assets/d.png\nhome/api.md\nhome/cafe.md\n');
+  });
+
+  it('stops promptly when cancelled while downloads are in flight', async () => {
+    const list = pages();
+    list[1].attachments = Array.from({ length: 5 }, (_, i) => ({ id: `a${i + 1}`, title: `f${i}.png`, version: 1, bytes: PNG }));
+    const fake = createFakeConfluence({ space: eng, pages: list, users: {} });
+    let finished = 0;
+    const slow = { ...fake.client, download: async (link) => {
+      await new Promise((resolve) => setTimeout(resolve, link.endsWith('/a1') ? 1 : 300));
+      finished += 1;
+      return fake.client.download(link);
+    } };
+    const controller = new AbortController();
+    const pending = runExport({
+      client: slow, target: { kind: 'space', spaceKey: 'ENG' }, options: DEFAULT_OPTIONS, previousManifest: null, siteUrl: 'https://x.atlassian.net',
+      signal: controller.signal, onProgress: (p) => p.stage === 'attachments' && p.done === 1 && controller.abort(), now: new Date(2026, 8, 28),
+    });
+    await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+    expect(finished).toBeLessThan(5);
+  });
+
+  it('keeps reporting scan progress while loading metadata and attachment lists', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
+    const scan = [];
+    await run(fake, { onProgress: (p) => p.stage === 'scan' && scan.push(p) });
+    const done = scan.map((p) => p.done);
+    expect(done).toEqual([...done].sort((a, b) => a - b));
+    expect(done.at(-1)).toBe(9);
+    expect(scan.every((p) => p.total === 0)).toBe(true);
+  });
+
+  it('lists previous files that a forced full export no longer writes', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
+    const previousManifest = await previousOf(fake);
+    const result = await run(fake, { previousManifest, options: { ...DEFAULT_OPTIONS, preset: 'hugo' } });
+    const out = await files(result);
+    expect(Object.keys(out)).toContain('home/_index.md');
+    expect(result.deletePaths).toEqual(['home/index.md']);
+    expect(out['export-deleted.txt']).toBe('home/index.md\n');
+    expect(result.stats).toMatchObject({ deleted: 1, missing: 0 });
+  });
+
+  const vanishing = (fake, id, withBody) => ({
+    ...fake,
+    client: { ...fake.client, getPages: async (ids, opts) => (await fake.client.getPages(ids, opts)).filter((p) => !(p.id === id && opts.withBody === withBody)) },
+  });
+
+  it('drops a page that vanished before its body was fetched and counts it as missing', async () => {
+    const fake = vanishing(createFakeConfluence({ space: eng, pages: pages(), users: {} }), '3', true);
+    const result = await run(fake);
+    const out = await files(result);
+    expect(Object.keys(out).sort()).toEqual(['export-manifest.json', 'home/api.assets/d.png', 'home/api.md', 'home/index.md']);
+    expect(result.stats).toMatchObject({ pages: 2, written: 2, missing: 1 });
+    expect(JSON.parse(out['export-manifest.json']).pages.map((p) => p.id)).toEqual(['2', '1']);
+  });
+
+  it('drops a parent that vanished before metadata and keeps its children in its place', async () => {
+    const fake = vanishing(createFakeConfluence({ space: eng, pages: pages(), users: {} }), '1', false);
+    const result = await run(fake);
+    const out = await files(result);
+    expect(Object.keys(out).sort()).toEqual(['api.assets/d.png', 'api.md', 'cafe.md', 'export-manifest.json']);
+    expect(result.stats).toMatchObject({ pages: 2, missing: 1 });
+    expect(out['cafe.md']).toContain('[Home](https://x.atlassian.net/wiki/display/ENG/Home)');
+  });
+});
