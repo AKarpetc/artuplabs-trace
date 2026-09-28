@@ -31,9 +31,10 @@ describe('issue panel shell', () => {
     document.body.innerHTML = '';
   });
 
-  it('bootstraps the Forge theme and renders the ArtUp Trace heading', async () => {
+  it('bootstraps the Forge theme and renders the panel content without repeating the panel title', async () => {
     document.body.innerHTML = '<div id="root"></div>';
     await import('../src/issue/main.jsx');
-    await waitFor(() => expect(screen.getByText('ArtUp Trace')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('spinner-wrapper')).toBeInTheDocument());
+    expect(screen.queryByText('ArtUp Trace')).not.toBeInTheDocument();
   });
 });
