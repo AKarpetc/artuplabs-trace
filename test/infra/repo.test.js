@@ -52,6 +52,15 @@ describe('recomputeCovered', () => {
   });
 });
 
+describe('confirmLink', () => {
+  it('sets the fingerprint, clears suspect and stamps the time, without taking or storing an account id', async () => {
+    h.answers.push({ rows: { affectedRows: 1 } });
+    expect(await repo.confirmLink('10001', '5', '2026-09-28T00:00:00.000Z')).toBe(1);
+    expect(h.calls[0].query).not.toContain('confirmed_by');
+    expect(h.calls[0].params).toEqual(['2026-09-28T00:00:00.000Z', '5', '10001', '10001']);
+  });
+});
+
 describe('pruneJobs', () => {
   it('deletes only finished jobs older than the cut-off, bounded by the limit', async () => {
     h.answers.push({ rows: { affectedRows: 3 } });

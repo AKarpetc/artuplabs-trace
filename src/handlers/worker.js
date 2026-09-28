@@ -35,9 +35,9 @@ export async function startSync(projectIdInput, { full, reanchor = false, delayS
 }
 
 /** Creates a baseline after an incremental sync and enqueues its capture; starts the sync first so a failure there leaves no orphaned capturing baseline (R19). */
-export async function startBaseline(projectId, name, accountId) {
+export async function startBaseline(projectId, name) {
   const syncJobId = await startSync(String(projectId), { full: false });
-  const baselineId = await baselineRepo.createBaseline({ projectId: String(projectId), name, createdBy: accountId, nowIso: new Date().toISOString() });
+  const baselineId = await baselineRepo.createBaseline({ projectId: String(projectId), name, nowIso: new Date().toISOString() });
   const id = await repo.createJob('baseline', String(projectId), { baselineId, afterIssueId: '', waitForJobId: syncJobId }, new Date().toISOString());
   await enqueueJob(id, 30);
   return baselineId;

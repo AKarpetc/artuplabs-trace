@@ -13,18 +13,19 @@ vi.mock('../../src/infra/settings', () => ({
   getBudget: vi.fn(),
   saveBudget: vi.fn(),
 }));
-vi.mock('../../src/infra/baselineRepo', () => ({}));
+vi.mock('../../src/infra/baselineRepo', () => ({ createBaseline: vi.fn(async () => 9) }));
 vi.mock('../../src/infra/queue', () => ({ enqueueJob: vi.fn(async () => {}) }));
 vi.mock('../../src/infra/schema', () => ({ runMigrations: vi.fn(async () => []) }));
 vi.mock('../../src/infra/jira', async (importOriginal) => ({ ...(await importOriginal()), createJira: vi.fn(() => ({})), asAppRequest: vi.fn() }));
 vi.mock('@forge/api', () => ({ default: {}, assumeTrustedRoute: (p) => p }));
 vi.mock('../../src/core/jobs', async (importOriginal) => ({ ...(await importOriginal()), runSyncStep: vi.fn() }));
 
-const { startSync, jobWorker } = await import('../../src/handlers/worker');
+const { startSync, startBaseline, jobWorker } = await import('../../src/handlers/worker');
 const repo = await import('../../src/infra/repo');
 const settings = await import('../../src/infra/settings');
 const queue = await import('../../src/infra/queue');
 const jobs = await import('../../src/core/jobs');
+const baselineRepo = await import('../../src/infra/baselineRepo');
 
 const config = { requirementTypeIds: ['10006'], verificationTypeIds: ['10007'], linkTypeIds: [], fingerprintFieldIds: ['summary', 'description'] };
 
@@ -44,6 +45,14 @@ describe('startSync', () => {
   it('enqueues at once when no delay is requested', async () => {
     await startSync('10001', { full: true });
     expect(queue.enqueueJob).toHaveBeenCalledWith(42, 0);
+  });
+});
+
+describe('startBaseline', () => {
+  it('creates the baseline without taking or forwarding an account id', async () => {
+    await startBaseline('10001', 'My baseline');
+    expect(baselineRepo.createBaseline).toHaveBeenCalledWith(expect.objectContaining({ projectId: '10001', name: 'My baseline' }));
+    expect(baselineRepo.createBaseline.mock.calls[0][0]).not.toHaveProperty('createdBy');
   });
 });
 

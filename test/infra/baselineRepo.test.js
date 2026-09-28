@@ -22,6 +22,23 @@ beforeEach(() => {
   h.answers.length = 0;
 });
 
+describe('createBaseline', () => {
+  it('writes created_by as an empty string, never an account id', async () => {
+    h.answers.push({ rows: { insertId: 7 } });
+    expect(await baselineRepo.createBaseline({ projectId: '10001', name: 'B1', nowIso: '2026-09-28T00:00:00.000Z' })).toBe(7);
+    expect(h.calls[0].params).toEqual(['10001', 'B1', '', '2026-09-28T00:00:00.000Z', 'capturing']);
+  });
+});
+
+describe('listBaselines', () => {
+  it('does not surface created_by on the returned rows', async () => {
+    h.answers.push({ rows: [{ id: 1, name: 'B1', created_by: '', created_at: 'now', status: 'complete', member_count: 3, checksum: 'abc' }] });
+    const [row] = await baselineRepo.listBaselines('10001');
+    expect(row).not.toHaveProperty('createdBy');
+    expect(row).toEqual({ id: 1, name: 'B1', createdAt: 'now', status: 'complete', memberCount: 3, checksum: 'abc' });
+  });
+});
+
 describe('diffCounts', () => {
   it('reads added, removed, changed, linksChanged and statusChanged from the three queries', async () => {
     h.answers.push(

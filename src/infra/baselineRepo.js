@@ -5,10 +5,10 @@ async function run(query, params = []) {
   return sql.prepare(query).bindParams(...params).execute();
 }
 
-/** Creates a baseline row in status "capturing". */
-export async function createBaseline({ projectId, name, createdBy, nowIso }) {
+/** Creates a baseline row in status "capturing"; created_by is always written empty since the app stores no account ids. */
+export async function createBaseline({ projectId, name, nowIso }) {
   const res = await run('INSERT INTO baseline (project_id, name, created_by, created_at, status) VALUES (?, ?, ?, ?, ?)',
-    [projectId, name, createdBy, nowIso, 'capturing']);
+    [projectId, name, '', nowIso, 'capturing']);
   return Number(res.rows.insertId);
 }
 
@@ -74,7 +74,7 @@ export async function failBaseline(baselineId, message) {
 /** Baselines of a project, newest first. */
 export async function listBaselines(projectId) {
   const res = await run('SELECT * FROM baseline WHERE project_id = ? ORDER BY id DESC LIMIT 100', [projectId]);
-  return res.rows.map((r) => ({ id: Number(r.id), name: r.name, createdBy: r.created_by, createdAt: r.created_at, status: r.status, memberCount: Number(r.member_count), checksum: r.checksum }));
+  return res.rows.map((r) => ({ id: Number(r.id), name: r.name, createdAt: r.created_at, status: r.status, memberCount: Number(r.member_count), checksum: r.checksum }));
 }
 
 /** Project id owning a baseline, or null when the baseline does not exist. */

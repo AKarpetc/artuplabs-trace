@@ -98,8 +98,8 @@ define('getSuspects', 'BROWSE_PROJECTS', async ({ projectId, after }) => {
   return { rows, next: rows.length === PAGE ? rows[rows.length - 1].linkId : null };
 });
 
-define('confirmLink', 'EDIT_ISSUES', async ({ projectId, linkId }, context) => {
-  const affected = await repo.confirmLink(projectId, requireJiraId(linkId), context.accountId, new Date().toISOString());
+define('confirmLink', 'EDIT_ISSUES', async ({ projectId, linkId }) => {
+  const affected = await repo.confirmLink(projectId, requireJiraId(linkId), new Date().toISOString());
   return { ok: affected > 0 };
 });
 
@@ -107,12 +107,12 @@ define('getIssueTrace', 'BROWSE_PROJECTS', async ({ issueId, projectId }, contex
 
 define('listBaselines', 'BROWSE_PROJECTS', async ({ projectId }) => baselineRepo.listBaselines(projectId));
 
-define('createBaseline', 'EDIT_ISSUES', async ({ projectId, name }, context) => {
+define('createBaseline', 'EDIT_ISSUES', async ({ projectId, name }) => {
   const clean = String(name ?? '').trim().slice(0, 200);
   if (!clean) {
     throw new Error('Baseline name is required.');
   }
-  return { baselineId: await startBaseline(projectId, clean, context.accountId) };
+  return { baselineId: await startBaseline(projectId, clean) };
 });
 
 define('getDiff', 'BROWSE_PROJECTS', async ({ projectId, leftId, rightId, after }) => {
