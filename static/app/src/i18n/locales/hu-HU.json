@@ -8,5 +8,10 @@
   "unlicensed.title": "Az ArtUp Export aktív licencet igényel",
   "unlicensed.body": "Kérje meg a Confluence rendszergazdáját, hogy indítson próbaidőszakot, vagy újítsa meg az előfizetést az Alkalmazások kezelése menüben.",
   "time.seconds": "{seconds} mp",
-  "time.minutesSeconds": "{minutes} perc {seconds} mp"
+  "time.minutesSeconds": "{minutes} perc {seconds} mp",
+  "fileTree.label": "Az exportban szereplő fájlok",
+  "fileTree.more": {
+    "one": "+{count} további fájl",
+    "other": "+{count} további fájl"
+  }
 }

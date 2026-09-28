@@ -8,5 +8,10 @@
   "unlicensed.title": "ArtUp Export vaatii aktiivisen lisenssin",
   "unlicensed.body": "Pyydä Confluence-pääkäyttäjää aloittamaan kokeilujakso tai uusimaan tilaus kohdassa Hallinnoi sovelluksia.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "fileTree.label": "Viennin tiedostot",
+  "fileTree.more": {
+    "one": "+{count} tiedosto lisää",
+    "other": "+{count} tiedostoa lisää"
+  }
 }

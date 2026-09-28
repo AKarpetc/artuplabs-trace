@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => {
     root: page ? resolve(rootDir, page) : rootDir,
     base: './',
     plugins: [react()],
+    resolve: mode === 'preview'
+      ? { alias: { '@forge/bridge': resolve(rootDir, 'preview/bridgeMock.js') } }
+      : {},
+    server: mode === 'preview' ? { fs: { allow: [rootDir] } } : {},
     build: page
       ? { outDir: resolve(rootDir, 'dist', page), emptyOutDir: true }
       : {},

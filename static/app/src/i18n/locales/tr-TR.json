@@ -8,5 +8,10 @@
   "unlicensed.title": "ArtUp Export etkin bir lisans gerektirir",
   "unlicensed.body": "Confluence yöneticinizden Uygulamaları Yönet bölümünde deneme sürümü başlatmasını veya aboneliği yenilemesini isteyin.",
   "time.seconds": "{seconds} sn",
-  "time.minutesSeconds": "{minutes} dk {seconds} sn"
+  "time.minutesSeconds": "{minutes} dk {seconds} sn",
+  "fileTree.label": "Dışa aktarımdaki dosyalar",
+  "fileTree.more": {
+    "one": "+{count} dosya daha",
+    "other": "+{count} dosya daha"
+  }
 }

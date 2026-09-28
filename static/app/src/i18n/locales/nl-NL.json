@@ -8,5 +8,10 @@
   "unlicensed.title": "ArtUp Export heeft een actieve licentie nodig",
   "unlicensed.body": "Vraag uw Confluence-beheerder om een proefperiode te starten of het abonnement te verlengen bij Apps beheren.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "fileTree.label": "Bestanden in de export",
+  "fileTree.more": {
+    "one": "+{count} ander bestand",
+    "other": "+{count} andere bestanden"
+  }
 }

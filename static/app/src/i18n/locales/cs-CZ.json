@@ -8,5 +8,12 @@
   "unlicensed.title": "ArtUp Export vyžaduje aktivní licenci",
   "unlicensed.body": "Požádejte správce Confluence, aby spustil zkušební verzi nebo obnovil předplatné v části Spravovat aplikace.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "fileTree.label": "Soubory v exportu",
+  "fileTree.more": {
+    "one": "Ještě {count} soubor",
+    "few": "Ještě {count} soubory",
+    "many": "Ještě {count} souboru",
+    "other": "Ještě {count} souborů"
+  }
 }

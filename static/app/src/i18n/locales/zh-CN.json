@@ -8,5 +8,9 @@
   "unlicensed.title": "ArtUp Export 需要有效的许可证",
   "unlicensed.body": "请联系您的 Confluence 管理员在“管理应用”中开始试用或续订。",
   "time.seconds": "{seconds} 秒",
-  "time.minutesSeconds": "{minutes} 分 {seconds} 秒"
+  "time.minutesSeconds": "{minutes} 分 {seconds} 秒",
+  "fileTree.label": "导出中的文件",
+  "fileTree.more": {
+    "other": "还有 {count} 个文件"
+  }
 }

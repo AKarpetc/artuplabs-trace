@@ -1,0 +1,84 @@
+import { setGlobalTheme } from '@atlaskit/tokens/set-global-theme';
+import { routeConfluence, SPACE } from './fixtures.js';
+
+/**
+ * Local stand-in for @forge/bridge used by `vite --mode preview`. Query parameters:
+ * `locale` (Confluence locale), `theme` (light|dark), `state` (e.g. unlicensed), `target` (page id), `entry`.
+ */
+function params() {
+  const search = new URLSearchParams(globalThis.location?.search ?? '');
+  return {
+    locale: search.get('locale') || 'en-US',
+    theme: search.get('theme') === 'dark' ? 'dark' : 'light',
+    state: search.get('state') || 'ready',
+    target: search.get('target') || '',
+    entry: search.get('entry') || 'studio',
+  };
+}
+
+const wait = (ms) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+const latency = () => wait(30 + Math.floor(Math.random() * 51));
+
+/** Forge `view` API: context from the query string and token theming. */
+export const view = {
+  async getContext() {
+    const { locale, theme, state, target, entry } = params();
+    const isAction = entry === 'action';
+    return {
+      locale: locale.replace('-', '_'),
+      siteUrl: 'https://preview.atlassian.net',
+      environmentType: 'DEVELOPMENT',
+      license: { active: state !== 'unlicensed' },
+      moduleKey: isAction ? 'export-content-action' : 'export-space-page',
+      theme: { colorMode: theme },
+      extension: {
+        type: isAction ? 'confluence:contentAction' : 'confluence:spacePage',
+        space: { key: SPACE.key, id: SPACE.id },
+        ...(target ? { content: { id: target, type: 'page' } } : {}),
+      },
+    };
+  },
+  theme: {
+    async enable() {
+      await setGlobalTheme({ colorMode: params().theme });
+    },
+  },
+  async close() {
+    return undefined;
+  },
+  async refresh() {
+    return undefined;
+  },
+};
+
+/** Forge `invoke`: answers the resolvers the UI calls; unknown keys reject like a missing resolver. */
+export async function invoke(key) {
+  await latency();
+  const { state } = params();
+  if (key === 'getAccess') return { licensed: state !== 'unlicensed' };
+  throw new Error(`preview: no resolver for ${key}`);
+}
+
+/** Forge `requestConfluence`: routes the REST path to the fixture space with 30–80 ms latency. */
+export async function requestConfluence(path) {
+  await latency();
+  return routeConfluence(path);
+}
+
+/** Forge `router`: logs navigation instead of leaving the preview. */
+export const router = {
+  async navigate(location) {
+    console.info('preview router.navigate', location);
+  },
+  async open(location) {
+    console.info('preview router.open', location);
+  },
+};
+
+/** Forge `showFlag`: logs the flag and returns a closable handle. */
+export function showFlag(options) {
+  console.info('preview showFlag', options);
+  return { close: async () => true };
+}

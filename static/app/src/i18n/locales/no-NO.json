@@ -8,5 +8,10 @@
   "unlicensed.title": "ArtUp Export krever en aktiv lisens",
   "unlicensed.body": "Be Confluence-administratoren starte en prøveperiode eller fornye abonnementet under Administrer apper.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "fileTree.label": "Filer i eksporten",
+  "fileTree.more": {
+    "one": "+{count} fil til",
+    "other": "+{count} filer til"
+  }
 }

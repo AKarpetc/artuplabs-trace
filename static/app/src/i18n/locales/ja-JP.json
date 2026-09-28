@@ -8,5 +8,9 @@
   "unlicensed.title": "ArtUp Export には有効なライセンスが必要です",
   "unlicensed.body": "Confluence の管理者に、「アプリの管理」でトライアルを開始するかサブスクリプションを更新するよう依頼してください。",
   "time.seconds": "{seconds} 秒",
-  "time.minutesSeconds": "{minutes} 分 {seconds} 秒"
+  "time.minutesSeconds": "{minutes} 分 {seconds} 秒",
+  "fileTree.label": "エクスポートに含まれるファイル",
+  "fileTree.more": {
+    "other": "ほか {count} 件のファイル"
+  }
 }

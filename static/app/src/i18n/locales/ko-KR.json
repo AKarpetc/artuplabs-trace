@@ -8,5 +8,9 @@
   "unlicensed.title": "ArtUp Export에는 활성 라이선스가 필요합니다",
   "unlicensed.body": "Confluence 관리자에게 '앱 관리'에서 체험판을 시작하거나 구독을 갱신하도록 요청하세요.",
   "time.seconds": "{seconds}초",
-  "time.minutesSeconds": "{minutes}분 {seconds}초"
+  "time.minutesSeconds": "{minutes}분 {seconds}초",
+  "fileTree.label": "내보내기에 포함된 파일",
+  "fileTree.more": {
+    "other": "외 {count}개 파일"
+  }
 }

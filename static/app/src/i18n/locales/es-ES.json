@@ -8,5 +8,11 @@
   "unlicensed.title": "ArtUp Export necesita una licencia activa",
   "unlicensed.body": "Pide a tu administrador de Confluence que inicie una prueba o renueve la suscripción en Gestionar aplicaciones.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "fileTree.label": "Archivos de la exportación",
+  "fileTree.more": {
+    "one": "+{count} archivo más",
+    "many": "+{count} archivos más",
+    "other": "+{count} archivos más"
+  }
 }

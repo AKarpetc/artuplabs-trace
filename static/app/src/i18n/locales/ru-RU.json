@@ -8,5 +8,12 @@
   "unlicensed.title": "ArtUp Export требует активной лицензии",
   "unlicensed.body": "Попросите администратора Confluence начать пробный период или продлить подписку в разделе «Управление приложениями».",
   "time.seconds": "{seconds} с",
-  "time.minutesSeconds": "{minutes} мин {seconds} с"
+  "time.minutesSeconds": "{minutes} мин {seconds} с",
+  "fileTree.label": "Файлы в экспорте",
+  "fileTree.more": {
+    "one": "Ещё {count} файл",
+    "few": "Ещё {count} файла",
+    "many": "Ещё {count} файлов",
+    "other": "Ещё {count} файла"
+  }
 }
