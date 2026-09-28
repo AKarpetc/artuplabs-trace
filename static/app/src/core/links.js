@@ -10,14 +10,14 @@ export function relativePath(fromFile, toFile) {
 }
 
 const NBSP = String.fromCharCode(160);
-const BREAKING_CHARS = new RegExp(`[ ()<>${NBSP}]`, 'g');
+const BREAKING_CHARS = new RegExp(`[ ()<>|${NBSP}]`, 'g');
 const linkEncoder = new TextEncoder();
 
 function percentEncode(char) {
   return Array.from(linkEncoder.encode(char)).map((byte) => `%${byte.toString(16).toUpperCase().padStart(2, '0')}`).join('');
 }
 
-/** Percent-encodes the characters that break a Markdown link target (as their UTF-8 bytes), keeping letters of every script. */
+/** Percent-encodes the characters that break a Markdown link target or a GFM table row (as their UTF-8 bytes), keeping letters of every script. */
 export function encodeLinkTarget(href) {
   return String(href).replace(BREAKING_CHARS, percentEncode);
 }

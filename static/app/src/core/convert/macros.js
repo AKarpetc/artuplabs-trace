@@ -11,9 +11,18 @@ const DYNAMIC = new Set([
 ]);
 const INLINE = new Set(['status', 'jira', 'anchor']);
 
+/** True for the current and legacy structured-macro element names. */
+export function isMacroTag(name) {
+  return name === 'ac:structured-macro' || name === 'ac:macro';
+}
+
 /** True for macros rendered inside a paragraph. */
 export function isInlineMacro(node) {
   return INLINE.has(attr(node, 'ac:name'));
+}
+
+function sanitizeMacroName(name) {
+  return name.replace(/[^\w.-]/g, '');
 }
 
 /** Renders an inline macro (status, single Jira issue, anchor). */
@@ -26,7 +35,10 @@ export function renderInlineMacro(node, ctx) {
     ctx.warn('dynamic-macro', 'jira');
     return '<!-- confluence:jira -->';
   }
-  if (name === 'anchor') return `<a id="${escapeHtml(param(node, '') || textOf(node).trim())}"></a>`;
+  if (name === 'anchor') {
+    const id = param(node, '') || textOf(node).trim();
+    return id ? `<a id="${escapeHtml(id)}"></a>` : '';
+  }
   return renderMacro(node, ctx);
 }
 
@@ -49,9 +61,9 @@ export function renderMacro(node, ctx) {
   if (INLINE.has(name)) return renderInlineMacro(node, ctx);
   if (DYNAMIC.has(name)) {
     ctx.warn('dynamic-macro', name);
-    return `<!-- confluence:${name} -->`;
+    return `<!-- confluence:${sanitizeMacroName(name)} -->`;
   }
   ctx.warn('unknown-macro', name);
   const inner = rich ? body() : plain ? fence(textOf(plain), '') : '';
-  return [`<!-- confluence:${name} -->`, inner].filter(Boolean).join('\n\n');
+  return [`<!-- confluence:${sanitizeMacroName(name)} -->`, inner].filter(Boolean).join('\n\n');
 }

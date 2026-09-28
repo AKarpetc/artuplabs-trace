@@ -22,6 +22,9 @@ describe('encodeLinkTarget', () => {
     const nbsp = String.fromCharCode(160);
     expect(encodeLinkTarget(`a${nbsp}b.md`)).toBe('a%C2%A0b.md');
   });
+  it('encodes a pipe, which would otherwise break a GFM table row', () => {
+    expect(encodeLinkTarget('https://e.com/x|y')).toBe('https://e.com/x%7Cy');
+  });
 });
 
 describe('planAttachments', () => {

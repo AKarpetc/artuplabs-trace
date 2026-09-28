@@ -140,6 +140,112 @@ describe('warning kinds', () => {
   });
 });
 
+describe('fix round 1 (R18/R19)', () => {
+  it.each([
+    ['ri:url with a link body', '<p><ac:link><ri:url ri:value="https://e.com/p"/><ac:plain-text-link-body><![CDATA[ext]]></ac:plain-text-link-body></ac:link></p>', '[ext](https://e.com/p)\n'],
+    ['ri:url without a link body falls back to the URL as text', '<p><ac:link><ri:url ri:value="https://e.com/p"/></ac:link></p>', '[https://e.com/p](https://e.com/p)\n'],
+    ['ri:blog-post resolved in the export', '<p><ac:link><ri:blog-post ri:content-title="Target" ri:space-key="ENG"/></ac:link></p>', '[Target](../api/target.md)\n'],
+    ['ri:blog-post outside the export goes to Confluence', '<p><ac:link><ri:blog-post ri:content-title="Other Post"/></ac:link></p>', '[Other Post](https://x.atlassian.net/wiki/display/ENG/Other%20Post)\n'],
+    ['ri:space', '<p><ac:link><ri:space ri:space-key="ENG"/></ac:link></p>', '[ENG](https://x.atlassian.net/wiki/spaces/ENG)\n'],
+    ['ri:content-entity', '<p><ac:link><ri:content-entity ri:content-id="123"/></ac:link></p>', '[123](https://x.atlassian.net/wiki/pages/viewpage.action?pageId=123)\n'],
+  ])('1. acLink: %s', (name, input, expected) => expect(md(input)).toBe(expected));
+
+  it('1. acLink never renders nothing for an unrecognised target, and warns', () => {
+    const result = storageToMarkdown('<p><ac:link></ac:link></p>', ctx());
+    expect(result.markdown).toBe('<!-- confluence:ac:link -->\n');
+    expect(result.warnings).toEqual([{ kind: 'unknown-macro', detail: 'ac:link' }]);
+  });
+
+  it.each([
+    ['drops an empty paragraph that holds only a hard break', '<p>a</p><p><br/></p><p>b</p>', 'a\n\nb\n'],
+    ['strips a trailing hard break with nothing to break to', '<p>a<br/></p>', 'a\n'],
+    ['strips a leading hard break with nothing to break from', '<p><br/>a</p>', 'a\n'],
+    ['keeps an interior hard break', '<p>line<br/>next</p>', 'line\\\nnext\n'],
+  ])('2. paragraph breaks: %s', (name, input, expected) => expect(md(input)).toBe(expected));
+
+  it.each([
+    ['punctuation-flanked strong before a word falls back to an HTML tag', '<p><strong>"quoted"</strong>word</p>', '<strong>"quoted"</strong>word\n'],
+    ['a word before punctuation-flanked em falls back to an HTML tag', '<p>word<em>(x)</em></p>', 'word<em>(x)</em>\n'],
+    ['a link plus trailing period inside strong, followed by a word, falls back to an HTML tag', '<p><strong><a href="u">x</a>.</strong>y</p>', '<strong>[x](u).</strong>y\n'],
+    ['adjacent em siblings merge into one run', '<p><em>a</em><em>b</em></p>', '*ab*\n'],
+    ['adjacent strong siblings merge into one run', '<p><strong>a</strong><strong>b</strong></p>', '**ab**\n'],
+    ['plain alphanumeric strong is unaffected', '<p>a <strong>b</strong> c</p>', 'a **b** c\n'],
+  ])('3. emphasis flanking: %s', (name, input, expected) => expect(md(input)).toBe(expected));
+
+  it.each([
+    ['a block macro inside <p> becomes its own block, the inline run its own paragraph', '<p>see <ac:structured-macro ac:name="code"><ac:plain-text-body><![CDATA[x]]></ac:plain-text-body></ac:structured-macro></p>', 'see\n\n```\nx\n```\n'],
+    ['a panel macro inside <p> splits the surrounding text into separate paragraphs', '<p>before <ac:structured-macro ac:name="info"><ac:rich-text-body><p>in</p></ac:rich-text-body></ac:structured-macro> after</p>', 'before\n\n> [!NOTE]\n> in\n\nafter\n'],
+  ])('4. block macro inside <p>: %s', (name, input, expected) => expect(md(input)).toBe(expected));
+
+  it('5. a nested task list renders as an indented sub-list, without leaking status text', () => {
+    const input = '<ac:task-list><ac:task><ac:task-status>incomplete</ac:task-status><ac:task-body>parent<ac:task-list><ac:task><ac:task-status>complete</ac:task-status><ac:task-body>child</ac:task-body></ac:task></ac:task-list></ac:task-body></ac:task></ac:task-list>';
+    expect(md(input)).toBe('- [ ] parent\n\n  - [x] child\n');
+  });
+
+  it('6. a table-cell link with a "|" in its target and text stays a valid table row', () => {
+    expect(md('<table><tbody><tr><td><a href="https://e.com/x|y">l|k</a></td></tr></tbody></table>')).toBe('| [l\\|k](https://e.com/x%7Cy) |\n| --- |\n');
+  });
+
+  it.each([
+    ['an unknown inline wrapper containing block content becomes a block, keeping paragraphs apart', '<span><p>a</p><p>b</p></span>', 'a\n\nb\n'],
+    ['dl renders dt as a bold term and dd as its own paragraph', '<dl><dt>t</dt><dd>d</dd></dl>', '**t**\n\nd\n'],
+    ['an unknown wrapper preserves a nested list instead of losing it', '<custom><p>a</p><ul><li>b</li></ul></custom>', 'a\n\n- b\n'],
+  ])('7. unknown wrapper elements: %s', (name, input, expected) => expect(md(input)).toBe(expected));
+
+  it('8. warns on a missing attachment reached via ac:link, not just ac:image', () => {
+    const result = storageToMarkdown('<p><ac:link><ri:attachment ri:filename="missing.png"/></ac:link></p>', ctx());
+    expect(result.markdown).toBe('missing.png\n');
+    expect(result.warnings).toEqual([{ kind: 'missing-attachment', detail: 'missing.png' }]);
+  });
+
+  it('9. escapes "&" before what looks like an HTML/XML entity, so it is not re-decoded downstream', () => {
+    expect(md('<p>&amp;copy; &amp;#169;</p>')).toBe('\\&copy; \\&#169;\n');
+  });
+
+  it.each([
+    ['a thematic-break-looking line after a hard break is escaped', '<p>Title<br/>---</p>', 'Title\\\n\\---\n'],
+    ['a setext-heading-looking line ("=") after a hard break is escaped', '<p>Title<br/>===</p>', 'Title\\\n\\===\n'],
+    ['a lone run of 3+ asterisks is not read as a thematic break', '<p>***</p>', '\\*\\*\\*\n'],
+    ['a "!" right before a link does not turn it into an image', '<p>Wow!<a href="u">x</a></p>', 'Wow\\![x](u)\n'],
+    ['a hard break inside a heading becomes a space', '<h2>Title<br/>Sub</h2>', '## Title Sub\n'],
+    ['an empty code span renders nothing', '<p><code></code></p>', '\n'],
+    ['a newline inside inline code becomes a space, not a line break', '<p>a <code>x\ny</code> b</p>', 'a `x y` b\n'],
+    ['an anchor macro with no id renders nothing', '<p><ac:structured-macro ac:name="anchor"></ac:structured-macro>Setup</p>', 'Setup\n'],
+    ['ol start="0" keeps 0 instead of defaulting to 1', '<ol start="0"><li>a</li></ol>', '0. a\n'],
+    ['paragraph breaks inside a simple table cell still join with <br>', '<table><tbody><tr><td><p>x</p><p>y</p></td></tr></tbody></table>', '| x<br>y |\n| --- |\n'],
+  ])('minor: %s', (name, input, expected) => expect(md(input)).toBe(expected));
+
+  it('minor: fence() normalises CRLF/CR line endings to LF', () => {
+    const macro = (name, params, body) => `<ac:structured-macro ac:name="${name}">${Object.entries(params).map(([k, v]) => `<ac:parameter ac:name="${k}">${v}</ac:parameter>`).join('')}${body}</ac:structured-macro>`;
+    const input = macro('code', { language: 'js' }, '<ac:plain-text-body><![CDATA[line1\r\nline2\r]]></ac:plain-text-body>');
+    expect(md(input)).toBe('```js\nline1\nline2\n```\n');
+  });
+
+  it('minor: a macro name is sanitised inside the HTML placeholder comment', () => {
+    const result = storageToMarkdown('<ac:structured-macro ac:name="ev-il--&gt;&lt;script&gt;"></ac:structured-macro>', ctx());
+    expect(result.markdown).toBe('<!-- confluence:ev-il--script -->\n');
+    expect(result.warnings).toEqual([{ kind: 'unknown-macro', detail: 'ev-il--><script>' }]);
+  });
+
+  it('minor: legacy <ac:macro> is treated like <ac:structured-macro>', () => {
+    const result = storageToMarkdown('<ac:macro ac:name="drawio"><ac:parameter ac:name="diagramName">x</ac:parameter></ac:macro>', ctx());
+    expect(result.markdown).toBe('<!-- confluence:drawio -->\n');
+    expect(result.warnings).toEqual([{ kind: 'unknown-macro', detail: 'drawio' }]);
+  });
+
+  it('every warning produced in this round has a kind in WARNING_KINDS', () => {
+    const inputs = [
+      '<p><ac:link></ac:link></p>',
+      '<p><ac:link><ri:attachment ri:filename="missing.png"/></ac:link></p>',
+      '<ac:structured-macro ac:name="ev-il--&gt;&lt;script&gt;"></ac:structured-macro>',
+      '<ac:macro ac:name="drawio"><ac:parameter ac:name="diagramName">x</ac:parameter></ac:macro>',
+    ];
+    const warnings = inputs.flatMap((input) => storageToMarkdown(input, ctx()).warnings);
+    expect(warnings.length).toBeGreaterThan(0);
+    for (const warning of warnings) expect(WARNING_KINDS).toContain(warning.kind);
+  });
+});
+
 describe('fixtures', () => {
   const dir = new URL('../fixtures/storage/', import.meta.url).pathname;
   const names = readdirSync(dir).filter((f) => f.endsWith('.xml')).map((f) => f.replace(/\.xml$/, ''));

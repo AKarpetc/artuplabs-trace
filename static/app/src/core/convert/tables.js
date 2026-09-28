@@ -1,7 +1,8 @@
 import { attr, elements } from './parse.js';
 import { renderBlockArray, renderBlocks } from './blocks.js';
+import { isMacroTag } from './macros.js';
 
-const BLOCKY = new Set(['ul', 'ol', 'table', 'pre', 'blockquote', 'ac:task-list', 'ac:structured-macro', 'ac:adf-extension', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+const BLOCKY = new Set(['ul', 'ol', 'dl', 'table', 'pre', 'blockquote', 'ac:task-list', 'ac:structured-macro', 'ac:macro', 'ac:adf-extension', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
 
 function rowsOf(table) {
   return elements(table).flatMap((c) => (c.name === 'tr' ? [c] : ['thead', 'tbody', 'tfoot'].includes(c.name) ? elements(c).filter((r) => r.name === 'tr') : []));
@@ -16,7 +17,7 @@ function span(cell, name) {
 }
 
 function isSimple(cell) {
-  const blocky = (node) => elements(node).some((c) => (BLOCKY.has(c.name) && !(c.name === 'ac:structured-macro' && ['status', 'jira', 'anchor'].includes(attr(c, 'ac:name')))) || blocky(c));
+  const blocky = (node) => elements(node).some((c) => (BLOCKY.has(c.name) && !(isMacroTag(c.name) && ['status', 'jira', 'anchor'].includes(attr(c, 'ac:name')))) || blocky(c));
   return span(cell, 'colspan') === 1 && span(cell, 'rowspan') === 1 && !blocky(cell);
 }
 
