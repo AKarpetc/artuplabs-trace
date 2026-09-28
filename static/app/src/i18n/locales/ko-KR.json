@@ -140,5 +140,16 @@
   "warnings.pagination.page": "페이지",
   "errors.forbidden": "Confluence에서 이 페이지 중 일부를 읽을 권한이 없습니다.",
   "errors.network": "Confluence에 연결할 수 없습니다. 연결을 확인하고 다시 시도하세요.",
-  "errors.back": "뒤로"
+  "errors.back": "뒤로",
+  "action.title": "‘{title}’ 내보내기",
+  "action.thisPage": "이 페이지",
+  "action.withChildren": {
+    "other": "이 페이지와 하위 페이지 {count}개"
+  },
+  "action.withChildrenUnknown": "이 페이지와 하위 페이지",
+  "action.noChildren": "이 페이지에는 하위 페이지가 없습니다.",
+  "action.moreOptions": "추가 옵션",
+  "action.close": "닫기",
+  "action.keepOpen": "다운로드가 시작될 때까지 이 창을 열어 두세요.",
+  "action.notFound": "이 페이지를 내보낼 수 없습니다. 페이지를 찾을 수 없거나 접근 권한이 없습니다."
 }

@@ -140,5 +140,16 @@
   "warnings.pagination.page": "页",
   "errors.forbidden": "你无权读取 Confluence 中的部分页面。",
   "errors.network": "无法连接 Confluence。请检查网络连接后重试。",
-  "errors.back": "返回"
+  "errors.back": "返回",
+  "action.title": "导出“{title}”",
+  "action.thisPage": "仅此页面",
+  "action.withChildren": {
+    "other": "此页面及其 {count} 个子页面"
+  },
+  "action.withChildrenUnknown": "此页面及其子页面",
+  "action.noChildren": "此页面没有子页面。",
+  "action.moreOptions": "更多选项",
+  "action.close": "关闭",
+  "action.keepOpen": "请保持此窗口打开，直到开始下载。",
+  "action.notFound": "无法导出此页面：页面不存在，或您无权访问。"
 }

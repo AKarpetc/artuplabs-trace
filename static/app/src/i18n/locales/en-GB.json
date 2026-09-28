@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Page",
   "errors.forbidden": "You don't have permission to read some of these pages in Confluence.",
   "errors.network": "Confluence could not be reached. Check your connection and try again.",
-  "errors.back": "Back"
+  "errors.back": "Back",
+  "action.title": "Export ‘{title}’",
+  "action.thisPage": "This page",
+  "action.withChildren": {
+    "one": "This page and {count} subpage",
+    "other": "This page and {count} subpages"
+  },
+  "action.withChildrenUnknown": "This page and its subpages",
+  "action.noChildren": "This page has no subpages.",
+  "action.moreOptions": "More options",
+  "action.close": "Close",
+  "action.keepOpen": "Keep this window open until the download starts.",
+  "action.notFound": "This page can’t be exported: it was not found, or you don’t have access to it."
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Button from '@atlaskit/button/new';
 import Heading from '@atlaskit/heading';
 import SectionMessage from '@atlaskit/section-message';
+import { token } from '@atlaskit/tokens';
 import { Box, Flex, Grid, Inline, Stack, Text, xcss } from '@atlaskit/primitives';
 import {
   ArchiveBoxIcon, AttachmentIcon, CheckCircleIcon, ChevronDownIcon, ChevronRightIcon, CopyIcon, DeleteIcon, DownloadIcon,
@@ -19,6 +20,7 @@ const cardStyles = xcss({
   boxShadow: 'elevation.shadow.raised',
   minWidth: '0',
 });
+const compactCardStyles = xcss({ padding: 'space.300' });
 const heroTextStyles = xcss({ minWidth: '0', flexGrow: 1, flexBasis: '280px' });
 const illustrationStyles = xcss({ flexShrink: 0, lineHeight: '0' });
 const fileStyles = xcss({ fontFamily: 'font.family.code', fontSize: '14px', lineHeight: '20px', color: 'color.text', overflowWrap: 'anywhere' });
@@ -82,12 +84,12 @@ function CopyButton({ text }) {
   );
 }
 
-function ApplyHelp({ fileName }) {
+function ApplyHelp({ fileName, compact }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const command = applyCommand(fileName);
   return (
-    <Box xcss={cardStyles}>
+    <Box xcss={[cardStyles, compact && compactCardStyles]}>
       <Stack space="space.200">
         <Box>
           <Button appearance="subtle" iconBefore={open ? ChevronDownIcon : ChevronRightIcon} onClick={() => setOpen(!open)} aria-expanded={open} testId="apply-toggle">
@@ -116,41 +118,53 @@ function ApplyHelp({ fileName }) {
   );
 }
 
-/** Finished export: success hero with download, stat tiles, full-export and missing-page notes, apply help and warnings. */
-export function ResultView({ result, siteUrl, spaceKey, onDownloadAgain, onNewExport }) {
+/**
+ * Finished export: success hero with download, stat tiles, full-export and missing-page notes, apply help and warnings.
+ * `compact` drops the hero illustration and lays the tiles out 2×2 for a modal; `extraAction` joins the hero buttons.
+ */
+export function ResultView({ result, siteUrl, spaceKey, onDownloadAgain, onNewExport, compact = false, extraAction = null }) {
   const t = useT();
   const locale = useLocale();
   const showApply = result.mode === 'update' || result.deletePaths.length > 0;
+  const card = [cardStyles, compact && compactCardStyles];
   return (
-    <Stack space="space.400" testId="result-view">
-      <Box xcss={cardStyles}>
+    <Stack space={compact ? 'space.300' : 'space.400'} testId="result-view">
+      <Box xcss={card}>
         <Flex gap="space.300" alignItems="center" wrap="wrap">
-          <Box xcss={illustrationStyles}><SuccessIllustration size={120} /></Box>
+          {compact ? null : <Box xcss={illustrationStyles} testId="result-illustration"><SuccessIllustration size={120} /></Box>}
           <Stack space="space.150" xcss={heroTextStyles}>
-            <Heading size="large" as="h2">{t('result.title')}</Heading>
+            {compact ? (
+              <Inline space="space.100" alignBlock="center">
+                <CheckCircleIcon label="" color={token('color.icon.success')} />
+                <Heading size="medium" as="h2">{t('result.title')}</Heading>
+              </Inline>
+            ) : <Heading size="large" as="h2">{t('result.title')}</Heading>}
             <Box xcss={fileStyles}>{result.fileName}</Box>
             <Text color="color.text.subtle">{t('result.started')}</Text>
             <Inline space="space.100" shouldWrap>
               <Button appearance="primary" iconBefore={DownloadIcon} onClick={onDownloadAgain} testId="download-again">{t('result.downloadAgain')}</Button>
               <Button onClick={onNewExport} testId="new-export">{t('result.newExport')}</Button>
+              {extraAction}
             </Inline>
           </Stack>
         </Flex>
       </Box>
-      <Grid gap="space.200" templateColumns="repeat(auto-fit, minmax(170px, 1fr))">
-        {tilesOf(t, locale, result).map((tile) => (
-          <StatTile key={tile.id} testId={`stat-${tile.id}`} label={tile.label} value={tile.value} icon={tile.icon} tone={tile.tone} />
-        ))}
-      </Grid>
+      <Box testId="result-tiles" data-columns={compact ? '2' : undefined}>
+        <Grid gap="space.200" templateColumns={compact ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(170px, 1fr))'}>
+          {tilesOf(t, locale, result).map((tile) => (
+            <StatTile key={tile.id} testId={`stat-${tile.id}`} label={tile.label} value={tile.value} icon={tile.icon} tone={tile.tone} />
+          ))}
+        </Grid>
+      </Box>
       {result.fullReason ? (
         <SectionMessage appearance="warning"><Text>{t(`result.full.${result.fullReason}`)}</Text></SectionMessage>
       ) : null}
       {result.stats.missing > 0 ? (
         <SectionMessage appearance="warning"><Text>{t('result.missing', { count: result.stats.missing })}</Text></SectionMessage>
       ) : null}
-      {showApply ? <ApplyHelp fileName={result.fileName} /> : null}
+      {showApply ? <ApplyHelp fileName={result.fileName} compact={compact} /> : null}
       {result.warnings.length > 0 ? (
-        <Box xcss={cardStyles}>
+        <Box xcss={card}>
           <WarningsTable warnings={result.warnings} siteUrl={siteUrl} spaceKey={spaceKey} />
         </Box>
       ) : <WarningsTable warnings={result.warnings} siteUrl={siteUrl} spaceKey={spaceKey} />}

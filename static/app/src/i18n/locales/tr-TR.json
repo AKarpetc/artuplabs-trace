@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Sayfa",
   "errors.forbidden": "Confluence'taki bu sayfaların bazılarını okuma izniniz yok.",
   "errors.network": "Confluence'a ulaşılamıyor. Bağlantınızı kontrol edip yeniden deneyin.",
-  "errors.back": "Geri"
+  "errors.back": "Geri",
+  "action.title": "“{title}” sayfasını dışa aktar",
+  "action.thisPage": "Bu sayfa",
+  "action.withChildren": {
+    "one": "Bu sayfa ve {count} alt sayfa",
+    "other": "Bu sayfa ve {count} alt sayfa"
+  },
+  "action.withChildrenUnknown": "Bu sayfa ve alt sayfaları",
+  "action.noChildren": "Bu sayfanın alt sayfası yok.",
+  "action.moreOptions": "Diğer seçenekler",
+  "action.close": "Kapat",
+  "action.keepOpen": "İndirme başlayana kadar bu pencereyi açık tutun.",
+  "action.notFound": "Bu sayfa dışa aktarılamıyor: bulunamadı veya erişim izniniz yok."
 }

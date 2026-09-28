@@ -140,5 +140,16 @@
   "warnings.pagination.page": "頁",
   "errors.forbidden": "你沒有權限讀取 Confluence 中的部分頁面。",
   "errors.network": "無法連線至 Confluence。請檢查網路連線後再試一次。",
-  "errors.back": "返回"
+  "errors.back": "返回",
+  "action.title": "匯出「{title}」",
+  "action.thisPage": "僅此頁面",
+  "action.withChildren": {
+    "other": "此頁面及其 {count} 個子頁面"
+  },
+  "action.withChildrenUnknown": "此頁面及其子頁面",
+  "action.noChildren": "此頁面沒有子頁面。",
+  "action.moreOptions": "更多選項",
+  "action.close": "關閉",
+  "action.keepOpen": "請保持此視窗開啟，直到開始下載。",
+  "action.notFound": "無法匯出此頁面：頁面不存在，或您沒有存取權限。"
 }

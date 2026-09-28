@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Pagina",
   "errors.forbidden": "Je hebt geen toestemming om sommige van deze pagina's in Confluence te lezen.",
   "errors.network": "Confluence is niet bereikbaar. Controleer je verbinding en probeer het opnieuw.",
-  "errors.back": "Terug"
+  "errors.back": "Terug",
+  "action.title": "‘{title}’ exporteren",
+  "action.thisPage": "Deze pagina",
+  "action.withChildren": {
+    "one": "Deze pagina en {count} subpagina",
+    "other": "Deze pagina en {count} subpagina’s"
+  },
+  "action.withChildrenUnknown": "Deze pagina en de subpagina’s",
+  "action.noChildren": "Deze pagina heeft geen subpagina’s.",
+  "action.moreOptions": "Meer opties",
+  "action.close": "Sluiten",
+  "action.keepOpen": "Houd dit venster open tot de download begint.",
+  "action.notFound": "Deze pagina kan niet worden geëxporteerd: ze is niet gevonden of je hebt er geen toegang toe."
 }

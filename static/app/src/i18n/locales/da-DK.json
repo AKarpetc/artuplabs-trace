@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Side",
   "errors.forbidden": "Du har ikke tilladelse til at læse nogle af disse sider i Confluence.",
   "errors.network": "Confluence kunne ikke nås. Kontrollér din forbindelse, og prøv igen.",
-  "errors.back": "Tilbage"
+  "errors.back": "Tilbage",
+  "action.title": "Eksportér »{title}«",
+  "action.thisPage": "Denne side",
+  "action.withChildren": {
+    "one": "Denne side og {count} underside",
+    "other": "Denne side og {count} undersider"
+  },
+  "action.withChildrenUnknown": "Denne side og dens undersider",
+  "action.noChildren": "Denne side har ingen undersider.",
+  "action.moreOptions": "Flere indstillinger",
+  "action.close": "Luk",
+  "action.keepOpen": "Hold dette vindue åbent, indtil downloadet starter.",
+  "action.notFound": "Denne side kan ikke eksporteres: den blev ikke fundet, eller du har ikke adgang til den."
 }

@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Sida",
   "errors.forbidden": "Du har inte behörighet att läsa några av de här sidorna i Confluence.",
   "errors.network": "Det gick inte att nå Confluence. Kontrollera anslutningen och försök igen.",
-  "errors.back": "Tillbaka"
+  "errors.back": "Tillbaka",
+  "action.title": "Exportera ”{title}”",
+  "action.thisPage": "Den här sidan",
+  "action.withChildren": {
+    "one": "Den här sidan och {count} undersida",
+    "other": "Den här sidan och {count} undersidor"
+  },
+  "action.withChildrenUnknown": "Den här sidan och dess undersidor",
+  "action.noChildren": "Den här sidan har inga undersidor.",
+  "action.moreOptions": "Fler alternativ",
+  "action.close": "Stäng",
+  "action.keepOpen": "Håll det här fönstret öppet tills nedladdningen startar.",
+  "action.notFound": "Den här sidan kan inte exporteras: den hittades inte eller så har du inte behörighet till den."
 }

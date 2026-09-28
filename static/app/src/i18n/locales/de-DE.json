@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Seite",
   "errors.forbidden": "Sie haben keine Berechtigung, einige dieser Seiten in Confluence zu lesen.",
   "errors.network": "Confluence ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-  "errors.back": "Zurück"
+  "errors.back": "Zurück",
+  "action.title": "„{title}“ exportieren",
+  "action.thisPage": "Diese Seite",
+  "action.withChildren": {
+    "one": "Diese Seite und {count} Unterseite",
+    "other": "Diese Seite und {count} Unterseiten"
+  },
+  "action.withChildrenUnknown": "Diese Seite und ihre Unterseiten",
+  "action.noChildren": "Diese Seite hat keine Unterseiten.",
+  "action.moreOptions": "Weitere Optionen",
+  "action.close": "Schließen",
+  "action.keepOpen": "Lassen Sie dieses Fenster geöffnet, bis der Download beginnt.",
+  "action.notFound": "Diese Seite kann nicht exportiert werden, weil sie nicht gefunden wurde oder Sie keinen Zugriff darauf haben."
 }

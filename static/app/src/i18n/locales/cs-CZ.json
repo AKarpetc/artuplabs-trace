@@ -167,5 +167,19 @@
   "warnings.pagination.page": "Stránka",
   "errors.forbidden": "Nemáte oprávnění číst některé z těchto stránek v Confluence.",
   "errors.network": "Nelze se připojit ke Confluence. Zkontrolujte připojení a zkuste to znovu.",
-  "errors.back": "Zpět"
+  "errors.back": "Zpět",
+  "action.title": "Exportovat „{title}“",
+  "action.thisPage": "Tato stránka",
+  "action.withChildren": {
+    "one": "Tato stránka a {count} podstránka",
+    "few": "Tato stránka a {count} podstránky",
+    "many": "Tato stránka a {count} podstránky",
+    "other": "Tato stránka a {count} podstránek"
+  },
+  "action.withChildrenUnknown": "Tato stránka a její podstránky",
+  "action.noChildren": "Tato stránka nemá podstránky.",
+  "action.moreOptions": "Další možnosti",
+  "action.close": "Zavřít",
+  "action.keepOpen": "Nechte toto okno otevřené, dokud nezačne stahování.",
+  "action.notFound": "Tuto stránku nelze exportovat: nebyla nalezena nebo k ní nemáte přístup."
 }

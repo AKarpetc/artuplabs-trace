@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Oldal",
   "errors.forbidden": "Nincs jogosultsága e lapok némelyikének olvasásához a Confluence-ben.",
   "errors.network": "A Confluence nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
-  "errors.back": "Vissza"
+  "errors.back": "Vissza",
+  "action.title": "„{title}” exportálása",
+  "action.thisPage": "Ez az oldal",
+  "action.withChildren": {
+    "one": "Ez az oldal és {count} aloldal",
+    "other": "Ez az oldal és {count} aloldal"
+  },
+  "action.withChildrenUnknown": "Ez az oldal és az aloldalai",
+  "action.noChildren": "Ennek az oldalnak nincsenek aloldalai.",
+  "action.moreOptions": "További beállítások",
+  "action.close": "Bezárás",
+  "action.keepOpen": "Tartsa nyitva ezt az ablakot, amíg a letöltés el nem indul.",
+  "action.notFound": "Ez az oldal nem exportálható: nem található, vagy nincs hozzá hozzáférése."
 }

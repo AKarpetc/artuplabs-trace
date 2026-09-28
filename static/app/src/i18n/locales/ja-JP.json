@@ -140,5 +140,16 @@
   "warnings.pagination.page": "ページ",
   "errors.forbidden": "Confluence でこれらのページの一部を閲覧する権限がありません。",
   "errors.network": "Confluence に接続できません。接続を確認して、もう一度お試しください。",
-  "errors.back": "戻る"
+  "errors.back": "戻る",
+  "action.title": "「{title}」をエクスポート",
+  "action.thisPage": "このページ",
+  "action.withChildren": {
+    "other": "このページと {count} 件のサブページ"
+  },
+  "action.withChildrenUnknown": "このページとサブページ",
+  "action.noChildren": "このページにはサブページがありません。",
+  "action.moreOptions": "その他のオプション",
+  "action.close": "閉じる",
+  "action.keepOpen": "ダウンロードが始まるまでこのウィンドウを開いたままにしてください。",
+  "action.notFound": "このページはエクスポートできません。見つからないか、アクセス権がありません。"
 }

@@ -21,13 +21,13 @@ async function readPrevious(file) {
 
 /**
  * Studio form state: target (space, branch or page), options, the previous export and the mode.
- * `mode`/`fullReason` are what the export will really do; `form` is what `onStart` receives.
+ * `initial` may set the starting `scope` and `page`; `mode`/`fullReason` are what the export will really do; `form` is what `onStart` receives.
  */
-export function useExportForm(context) {
+export function useExportForm(context, initial = {}) {
   const spaceKey = context?.extension?.space?.key ?? '';
   const siteUrl = context?.siteUrl ?? '';
-  const [scope, setScope] = useState('space');
-  const [page, setPage] = useState(null);
+  const [scope, setScope] = useState(initial.scope ?? 'space');
+  const [page, setPage] = useState(initial.page ?? null);
   const [options, setOptions] = useState(DEFAULT_OPTIONS);
   const [modeChoice, setModeChoice] = useState('full');
   const [previous, setPrevious] = useState(null);

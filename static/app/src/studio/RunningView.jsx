@@ -19,7 +19,9 @@ const cardStyles = xcss({
   backgroundColor: 'elevation.surface.raised',
   boxShadow: 'elevation.shadow.raised',
 });
+const compactCardStyles = xcss({ padding: 'space.300' });
 const percentStyles = xcss({ font: 'font.heading.xlarge', color: 'color.text' });
+const compactPercentStyles = xcss({ font: 'font.heading.large' });
 const trackerStyles = xcss({ minWidth: '0', overflowX: 'auto' });
 
 /** Overall completion 0…1 from a pipeline progress event; the scan stage counts as 0 (its total is unknown). */
@@ -56,8 +58,11 @@ function trackerItems(t, stage, fraction) {
   });
 }
 
-/** Running export: stage tracker, big percentage, progress bar, counters, elapsed time and ETA, cancel. */
-export function RunningView({ progress, startedAt, onCancel, clock = Date.now }) {
+/**
+ * Running export: stage tracker, big percentage, progress bar, counters, elapsed time and ETA, cancel.
+ * `hint` replaces the keep-the-tab-open note; `compact` tightens padding and type for a modal.
+ */
+export function RunningView({ progress, startedAt, onCancel, clock = Date.now, hint, compact = false }) {
   const t = useT();
   const locale = useLocale();
   const now = useNow(clock);
@@ -67,14 +72,14 @@ export function RunningView({ progress, startedAt, onCancel, clock = Date.now })
   const eta = fraction >= ETA_FROM && fraction < 1 ? (elapsed / fraction) * (1 - fraction) : null;
   const percent = new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(fraction);
   return (
-    <Box xcss={cardStyles} testId="run-view">
+    <Box xcss={[cardStyles, compact && compactCardStyles]} testId="run-view" data-density={compact ? 'compact' : undefined}>
       <Stack space="space.300">
-        <Heading size="medium" as="h2">{t('run.title')}</Heading>
+        <Heading size={compact ? 'small' : 'medium'} as="h2">{t('run.title')}</Heading>
         <Box xcss={trackerStyles}>
-          <ProgressTracker items={trackerItems(t, current.stage, fraction)} label={t('run.title')} spacing="cozy" />
+          <ProgressTracker items={trackerItems(t, current.stage, fraction)} label={t('run.title')} spacing={compact ? 'compact' : 'cozy'} />
         </Box>
         <Stack space="space.150">
-          <Box xcss={percentStyles} testId="run-percent">{percent}</Box>
+          <Box xcss={[percentStyles, compact && compactPercentStyles]} testId="run-percent">{percent}</Box>
           <ProgressBar value={fraction} isIndeterminate={current.stage === 'scan'} ariaLabel={t('run.title')} />
           <Flex gap="space.200" justifyContent="space-between" wrap="wrap" alignItems="center">
             <Text weight="medium">{counterText(t, current)}</Text>
@@ -85,7 +90,7 @@ export function RunningView({ progress, startedAt, onCancel, clock = Date.now })
           </Flex>
         </Stack>
         <SectionMessage appearance="information">
-          <Text>{t('run.keepOpen')}</Text>
+          <Text>{hint ?? t('run.keepOpen')}</Text>
         </SectionMessage>
         <Flex justifyContent="end">
           <Button appearance="subtle" onClick={onCancel} testId="run-cancel">{t('run.cancel')}</Button>

@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Sivu",
   "errors.forbidden": "Sinulla ei ole oikeutta lukea joitakin näistä sivuista Confluencessa.",
   "errors.network": "Confluenceen ei saada yhteyttä. Tarkista yhteys ja yritä uudelleen.",
-  "errors.back": "Takaisin"
+  "errors.back": "Takaisin",
+  "action.title": "Vie ”{title}”",
+  "action.thisPage": "Tämä sivu",
+  "action.withChildren": {
+    "one": "Tämä sivu ja {count} alasivu",
+    "other": "Tämä sivu ja {count} alasivua"
+  },
+  "action.withChildrenUnknown": "Tämä sivu ja sen alasivut",
+  "action.noChildren": "Tällä sivulla ei ole alasivuja.",
+  "action.moreOptions": "Lisää asetuksia",
+  "action.close": "Sulje",
+  "action.keepOpen": "Pidä tämä ikkuna auki, kunnes lataus alkaa.",
+  "action.notFound": "Tätä sivua ei voi viedä: sitä ei löytynyt tai sinulla ei ole siihen käyttöoikeutta."
 }

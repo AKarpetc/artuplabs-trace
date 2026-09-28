@@ -167,5 +167,19 @@
   "warnings.pagination.page": "Strona",
   "errors.forbidden": "Nie masz uprawnień do odczytu niektórych z tych stron w Confluence.",
   "errors.network": "Nie można połączyć się z Confluence. Sprawdź połączenie i spróbuj ponownie.",
-  "errors.back": "Wstecz"
+  "errors.back": "Wstecz",
+  "action.title": "Eksportuj „{title}”",
+  "action.thisPage": "Ta strona",
+  "action.withChildren": {
+    "one": "Ta strona i {count} podstrona",
+    "few": "Ta strona i {count} podstrony",
+    "many": "Ta strona i {count} podstron",
+    "other": "Ta strona i {count} podstrony"
+  },
+  "action.withChildrenUnknown": "Ta strona i jej podstrony",
+  "action.noChildren": "Ta strona nie ma podstron.",
+  "action.moreOptions": "Więcej opcji",
+  "action.close": "Zamknij",
+  "action.keepOpen": "Nie zamykaj tego okna, dopóki nie rozpocznie się pobieranie.",
+  "action.notFound": "Nie można wyeksportować tej strony: nie została znaleziona lub nie masz do niej dostępu."
 }

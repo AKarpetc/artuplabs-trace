@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
 import Button from '@atlaskit/button/new';
-import EmptyState from '@atlaskit/empty-state';
 import SectionMessage from '@atlaskit/section-message';
-import Spinner from '@atlaskit/spinner';
 import { router } from '@forge/bridge';
 import { Box, Flex, Stack, Text, xcss } from '@atlaskit/primitives';
-import { errorMessage } from '../api.js';
 import { AppHeader } from '../components/AppHeader.jsx';
 import { DownloadIcon, QuestionCircleIcon } from '../components/icons.js';
 import { PageLayout } from '../components/PageLayout.jsx';
 import { toSlug } from '../core/slug.js';
 import { useT } from '../i18n/index.js';
-import { EmptyIllustration } from '../illustrations/EmptyIllustration.jsx';
-import { LockIllustration } from '../illustrations/LockIllustration.jsx';
 import { createBridgeClient } from '../infra/bridge.js';
 import { exportFileName, saveBlob } from '../infra/download.js';
+import { AccessGate } from './AccessGate.jsx';
 import { FailureView } from './FailureView.jsx';
 import { FormatStep } from './FormatStep.jsx';
 import { ModeStep } from './ModeStep.jsx';
@@ -22,7 +18,6 @@ import { OutputPreview } from './OutputPreview.jsx';
 import { ResultView } from './ResultView.jsx';
 import { RunningView } from './RunningView.jsx';
 import { ScopeStep } from './ScopeStep.jsx';
-import { useAccess } from './useAccess.js';
 import { useExportForm } from './useExportForm.js';
 import { useExportRun } from './useExportRun.js';
 import { usePreview } from './usePreview.js';
@@ -30,7 +25,6 @@ import { usePreview } from './usePreview.js';
 const HELP_URL = 'https://artuplabs.com/docs/export/';
 
 const pageStyles = xcss({ minHeight: '100vh', boxSizing: 'border-box', padding: 'space.300', backgroundColor: 'elevation.surface' });
-const centerStyles = xcss({ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' });
 const footerStyles = xcss({
   paddingBlockStart: 'space.300',
   borderBlockStartWidth: 'border.width',
@@ -144,24 +138,11 @@ function Workspace({ context, createClient, save, onStart }) {
  * `onStart(form)` observes each start; `createClient({ signal })` and `save(fileName, blob)` override the bridge client and the download.
  */
 export function StudioApp({ context, createClient = createBridgeClient, save = saveBlob, onStart }) {
-  const t = useT();
-  const access = useAccess();
-  let content;
-  if (access.status === 'loading') {
-    content = <Box xcss={centerStyles}><Spinner size="large" label={t('loading')} /></Box>;
-  } else if (access.status === 'unlicensed') {
-    content = <EmptyState header={t('unlicensed.title')} description={t('unlicensed.body')} renderImage={() => <LockIllustration size={160} />} headingLevel={1} />;
-  } else if (access.status === 'error') {
-    content = (
-      <EmptyState
-        header={errorMessage(t, access.error)}
-        renderImage={() => <EmptyIllustration size={160} />}
-        primaryAction={<Button appearance="primary" onClick={access.retry}>{t('errors.tryAgain')}</Button>}
-        headingLevel={1}
-      />
-    );
-  } else {
-    content = <Workspace context={context} createClient={createClient} save={save} onStart={onStart} />;
-  }
-  return <Box xcss={pageStyles}>{content}</Box>;
+  return (
+    <Box xcss={pageStyles}>
+      <AccessGate>
+        <Workspace context={context} createClient={createClient} save={save} onStart={onStart} />
+      </AccessGate>
+    </Box>
+  );
 }

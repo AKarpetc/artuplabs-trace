@@ -4,7 +4,7 @@ import { bootstrap } from '../src/theme';
 import { I18nProvider, resolveLocale } from '../src/i18n/index.js';
 import { StudioApp } from '../src/studio/StudioApp.jsx';
 import { ActionApp } from '../src/action/ActionApp.jsx';
-import { drive } from './driver.js';
+import { drive, driveAction } from './driver.js';
 import { Gallery } from './Gallery.jsx';
 
 const ENTRIES = { studio: StudioApp, action: ActionApp, gallery: Gallery };
@@ -19,7 +19,9 @@ async function main() {
       <App context={context} />
     </I18nProvider>,
   );
-  if (entry === 'studio') await drive(new URLSearchParams(window.location.search).get('state') || '');
+  const state = new URLSearchParams(window.location.search).get('state') || '';
+  if (entry === 'studio') await drive(state);
+  if (entry === 'action') await driveAction(state);
 }
 
 main();

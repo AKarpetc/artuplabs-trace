@@ -48,14 +48,30 @@ const tileStyles = Object.fromEntries(ACCENTS.map((accent) => [accent, xcss({
   borderRadius: 'radius.medium',
   backgroundColor: `color.background.accent.${accent}.subtler`,
 })]));
+const compactStyles = xcss({ padding: `${token('space.100')} ${token('space.150')}` });
+const compactSelectedStyles = xcss({ padding: `calc(${token('space.100')} - 1px) calc(${token('space.150')} - 1px)` });
+const compactTileStyles = Object.fromEntries(ACCENTS.map((accent) => [accent, xcss({
+  width: '32px',
+  height: '32px',
+  flexShrink: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: 'radius.medium',
+  backgroundColor: `color.background.accent.${accent}.subtler`,
+})]));
 const glyphStyles = xcss({ width: '24px', height: '24px', lineHeight: '0' });
+const compactGlyphStyles = xcss({ width: '16px', height: '16px', lineHeight: '0' });
 const bodyStyles = xcss({ minWidth: '0', flexGrow: 1 });
 
 /**
  * Radio-like selectable card (role="radio", Space/Enter select) with a tinted icon tile,
  * a semibold title, an optional badge and a wrapping description; `tabIndex` overrides the default tab stop.
+ * `compact` renders a smaller tile and the title only, for segmented rows; a non-string `title` (a skeleton) renders as is.
  */
-export const ChoiceCard = forwardRef(function ChoiceCard({ selected, onSelect, icon, accent = 'blue', title, description, badge, disabled = false, testId, tabIndex }, ref) {
+export const ChoiceCard = forwardRef(function ChoiceCard({
+  selected, onSelect, icon, accent = 'blue', title, description, badge, disabled = false, testId, tabIndex, compact = false,
+}, ref) {
   const Icon = glyph(icon);
   const tone = ACCENTS.includes(accent) ? accent : 'blue';
   const choose = () => {
@@ -76,22 +92,23 @@ export const ChoiceCard = forwardRef(function ChoiceCard({ selected, onSelect, i
       onClick={choose}
       onKeyDown={onKeyDown}
       testId={testId}
-      xcss={[cardStyles, selected && selectedStyles, disabled && disabledStyles]}
+      data-density={compact ? 'compact' : undefined}
+      xcss={[cardStyles, selected && selectedStyles, compact && compactStyles, compact && selected && compactSelectedStyles, disabled && disabledStyles]}
     >
-      <Inline space="space.150" alignBlock="start">
+      <Inline space={compact ? 'space.100' : 'space.150'} alignBlock={compact ? 'center' : 'start'}>
         {Icon ? (
-          <Box xcss={tileStyles[tone]}>
-            <Box xcss={glyphStyles}>
+          <Box xcss={(compact ? compactTileStyles : tileStyles)[tone]}>
+            <Box xcss={compact ? compactGlyphStyles : glyphStyles}>
               <Icon label="" color={token(`color.icon.accent.${tone}`)} shouldScale />
             </Box>
           </Box>
         ) : null}
         <Stack space="space.050" xcss={bodyStyles}>
           <Inline space="space.100" alignBlock="center" shouldWrap>
-            <Text weight="semibold">{title}</Text>
+            {typeof title === 'string' ? <Text weight="semibold">{title}</Text> : title}
             {badge ? <Lozenge appearance="new">{badge}</Lozenge> : null}
           </Inline>
-          {description ? <Text color="color.text.subtle" size="small">{description}</Text> : null}
+          {description && !compact ? <Text color="color.text.subtle" size="small">{description}</Text> : null}
         </Stack>
       </Inline>
     </Box>
@@ -117,9 +134,10 @@ function targetIndex(options, from, key) {
 
 /**
  * Labelled radiogroup of ChoiceCards with roving focus: one tab stop (selected or first enabled card),
- * arrows move focus and selection with wrap, Home/End jump, disabled cards are skipped.
+ * arrows move focus and selection with wrap, Home/End jump, disabled cards are skipped; `compact` shrinks every card
+ * and `gridStyles` (xcss) may override the grid, e.g. with media queries.
  */
-export function ChoiceGroup({ label, value, options, onChange, columns = 'repeat(auto-fit, minmax(240px, 1fr))' }) {
+export function ChoiceGroup({ label, value, options, onChange, columns = 'repeat(auto-fit, minmax(240px, 1fr))', compact = false, gridStyles }) {
   const cards = useRef([]);
   const selectedIndex = options.findIndex((option) => option.value === value && !option.disabled);
   const tabStop = selectedIndex >= 0 ? selectedIndex : options.findIndex((option) => !option.disabled);
@@ -134,7 +152,7 @@ export function ChoiceGroup({ label, value, options, onChange, columns = 'repeat
   };
   return (
     <Box role="radiogroup" aria-label={label} onKeyDown={onKeyDown}>
-      <Grid gap="space.150" templateColumns={columns}>
+      <Grid gap={compact ? 'space.100' : 'space.150'} templateColumns={columns} xcss={gridStyles}>
         {options.map((option, index) => (
           <ChoiceCard
             key={option.value}
@@ -151,6 +169,7 @@ export function ChoiceGroup({ label, value, options, onChange, columns = 'repeat
             disabled={option.disabled}
             testId={option.testId}
             tabIndex={index === tabStop ? 0 : -1}
+            compact={compact}
           />
         ))}
       </Grid>

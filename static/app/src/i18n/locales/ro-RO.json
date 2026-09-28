@@ -158,5 +158,18 @@
   "warnings.pagination.page": "Pagina",
   "errors.forbidden": "Nu aveți permisiunea de a citi unele dintre aceste pagini în Confluence.",
   "errors.network": "Confluence nu poate fi accesat. Verificați conexiunea și încercați din nou.",
-  "errors.back": "Înapoi"
+  "errors.back": "Înapoi",
+  "action.title": "Exportă „{title}”",
+  "action.thisPage": "Această pagină",
+  "action.withChildren": {
+    "one": "Această pagină și {count} subpagină",
+    "few": "Această pagină și {count} subpagini",
+    "other": "Această pagină și {count} de subpagini"
+  },
+  "action.withChildrenUnknown": "Această pagină și subpaginile ei",
+  "action.noChildren": "Această pagină nu are subpagini.",
+  "action.moreOptions": "Mai multe opțiuni",
+  "action.close": "Închide",
+  "action.keepOpen": "Păstrați această fereastră deschisă până începe descărcarea.",
+  "action.notFound": "Această pagină nu poate fi exportată: nu a fost găsită sau nu aveți acces la ea."
 }

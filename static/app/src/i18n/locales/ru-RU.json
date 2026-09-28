@@ -167,5 +167,19 @@
   "warnings.pagination.page": "Страница",
   "errors.forbidden": "У вас нет прав на чтение некоторых из этих страниц в Confluence.",
   "errors.network": "Не удалось связаться с Confluence. Проверьте подключение и повторите попытку.",
-  "errors.back": "Назад"
+  "errors.back": "Назад",
+  "action.title": "Экспорт «{title}»",
+  "action.thisPage": "Эта страница",
+  "action.withChildren": {
+    "one": "Эта страница и {count} подстраница",
+    "few": "Эта страница и {count} подстраницы",
+    "many": "Эта страница и {count} подстраниц",
+    "other": "Эта страница и {count} подстраницы"
+  },
+  "action.withChildrenUnknown": "Эта страница и её подстраницы",
+  "action.noChildren": "У этой страницы нет подстраниц.",
+  "action.moreOptions": "Дополнительные параметры",
+  "action.close": "Закрыть",
+  "action.keepOpen": "Не закрывайте это окно, пока не начнётся загрузка.",
+  "action.notFound": "Эту страницу нельзя экспортировать: она не найдена или у вас нет к ней доступа."
 }

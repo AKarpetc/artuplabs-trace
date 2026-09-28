@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Leht",
   "errors.forbidden": "Teil pole õigust lugeda mõnda neist Confluence'i lehtedest.",
   "errors.network": "Confluence'iga ei saa ühendust. Kontrollige ühendust ja proovige uuesti.",
-  "errors.back": "Tagasi"
+  "errors.back": "Tagasi",
+  "action.title": "Ekspordi „{title}“",
+  "action.thisPage": "See leht",
+  "action.withChildren": {
+    "one": "See leht ja {count} alamleht",
+    "other": "See leht ja {count} alamlehte"
+  },
+  "action.withChildrenUnknown": "See leht ja selle alamlehed",
+  "action.noChildren": "Sellel lehel pole alamlehti.",
+  "action.moreOptions": "Rohkem valikuid",
+  "action.close": "Sulge",
+  "action.keepOpen": "Hoidke see aken avatuna, kuni allalaadimine algab.",
+  "action.notFound": "Seda lehte ei saa eksportida: seda ei leitud või teil pole sellele juurdepääsu."
 }

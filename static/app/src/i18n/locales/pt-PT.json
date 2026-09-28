@@ -158,5 +158,18 @@
   "warnings.pagination.page": "Página",
   "errors.forbidden": "Não tem permissão para ler algumas destas páginas no Confluence.",
   "errors.network": "Não foi possível contactar o Confluence. Verifique a ligação e tente novamente.",
-  "errors.back": "Voltar"
+  "errors.back": "Voltar",
+  "action.title": "Exportar «{title}»",
+  "action.thisPage": "Esta página",
+  "action.withChildren": {
+    "one": "Esta página e {count} subpágina",
+    "many": "Esta página e {count} de subpáginas",
+    "other": "Esta página e {count} subpáginas"
+  },
+  "action.withChildrenUnknown": "Esta página e as suas subpáginas",
+  "action.noChildren": "Esta página não tem subpáginas.",
+  "action.moreOptions": "Mais opções",
+  "action.close": "Fechar",
+  "action.keepOpen": "Mantenha esta janela aberta até a transferência começar.",
+  "action.notFound": "Não é possível exportar esta página: não foi encontrada ou não tem acesso a ela."
 }

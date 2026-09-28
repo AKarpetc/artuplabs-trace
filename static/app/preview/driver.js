@@ -60,3 +60,18 @@ export async function drive(state) {
   });
   button.click();
 }
+
+/** Drives the page action for `?state=running|done|failed`: picks the page with its subpages once counted, then presses Export. */
+export async function driveAction(state) {
+  if (!RUN_STATES.includes(state) || state === 'done-update') return;
+  const branch = await until(() => {
+    const found = document.querySelector('[data-testid="action-branch"]');
+    return found && found.getAttribute('aria-disabled') !== 'true' && !found.querySelector('[data-testid="action-count-skeleton"]') ? found : null;
+  });
+  branch.click();
+  const button = await until(() => {
+    const found = document.querySelector('[data-testid="action-export"]');
+    return found && !found.disabled && /\d/.test(found.textContent) ? found : null;
+  });
+  button.click();
+}

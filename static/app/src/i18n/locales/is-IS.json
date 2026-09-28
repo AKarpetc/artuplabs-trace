@@ -149,5 +149,17 @@
   "warnings.pagination.page": "Síða",
   "errors.forbidden": "Þú hefur ekki heimild til að lesa sumar þessara síðna í Confluence.",
   "errors.network": "Ekki náðist samband við Confluence. Athugaðu tenginguna og reyndu aftur.",
-  "errors.back": "Til baka"
+  "errors.back": "Til baka",
+  "action.title": "Flytja út „{title}“",
+  "action.thisPage": "Þessi síða",
+  "action.withChildren": {
+    "one": "Þessi síða og {count} undirsíða",
+    "other": "Þessi síða og {count} undirsíður"
+  },
+  "action.withChildrenUnknown": "Þessi síða og undirsíður hennar",
+  "action.noChildren": "Þessi síða hefur engar undirsíður.",
+  "action.moreOptions": "Fleiri valkostir",
+  "action.close": "Loka",
+  "action.keepOpen": "Hafðu þennan glugga opinn þar til niðurhalið hefst.",
+  "action.notFound": "Ekki er hægt að flytja þessa síðu út: hún fannst ekki eða þú hefur ekki aðgang að henni."
 }

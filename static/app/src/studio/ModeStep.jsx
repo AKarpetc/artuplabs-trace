@@ -97,8 +97,8 @@ function Status({ form }) {
   return <SectionMessage appearance="success">{t('drop.loaded', { count: previous.manifest.pages.length })}</SectionMessage>;
 }
 
-/** Step 3: full or update export, with the drop zone for the previous zip or manifest and what it means. */
-export function ModeStep({ number, form }) {
+/** Full or update cards, the drop zone for the previous zip or manifest, and what the dropped file means. */
+export function ModeFields({ form }) {
   const t = useT();
   const options = MODES.map((mode) => ({
     ...mode,
@@ -107,12 +107,20 @@ export function ModeStep({ number, form }) {
     testId: `mode-${mode.value}`,
   }));
   return (
+    <Stack space="space.200">
+      <ChoiceGroup label={t('step.mode.title')} value={form.modeChoice} options={options} onChange={form.setModeChoice} />
+      <DropZone fileName={form.previous?.fileName} onFile={form.setPreviousFile} />
+      <Status form={form} />
+    </Stack>
+  );
+}
+
+/** Step 3: full or update export, with the drop zone for the previous zip or manifest and what it means. */
+export function ModeStep({ number, form }) {
+  const t = useT();
+  return (
     <StepSection number={number} title={t('step.mode.title')} description={t('step.mode.description')}>
-      <Stack space="space.200">
-        <ChoiceGroup label={t('step.mode.title')} value={form.modeChoice} options={options} onChange={form.setModeChoice} />
-        <DropZone fileName={form.previous?.fileName} onFile={form.setPreviousFile} />
-        <Status form={form} />
-      </Stack>
+      <ModeFields form={form} />
     </StepSection>
   );
 }
