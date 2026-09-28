@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Button from '@atlaskit/button/new';
 import DynamicTable from '@atlaskit/dynamic-table';
-import Heading from '@atlaskit/heading';
 import Lozenge from '@atlaskit/lozenge';
 import Spinner from '@atlaskit/spinner';
 import { Flex, Inline, Stack, Text } from '@atlaskit/primitives';
@@ -107,10 +106,5 @@ export function IssueApp({ issueId, projectId }) {
     );
   }
 
-  return (
-    <Stack space="space.200">
-      <Heading size="medium">{t('app.title')}</Heading>
-      {content}
-    </Stack>
-  );
+  return content;
 }
