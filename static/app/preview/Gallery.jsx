@@ -13,7 +13,7 @@ import WarningIcon from '@atlaskit/icon/core/warning';
 import { Box, Grid, Inline, Stack, Text, xcss } from '@atlaskit/primitives';
 import { formatNumber, useLocale, useT } from '../src/i18n/index.js';
 import { AppHeader } from '../src/components/AppHeader.jsx';
-import { ChoiceCard } from '../src/components/ChoiceCard.jsx';
+import { ChoiceGroup } from '../src/components/ChoiceCard.jsx';
 import { FileTree } from '../src/components/FileTree.jsx';
 import { PageLayout } from '../src/components/PageLayout.jsx';
 import { StatTile } from '../src/components/StatTile.jsx';
@@ -73,37 +73,21 @@ const ILLUSTRATIONS = [
   ['SuccessIllustration', SuccessIllustration],
 ];
 
-/** Radio group of choice cards bound to local state. */
-function ChoiceGroup({ items, columns, disabledValue }) {
+/** Choice group bound to local state; the first option starts selected. */
+function DemoGroup({ label, items, columns, disabledValue }) {
   const [value, setValue] = useState(items[0].value);
-  return (
-    <Grid role="radiogroup" gap="space.150" templateColumns={columns}>
-      {items.map((item) => (
-        <ChoiceCard
-          key={item.value}
-          selected={value === item.value}
-          onSelect={() => setValue(item.value)}
-          icon={item.icon}
-          accent={item.accent}
-          title={item.title}
-          description={item.description}
-          badge={item.badge}
-          disabled={item.value === disabledValue}
-          testId={`gallery-choice-${item.value}`}
-        />
-      ))}
-    </Grid>
-  );
+  const options = items.map((item) => ({ ...item, disabled: item.value === disabledValue, testId: `gallery-choice-${item.value}` }));
+  return <ChoiceGroup label={label} value={value} options={options} onChange={setValue} columns={columns} />;
 }
 
 function Main({ locale }) {
   return (
     <Stack space="space.400">
       <StepSection number={1} title="Choose what to export" description="The whole space or one branch of the page tree.">
-        <ChoiceGroup items={SCOPES} columns="repeat(auto-fit, minmax(240px, 1fr))" />
+        <DemoGroup label="Choose what to export" items={SCOPES} columns="repeat(auto-fit, minmax(240px, 1fr))" />
       </StepSection>
       <StepSection number={2} title="Choose a format" description="Presets shape file names, front-matter and admonitions. Disabled card below shows the disabled state.">
-        <ChoiceGroup items={PRESETS} columns="repeat(auto-fit, minmax(240px, 1fr))" disabledValue="hugo" />
+        <DemoGroup label="Choose a format" items={PRESETS} columns="repeat(auto-fit, minmax(240px, 1fr))" disabledValue="hugo" />
       </StepSection>
       <StepSection number={3} title="Result" description="Stat tiles in every tone.">
         <Grid gap="space.200" templateColumns="repeat(auto-fit, minmax(150px, 1fr))">

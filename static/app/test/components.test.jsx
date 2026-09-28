@@ -5,7 +5,7 @@ import PageIcon from '@atlaskit/icon/core/page';
 import { I18nProvider } from '../src/i18n/index.js';
 import { AppHeader } from '../src/components/AppHeader.jsx';
 import { StepSection } from '../src/components/StepSection.jsx';
-import { ChoiceCard } from '../src/components/ChoiceCard.jsx';
+import { ChoiceCard, ChoiceGroup } from '../src/components/ChoiceCard.jsx';
 import { StatTile } from '../src/components/StatTile.jsx';
 import { FileTree } from '../src/components/FileTree.jsx';
 import { PageLayout } from '../src/components/PageLayout.jsx';
@@ -81,6 +81,73 @@ describe('ChoiceCard', () => {
   });
 });
 
+const OPTIONS = [
+  { value: 'gfm', icon: PageIcon, title: 'GFM', description: 'd', testId: 'g-gfm' },
+  { value: 'docusaurus', icon: PageIcon, title: 'Docusaurus', description: 'd', testId: 'g-docusaurus' },
+  { value: 'hugo', icon: PageIcon, title: 'Hugo', description: 'd', disabled: true, testId: 'g-hugo' },
+  { value: 'mkdocs', icon: PageIcon, title: 'MkDocs', description: 'd', testId: 'g-mkdocs' },
+];
+
+function Group({ initial = 'gfm', onChange = () => {} }) {
+  const [value, setValue] = useState(initial);
+  return <ChoiceGroup label="Format" value={value} options={OPTIONS} onChange={(next) => { setValue(next); onChange(next); }} />;
+}
+
+describe('ChoiceGroup', () => {
+  const tabStops = () => screen.getAllByRole('radio').filter((radio) => radio.getAttribute('tabindex') === '0');
+
+  it('is a labelled radiogroup with a single tab stop on the selected card', () => {
+    renderIn(<Group initial="docusaurus" />);
+    expect(screen.getByRole('radiogroup', { name: 'Format' })).toBeInTheDocument();
+    expect(tabStops()).toEqual([screen.getByTestId('g-docusaurus')]);
+    expect(screen.getByTestId('g-hugo')).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('puts the tab stop on the first enabled card when nothing is selected', () => {
+    renderIn(<ChoiceGroup label="Format" value={null} options={OPTIONS} onChange={() => {}} />);
+    expect(tabStops()).toEqual([screen.getByTestId('g-gfm')]);
+  });
+
+  it('moves selection and focus with arrows, skipping disabled cards and wrapping', () => {
+    const onChange = vi.fn();
+    renderIn(<Group onChange={onChange} />);
+    const gfm = screen.getByTestId('g-gfm');
+    gfm.focus();
+    fireEvent.keyDown(gfm, { key: 'ArrowRight' });
+    expect(screen.getByTestId('g-docusaurus')).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByTestId('g-docusaurus')).toHaveFocus();
+    fireEvent.keyDown(screen.getByTestId('g-docusaurus'), { key: 'ArrowDown' });
+    expect(screen.getByTestId('g-mkdocs')).toHaveFocus();
+    expect(screen.getByTestId('g-hugo')).toHaveAttribute('aria-checked', 'false');
+    fireEvent.keyDown(screen.getByTestId('g-mkdocs'), { key: 'ArrowRight' });
+    expect(gfm).toHaveFocus();
+    fireEvent.keyDown(gfm, { key: 'ArrowLeft' });
+    expect(screen.getByTestId('g-mkdocs')).toHaveFocus();
+    fireEvent.keyDown(screen.getByTestId('g-mkdocs'), { key: 'ArrowUp' });
+    expect(screen.getByTestId('g-docusaurus')).toHaveFocus();
+    expect(onChange.mock.calls).toEqual([['docusaurus'], ['mkdocs'], ['gfm'], ['mkdocs'], ['docusaurus']]);
+    expect(tabStops()).toEqual([screen.getByTestId('g-docusaurus')]);
+  });
+
+  it('jumps to the first and last enabled card with Home and End', () => {
+    renderIn(<Group initial="docusaurus" />);
+    fireEvent.keyDown(screen.getByTestId('g-docusaurus'), { key: 'End' });
+    expect(screen.getByTestId('g-mkdocs')).toHaveFocus();
+    expect(screen.getByTestId('g-mkdocs')).toHaveAttribute('aria-checked', 'true');
+    fireEvent.keyDown(screen.getByTestId('g-mkdocs'), { key: 'Home' });
+    expect(screen.getByTestId('g-gfm')).toHaveFocus();
+    expect(screen.getByTestId('g-gfm')).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('selects by click through the group', () => {
+    renderIn(<Group />);
+    fireEvent.click(screen.getByTestId('g-mkdocs'));
+    expect(screen.getByTestId('g-mkdocs')).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(screen.getByTestId('g-hugo'));
+    expect(screen.getByTestId('g-hugo')).toHaveAttribute('aria-checked', 'false');
+  });
+});
+
 describe('FileTree', () => {
   const names = () => screen.getAllByTestId('file-tree-row').map((row) => row.textContent);
 
@@ -88,7 +155,11 @@ describe('FileTree', () => {
     renderIn(<FileTree paths={['a/index.md', 'a/b.md', 'c.md']} />);
     expect(names()).toEqual(['a', 'b.md', 'index.md', 'c.md']);
     const rows = screen.getAllByTestId('file-tree-row');
-    expect(rows.map((row) => row.getAttribute('aria-level'))).toEqual(['1', '2', '2', '1']);
+    expect(rows.map((row) => row.getAttribute('data-depth'))).toEqual(['0', '1', '1', '0']);
+    const list = screen.getByRole('list', { name: 'Files in the export' });
+    const nested = within(list).getAllByRole('list');
+    expect(nested).toHaveLength(1);
+    expect(within(nested[0]).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['b.md', 'index.md']);
     expect(rows[0]).toHaveAttribute('data-kind', 'folder');
     expect(rows[1]).toHaveAttribute('data-kind', 'markdown');
   });
@@ -116,7 +187,9 @@ describe('FileTree', () => {
   it('has no more row within the limit and a translated tree label', () => {
     renderIn(<FileTree paths={['a.md']} />);
     expect(screen.queryByTestId('file-tree-more')).toBeNull();
-    expect(screen.getByRole('tree')).toHaveAttribute('aria-label', 'Files in the export');
+    expect(screen.queryByRole('tree')).toBeNull();
+    expect(screen.queryByRole('treeitem')).toBeNull();
+    expect(screen.getByRole('list')).toHaveAttribute('aria-label', 'Files in the export');
   });
 });
 

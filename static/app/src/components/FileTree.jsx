@@ -23,15 +23,20 @@ const treeStyles = xcss({
   overflowWrap: 'anywhere',
   minWidth: '0',
 });
-const rowStyles = xcss({ display: 'flex', alignItems: 'stretch', minWidth: '0' });
-const guideStyles = xcss({
-  width: '8px',
+const listStyles = xcss({ listStyle: 'none', margin: '0', padding: '0' });
+const nestedStyles = xcss({
+  listStyle: 'none',
+  margin: '0',
+  padding: '0',
   marginInlineStart: 'space.100',
-  flexShrink: 0,
+  paddingInlineStart: '7px',
   borderInlineStartWidth: 'border.width',
   borderInlineStartStyle: 'solid',
   borderInlineStartColor: 'color.border',
+  ':nth-of-type(n)': { marginBlockStart: '0' },
 });
+const itemStyles = xcss({ margin: '0', minWidth: '0' });
+const rowStyles = xcss({ display: 'flex', alignItems: 'stretch', minWidth: '0' });
 const glyphStyles = xcss({ flexShrink: 0, paddingBlock: 'space.025', paddingInlineEnd: 'space.075', lineHeight: '0' });
 const folderNameStyles = xcss({ color: 'color.text', fontWeight: 'font.weight.medium', minWidth: '0' });
 const fileNameStyles = xcss({ color: 'color.text.subtle', minWidth: '0' });
@@ -86,33 +91,58 @@ function visibleRows(rows, limit) {
   return { shown, files };
 }
 
+/** Turns depth-first rows into nested nodes: each folder row gets the rows below it as `children`. */
+function nest(rows) {
+  const root = [];
+  const stack = [root];
+  for (const row of rows) {
+    stack.length = row.depth + 1;
+    const node = { ...row, children: [] };
+    stack[row.depth].push(node);
+    if (row.kind === 'folder') stack[row.depth + 1] = node.children;
+  }
+  return root;
+}
+
+/** One list level: rows as list items, folders carrying a nested list whose border is the indentation guide. */
+function Level({ nodes, label, root = false }) {
+  return (
+    <Box as="ul" aria-label={label} xcss={root ? listStyles : nestedStyles}>
+      {nodes.map((node) => {
+        const { Icon, color } = GLYPHS[node.kind];
+        return (
+          <Box as="li" key={node.key} xcss={itemStyles}>
+            <Box data-kind={node.kind === 'image' ? 'attachment' : node.kind} data-depth={node.depth} testId="file-tree-row" xcss={rowStyles}>
+              <Box as="span" xcss={glyphStyles}>
+                <Icon label="" color={token(color)} />
+              </Box>
+              <Box as="span" xcss={node.kind === 'folder' ? folderNameStyles : fileNameStyles}>{node.name}</Box>
+            </Box>
+            {node.children.length > 0 ? <Level nodes={node.children} /> : null}
+          </Box>
+        );
+      })}
+    </Box>
+  );
+}
+
 /**
  * Monospace preview of export paths as a folder tree with indentation guides; beyond
  * `limit` files it shows a "+N more" row whose text comes from `moreLabel` (string or count => string).
+ * Rendered as nested labelled lists (`label` or the translated default).
  */
-export function FileTree({ paths, limit = 14, moreLabel }) {
+export function FileTree({ paths, limit = 14, moreLabel, label }) {
   const t = useT();
   const { shown, hidden } = useMemo(() => {
     const rows = flatten(buildTree(paths ?? []), 0, []);
     const total = rows.filter((row) => row.kind !== 'folder').length;
     const visible = visibleRows(rows, Math.max(0, limit));
-    return { shown: visible.shown, hidden: total - visible.files };
+    return { shown: nest(visible.shown), hidden: total - visible.files };
   }, [paths, limit]);
   const more = typeof moreLabel === 'function' ? moreLabel(hidden) : moreLabel ?? t('fileTree.more', { count: hidden });
   return (
-    <Box role="tree" aria-label={t('fileTree.label')} xcss={treeStyles}>
-      {shown.map((row) => {
-        const { Icon, color } = GLYPHS[row.kind];
-        return (
-          <Box key={row.key} role="treeitem" aria-level={row.depth + 1} aria-selected="false" data-kind={row.kind === 'image' ? 'attachment' : row.kind} testId="file-tree-row" xcss={rowStyles}>
-            {Array.from({ length: row.depth }, (_, index) => <Box key={index} xcss={guideStyles} />)}
-            <Box as="span" xcss={glyphStyles}>
-              <Icon label="" color={token(color)} />
-            </Box>
-            <Box as="span" xcss={row.kind === 'folder' ? folderNameStyles : fileNameStyles}>{row.name}</Box>
-          </Box>
-        );
-      })}
+    <Box xcss={treeStyles}>
+      <Level nodes={shown} label={label ?? t('fileTree.label')} root />
       {hidden > 0 ? <Box testId="file-tree-more" xcss={moreStyles}>{more}</Box> : null}
     </Box>
   );
