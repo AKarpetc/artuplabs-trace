@@ -125,11 +125,11 @@ function longTitle(seed) {
   return text.slice(0, 250);
 }
 
+/**
+ * Cycles through numbered title-pattern generators; Confluence enforces per-space title
+ * uniqueness (measured 2026-09-28), so every generated title gets a unique numeric suffix.
+ */
 function titleGenerator() {
-  // Confluence enforces title uniqueness per space (measured 2026-09-28), so every
-  // generated title carries a unique numeric suffix even when it cycles through a
-  // short list of scripts/patterns; only the explicit dup-test parents below reuse
-  // near-identical titles on purpose.
   const generators = [
     (i) => `${PLAIN_TITLES[i % PLAIN_TITLES.length]} ${i}`,
     (i) => `${DIACRITIC_TITLES[i % DIACRITIC_TITLES.length]} ${i}`,
@@ -261,6 +261,12 @@ function planTree(totalPages) {
   return nodes.slice(0, totalPages);
 }
 
+/**
+ * Assigns titles, substituting accent/case near-duplicates ("Café notes"/"Cafe notes",
+ * "Straße plan"/"Strasse plan") for two sibling groups: real Confluence rejects literal
+ * case-only duplicates (measured 2026-09-28) but accepts these, and they still collide in
+ * the export tool's transliterated slug.
+ */
 function assignTitles(nodes) {
   const gen = titleGenerator();
   const byParent = new Map();
@@ -272,12 +278,6 @@ function assignTitles(nodes) {
   const dupNotesParent = parentsWithFourChildren[0];
   const dupApiParent = parentsWithFourChildren[1];
   for (const n of nodes) n.title = null;
-  // Confluence enforces case-insensitive (but accent-sensitive) title uniqueness per
-  // space (measured 2026-09-28: "Notes"/"notes" is rejected with 400 BAD_REQUEST,
-  // "Café"/"Cafe" is accepted) - literal case-only duplicate siblings ("Notes" x3,
-  // "API"+"api") are not reproducible on real Confluence. Substituted with accent-only
-  // near-duplicates, which Confluence accepts and which still collide in the export
-  // tool's transliterated slug (see atlassian/plans/2026-09-28-artup-export-v1.md Task 4).
   if (dupNotesParent) {
     const [, kids] = dupNotesParent;
     kids[0].title = 'Café notes';
