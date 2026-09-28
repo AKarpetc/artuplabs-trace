@@ -201,10 +201,10 @@ export async function suspectsPage(projectId, after, limit) {
 }
 
 /** Confirms a link owned by the project (both the link row and its requirement must belong to it): anchors it to the requirement's current fingerprint. Returns the number of rows changed so a no-op is visible to the caller. */
-export async function confirmLink(projectId, linkId, accountId, nowIso) {
+export async function confirmLink(projectId, linkId, nowIso) {
   const res = await run(`UPDATE trace_link t JOIN req_issue r ON r.issue_id = t.req_issue_id
-    SET t.confirmed_fingerprint = r.fingerprint, t.suspect = 0, t.confirmed_by = ?, t.confirmed_at = ?
-    WHERE t.link_id = ? AND t.project_id = ? AND r.project_id = ?`, [accountId, nowIso, linkId, projectId, projectId]);
+    SET t.confirmed_fingerprint = r.fingerprint, t.suspect = 0, t.confirmed_at = ?
+    WHERE t.link_id = ? AND t.project_id = ? AND r.project_id = ?`, [nowIso, linkId, projectId, projectId]);
   return Number(res.rows.affectedRows ?? 0);
 }
 

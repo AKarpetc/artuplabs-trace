@@ -76,5 +76,7 @@ export async function runMigrations() {
       INDEX idx_job_project (project_id, kind, id)
     )`)
     .enqueue('v007_member_status', 'ALTER TABLE baseline_member ADD COLUMN status_name VARCHAR(255) NOT NULL DEFAULT \'\'')
+    .enqueue('v008_erase_link_confirmed_by', 'UPDATE trace_link SET confirmed_by = NULL WHERE confirmed_by IS NOT NULL')
+    .enqueue('v009_erase_baseline_created_by', 'UPDATE baseline SET created_by = \'\' WHERE created_by <> \'\'')
     .run();
 }

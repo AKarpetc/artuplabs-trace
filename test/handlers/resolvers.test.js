@@ -55,6 +55,7 @@ vi.mock('../../src/handlers/worker', () => ({
 const { resolverHandler } = await import('../../src/handlers/resolvers');
 const settings = await import('../../src/infra/settings');
 const worker = await import('../../src/handlers/worker');
+const repo = await import('../../src/infra/repo');
 const baselineRepo = await import('../../src/infra/baselineRepo');
 const { normalizeConfig } = await import('../../src/core/config');
 
@@ -115,6 +116,22 @@ describe('production license', () => {
     await expect(call('listBaselines', {}, { environmentType: 'PRODUCTION', license: { active: true } })).resolves.toEqual([]);
     await expect(call('listBaselines', {}, { environmentType: 'PRODUCTION', license: { active: false } })).rejects.toThrow('unlicensed');
     await expect(call('listBaselines', {}, { environmentType: 'PRODUCTION' })).rejects.toThrow('unlicensed');
+  });
+});
+
+describe('confirmLink', () => {
+  it('does not forward the caller account id to the repo', async () => {
+    await call('confirmLink', { linkId: '5' });
+    expect(repo.confirmLink).toHaveBeenCalledWith('10001', '5', expect.any(String));
+    expect(repo.confirmLink.mock.calls[0]).not.toContain('acc-1');
+  });
+});
+
+describe('createBaseline', () => {
+  it('does not forward the caller account id to startBaseline', async () => {
+    await call('createBaseline', { name: 'B1' });
+    expect(worker.startBaseline).toHaveBeenCalledWith('10001', 'B1');
+    expect(worker.startBaseline.mock.calls[0]).not.toContain('acc-1');
   });
 });
 

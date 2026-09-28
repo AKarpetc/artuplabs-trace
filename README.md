@@ -46,10 +46,10 @@ forge eligibility -e development
 
 ## Data stored
 
-The app stores no issue descriptions or other free text beyond what is listed below. All data lives in Forge SQL (app-owned) and Forge KVS (project config), scoped per installation:
+The app stores no issue descriptions, no Atlassian account ids, and no other free text or personal data beyond what is listed below. All data lives in Forge SQL (app-owned) and Forge KVS (project config), scoped per installation:
 
 - **Requirement issues** (`req_issue`): issue id, issue key, project id, issue type id, summary, status name, a SHA-256 **fingerprint** hash of the fingerprint fields (summary and description) (never the field values or description text), a SHA-256 **links hash**, a per-field SHA-256 hash for each extra fingerprint field beyond summary/description (`fields_json`; no field values; always empty in v1, where the fingerprint fields are fixed), and sync bookkeeping (last-seen sync id).
-- **Trace links** (`trace_link`): the link id, the requirement's issue id, the linked issue's id/key/type/status, the link type, direction, the SHA-256 fingerprint the link was last confirmed against, who confirmed it and when, and whether it is currently suspect.
+- **Trace links** (`trace_link`): the link id, the requirement's issue id, the linked issue's id/key/type/status, the link type, direction, the SHA-256 fingerprint the link was last confirmed against, when it was confirmed, and whether it is currently suspect.
 - **Issue versions** (`issue_version`): one row per distinct fingerprint seen for an issue — issue id, issue key, summary, status name, the SHA-256 fingerprint, and the same per-field SHA-256 hashes as `req_issue.fields_json` (never the field values or description text) — used for baselines only: each baseline member points at the version it captured.
 - **Baselines** (`baseline`, `baseline_member`): a named, timestamped snapshot of a project's requirements (issue id, version id, links hash, status name) plus a checksum, used to diff two points in time.
 - **Jobs** (`job`): checkpointed state for full-sync, incremental-sync and baseline-capture background jobs. Finished jobs are deleted after 7 days.
