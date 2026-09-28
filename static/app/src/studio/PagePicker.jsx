@@ -1,4 +1,4 @@
-import { useCallback, useId } from 'react';
+import { useCallback, useEffect, useId, useRef } from 'react';
 import { Label } from '@atlaskit/form';
 import { Box, Stack, Text, xcss } from '@atlaskit/primitives';
 import { AsyncSelect } from '@atlaskit/select';
@@ -20,19 +20,27 @@ function OptionLabel(option, { context }) {
   );
 }
 
-/** Async page search in the current space; the chosen page shows its breadcrumb path below the field. */
-export function PagePicker({ client, spaceKey, value, onChange }) {
+/** Async page search in the current space (only the latest request counts); the chosen page shows its breadcrumb path below the field. */
+export function PagePicker({ createClient, spaceKey, value, onChange }) {
   const t = useT();
   const id = useId();
+  const latest = useRef({ request: 0, controller: null });
+  useEffect(() => () => latest.current.controller?.abort(), []);
   const load = useCallback(async (input) => {
     const text = input.trim();
+    latest.current.controller?.abort();
+    latest.current.request += 1;
+    const request = latest.current.request;
+    const controller = new AbortController();
+    latest.current.controller = controller;
     if (!text) return [];
     try {
-      return (await client.searchPages(spaceKey, text)).map(toOption);
+      const results = await createClient({ signal: controller.signal }).searchPages(spaceKey, text);
+      return request === latest.current.request ? results.map(toOption) : [];
     } catch {
       return [];
     }
-  }, [client, spaceKey]);
+  }, [createClient, spaceKey]);
   const path = trail(value);
   return (
     <Stack space="space.050">

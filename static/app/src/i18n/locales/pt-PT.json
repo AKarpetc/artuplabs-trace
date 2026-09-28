@@ -64,6 +64,7 @@
   "drop.error.not-manifest": "Este ficheiro não é um manifesto do ArtUp Export.",
   "drop.error.newer-version": "Esta exportação foi feita por uma versão mais recente do ArtUp Export. Atualize a aplicação e tente novamente.",
   "drop.error.no-manifest-in-zip": "Este zip não contém export-manifest.json.",
+  "drop.error.too-large": "Este ficheiro é maior do que {size}. Largue antes o export-manifest.json que está dentro do zip.",
   "drop.full.other-source": "Será feita uma exportação completa porque a anterior provém de outro site, espaço ou página.",
   "drop.full.options-changed": "Será feita uma exportação completa porque as opções de formato diferem da exportação anterior. Os ficheiros que deixaram de ser gerados serão listados para eliminação.",
   "preview.title": "Pré-visualização do resultado",

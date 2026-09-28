@@ -62,6 +62,7 @@
   "drop.error.not-manifest": "Ez a fájl nem ArtUp Export-manifeszt.",
   "drop.error.newer-version": "Ez az export az ArtUp Export egy újabb verziójával készült. Frissítse az alkalmazást, és próbálja újra.",
   "drop.error.no-manifest-in-zip": "Ebben a zipben nincs export-manifest.json.",
+  "drop.error.too-large": "A fájl nagyobb, mint {size}. Helyette a zipben lévő export-manifest.json fájlt húzza ide.",
   "drop.full.other-source": "Teljes export készül, mert az előző export másik webhelyről, térből vagy oldalról származik.",
   "drop.full.options-changed": "Teljes export készül, mert a formátumbeállítások eltérnek az előző exporttól. A már nem létrehozott fájlok a törlési listára kerülnek.",
   "preview.title": "Az eredmény előnézete",

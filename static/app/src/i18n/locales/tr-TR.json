@@ -62,6 +62,7 @@
   "drop.error.not-manifest": "Bu dosya bir ArtUp Export bildirimi değil.",
   "drop.error.newer-version": "Bu dışa aktarım ArtUp Export'un daha yeni bir sürümüyle yapıldı. Uygulamayı güncelleyip yeniden deneyin.",
   "drop.error.no-manifest-in-zip": "Bu zip dosyasında export-manifest.json yok.",
+  "drop.error.too-large": "Bu dosya {size} boyutundan büyük. Bunun yerine zip içindeki export-manifest.json dosyasını bırakın.",
   "drop.full.other-source": "Önceki dışa aktarım başka bir siteden, alandan veya sayfadan geldiği için tam dışa aktarım yapılacak.",
   "drop.full.options-changed": "Biçim seçenekleri önceki dışa aktarımdan farklı olduğu için tam dışa aktarım yapılacak. Artık üretilmeyen dosyalar silinmek üzere listelenecek.",
   "preview.title": "Çıktı önizlemesi",

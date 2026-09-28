@@ -62,6 +62,7 @@
   "drop.error.not-manifest": "Dit bestand is geen ArtUp Export-manifest.",
   "drop.error.newer-version": "Deze export is gemaakt met een nieuwere versie van ArtUp Export. Werk de app bij en probeer het opnieuw.",
   "drop.error.no-manifest-in-zip": "Deze zip bevat geen export-manifest.json.",
+  "drop.error.too-large": "Dit bestand is groter dan {size}. Sleep in plaats daarvan de export-manifest.json uit de zip hierheen.",
   "drop.full.other-source": "Er wordt een volledige export gemaakt, omdat de vorige export van een andere site, ruimte of pagina komt.",
   "drop.full.options-changed": "Er wordt een volledige export gemaakt, omdat de formaatopties afwijken van de vorige export. Bestanden die niet meer worden gemaakt, komen op de lijst om te verwijderen.",
   "preview.title": "Voorbeeld van de uitvoer",

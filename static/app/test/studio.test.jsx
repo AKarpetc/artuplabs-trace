@@ -4,6 +4,7 @@ import { buildManifest } from '../src/core/manifest.js';
 import { DEFAULT_OPTIONS } from '../src/core/presets.js';
 import { I18nProvider, localeDictionaries } from '../src/i18n/index.js';
 import { createFakeConfluence } from './fixtures/fakeConfluence.js';
+import { routeConfluence } from '../preview/fixtures.js';
 
 const { invoke, requestConfluence, routerOpen } = vi.hoisted(() => ({ invoke: vi.fn(), requestConfluence: vi.fn(), routerOpen: vi.fn() }));
 vi.mock('@forge/bridge', () => ({
@@ -27,15 +28,35 @@ const context = { siteUrl: SITE, locale: 'en_US', extension: { space: { key: 'EN
 const rows = () => screen.queryAllByTestId('file-tree-row').map((row) => row.textContent);
 const exportButton = () => screen.getByTestId('studio-export');
 
-function renderStudio({ locale = 'en-US', onStart } = {}) {
+function renderStudio({ locale = 'en-US', onStart, createClient } = {}) {
   const fake = createFakeConfluence({ space: SPACE, pages: PAGES, users: {} });
-  render(
+  const view = render(
     <I18nProvider locale={locale}>
-      <StudioApp context={context} client={fake.client} onStart={onStart} />
+      <StudioApp context={context} createClient={createClient ?? (() => fake.client)} onStart={onStart} />
     </I18nProvider>,
   );
-  return fake;
+  return { fake, view };
 }
+
+const delay = (ms) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+const docsContext = { siteUrl: 'https://preview.atlassian.net', locale: 'en_US', extension: { space: { key: 'DOCS', id: '98001' } } };
+
+function renderBridgeStudio() {
+  requestConfluence.mockReset();
+  requestConfluence.mockImplementation(async (path) => {
+    await delay(40);
+    return routeConfluence(path);
+  });
+  return render(
+    <I18nProvider locale="en-US">
+      <StudioApp context={docsContext} />
+    </I18nProvider>,
+  );
+}
+
+const scanCalls = () => requestConfluence.mock.calls.map(([path]) => path).filter((path) => /\/pages(\/\d+\/children)?\?/.test(path));
 
 function manifestFile(options = DEFAULT_OPTIONS, name = 'export-manifest.json') {
   const pages = PAGES.map((p, i) => ({
@@ -144,5 +165,56 @@ describe('export studio', () => {
     expect(await screen.findByText(ru['step.scope.title'])).toBeInTheDocument();
     await waitFor(() => expect(exportButton()).toHaveTextContent(ru['studio.exportButton'].few.replace('{count}', '3')));
     expect(within(screen.getByTestId('scope-space')).getByText(ru['scope.space.title'])).toBeInTheDocument();
+  });
+
+  it('stops the preview requests when the studio unmounts during a scan', async () => {
+    const { unmount } = renderBridgeStudio();
+    await waitFor(() => expect(scanCalls().length).toBeGreaterThan(0), { timeout: 2000 });
+    unmount();
+    const count = requestConfluence.mock.calls.length;
+    await delay(400);
+    expect(requestConfluence.mock.calls.length).toBe(count);
+  });
+
+  it('aborts the previous scan when the target changes', async () => {
+    renderBridgeStudio();
+    await waitFor(() => expect(scanCalls().length).toBeGreaterThan(0), { timeout: 2000 });
+    fireEvent.click(screen.getByTestId('scope-branch'));
+    const count = requestConfluence.mock.calls.length;
+    await delay(400);
+    expect(requestConfluence.mock.calls.length).toBe(count);
+  });
+
+  it('rejects a dropped file over 512 MB without reading it', async () => {
+    renderStudio();
+    const zone = await screen.findByTestId('drop-zone');
+    const file = new File(['x'], 'huge.zip');
+    Object.defineProperty(file, 'size', { value: 600 * 1024 * 1024 });
+    file.arrayBuffer = vi.fn();
+    fireEvent.drop(zone, { dataTransfer: { files: [file] } });
+    expect(await screen.findByText('This file is larger than 512 MB. Drop the export-manifest.json from inside the zip instead.')).toBeInTheDocument();
+    expect(file.arrayBuffer).not.toHaveBeenCalled();
+    expect(screen.getByTestId('mode-update')).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('keeps only the latest picker search when responses arrive out of order', async () => {
+    const fake = createFakeConfluence({ space: SPACE, pages: PAGES, users: {} });
+    const answers = { Ca: [{ id: '2', title: 'Getting started', ancestors: [] }], Caf: [{ id: '3', title: 'Café', ancestors: ['Engineering'] }] };
+    const client = {
+      ...fake.client,
+      async searchPages(key, text) {
+        await delay(text === 'Ca' ? 300 : 20);
+        return answers[text] ?? [];
+      },
+    };
+    renderStudio({ createClient: () => client });
+    fireEvent.click(await screen.findByTestId('scope-branch'));
+    const input = screen.getByLabelText('Page to export');
+    fireEvent.change(input, { target: { value: 'Ca' } });
+    fireEvent.change(input, { target: { value: 'Caf' } });
+    expect(await screen.findByText('Café', { selector: '[data-testid="picker-option-title"]' })).toBeInTheDocument();
+    await delay(400);
+    expect(screen.queryByText('Getting started', { selector: '[data-testid="picker-option-title"]' })).toBeNull();
+    expect(screen.getByText('Café', { selector: '[data-testid="picker-option-title"]' })).toBeInTheDocument();
   });
 });

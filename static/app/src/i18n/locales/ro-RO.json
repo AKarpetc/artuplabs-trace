@@ -64,6 +64,7 @@
   "drop.error.not-manifest": "Acest fișier nu este un manifest ArtUp Export.",
   "drop.error.newer-version": "Acest export a fost creat de o versiune mai nouă a ArtUp Export. Actualizează aplicația și încearcă din nou.",
   "drop.error.no-manifest-in-zip": "Această arhivă zip nu conține export-manifest.json.",
+  "drop.error.too-large": "Fișierul depășește {size}. Plasează în schimb fișierul export-manifest.json din arhiva zip.",
   "drop.full.other-source": "Se va face un export complet, deoarece exportul anterior provine din alt site, spațiu sau pagină.",
   "drop.full.options-changed": "Se va face un export complet, deoarece opțiunile de format diferă de exportul anterior. Fișierele care nu mai sunt generate vor fi trecute pe lista de ștergere.",
   "preview.title": "Previzualizarea rezultatului",

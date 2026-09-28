@@ -60,6 +60,7 @@
   "drop.error.not-manifest": "이 파일은 ArtUp Export 매니페스트가 아닙니다.",
   "drop.error.newer-version": "이 내보내기는 더 새로운 버전의 ArtUp Export로 만들어졌습니다. 앱을 업데이트한 후 다시 시도하세요.",
   "drop.error.no-manifest-in-zip": "이 zip에는 export-manifest.json이 없습니다.",
+  "drop.error.too-large": "이 파일은 {size}보다 큽니다. 대신 zip 안의 export-manifest.json을 놓으세요.",
   "drop.full.other-source": "이전 내보내기가 다른 사이트, 스페이스 또는 페이지에서 만들어졌으므로 전체 내보내기를 수행합니다.",
   "drop.full.options-changed": "형식 옵션이 이전 내보내기와 다르므로 전체 내보내기를 수행합니다. 더 이상 만들어지지 않는 파일은 삭제 목록에 표시됩니다.",
   "preview.title": "출력 미리 보기",

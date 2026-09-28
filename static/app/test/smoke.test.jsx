@@ -14,7 +14,7 @@ vi.mock('@forge/bridge', () => ({
     }),
   },
   invoke: vi.fn().mockResolvedValue({ licensed: true }),
-  requestConfluence: vi.fn().mockRejectedValue(new Error('offline')),
+  requestConfluence: vi.fn(async () => new Response(JSON.stringify({ results: [], totalSize: 0 }), { status: 200 })),
   router: { navigate: vi.fn() },
   showFlag: vi.fn(() => ({ close: vi.fn(() => Promise.resolve(true)) })),
 }));
@@ -28,6 +28,13 @@ describe('space page shell', () => {
     document.body.innerHTML = '<div id="root"></div>';
     await import('../src/studio/main.jsx');
     await waitFor(() => expect(screen.getByText('ArtUp Export')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Try again')).toBeInTheDocument(), { timeout: 2000 });
+    const { requestConfluence } = await import('@forge/bridge');
+    const settled = requestConfluence.mock.calls.length;
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
+    expect(requestConfluence.mock.calls.length).toBe(settled);
   });
 });
 

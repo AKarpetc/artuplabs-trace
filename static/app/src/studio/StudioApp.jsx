@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '@atlaskit/button/new';
 import EmptyState from '@atlaskit/empty-state';
 import Spinner from '@atlaskit/spinner';
@@ -42,32 +42,34 @@ const fileStyles = xcss({
   overflowWrap: 'anywhere',
 });
 
-function useSpaceName(client, spaceKey) {
+function useSpaceName(createClient, spaceKey) {
   const [name, setName] = useState(null);
   useEffect(() => {
-    let live = true;
-    if (spaceKey) client.getSpace(spaceKey).then((space) => live && setName(space.name), () => {});
-    return () => {
-      live = false;
-    };
-  }, [client, spaceKey]);
+    const controller = new AbortController();
+    if (spaceKey) {
+      createClient({ signal: controller.signal }).getSpace(spaceKey)
+        .then((space) => !controller.signal.aborted && setName(space.name), () => {});
+    }
+    return () => controller.abort();
+  }, [createClient, spaceKey]);
   return name;
 }
 
-function zipName(form) {
+function zipName(form, now) {
   const { target, page, mode } = form;
   const rootSlug = target.kind === 'space' ? '' : toSlug(page?.title ?? '') || target.pageId;
-  return exportFileName({ spaceKey: target.spaceKey, rootSlug, mode, now: new Date() });
+  return exportFileName({ spaceKey: target.spaceKey, rootSlug, mode, now });
 }
 
 function ExportBar({ form, total, onStart }) {
   const t = useT();
+  const [now] = useState(() => new Date());
   const count = form.target.kind === 'page' && form.hasTarget ? 1 : total;
   const label = typeof count === 'number' && form.hasTarget ? t('studio.exportButton', { count }) : t('studio.exportButtonUnknown');
   return (
     <Box xcss={footerStyles}>
       <Flex gap="space.200" alignItems="center" justifyContent="end" wrap="wrap">
-        {form.hasTarget ? <Box xcss={fileStyles}>{zipName(form)}</Box> : null}
+        {form.hasTarget ? <Box xcss={fileStyles}>{zipName(form, now)}</Box> : null}
         <Button appearance="primary" iconAfter={DownloadIcon} isDisabled={!form.ready} onClick={() => onStart(form.form)} testId="studio-export">
           {label}
         </Button>
@@ -76,10 +78,10 @@ function ExportBar({ form, total, onStart }) {
   );
 }
 
-function Studio({ client, form, onStart }) {
+function Studio({ createClient, form, onStart }) {
   const t = useT();
-  const preview = usePreview({ client, target: form.target, options: form.options, names: form.names, siteUrl: form.form.siteUrl });
-  const spaceName = useSpaceName(client, form.spaceKey);
+  const preview = usePreview({ createClient, target: form.target, options: form.options, names: form.names, siteUrl: form.form.siteUrl });
+  const spaceName = useSpaceName(createClient, form.spaceKey);
   const help = (
     <Button appearance="subtle" iconBefore={QuestionCircleIcon} onClick={() => router.open(HELP_URL)}>
       {t('studio.help')}
@@ -87,7 +89,7 @@ function Studio({ client, form, onStart }) {
   );
   const main = (
     <Stack space="space.400">
-      <ScopeStep number={1} form={form} client={client} />
+      <ScopeStep number={1} form={form} createClient={createClient} />
       <FormatStep number={2} form={form} />
       <ModeStep number={3} form={form} />
       <ExportBar form={form} total={preview.total} onStart={onStart} />
@@ -103,12 +105,11 @@ function Studio({ client, form, onStart }) {
 
 /**
  * Space page: licence gate, then the export studio (scope, format, mode, live preview).
- * `onStart(form)` receives the chosen target, options and previous manifest; `client` overrides the bridge client.
+ * `onStart(form)` receives the chosen target, options and previous manifest; `createClient({ signal })` overrides the bridge client.
  */
-export function StudioApp({ context, client, onStart }) {
+export function StudioApp({ context, createClient = createBridgeClient, onStart }) {
   const t = useT();
   const access = useAccess();
-  const confluence = useMemo(() => client ?? createBridgeClient(), [client]);
   const form = useExportForm(context);
   const [, setStarted] = useState(null);
   const start = (chosen) => {
@@ -130,7 +131,7 @@ export function StudioApp({ context, client, onStart }) {
       />
     );
   } else {
-    content = <Studio client={confluence} form={form} onStart={start} />;
+    content = <Studio createClient={createClient} form={form} onStart={start} />;
   }
   return <Box xcss={pageStyles}>{content}</Box>;
 }

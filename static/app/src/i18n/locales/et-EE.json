@@ -62,6 +62,7 @@
   "drop.error.not-manifest": "See fail ei ole ArtUp Exporti manifest.",
   "drop.error.newer-version": "See eksport on tehtud ArtUp Exporti uuema versiooniga. Uuenda rakendust ja proovi uuesti.",
   "drop.error.no-manifest-in-zip": "Selles zipis pole faili export-manifest.json.",
+  "drop.error.too-large": "See fail on suurem kui {size}. Lohista selle asemel zipis olev export-manifest.json.",
   "drop.full.other-source": "Tehakse täielik eksport, sest eelmine eksport pärineb teiselt saidilt, ruumist või lehelt.",
   "drop.full.options-changed": "Tehakse täielik eksport, sest vormingu valikud erinevad eelmisest ekspordist. Failid, mida enam ei looda, lisatakse kustutamise loendisse.",
   "preview.title": "Tulemuse eelvaade",

@@ -30,7 +30,7 @@ function countOf(client, target) {
  * Live output preview: scans the target two levels deep (debounced), counts its pages through CQL,
  * and plans paths and the first page's front-matter for the current options and previous names.
  */
-export function usePreview({ client, target, options, names, siteUrl }) {
+export function usePreview({ createClient, target, options, names, siteUrl }) {
   const [scan, setScan] = useState(IDLE);
   const [total, setTotal] = useState(null);
   const [attempt, setAttempt] = useState(0);
@@ -43,25 +43,28 @@ export function usePreview({ client, target, options, names, siteUrl }) {
       setScan(IDLE);
       return undefined;
     }
-    let live = true;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const live = () => !signal.aborted;
     setScan((current) => ({ ...current, status: 'loading', error: null }));
     const scope = kind === 'space' ? { kind, spaceKey } : { kind, spaceKey, pageId };
     const timer = setTimeout(async () => {
-      countOf(client, scope).then((count) => live && setTotal(count));
+      const client = createClient({ signal });
+      countOf(client, scope).then((count) => live() && setTotal(count));
       try {
-        const tree = await scanTree(client, scope, () => {}, undefined, { maxDepth: PREVIEW_DEPTH });
+        const tree = await scanTree(client, scope, () => {}, signal, { maxDepth: PREVIEW_DEPTH });
         const firstId = tree.rootIds[0];
         const first = firstId ? await firstPageMeta(client, firstId, spaceKey, siteUrl).catch(() => null) : null;
-        if (live) setScan({ status: 'ready', tree, first, error: null });
+        if (live()) setScan({ status: 'ready', tree, first, error: null });
       } catch (error) {
-        if (live) setScan({ ...IDLE, status: 'error', error });
+        if (live()) setScan({ ...IDLE, status: 'error', error });
       }
     }, DEBOUNCE_MS);
     return () => {
-      live = false;
+      controller.abort();
       clearTimeout(timer);
     };
-  }, [client, kind, spaceKey, pageId, needsPage, siteUrl, attempt]);
+  }, [createClient, kind, spaceKey, pageId, needsPage, siteUrl, attempt]);
 
   const planned = useMemo(() => {
     if (!scan.tree) return null;

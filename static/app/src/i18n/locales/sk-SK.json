@@ -66,6 +66,7 @@
   "drop.error.not-manifest": "Tento súbor nie je manifest ArtUp Export.",
   "drop.error.newer-version": "Tento export vytvorila novšia verzia ArtUp Export. Aktualizujte aplikáciu a skúste to znova.",
   "drop.error.no-manifest-in-zip": "Tento zip neobsahuje export-manifest.json.",
+  "drop.error.too-large": "Súbor je väčší ako {size}. Presuňte namiesto neho export-manifest.json zo zipu.",
   "drop.full.other-source": "Vykoná sa úplný export, pretože predchádzajúci export pochádza z iného webu, priestoru alebo stránky.",
   "drop.full.options-changed": "Vykoná sa úplný export, pretože možnosti formátu sa líšia od predchádzajúceho exportu. Súbory, ktoré sa už nevytvárajú, sa uvedú na odstránenie.",
   "preview.title": "Náhľad výsledku",

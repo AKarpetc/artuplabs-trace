@@ -62,6 +62,7 @@
   "drop.error.not-manifest": "Tämä tiedosto ei ole ArtUp Export -manifesti.",
   "drop.error.newer-version": "Tämä vienti on tehty ArtUp Exportin uudemmalla versiolla. Päivitä sovellus ja yritä uudelleen.",
   "drop.error.no-manifest-in-zip": "Tässä zipissä ei ole export-manifest.json-tiedostoa.",
+  "drop.error.too-large": "Tiedosto on suurempi kuin {size}. Pudota sen sijaan zipin sisältä export-manifest.json.",
   "drop.full.other-source": "Tehdään täysi vienti, koska edellinen vienti on toiselta sivustolta, tilasta tai sivulta.",
   "drop.full.options-changed": "Tehdään täysi vienti, koska muotoasetukset poikkeavat edellisestä viennistä. Tiedostot, joita ei enää luoda, luetellaan poistettaviksi.",
   "preview.title": "Tuloksen esikatselu",

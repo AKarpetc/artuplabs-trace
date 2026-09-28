@@ -62,6 +62,7 @@
   "drop.error.not-manifest": "Þessi skrá er ekki ArtUp Export-yfirlit.",
   "drop.error.newer-version": "Þessi útflutningur var gerður með nýrri útgáfu af ArtUp Export. Uppfærðu forritið og reyndu aftur.",
   "drop.error.no-manifest-in-zip": "Í þessari zip-skrá er engin export-manifest.json.",
+  "drop.error.too-large": "Þessi skrá er stærri en {size}. Slepptu frekar export-manifest.json úr zip-skránni.",
   "drop.full.other-source": "Fullur útflutningur verður gerður því fyrri útflutningur kemur frá öðrum vef, svæði eða síðu.",
   "drop.full.options-changed": "Fullur útflutningur verður gerður því sniðvalkostir eru aðrir en í fyrri útflutningi. Skrár sem verða ekki lengur til eru settar á lista til eyðingar.",
   "preview.title": "Forskoðun á útkomu",

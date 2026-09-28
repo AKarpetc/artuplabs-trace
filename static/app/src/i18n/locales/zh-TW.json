@@ -60,6 +60,7 @@
   "drop.error.not-manifest": "此檔案不是 ArtUp Export 資訊清單。",
   "drop.error.newer-version": "此匯出由較新版本的 ArtUp Export 產生。請更新應用程式後再試一次。",
   "drop.error.no-manifest-in-zip": "此 zip 中沒有 export-manifest.json。",
+  "drop.error.too-large": "此檔案大於 {size}。請改為拖放 zip 內的 export-manifest.json。",
   "drop.full.other-source": "由於上次匯出來自其他網站、空間或頁面，將進行完整匯出。",
   "drop.full.options-changed": "由於格式選項與上次匯出不同，將進行完整匯出。不再產生的檔案會列入刪除清單。",
   "preview.title": "輸出預覽",

@@ -66,6 +66,7 @@
   "drop.error.not-manifest": "Этот файл не является манифестом ArtUp Export.",
   "drop.error.newer-version": "Этот экспорт сделан более новой версией ArtUp Export. Обновите приложение и повторите попытку.",
   "drop.error.no-manifest-in-zip": "В этом zip нет export-manifest.json.",
+  "drop.error.too-large": "Файл больше {size}. Перетащите вместо него export-manifest.json из этого zip.",
   "drop.full.other-source": "Будет выполнен полный экспорт: прошлый экспорт сделан с другого сайта, пространства или страницы.",
   "drop.full.options-changed": "Будет выполнен полный экспорт: параметры формата отличаются от прошлого экспорта. Файлы, которые больше не создаются, попадут в список на удаление.",
   "preview.title": "Предпросмотр результата",

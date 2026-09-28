@@ -60,6 +60,7 @@
   "drop.error.not-manifest": "このファイルは ArtUp Export のマニフェストではありません。",
   "drop.error.newer-version": "このエクスポートは新しいバージョンの ArtUp Export で作成されました。アプリを更新してもう一度お試しください。",
   "drop.error.no-manifest-in-zip": "この zip には export-manifest.json が含まれていません。",
+  "drop.error.too-large": "このファイルは {size} を超えています。代わりに zip 内の export-manifest.json をドロップしてください。",
   "drop.full.other-source": "前回のエクスポートが別のサイト、スペース、またはページのものなので、完全エクスポートを行います。",
   "drop.full.options-changed": "形式のオプションが前回のエクスポートと異なるため、完全エクスポートを行います。作成されなくなったファイルは削除一覧に記載されます。",
   "preview.title": "出力のプレビュー",

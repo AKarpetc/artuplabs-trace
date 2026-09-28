@@ -6,7 +6,11 @@ import { readManifestFromFile } from '../infra/zip.js';
 
 const NO_NAMES = new Map();
 
+/** Largest previous export the studio reads into memory: 512 MB. */
+export const MAX_PREVIOUS_BYTES = 512 * 1024 * 1024;
+
 async function readPrevious(file) {
+  if (file.size > MAX_PREVIOUS_BYTES) return { ok: false, error: 'too-large' };
   try {
     const text = await readManifestFromFile(file);
     return text === null ? { ok: false, error: 'no-manifest-in-zip' } : parseManifest(text);

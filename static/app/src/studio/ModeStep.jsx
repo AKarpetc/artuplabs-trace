@@ -5,7 +5,8 @@ import { Box, Inline, Stack, Text, xcss } from '@atlaskit/primitives';
 import { ChoiceGroup } from '../components/ChoiceCard.jsx';
 import { DownloadIcon, RefreshIcon, UploadIcon } from '../components/icons.js';
 import { StepSection } from '../components/StepSection.jsx';
-import { useT } from '../i18n/index.js';
+import { formatBytes, useLocale, useT } from '../i18n/index.js';
+import { MAX_PREVIOUS_BYTES } from './useExportForm.js';
 
 const MODES = [
   { value: 'full', icon: DownloadIcon, accent: 'blue' },
@@ -87,9 +88,10 @@ function DropZone({ fileName, onFile }) {
 
 function Status({ form }) {
   const t = useT();
+  const locale = useLocale();
   const { previous, modeChoice, fullReason } = form;
   if (!previous) return null;
-  if (previous.error) return <SectionMessage appearance="error">{t(`drop.error.${previous.error}`)}</SectionMessage>;
+  if (previous.error) return <SectionMessage appearance="error">{t(`drop.error.${previous.error}`, { size: formatBytes(locale, MAX_PREVIOUS_BYTES) })}</SectionMessage>;
   if (modeChoice !== 'update') return null;
   if (fullReason) return <SectionMessage appearance="warning">{t(`drop.full.${fullReason}`)}</SectionMessage>;
   return <SectionMessage appearance="success">{t('drop.loaded', { count: previous.manifest.pages.length })}</SectionMessage>;
