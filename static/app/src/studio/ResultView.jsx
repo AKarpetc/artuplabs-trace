@@ -38,9 +38,9 @@ const commandStyles = xcss({
 });
 const listStyles = xcss({ margin: 'space.0', paddingInlineStart: 'space.300' });
 
-/** Shell command that unpacks an update zip over `docs` and removes the files listed in export-deleted.txt. */
+/** Shell command (BSD and GNU) that unpacks an update zip over `docs` and removes the files listed in export-deleted.txt. */
 export function applyCommand(fileName) {
-  return `unzip -o ${fileName} -d docs && (cd docs && [ -f export-deleted.txt ] && xargs -d '\\n' rm -f < export-deleted.txt; rm -f export-deleted.txt)`;
+  return `unzip -o ${fileName} -d docs && cd docs && if [ -f export-deleted.txt ]; then while IFS= read -r f; do rm -f -- "$f"; done < export-deleted.txt; rm -f export-deleted.txt; fi`;
 }
 
 function tilesOf(t, locale, result) {

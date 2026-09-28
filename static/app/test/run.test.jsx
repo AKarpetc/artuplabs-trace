@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import { DEFAULT_OPTIONS } from '../src/core/presets.js';
 import { runExport } from '../src/export/pipeline.js';
 import { I18nProvider, localeDictionaries } from '../src/i18n/index.js';
@@ -16,6 +16,7 @@ vi.mock('@forge/bridge', () => ({
 }));
 
 const { StudioApp } = await import('../src/studio/StudioApp.jsx');
+const { useExportRun } = await import('../src/studio/useExportRun.js');
 
 const en = localeDictionaries['en-US'];
 const SITE = 'https://acme.atlassian.net';
@@ -187,7 +188,9 @@ describe('export run', () => {
     expect(within(result).getByText(/1 page from the previous export was not found/)).toBeInTheDocument();
     expect(within(result).queryByText('Gone')).toBeNull();
     fireEvent.click(within(result).getByTestId('apply-toggle'));
-    expect(within(result).getByTestId('apply-command')).toHaveTextContent(`unzip -o ${save.mock.calls[0][0]} -d docs`);
+    expect(within(result).getByTestId('apply-command')).toHaveTextContent(
+      `unzip -o ${save.mock.calls[0][0]} -d docs && cd docs && if [ -f export-deleted.txt ]; then while IFS= read -r f; do rm -f -- "$f"; done < export-deleted.txt; rm -f export-deleted.txt; fi`,
+    );
   });
 
   it('lists warnings sorted by page, filters them by kind and opens the page in Confluence', async () => {
@@ -226,5 +229,22 @@ describe('export run', () => {
     const result = await screen.findByTestId('result-view');
     expect(within(result).getByText(ru['result.title'])).toBeInTheDocument();
     expect(within(result).getByText(ru['result.newExport'])).toBeInTheDocument();
+  });
+
+  it('ignores a second start while an export is running', async () => {
+    const held = gate();
+    const fake = createFakeConfluence({ space: SPACE, pages: PAGES, users: {} });
+    const createClient = vi.fn(() => gatedLabels(held)(fake.client));
+    const save = vi.fn();
+    const { result } = renderHook(() => useExportRun({ context, createClient, save }));
+    const form = { target: { kind: 'space', spaceKey: 'ENG' }, options: DEFAULT_OPTIONS, previousManifest: null, siteUrl: SITE };
+    act(() => {
+      result.current.start(form);
+      result.current.start(form);
+    });
+    expect(createClient).toHaveBeenCalledTimes(1);
+    held.open();
+    await waitFor(() => expect(result.current.state).toBe('done'));
+    expect(save).toHaveBeenCalledTimes(1);
   });
 });

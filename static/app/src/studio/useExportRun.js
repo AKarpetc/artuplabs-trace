@@ -17,10 +17,12 @@ function preventUnload(event) {
 export function useExportRun({ context, createClient = createBridgeClient, save = saveBlob, clock = Date.now } = {}) {
   const [run, setRun] = useState({ state: 'idle', progress: null, result: null, error: null, form: null, startedAt: 0 });
   const controller = useRef(null);
+  const running = useRef(false);
   const siteUrl = context?.siteUrl ?? '';
 
   const start = useCallback(async (form) => {
-    controller.current?.abort();
+    if (running.current) return;
+    running.current = true;
     const current = new AbortController();
     controller.current = current;
     const startedAt = clock();
@@ -36,11 +38,13 @@ export function useExportRun({ context, createClient = createBridgeClient, save 
         onProgress: (progress) => setRun((prev) => (prev.state === 'running' && controller.current === current ? { ...prev, progress } : prev)),
         now: new Date(clock()),
       });
+      if (controller.current === current) running.current = false;
       if (current.signal.aborted) return;
       const finished = { ...result, elapsedMs: clock() - startedAt };
       setRun((prev) => ({ ...prev, state: 'done', result: finished }));
       save(result.fileName, result.blob);
     } catch (error) {
+      if (controller.current === current) running.current = false;
       if (current.signal.aborted || isAbort(error)) return;
       setRun((prev) => ({ ...prev, state: 'failed', error }));
     }
@@ -49,12 +53,14 @@ export function useExportRun({ context, createClient = createBridgeClient, save 
   const cancel = useCallback(() => {
     controller.current?.abort();
     controller.current = null;
+    running.current = false;
     setRun((prev) => ({ ...prev, state: 'cancelled', progress: null }));
   }, []);
 
   const reset = useCallback(() => {
     controller.current?.abort();
     controller.current = null;
+    running.current = false;
     setRun({ state: 'idle', progress: null, result: null, error: null, form: null, startedAt: 0 });
   }, []);
 
