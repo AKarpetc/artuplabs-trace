@@ -7,10 +7,11 @@
  *   set -a && . /path/to/.env && set +a
  *   node scripts/acceptance.mjs full   --space EXPT [--preset generic] --out data/full-1.zip
  *   node scripts/acceptance.mjs update --space EXPT --previous data/full-1.zip --out data/update.zip
- *   node scripts/acceptance.mjs edit   --space EXPT [--seed data/seed-EXPT.json]
+ *   node scripts/acceptance.mjs edit   --space EXPT [--seed data/seed-EXPT.json] [--force]
  *
  * `edit` changes the dev space through REST: 3 page bodies, 1 rename, 1 move, 1 delete,
  * chosen deterministically from the seed data file written by scripts/seed-space.mjs.
+ * It refuses any space other than EXPT unless --force is given.
  */
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -25,17 +26,24 @@ import { readManifestFromFile } from '../static/app/src/infra/zip.js';
 const SITE = 'https://artuplabs-dev.atlassian.net';
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const EDIT_MARK = 'ArtUp Export acceptance edit';
+const EDIT_SPACE = 'EXPT';
 
 function parseArgs(argv) {
   const [command, ...rest] = argv;
-  const args = { command, space: 'EXPT', preset: 'generic', out: null, previous: null, seed: null };
+  const args = { command, space: 'EXPT', preset: 'generic', out: null, previous: null, seed: null, force: false };
   for (let i = 0; i < rest.length; i += 1) {
     const key = rest[i].replace(/^--/, '');
+    if (key === 'force') {
+      args.force = true;
+      continue;
+    }
     if (!(key in args) || key === 'command') throw new Error(`unknown argument: ${rest[i]}`);
     args[key] = rest[++i];
   }
   return args;
 }
+
+class EditError extends Error {}
 
 function authHeader() {
   const { FORGE_EMAIL: email, FORGE_API_TOKEN: token } = process.env;
@@ -134,7 +142,8 @@ async function loadSeed(args) {
 
 async function currentPage(id) {
   try {
-    return await api('GET', `/wiki/api/v2/pages/${id}?body-format=storage`);
+    const page = await api('GET', `/wiki/api/v2/pages/${id}?body-format=storage`);
+    return page.status === 'current' ? page : null;
   } catch (error) {
     if (/→ 404/.test(error.message)) return null;
     throw error;
@@ -164,36 +173,59 @@ function pickTargets(seed) {
   return { edits: [e1, e2, e3], rename, move, newParent, remove };
 }
 
+async function existingPage(target, action) {
+  const page = await currentPage(target.id);
+  if (!page) {
+    throw new EditError(`${action}: page ${target.id} "${target.title}" is not a current page any more (deleted, trashed or no access); nothing was changed. Reseed the space or restore the page from the trash before running edit again.`);
+  }
+  return page;
+}
+
 async function editCommand(args) {
+  if (args.space !== EDIT_SPACE && !args.force) {
+    throw new EditError(`edit changes and deletes pages; it only runs on the ${EDIT_SPACE} test space. Pass --force to run it on ${args.space}.`);
+  }
   const seed = await loadSeed(args);
+  if (seed.space !== args.space) throw new EditError(`seed file is for space ${seed.space}, not ${args.space}`);
   const targets = pickTargets(seed);
+  const edited = [];
+  for (const target of targets.edits) edited.push(await existingPage(target, 'edit-body'));
+  const renamed = await existingPage(targets.rename, 'rename');
+  const moved = await existingPage(targets.move, 'move');
+  await existingPage(targets.newParent, 'move target');
+  const removed = await existingPage(targets.remove, 'delete');
   const log = [];
-  for (const target of targets.edits) {
-    const page = await currentPage(target.id);
+  for (const page of edited) {
     const body = `${page.body.storage.value}<p>${EDIT_MARK}: body changed.</p>`;
     const updated = await updatePage(page, { body });
     log.push({ action: 'edit-body', id: page.id, title: page.title, version: updated.version.number });
   }
-  const renamed = await currentPage(targets.rename.id);
   const newTitle = `${renamed.title} renamed`;
   const afterRename = await updatePage(renamed, { title: newTitle });
   log.push({ action: 'rename', id: renamed.id, from: renamed.title, to: newTitle, version: afterRename.version.number });
-  const moved = await currentPage(targets.move.id);
   const afterMove = await updatePage(moved, { parentId: targets.newParent.id });
   log.push({ action: 'move', id: moved.id, title: moved.title, fromParent: moved.parentId, toParent: afterMove.parentId, toParentTitle: targets.newParent.title });
-  const removed = await currentPage(targets.remove.id);
   await api('DELETE', `/wiki/api/v2/pages/${removed.id}`);
   log.push({ action: 'delete', id: removed.id, title: removed.title });
   console.log(JSON.stringify(log, null, 2));
 }
 
-const args = parseArgs(process.argv.slice(2));
-if (args.command === 'full') await exportCommand(args);
-else if (args.command === 'update') {
-  if (!args.previous) throw new Error('--previous is required');
-  await exportCommand(args);
-} else if (args.command === 'edit') await editCommand(args);
-else {
-  console.error('usage: acceptance.mjs full|update|edit --space EXPT [--preset p] [--previous zip] [--out zip] [--seed json]');
-  process.exit(2);
+async function main(args) {
+  if (args.command === 'full') return exportCommand(args);
+  if (args.command === 'update') {
+    if (!args.previous) throw new EditError('--previous is required');
+    return exportCommand(args);
+  }
+  if (args.command === 'edit') return editCommand(args);
+  console.error('usage: acceptance.mjs full|update|edit --space EXPT [--preset p] [--previous zip] [--out zip] [--seed json] [--force]');
+  process.exitCode = 2;
+  return undefined;
+}
+
+try {
+  await main(parseArgs(process.argv.slice(2)));
+} catch (error) {
+  if (!(error instanceof EditError)) throw error;
+  console.error(error.message);
+  process.exitCode = 1;
 }

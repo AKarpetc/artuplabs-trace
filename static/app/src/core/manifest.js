@@ -27,14 +27,20 @@ export function buildManifest({ siteUrl, spaceKey, rootPageId, options, pages, w
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
+/** True for a relative forward-slash path with no empty, `.` or `..` segments, backslash, NUL or drive prefix. */
+export function isSafePath(path) {
+  if (typeof path !== 'string' || path === '' || /[\\\u0000]/.test(path) || /^[A-Za-z]:/.test(path)) return false;
+  return path.split('/').every((segment) => segment !== '' && segment !== '.' && segment !== '..');
+}
+
 function isValidAttachment(a) {
   return Boolean(a) && typeof a === 'object'
-    && typeof a.id === 'string' && typeof a.path === 'string' && typeof a.version === 'number';
+    && typeof a.id === 'string' && isSafePath(a.path) && typeof a.version === 'number';
 }
 
 function isValidPage(p) {
   return Boolean(p) && typeof p === 'object'
-    && typeof p.id === 'string' && typeof p.path === 'string' && typeof p.name === 'string'
+    && typeof p.id === 'string' && isSafePath(p.path) && typeof p.name === 'string'
     && typeof p.version === 'number' && typeof p.weight === 'number'
     && Array.isArray(p.links) && Array.isArray(p.attachments) && p.attachments.every(isValidAttachment);
 }

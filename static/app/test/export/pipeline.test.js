@@ -147,6 +147,19 @@ describe('runExport edge cases', () => {
     expect(out['export-manifest.json']).not.toContain('Secret');
   });
 
+  it('never lists unsafe paths from a crafted previous manifest for deletion', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
+    const previous = JSON.parse((await files(await run(fake)))['export-manifest.json']);
+    ['../outside.md', '/etc/passwd', 'home/../../x.md', 'home\\x.md'].forEach((path, i) => previous.pages.push({
+      id: String(90 + i), title: `Gone ${i}`, parentId: '1', version: 1, path, name: 'x', weight: 40 + i, links: [], attachments: [],
+    }));
+    previous.pages.push({ id: '99', title: 'Gone', parentId: '1', version: 1, path: 'home/gone.md', name: 'gone', weight: 99, links: [], attachments: [] });
+    const result = await run(fake, { previousManifest: previous });
+    const out = await files(result);
+    expect(result.deletePaths).toEqual(['home/gone.md']);
+    expect(out['export-deleted.txt']).toBe('home/gone.md\n');
+  });
+
   it('reports full stats and a dated file name', async () => {
     const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
     const result = await run(fake);

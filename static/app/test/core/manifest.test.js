@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildManifest, parseManifest, previousNames, sameOptions, sameSource } from '../../src/core/manifest.js';
+import { buildManifest, isSafePath, parseManifest, previousNames, sameOptions, sameSource } from '../../src/core/manifest.js';
 import { DEFAULT_OPTIONS } from '../../src/core/presets.js';
 
 const page = (id, path, over = {}) => ({ id, title: `T${id}`, parentId: null, version: 1, path, name: path.replace(/\.md$/, ''), weight: 10, links: [], attachments: [], ...over });
@@ -42,6 +42,23 @@ describe('manifest', () => {
     ['{"format":"artup-export","version":1,"pages":[{"id":"1","path":"a.md","name":"a","version":1,"weight":10,"attachments":[]}]}', 'not-manifest'],
     ['{"format":"artup-export","version":1,"pages":[{"id":"1","path":"a.md","name":"a","version":1,"weight":10,"links":[],"attachments":"nope"}]}', 'not-manifest'],
   ])('rejects %s as %s', (text, error) => expect(parseManifest(text)).toEqual({ ok: false, error }));
+
+  it.each([
+    '/etc/passwd', '../x.md', 'a/../../x.md', 'a//b.md', 'a/./b.md', 'a\\b.md', 'a\u0000.md', 'C:/x.md', '', 'a/',
+  ])('rejects the unsafe page path %j', (path) => {
+    const text = buildManifest({ ...input, pages: [page('1', path)] });
+    expect(parseManifest(text)).toEqual({ ok: false, error: 'not-manifest' });
+    expect(isSafePath(path)).toBe(false);
+  });
+
+  it('rejects an unsafe attachment path', () => {
+    const text = buildManifest({ ...input, pages: [page('1', 'a.md', { attachments: [{ id: 'x', version: 1, path: '../../.ssh/id_rsa' }] })] });
+    expect(parseManifest(text)).toEqual({ ok: false, error: 'not-manifest' });
+  });
+
+  it('accepts nested relative paths with dots inside names', () => {
+    expect(['a.md', 'home/api/index.md', 'home/a.assets/v1.2.png', 'x/..hidden/.pages'].every(isSafePath)).toBe(true);
+  });
 
   it('drops extra keys from warnings before comparing and serializing', () => {
     const extra = { ...input, warnings: input.warnings.map((w) => ({ ...w, extraKey: 'ignored' })) };

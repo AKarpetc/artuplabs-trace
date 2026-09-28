@@ -2,7 +2,7 @@ import { collectMentions, storageToMarkdown } from '../core/convert/index.js';
 import { renderFrontMatter } from '../core/frontMatter.js';
 import { planUpdate } from '../core/increment.js';
 import { planAttachments, relativePath } from '../core/links.js';
-import { buildManifest, DELETED_FILE, MANIFEST_FILE, previousNames, sameOptions, sameSource } from '../core/manifest.js';
+import { buildManifest, DELETED_FILE, isSafePath, MANIFEST_FILE, previousNames, sameOptions, sameSource } from '../core/manifest.js';
 import { planPaths } from '../core/paths.js';
 import { presetFiles } from '../core/presets.js';
 import { toSlug } from '../core/slug.js';
@@ -348,7 +348,8 @@ export async function runExport({ client, target, options, previousManifest, sit
   const used = new Set();
   const converted = writePages(job, content, used);
   const kept = keptAttachments(job, used, changes.fetchIds);
-  const { downloadIds, deletePaths } = planChanges(job, kept);
+  const { downloadIds, deletePaths: planned } = planChanges(job, kept);
+  const deletePaths = planned.filter(isSafePath);
   const attachments = await writeAttachments(job, kept, downloadIds);
   const warnings = collectWarnings(job, converted);
   const blob = await pack(job, finalManifestPages(job, content, converted, kept), warnings, deletePaths);

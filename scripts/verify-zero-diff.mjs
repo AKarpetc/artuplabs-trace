@@ -14,18 +14,34 @@
 import { mkdtemp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { unzipSync } = createRequire(join(REPO_ROOT, 'static/app/package.json'))('fflate');
 const DELETED_FILE = 'export-deleted.txt';
 
+class UnsafePathError extends Error {
+  constructor(path, source) {
+    super(`unsafe path rejected in ${source}: ${JSON.stringify(path)}`);
+    this.name = 'UnsafePathError';
+  }
+}
+
+function safeTarget(dir, path, source) {
+  const segments = path.split('/');
+  const unsafe = path === '' || path.startsWith('/') || /^[A-Za-z]:/.test(path) || /[\\\u0000]/.test(path)
+    || segments.some((s, i) => s === '..' || s === '.' || (s === '' && i < segments.length - 1));
+  const target = resolve(dir, path);
+  if (unsafe || !target.startsWith(resolve(dir) + sep)) throw new UnsafePathError(path, source);
+  return target;
+}
+
 async function unzipTo(zipPath, dir) {
   const entries = unzipSync(new Uint8Array(await readFile(resolve(zipPath))));
-  for (const [name, data] of Object.entries(entries)) {
+  const files = Object.entries(entries).map(([name, data]) => [name, safeTarget(dir, name, zipPath), data]);
+  for (const [name, target, data] of files) {
     if (name.endsWith('/')) continue;
-    const target = join(dir, name);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, data);
   }
@@ -68,7 +84,8 @@ async function applyUpdate(dir, updateZip) {
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
-  for (const path of listed) await rm(join(dir, path), { force: true });
+  const targets = listed.map((path) => safeTarget(dir, path, `${updateZip}:${DELETED_FILE}`));
+  for (const target of targets) await rm(target, { force: true });
   await rm(listPath, { force: true });
   return listed.length;
 }
@@ -108,4 +125,10 @@ async function main(argv) {
   }
 }
 
-process.exitCode = await main(process.argv.slice(2));
+try {
+  process.exitCode = await main(process.argv.slice(2));
+} catch (error) {
+  if (!(error instanceof UnsafePathError)) throw error;
+  console.error(error.message);
+  process.exitCode = 1;
+}
