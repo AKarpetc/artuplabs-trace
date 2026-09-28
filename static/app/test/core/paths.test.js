@@ -64,4 +64,26 @@ describe('planPaths', () => {
   it('is deterministic', () => {
     expect(paths(planPaths(tree, DEFAULT_OPTIONS, new Map()))).toEqual(paths(planPaths(tree, DEFAULT_OPTIONS, new Map())));
   });
+
+  it('resolves a fallback collision against a name another sibling already took directly', () => {
+    const plan = planPaths(treeOf([['3', 'notes-9'], ['5', 'Notes'], ['9', 'Notes']]), DEFAULT_OPTIONS, new Map());
+    const result = paths(plan);
+    expect(new Set(Object.values(result).map((p) => p.toLowerCase())).size).toBe(3);
+    expect(result).toEqual({ 3: 'notes-9.md', 5: 'notes.md', 9: 'notes-9-2.md' });
+  });
+
+  it('repeats the same collision-resolved names when fed back as previous names', () => {
+    const rows = treeOf([['3', 'notes-9'], ['5', 'Notes'], ['9', 'Notes']]);
+    const first = planPaths(rows, DEFAULT_OPTIONS, new Map());
+    const previous = new Map([...first].map(([id, entry]) => [id, entry.name]));
+    expect(paths(planPaths(rows, DEFAULT_OPTIONS, previous))).toEqual(paths(first));
+  });
+
+  it("resolves a fallback that collides with another sibling's sticky previous name", () => {
+    const rows = treeOf([['2', 'Foo'], ['5', 'Foo'], ['9', 'Foo 5']]);
+    const plan = planPaths(rows, DEFAULT_OPTIONS, new Map([['9', 'foo-5']]));
+    const result = paths(plan);
+    expect(new Set(Object.values(result).map((p) => p.toLowerCase())).size).toBe(3);
+    expect(result).toEqual({ 2: 'foo.md', 5: 'foo-5-2.md', 9: 'foo-5.md' });
+  });
 });

@@ -9,9 +9,17 @@ export function relativePath(fromFile, toFile) {
   return [...from.slice(shared).map(() => '..'), ...to.slice(shared)].join('/');
 }
 
-/** Percent-encodes the characters that break a Markdown link target, keeping letters of every script. */
+const NBSP = String.fromCharCode(160);
+const BREAKING_CHARS = new RegExp(`[ ()<>${NBSP}]`, 'g');
+const linkEncoder = new TextEncoder();
+
+function percentEncode(char) {
+  return Array.from(linkEncoder.encode(char)).map((byte) => `%${byte.toString(16).toUpperCase().padStart(2, '0')}`).join('');
+}
+
+/** Percent-encodes the characters that break a Markdown link target (as their UTF-8 bytes), keeping letters of every script. */
 export function encodeLinkTarget(href) {
-  return String(href).replace(/[ ()<> ]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')}`);
+  return String(href).replace(BREAKING_CHARS, percentEncode);
 }
 
 /** Folder holding a page's attachments: page.md → page.assets. */

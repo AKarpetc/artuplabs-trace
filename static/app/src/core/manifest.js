@@ -20,9 +20,23 @@ export function buildManifest({ siteUrl, spaceKey, rootPageId, options, pages, w
       links: [...new Set(p.links)].sort(byNumeric),
       attachments: [...p.attachments].sort(byId).map((a) => ({ id: a.id, version: a.version, path: a.path })),
     })),
-    warnings: [...warnings].sort((a, b) => byNumeric(a.pageId, b.pageId) || byText(a.kind, b.kind) || byText(a.detail, b.detail)),
+    warnings: [...warnings]
+      .map((w) => ({ pageId: w.pageId, kind: w.kind, detail: w.detail }))
+      .sort((a, b) => byNumeric(a.pageId, b.pageId) || byText(a.kind, b.kind) || byText(a.detail, b.detail)),
   };
   return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+function isValidAttachment(a) {
+  return Boolean(a) && typeof a === 'object'
+    && typeof a.id === 'string' && typeof a.path === 'string' && typeof a.version === 'number';
+}
+
+function isValidPage(p) {
+  return Boolean(p) && typeof p === 'object'
+    && typeof p.id === 'string' && typeof p.path === 'string' && typeof p.name === 'string'
+    && typeof p.version === 'number' && typeof p.weight === 'number'
+    && Array.isArray(p.links) && Array.isArray(p.attachments) && p.attachments.every(isValidAttachment);
 }
 
 /** Parses and validates a manifest text. */
@@ -35,6 +49,7 @@ export function parseManifest(text) {
   }
   if (data?.format !== MANIFEST_FORMAT || !Array.isArray(data.pages)) return { ok: false, error: 'not-manifest' };
   if (data.version > MANIFEST_VERSION) return { ok: false, error: 'newer-version' };
+  if (!data.pages.every(isValidPage)) return { ok: false, error: 'not-manifest' };
   return { ok: true, manifest: data };
 }
 

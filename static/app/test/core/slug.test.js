@@ -40,11 +40,17 @@ describe('toSlug unicode', () => {
   it('keeps letters of every script, lower-cased, NFC', () => {
     expect(toSlug('设计文档', { fileNames: 'unicode' })).toBe('设计文档');
     expect(toSlug('Привет, Мир!', { fileNames: 'unicode' })).toBe('привет-мир');
-    expect(toSlug('Café', { fileNames: 'unicode' })).toBe('café');
+    expect(toSlug('Cafe\u0301', { fileNames: 'unicode' })).toBe('café');
   });
   it('stays within 200 UTF-8 bytes', () => {
     const slug = toSlug('漢'.repeat(120), { fileNames: 'unicode' });
     expect(new TextEncoder().encode(slug).length).toBeLessThanOrEqual(200);
+  });
+  it('keeps combining marks attached to their base letter instead of hyphenating them', () => {
+    expect(toSlug('हिन्दी दस्तावेज़', { fileNames: 'unicode' })).toBe('हिन्दी-दस्तावेज़');
+  });
+  it('keeps a combining mark produced by lower-casing a dotted capital I', () => {
+    expect(toSlug('İstanbul', { fileNames: 'unicode' })).not.toContain('-');
   });
 });
 

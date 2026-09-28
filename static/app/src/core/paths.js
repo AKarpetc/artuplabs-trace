@@ -23,7 +23,8 @@ function nameSiblings(ids, nodes, options, previousNames) {
   }
   for (const id of ids.filter((x) => !names.has(x)).sort(byNumericId)) {
     const plain = base(id);
-    const name = taken.has(plain.toLowerCase()) ? `${plain}-${id}` : plain;
+    let name = taken.has(plain) ? `${plain}-${id}` : plain;
+    for (let n = 2; taken.has(name.toLowerCase()); n += 1) name = `${plain}-${id}-${n}`;
     names.set(id, name);
     taken.add(name.toLowerCase());
   }

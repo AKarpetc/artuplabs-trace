@@ -29,6 +29,10 @@ function trimDashes(text) {
   return text.replace(/-+/g, '-').replace(/^-|-$/g, '');
 }
 
+function stripLeadingMarks(text) {
+  return text.replace(/^\p{M}+/u, '');
+}
+
 function cut(slug) {
   const chars = [...slug];
   let end = Math.min(chars.length, MAX_CHARS);
@@ -47,7 +51,7 @@ function cut(slug) {
 export function toSlug(title, { fileNames = 'ascii' } = {}) {
   const lower = String(title ?? '').normalize('NFC').toLowerCase();
   const mapped = fileNames === 'unicode'
-    ? [...lower].map((ch) => (/[\p{L}\p{N}]/u.test(ch) ? ch : '-')).join('')
+    ? stripLeadingMarks([...lower].map((ch) => (/[\p{L}\p{M}\p{N}]/u.test(ch) ? ch : '-')).join(''))
     : [...lower].map((ch) => transliterate(ch).replace(/[^a-z0-9]/g, '-')).join('');
   const slug = cut(trimDashes(mapped));
   const bare = slug.replace(/^_+/, '');

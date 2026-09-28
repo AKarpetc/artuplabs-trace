@@ -18,6 +18,10 @@ describe('encodeLinkTarget', () => {
     expect(encodeLinkTarget('a b/(c)<d>.md#x')).toBe('a%20b/%28c%29%3Cd%3E.md#x');
     expect(encodeLinkTarget('привет/файл.md')).toBe('привет/файл.md');
   });
+  it('encodes a non-breaking space as its two UTF-8 bytes', () => {
+    const nbsp = String.fromCharCode(160);
+    expect(encodeLinkTarget(`a${nbsp}b.md`)).toBe('a%C2%A0b.md');
+  });
 });
 
 describe('planAttachments', () => {

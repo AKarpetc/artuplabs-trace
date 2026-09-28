@@ -4,7 +4,7 @@ export function planUpdate({ previous, versions, plan, attachments, attachmentPl
   const downloadIds = new Set();
   const deletes = new Set();
   const gone = new Set();
-  const stats = { added: 0, changed: 0, moved: 0, deleted: 0, missing: 0, unchanged: 0 };
+  const stats = { added: 0, changed: 0, moved: 0, relinked: 0, missing: 0, unchanged: 0 };
   const byId = new Map(previous.pages.map((p) => [p.id, p]));
 
   for (const [id, version] of versions) {
@@ -34,7 +34,10 @@ export function planUpdate({ previous, versions, plan, attachments, attachmentPl
     old.attachments.forEach((a) => deletes.add(a.path));
   }
   for (const old of previous.pages) {
-    if (versions.has(old.id) && !fetchIds.has(old.id) && old.links.some((id) => gone.has(id))) fetchIds.add(old.id);
+    if (versions.has(old.id) && !fetchIds.has(old.id) && old.links.some((id) => gone.has(id))) {
+      fetchIds.add(old.id);
+      stats.relinked += 1;
+    }
   }
   if (attachments) {
     for (const [pageId, list] of attachments) {

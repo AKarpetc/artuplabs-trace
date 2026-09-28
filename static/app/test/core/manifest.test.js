@@ -38,5 +38,13 @@ describe('manifest', () => {
     ['{"format":"other","version":1,"pages":[]}', 'not-manifest'],
     ['{"format":"artup-export","version":1}', 'not-manifest'],
     ['{"format":"artup-export","version":2,"pages":[]}', 'newer-version'],
+    ['{"format":"artup-export","version":1,"pages":[null]}', 'not-manifest'],
+    ['{"format":"artup-export","version":1,"pages":[{"id":"1","path":"a.md","name":"a","version":1,"weight":10,"attachments":[]}]}', 'not-manifest'],
+    ['{"format":"artup-export","version":1,"pages":[{"id":"1","path":"a.md","name":"a","version":1,"weight":10,"links":[],"attachments":"nope"}]}', 'not-manifest'],
   ])('rejects %s as %s', (text, error) => expect(parseManifest(text)).toEqual({ ok: false, error }));
+
+  it('drops extra keys from warnings before comparing and serializing', () => {
+    const extra = { ...input, warnings: input.warnings.map((w) => ({ ...w, extraKey: 'ignored' })) };
+    expect(buildManifest(extra)).toBe(buildManifest(input));
+  });
 });
