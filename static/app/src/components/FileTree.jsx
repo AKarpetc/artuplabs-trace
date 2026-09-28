@@ -129,16 +129,16 @@ function Level({ nodes, label, root = false }) {
 /**
  * Monospace preview of export paths as a folder tree with indentation guides; beyond
  * `limit` files it shows a "+N more" row whose text comes from `moreLabel` (string or count => string).
- * Rendered as nested labelled lists (`label` or the translated default).
+ * Rendered as nested labelled lists (`label` or the translated default); `hiddenExtra` counts files not in `paths`.
  */
-export function FileTree({ paths, limit = 14, moreLabel, label }) {
+export function FileTree({ paths, limit = 14, moreLabel, label, hiddenExtra = 0 }) {
   const t = useT();
   const { shown, hidden } = useMemo(() => {
     const rows = flatten(buildTree(paths ?? []), 0, []);
     const total = rows.filter((row) => row.kind !== 'folder').length;
     const visible = visibleRows(rows, Math.max(0, limit));
-    return { shown: nest(visible.shown), hidden: total - visible.files };
-  }, [paths, limit]);
+    return { shown: nest(visible.shown), hidden: total - visible.files + Math.max(0, hiddenExtra) };
+  }, [paths, limit, hiddenExtra]);
   const more = typeof moreLabel === 'function' ? moreLabel(hidden) : moreLabel ?? t('fileTree.more', { count: hidden });
   return (
     <Box xcss={treeStyles}>

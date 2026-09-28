@@ -30,7 +30,9 @@ describe('preview fixture Confluence', () => {
     expect(await c.getLabels(PAGES[0].id)).toEqual(['docs', 'reviewed']);
     const users = await c.getUsers(['u-ann', 'u-gone']);
     expect([...users.entries()]).toEqual([['u-ann', 'Ann Lee']]);
-    expect((await c.searchPages(SPACE.key, 'Ёж')).map((r) => r.title)).toEqual(['Ёж']);
+    expect(await c.searchPages(SPACE.key, 'Ёж')).toEqual([expect.objectContaining({ title: 'Ёж', ancestors: ['Product documentation', 'Архитектура системы'] })]);
+    expect(await c.countPages(SPACE.key)).toBe(60);
+    expect(await c.countPages(SPACE.key, PAGES[0].id)).toBe(52);
   });
 
   it('includes Cyrillic, CJK, case-colliding and 250-character titles', () => {

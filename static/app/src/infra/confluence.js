@@ -12,6 +12,8 @@ export class ConfluenceError extends Error {
   }
 }
 
+const sanitize = (value) => String(value).replace(/["\\]/g, '');
+
 function chunks(list, size) {
   return Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, (i + 1) * size));
 }
@@ -103,10 +105,18 @@ export function createConfluenceClient({ request, sleep, concurrency = 6, signal
       return result;
     },
     async searchPages(spaceKey, text) {
-      const sanitize = (value) => String(value).replace(/["\\]/g, '');
       const cql = `type=page AND space="${sanitize(spaceKey)}" AND title~"${sanitize(text)}*"`;
-      const page = await getJson(`/wiki/rest/api/search?cql=${encodeURIComponent(cql)}&limit=20`);
-      return (page.results ?? []).map((r) => ({ id: String(r.content?.id ?? r.id), title: r.content?.title ?? r.title }));
+      const page = await getJson(`/wiki/rest/api/search?cql=${encodeURIComponent(cql)}&limit=20&expand=content.ancestors`);
+      return (page.results ?? []).map((r) => ({
+        id: String(r.content?.id ?? r.id), title: r.content?.title ?? r.title, ancestors: (r.content?.ancestors ?? []).map((a) => a.title),
+      }));
+    },
+    async countPages(spaceKey, ancestorId) {
+      if (ancestorId != null && !/^\d+$/.test(String(ancestorId))) return null;
+      const cql = `type=page AND space="${sanitize(spaceKey)}"${ancestorId != null ? ` AND ancestor=${ancestorId}` : ''}`;
+      const page = await getJson(`/wiki/rest/api/search?cql=${encodeURIComponent(cql)}&limit=1`);
+      if (typeof page.totalSize !== 'number') return null;
+      return page.totalSize + (ancestorId != null ? 1 : 0);
     },
   };
 }

@@ -125,13 +125,28 @@ function download(pathname) {
   return new Response(attachmentBytes(attachment), { status: 200, headers: { 'content-type': attachment.mediaType } });
 }
 
+function ancestorsOf(page) {
+  const chain = [];
+  for (let parent = BY_ID.get(page.parentId); parent; parent = BY_ID.get(parent.parentId)) chain.unshift(parent);
+  return chain;
+}
+
 function search(url) {
   const cql = url.searchParams.get('cql') ?? '';
   const text = (cql.match(/title~"([^"]*)\*?"/)?.[1] ?? '').replace(/\*$/, '').toLowerCase();
+  const ancestor = cql.match(/ancestor=(\d+)/)?.[1] ?? null;
   const limit = Number(url.searchParams.get('limit')) || 20;
-  const results = PAGES.filter((page) => page.title.toLowerCase().includes(text)).slice(0, limit)
-    .map((page) => ({ content: { id: page.id, type: 'page', title: page.title }, title: page.title }));
-  return json({ results, size: results.length });
+  const expand = (url.searchParams.get('expand') ?? '').split(',');
+  const matches = PAGES.filter((page) => page.title.toLowerCase().includes(text))
+    .filter((page) => !ancestor || ancestorsOf(page).some((a) => a.id === ancestor));
+  const results = matches.slice(0, limit).map((page) => ({
+    content: {
+      id: page.id, type: 'page', title: page.title,
+      ...(expand.includes('content.ancestors') ? { ancestors: ancestorsOf(page).map((a) => ({ id: a.id, type: 'page', title: a.title })) } : {}),
+    },
+    title: page.title,
+  }));
+  return json({ results, size: results.length, totalSize: matches.length });
 }
 
 const ROUTES = [

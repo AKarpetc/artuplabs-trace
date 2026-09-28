@@ -15,8 +15,11 @@ async function rootsOf(client, target, signal) {
   return [{ id: page.id, title: page.title, parentId: page.parentId ?? null }];
 }
 
-/** Scans the export target breadth-first, level by level; nodes in discovery order, children in Confluence order. */
-export async function scanTree(client, target, onProgress, signal) {
+/**
+ * Scans the export target breadth-first, level by level; nodes in discovery order, children in Confluence order.
+ * `maxDepth` limits the levels read below the roots (the preview reads two).
+ */
+export async function scanTree(client, target, onProgress, signal, { maxDepth = Infinity } = {}) {
   throwIfAborted(signal);
   const nodes = new Map();
   const add = ({ id, title, parentId }) => nodes.set(id, { id, title, parentId, childIds: [] });
@@ -25,7 +28,7 @@ export async function scanTree(client, target, onProgress, signal) {
   roots.forEach(add);
   onProgress({ stage: 'scan', done: nodes.size, total: 0 });
   let level = target.kind === 'page' ? [] : roots.map((r) => r.id);
-  while (level.length > 0) {
+  for (let depth = 0; level.length > 0 && depth < maxDepth; depth += 1) {
     const children = await Promise.all(level.map((id) => client.listChildren(id)));
     throwIfAborted(signal);
     const next = [];

@@ -100,6 +100,30 @@ describe('confluence client', () => {
     expect(cql).toBe('type=page AND space="ENG OR space=X" AND title~"café*"');
   });
 
+  it('returns search results with ancestor titles as breadcrumbs', async () => {
+    const request = vi.fn(async () => json({ results: [{ content: { id: 7, title: 'Café', ancestors: [{ id: 1, title: 'Eng' }, { id: 2, title: 'Docs' }] } }, { content: { id: 8, title: 'Cafe' } }] }));
+    const client = createConfluenceClient({ request, sleep: async () => {} });
+    expect(await client.searchPages('ENG', 'caf')).toEqual([{ id: '7', title: 'Café', ancestors: ['Eng', 'Docs'] }, { id: '8', title: 'Cafe', ancestors: [] }]);
+    expect(new URL(`https://h${request.mock.calls[0][0]}`).searchParams.get('expand')).toBe('content.ancestors');
+  });
+
+  it('counts pages of a space, or a branch including its root, from the CQL totalSize', async () => {
+    const request = vi.fn(async () => json({ results: [], totalSize: 41, size: 0 }));
+    const client = createConfluenceClient({ request, sleep: async () => {} });
+    expect(await client.countPages('ENG')).toBe(41);
+    expect(await client.countPages('EN"G', '12')).toBe(42);
+    const cqls = request.mock.calls.map(([path]) => new URL(`https://h${path}`).searchParams.get('cql'));
+    expect(cqls).toEqual(['type=page AND space="ENG"', 'type=page AND space="ENG" AND ancestor=12']);
+  });
+
+  it('counts null when totalSize is missing and refuses a non-numeric ancestor', async () => {
+    const request = vi.fn(async () => json({ results: [] }));
+    const client = createConfluenceClient({ request, sleep: async () => {} });
+    expect(await client.countPages('ENG')).toBeNull();
+    expect(await client.countPages('ENG', '1 OR 1=1')).toBeNull();
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
   it('drops non-numeric page ids and sends no request when none remain', async () => {
     const request = vi.fn(async () => json({ results: [] }));
     const client = createConfluenceClient({ request, sleep: async () => {} });

@@ -9,6 +9,11 @@ export function createFakeConfluence({ space, pages, users = {} }) {
   };
   const listed = (filter) => [...byId.values()].filter(filter).sort((a, b) => a.position - b.position)
     .map((p) => ({ id: p.id, title: p.title, position: p.position }));
+  const ancestorsOf = (page) => {
+    const chain = [];
+    for (let parent = byId.get(page.parentId); parent; parent = byId.get(parent.parentId)) chain.unshift(parent);
+    return chain;
+  };
   const client = {
     async getSpace(key) {
       count('getSpace');
@@ -55,7 +60,12 @@ export function createFakeConfluence({ space, pages, users = {} }) {
       return new Map([...new Set(accountIds)].filter((id) => id in users).map((id) => [id, users[id]]));
     },
     async searchPages(spaceKey, text) {
-      return [...byId.values()].filter((p) => p.title.toLowerCase().startsWith(String(text).toLowerCase())).map((p) => ({ id: p.id, title: p.title }));
+      return [...byId.values()].filter((p) => p.title.toLowerCase().startsWith(String(text).toLowerCase()))
+        .map((p) => ({ id: p.id, title: p.title, ancestors: ancestorsOf(p).map((a) => a.title) }));
+    },
+    async countPages(spaceKey, ancestorId) {
+      if (!ancestorId) return byId.size;
+      return [...byId.values()].filter((p) => ancestorsOf(p).some((a) => a.id === ancestorId)).length + 1;
     },
   };
   return {

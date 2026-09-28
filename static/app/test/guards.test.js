@@ -20,6 +20,10 @@ describe('source guards', () => {
     const offenders = code.filter((f) => f.endsWith('.jsx') && literal.test(readFileSync(f, 'utf8')));
     expect(offenders).toEqual([]);
   });
+  it('imports @atlaskit/icon/core only in components/icons.js, where glyph() unwraps it', () => {
+    const offenders = code.filter((f) => !f.endsWith('/components/icons.js') && /@atlaskit\/icon\/core\//.test(readFileSync(f, 'utf8')));
+    expect(offenders).toEqual([]);
+  });
   it('has no comments inside function bodies', () => {
     const offenders = code.filter((f) => /^\s+\/\/(?!\s*eslint)/m.test(readFileSync(f, 'utf8')));
     expect(offenders).toEqual([]);

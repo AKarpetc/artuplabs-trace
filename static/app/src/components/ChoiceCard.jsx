@@ -53,7 +53,7 @@ const bodyStyles = xcss({ minWidth: '0', flexGrow: 1 });
 
 /**
  * Radio-like selectable card (role="radio", Space/Enter select) with a tinted icon tile,
- * a semibold title, an optional badge and a two-line description; `tabIndex` overrides the default tab stop.
+ * a semibold title, an optional badge and a wrapping description; `tabIndex` overrides the default tab stop.
  */
 export const ChoiceCard = forwardRef(function ChoiceCard({ selected, onSelect, icon, accent = 'blue', title, description, badge, disabled = false, testId, tabIndex }, ref) {
   const Icon = glyph(icon);
@@ -91,7 +91,7 @@ export const ChoiceCard = forwardRef(function ChoiceCard({ selected, onSelect, i
             <Text weight="semibold">{title}</Text>
             {badge ? <Lozenge appearance="new">{badge}</Lozenge> : null}
           </Inline>
-          {description ? <Text color="color.text.subtle" size="small" maxLines={2}>{description}</Text> : null}
+          {description ? <Text color="color.text.subtle" size="small">{description}</Text> : null}
         </Stack>
       </Inline>
     </Box>

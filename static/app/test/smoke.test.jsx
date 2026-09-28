@@ -13,8 +13,8 @@ vi.mock('@forge/bridge', () => ({
       moduleKey: 'export-space-page',
     }),
   },
-  invoke: vi.fn(),
-  requestConfluence: vi.fn(),
+  invoke: vi.fn().mockResolvedValue({ licensed: true }),
+  requestConfluence: vi.fn().mockRejectedValue(new Error('offline')),
   router: { navigate: vi.fn() },
   showFlag: vi.fn(() => ({ close: vi.fn(() => Promise.resolve(true)) })),
 }));

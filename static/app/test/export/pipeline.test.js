@@ -236,6 +236,15 @@ describe('scanTree', () => {
     expect(single.rootIds).toEqual(['13']);
     expect(single.nodes.get('13')).toEqual({ id: '13', title: 'A1', parentId: '10', childIds: [] });
   });
+
+  it('stops after maxDepth levels below the roots', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: rows(), users: {} });
+    const space = await scanTree(fake.client, { kind: 'space', spaceKey: 'ENG' }, () => {}, undefined, { maxDepth: 1 });
+    expect([...space.nodes.keys()]).toEqual(['11', '10', '13', '12']);
+    expect(space.nodes.get('13').childIds).toEqual([]);
+    const roots = await scanTree(fake.client, { kind: 'branch', spaceKey: 'ENG', pageId: '10' }, () => {}, undefined, { maxDepth: 0 });
+    expect([...roots.nodes.keys()]).toEqual(['10']);
+  });
 });
 
 describe('runExport fix round 1', () => {

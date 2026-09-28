@@ -184,6 +184,14 @@ describe('FileTree', () => {
     expect(screen.getByText('Ещё 2 файла')).toBeInTheDocument();
   });
 
+  it('adds hiddenExtra to the more row, even when every given path is shown', () => {
+    renderIn(<FileTree paths={['a.md']} hiddenExtra={4} moreLabel={(count) => `+${count} more`} />);
+    expect(screen.getByTestId('file-tree-more')).toHaveTextContent('+4 more');
+    cleanup();
+    renderIn(<FileTree paths={['a.md', 'b.md']} limit={1} hiddenExtra={2} moreLabel={(count) => `+${count} more`} />);
+    expect(screen.getByTestId('file-tree-more')).toHaveTextContent('+3 more');
+  });
+
   it('has no more row within the limit and a translated tree label', () => {
     renderIn(<FileTree paths={['a.md']} />);
     expect(screen.queryByTestId('file-tree-more')).toBeNull();
