@@ -16,6 +16,23 @@ contains only what changed.
 Every zip contains `export-manifest.json` (page ids, versions, paths, options — no page content).
 Keep it with the exported files: it is what makes the next export an update.
 
+### Front-matter
+
+Every page starts with YAML front-matter in this order (no export time, so repeated exports are identical):
+
+| Key | Value |
+|---|---|
+| `title` | Page title |
+| `confluence_id` | Page id |
+| `space` | Space key |
+| `parent_id` | Parent page id (omitted for a top-level page) |
+| `version` | Page version number |
+| `author` | Display name of the last editor (omitted when unknown) |
+| `updated` | Time of the last edit (ISO 8601) |
+| `weight` / `sidebar_position` | Order among siblings (Generic and Hugo / Docusaurus; none for MkDocs) |
+| `labels` | Page labels, sorted (`[]` when none) |
+| `confluence_url` | URL of the page in Confluence |
+
 ### Presets
 
 | Preset | Index file | Order | Extra files |

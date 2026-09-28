@@ -24,6 +24,8 @@ describe('runExport', () => {
     const out = await files(await run(fake));
     expect(Object.keys(out).sort()).toEqual(['export-manifest.json', 'home/api.assets/d.png', 'home/api.md', 'home/cafe.md', 'home/index.md']);
     expect(out['home/index.md']).toContain('title: "Home"');
+    expect(out['home/index.md']).toContain('confluence_url: "https://x.atlassian.net/wiki/spaces/ENG/pages/1"\n---\n');
+    expect(out['home/index.md']).not.toMatch(/^source:/m);
     expect(out['home/index.md']).toContain('Welcome to [API](api.md)');
     expect(out['home/cafe.md']).toContain('Back to [Home](index.md)');
     expect(out['home/api.md']).toContain('![](api.assets/d.png)');

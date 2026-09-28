@@ -22,7 +22,7 @@ describe('renderFrontMatter', () => {
       'labels:',
       '  - "a"',
       '  - "b"',
-      'source: "https://x.atlassian.net/wiki/spaces/ENG/pages/123"',
+      'confluence_url: "https://x.atlassian.net/wiki/spaces/ENG/pages/123"',
       '---',
       '',
     ].join('\n'));
