@@ -74,5 +74,71 @@
     "other": "{count} ページをエクスポート"
   },
   "studio.exportButtonUnknown": "エクスポート",
-  "errors.tryAgain": "再試行"
+  "errors.tryAgain": "再試行",
+  "run.title": "Markdown にエクスポート中",
+  "run.stage.scan": "スキャン",
+  "run.stage.pages": "ページ",
+  "run.stage.attachments": "添付ファイル",
+  "run.stage.pack": "パッケージ化",
+  "run.scanned": {
+    "other": "{count} 件を確認済み"
+  },
+  "run.counter": {
+    "other": "{count} ページ中 {done} ページ"
+  },
+  "run.counterAttachments": {
+    "other": "{count} 件中 {done} 件の添付ファイル"
+  },
+  "run.packing": "zip を作成中",
+  "run.elapsed": "経過時間: {time}",
+  "run.eta": "残り約 {time}",
+  "run.keepOpen": "ダウンロードが始まるまでこのタブを開いたままにしてください。",
+  "run.cancel": "キャンセル",
+  "run.cancelled": "エクスポートをキャンセルしました。選択内容は保持されています。",
+  "result.title": "エクスポート完了",
+  "result.started": "ダウンロードを開始しました。",
+  "result.downloadAgain": "もう一度ダウンロード",
+  "result.newExport": "新しいエクスポート",
+  "result.pages": "ページ",
+  "result.attachments": "添付ファイル",
+  "result.size": "サイズ",
+  "result.time": "所要時間",
+  "result.changed": "変更",
+  "result.unchanged": "変更なし",
+  "result.deleted": "削除",
+  "result.full.options-changed": "形式オプションが前回のエクスポートと異なるため、完全エクスポートを行いました。生成されなくなったファイルは export-deleted.txt に記載されています。",
+  "result.full.other-source": "前回のエクスポートが別のサイト、スペース、またはページのものであるため、完全エクスポートを行いました。",
+  "result.missing": {
+    "other": "前回のエクスポートの {count} ページが見つかりませんでした。削除されたか、閲覧権限がありません。これらのファイルは export-deleted.txt に記載されています。"
+  },
+  "result.apply.title": "この更新を適用する",
+  "result.apply.step1": "前回のエクスポートが入っている docs フォルダーの隣に zip を置きます。",
+  "result.apply.step2": "次のコマンドを実行します。変更されたファイルを上書きし、export-deleted.txt に記載されたファイルを削除します。",
+  "result.apply.step3": "git status で変更を確認してコミットします。",
+  "result.apply.copy": "コピー",
+  "result.apply.copied": "コピーしました",
+  "warnings.title": {
+    "other": "{count} 件の警告"
+  },
+  "warnings.none": "警告はありません",
+  "warnings.filter.label": "種類で警告を絞り込む",
+  "warnings.filter.all": "すべての種類",
+  "warnings.kind.unknown-macro": "不明なマクロ",
+  "warnings.kind.dynamic-macro": "動的マクロ",
+  "warnings.kind.complex-table": "複雑な表",
+  "warnings.kind.missing-attachment": "添付ファイルがない",
+  "warnings.kind.adf-extension": "エディター拡張",
+  "warnings.kind.unresolved-user": "不明なユーザー",
+  "warnings.kind.attachment-too-large": "添付ファイルが大きすぎる",
+  "warnings.kind.convert-failed": "ページを変換できない",
+  "warnings.column.page": "ページ",
+  "warnings.column.kind": "種類",
+  "warnings.column.detail": "詳細",
+  "warnings.pagination.label": "警告のページ",
+  "warnings.pagination.prev": "前へ",
+  "warnings.pagination.next": "次へ",
+  "warnings.pagination.page": "ページ",
+  "errors.forbidden": "Confluence でこれらのページの一部を閲覧する権限がありません。",
+  "errors.network": "Confluence に接続できません。接続を確認して、もう一度お試しください。",
+  "errors.back": "戻る"
 }

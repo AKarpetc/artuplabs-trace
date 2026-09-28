@@ -78,5 +78,76 @@
     "other": "Vie {count} sivua"
   },
   "studio.exportButtonUnknown": "Vie",
-  "errors.tryAgain": "Yritä uudelleen"
+  "errors.tryAgain": "Yritä uudelleen",
+  "run.title": "Viedään Markdowniksi",
+  "run.stage.scan": "Läpikäynti",
+  "run.stage.pages": "Sivut",
+  "run.stage.attachments": "Liitteet",
+  "run.stage.pack": "Pakkaus",
+  "run.scanned": {
+    "one": "{count} kohde tarkistettu",
+    "other": "{count} kohdetta tarkistettu"
+  },
+  "run.counter": {
+    "one": "{done}/{count} sivu",
+    "other": "{done}/{count} sivua"
+  },
+  "run.counterAttachments": {
+    "one": "{done}/{count} liite",
+    "other": "{done}/{count} liitettä"
+  },
+  "run.packing": "Zip-tiedostoa pakataan",
+  "run.elapsed": "Kulunut aika: {time}",
+  "run.eta": "Noin {time} jäljellä",
+  "run.keepOpen": "Pidä tämä välilehti auki, kunnes lataus alkaa.",
+  "run.cancel": "Peruuta",
+  "run.cancelled": "Vienti peruttiin. Valintasi säilyivät.",
+  "result.title": "Vienti valmis",
+  "result.started": "Lataus on alkanut.",
+  "result.downloadAgain": "Lataa uudelleen",
+  "result.newExport": "Uusi vienti",
+  "result.pages": "Sivut",
+  "result.attachments": "Liitteet",
+  "result.size": "Koko",
+  "result.time": "Aika",
+  "result.changed": "Muuttuneet",
+  "result.unchanged": "Muuttumattomat",
+  "result.deleted": "Poistetut",
+  "result.full.options-changed": "Tehtiin täysi vienti, koska muotoiluasetukset poikkeavat edellisestä viennistä. Tiedostot, joita ei enää luoda, on lueteltu tiedostossa export-deleted.txt.",
+  "result.full.other-source": "Tehtiin täysi vienti, koska edellinen vienti on peräisin toiselta sivustolta, tilasta tai sivulta.",
+  "result.missing": {
+    "one": "Edellisen viennin {count} sivu puuttuu – se on poistettu tai et näe sitä. Sen tiedostot on lueteltu tiedostossa export-deleted.txt.",
+    "other": "Edellisen viennin {count} sivua puuttuu – ne on poistettu tai et näe niitä. Niiden tiedostot on lueteltu tiedostossa export-deleted.txt."
+  },
+  "result.apply.title": "Ota tämä päivitys käyttöön",
+  "result.apply.step1": "Aseta zip-tiedosto edellisen viennin sisältävän docs-kansion viereen.",
+  "result.apply.step2": "Suorita tämä komento: se korvaa muuttuneet tiedostot ja poistaa tiedostossa export-deleted.txt luetellut tiedostot.",
+  "result.apply.step3": "Tarkista muutokset komennolla git status ja tee commit.",
+  "result.apply.copy": "Kopioi",
+  "result.apply.copied": "Kopioitu",
+  "warnings.title": {
+    "one": "{count} varoitus",
+    "other": "{count} varoitusta"
+  },
+  "warnings.none": "Ei varoituksia",
+  "warnings.filter.label": "Suodata varoitukset tyypin mukaan",
+  "warnings.filter.all": "Kaikki tyypit",
+  "warnings.kind.unknown-macro": "Tuntematon makro",
+  "warnings.kind.dynamic-macro": "Dynaaminen makro",
+  "warnings.kind.complex-table": "Monimutkainen taulukko",
+  "warnings.kind.missing-attachment": "Puuttuva liite",
+  "warnings.kind.adf-extension": "Editorin laajennus",
+  "warnings.kind.unresolved-user": "Tuntematon käyttäjä",
+  "warnings.kind.attachment-too-large": "Liian suuri liite",
+  "warnings.kind.convert-failed": "Sivua ei muunnettu",
+  "warnings.column.page": "Sivu",
+  "warnings.column.kind": "Tyyppi",
+  "warnings.column.detail": "Tiedot",
+  "warnings.pagination.label": "Varoitussivut",
+  "warnings.pagination.prev": "Edellinen",
+  "warnings.pagination.next": "Seuraava",
+  "warnings.pagination.page": "Sivu",
+  "errors.forbidden": "Sinulla ei ole oikeutta lukea joitakin näistä sivuista Confluencessa.",
+  "errors.network": "Confluenceen ei saada yhteyttä. Tarkista yhteys ja yritä uudelleen.",
+  "errors.back": "Takaisin"
 }

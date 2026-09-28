@@ -78,5 +78,76 @@
     "other": "Export {count} pages"
   },
   "studio.exportButtonUnknown": "Export",
-  "errors.tryAgain": "Try again"
+  "errors.tryAgain": "Try again",
+  "run.title": "Exporting to Markdown",
+  "run.stage.scan": "Scan",
+  "run.stage.pages": "Pages",
+  "run.stage.attachments": "Attachments",
+  "run.stage.pack": "Pack",
+  "run.scanned": {
+    "one": "{count} item checked",
+    "other": "{count} items checked"
+  },
+  "run.counter": {
+    "one": "{done} of {count} page",
+    "other": "{done} of {count} pages"
+  },
+  "run.counterAttachments": {
+    "one": "{done} of {count} attachment",
+    "other": "{done} of {count} attachments"
+  },
+  "run.packing": "Packing the zip",
+  "run.elapsed": "Elapsed: {time}",
+  "run.eta": "About {time} left",
+  "run.keepOpen": "Keep this tab open until the download starts.",
+  "run.cancel": "Cancel",
+  "run.cancelled": "Export cancelled. Your choices are kept.",
+  "result.title": "Export ready",
+  "result.started": "The download has started.",
+  "result.downloadAgain": "Download again",
+  "result.newExport": "New export",
+  "result.pages": "Pages",
+  "result.attachments": "Attachments",
+  "result.size": "Size",
+  "result.time": "Time",
+  "result.changed": "Changed",
+  "result.unchanged": "Unchanged",
+  "result.deleted": "Deleted",
+  "result.full.options-changed": "A full export was made because the format options differ from the previous export. Files that are no longer produced are listed in export-deleted.txt.",
+  "result.full.other-source": "A full export was made because the previous export comes from another site, space or page.",
+  "result.missing": {
+    "one": "{count} page from the previous export was not found — it was deleted or you can't see it. Its files are listed in export-deleted.txt.",
+    "other": "{count} pages from the previous export were not found — they were deleted or you can't see them. Their files are listed in export-deleted.txt."
+  },
+  "result.apply.title": "Apply this update",
+  "result.apply.step1": "Put the zip next to the docs folder that holds your previous export.",
+  "result.apply.step2": "Run this command: it overwrites changed files and removes the files listed in export-deleted.txt.",
+  "result.apply.step3": "Review the changes with git status and commit them.",
+  "result.apply.copy": "Copy",
+  "result.apply.copied": "Copied",
+  "warnings.title": {
+    "one": "{count} warning",
+    "other": "{count} warnings"
+  },
+  "warnings.none": "No warnings",
+  "warnings.filter.label": "Filter warnings by kind",
+  "warnings.filter.all": "All kinds",
+  "warnings.kind.unknown-macro": "Unknown macro",
+  "warnings.kind.dynamic-macro": "Dynamic macro",
+  "warnings.kind.complex-table": "Complex table",
+  "warnings.kind.missing-attachment": "Missing attachment",
+  "warnings.kind.adf-extension": "Editor extension",
+  "warnings.kind.unresolved-user": "Unknown user",
+  "warnings.kind.attachment-too-large": "Attachment too large",
+  "warnings.kind.convert-failed": "Page not converted",
+  "warnings.column.page": "Page",
+  "warnings.column.kind": "Kind",
+  "warnings.column.detail": "Detail",
+  "warnings.pagination.label": "Warning pages",
+  "warnings.pagination.prev": "Previous",
+  "warnings.pagination.next": "Next",
+  "warnings.pagination.page": "Page",
+  "errors.forbidden": "You don't have permission to read some of these pages in Confluence.",
+  "errors.network": "Confluence could not be reached. Check your connection and try again.",
+  "errors.back": "Back"
 }

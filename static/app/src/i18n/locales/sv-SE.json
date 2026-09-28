@@ -78,5 +78,76 @@
     "other": "Exportera {count} sidor"
   },
   "studio.exportButtonUnknown": "Exportera",
-  "errors.tryAgain": "Försök igen"
+  "errors.tryAgain": "Försök igen",
+  "run.title": "Exporterar till Markdown",
+  "run.stage.scan": "Genomsökning",
+  "run.stage.pages": "Sidor",
+  "run.stage.attachments": "Bilagor",
+  "run.stage.pack": "Packning",
+  "run.scanned": {
+    "one": "{count} objekt kontrollerat",
+    "other": "{count} objekt kontrollerade"
+  },
+  "run.counter": {
+    "one": "{done} av {count} sida",
+    "other": "{done} av {count} sidor"
+  },
+  "run.counterAttachments": {
+    "one": "{done} av {count} bilaga",
+    "other": "{done} av {count} bilagor"
+  },
+  "run.packing": "Packar zip-filen",
+  "run.elapsed": "Förfluten tid: {time}",
+  "run.eta": "Cirka {time} kvar",
+  "run.keepOpen": "Håll den här fliken öppen tills nedladdningen startar.",
+  "run.cancel": "Avbryt",
+  "run.cancelled": "Exporten avbröts. Dina val finns kvar.",
+  "result.title": "Exporten är klar",
+  "result.started": "Nedladdningen har startat.",
+  "result.downloadAgain": "Ladda ned igen",
+  "result.newExport": "Ny export",
+  "result.pages": "Sidor",
+  "result.attachments": "Bilagor",
+  "result.size": "Storlek",
+  "result.time": "Tid",
+  "result.changed": "Ändrade",
+  "result.unchanged": "Oförändrade",
+  "result.deleted": "Borttagna",
+  "result.full.options-changed": "En fullständig export gjordes eftersom formatalternativen skiljer sig från föregående export. Filer som inte längre skapas listas i export-deleted.txt.",
+  "result.full.other-source": "En fullständig export gjordes eftersom föregående export kommer från en annan webbplats, ett annat utrymme eller en annan sida.",
+  "result.missing": {
+    "one": "{count} sida från föregående export hittades inte – den har tagits bort eller så kan du inte se den. Dess filer listas i export-deleted.txt.",
+    "other": "{count} sidor från föregående export hittades inte – de har tagits bort eller så kan du inte se dem. Deras filer listas i export-deleted.txt."
+  },
+  "result.apply.title": "Tillämpa den här uppdateringen",
+  "result.apply.step1": "Lägg zip-filen bredvid mappen docs med din föregående export.",
+  "result.apply.step2": "Kör det här kommandot: det skriver över ändrade filer och tar bort filerna i export-deleted.txt.",
+  "result.apply.step3": "Granska ändringarna med git status och checka in dem.",
+  "result.apply.copy": "Kopiera",
+  "result.apply.copied": "Kopierat",
+  "warnings.title": {
+    "one": "{count} varning",
+    "other": "{count} varningar"
+  },
+  "warnings.none": "Inga varningar",
+  "warnings.filter.label": "Filtrera varningar efter typ",
+  "warnings.filter.all": "Alla typer",
+  "warnings.kind.unknown-macro": "Okänt makro",
+  "warnings.kind.dynamic-macro": "Dynamiskt makro",
+  "warnings.kind.complex-table": "Komplex tabell",
+  "warnings.kind.missing-attachment": "Bilaga saknas",
+  "warnings.kind.adf-extension": "Redigeringstillägg",
+  "warnings.kind.unresolved-user": "Okänd användare",
+  "warnings.kind.attachment-too-large": "För stor bilaga",
+  "warnings.kind.convert-failed": "Sidan konverterades inte",
+  "warnings.column.page": "Sida",
+  "warnings.column.kind": "Typ",
+  "warnings.column.detail": "Detaljer",
+  "warnings.pagination.label": "Varningssidor",
+  "warnings.pagination.prev": "Föregående",
+  "warnings.pagination.next": "Nästa",
+  "warnings.pagination.page": "Sida",
+  "errors.forbidden": "Du har inte behörighet att läsa några av de här sidorna i Confluence.",
+  "errors.network": "Det gick inte att nå Confluence. Kontrollera anslutningen och försök igen.",
+  "errors.back": "Tillbaka"
 }

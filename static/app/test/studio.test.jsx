@@ -32,7 +32,7 @@ function renderStudio({ locale = 'en-US', onStart, createClient } = {}) {
   const fake = createFakeConfluence({ space: SPACE, pages: PAGES, users: {} });
   const view = render(
     <I18nProvider locale={locale}>
-      <StudioApp context={context} createClient={createClient ?? (() => fake.client)} onStart={onStart} />
+      <StudioApp context={context} createClient={createClient ?? (() => fake.client)} onStart={onStart} save={vi.fn()} />
     </I18nProvider>,
   );
   return { fake, view };
@@ -140,7 +140,8 @@ describe('export studio', () => {
     expect(onStart).toHaveBeenLastCalledWith(expect.objectContaining({ mode: 'update', fullReason: null }));
     expect(onStart.mock.lastCall[0].previousManifest.pages).toHaveLength(3);
 
-    fireEvent.drop(zone, { dataTransfer: { files: [manifestFile({ ...DEFAULT_OPTIONS, preset: 'hugo' })] } });
+    fireEvent.click(await screen.findByTestId('new-export'));
+    fireEvent.drop(await screen.findByTestId('drop-zone'), { dataTransfer: { files: [manifestFile({ ...DEFAULT_OPTIONS, preset: 'hugo' })] } });
     expect(await screen.findByText(/A full export will be made because the format options differ/)).toBeInTheDocument();
   });
 

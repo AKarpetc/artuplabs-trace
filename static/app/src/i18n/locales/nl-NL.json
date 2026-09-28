@@ -78,5 +78,76 @@
     "other": "{count} pagina's exporteren"
   },
   "studio.exportButtonUnknown": "Exporteren",
-  "errors.tryAgain": "Opnieuw proberen"
+  "errors.tryAgain": "Opnieuw proberen",
+  "run.title": "Exporteren naar Markdown",
+  "run.stage.scan": "Scannen",
+  "run.stage.pages": "Pagina's",
+  "run.stage.attachments": "Bijlagen",
+  "run.stage.pack": "Inpakken",
+  "run.scanned": {
+    "one": "{count} item gecontroleerd",
+    "other": "{count} items gecontroleerd"
+  },
+  "run.counter": {
+    "one": "{done} van {count} pagina",
+    "other": "{done} van {count} pagina's"
+  },
+  "run.counterAttachments": {
+    "one": "{done} van {count} bijlage",
+    "other": "{done} van {count} bijlagen"
+  },
+  "run.packing": "Zip wordt ingepakt",
+  "run.elapsed": "Verstreken: {time}",
+  "run.eta": "Nog ongeveer {time}",
+  "run.keepOpen": "Houd dit tabblad open tot de download begint.",
+  "run.cancel": "Annuleren",
+  "run.cancelled": "Export geannuleerd. Je keuzes zijn bewaard.",
+  "result.title": "Export klaar",
+  "result.started": "De download is gestart.",
+  "result.downloadAgain": "Opnieuw downloaden",
+  "result.newExport": "Nieuwe export",
+  "result.pages": "Pagina's",
+  "result.attachments": "Bijlagen",
+  "result.size": "Grootte",
+  "result.time": "Tijd",
+  "result.changed": "Gewijzigd",
+  "result.unchanged": "Ongewijzigd",
+  "result.deleted": "Verwijderd",
+  "result.full.options-changed": "Er is een volledige export gemaakt omdat de formaatopties afwijken van de vorige export. Bestanden die niet meer worden gemaakt, staan in export-deleted.txt.",
+  "result.full.other-source": "Er is een volledige export gemaakt omdat de vorige export van een andere site, ruimte of pagina komt.",
+  "result.missing": {
+    "one": "{count} pagina uit de vorige export is niet gevonden — die is verwijderd of je kunt hem niet zien. De bestanden ervan staan in export-deleted.txt.",
+    "other": "{count} pagina's uit de vorige export zijn niet gevonden — ze zijn verwijderd of je kunt ze niet zien. Hun bestanden staan in export-deleted.txt."
+  },
+  "result.apply.title": "Deze update toepassen",
+  "result.apply.step1": "Zet de zip naast de map docs met je vorige export.",
+  "result.apply.step2": "Voer deze opdracht uit: die overschrijft gewijzigde bestanden en verwijdert de bestanden uit export-deleted.txt.",
+  "result.apply.step3": "Controleer de wijzigingen met git status en commit ze.",
+  "result.apply.copy": "Kopiëren",
+  "result.apply.copied": "Gekopieerd",
+  "warnings.title": {
+    "one": "{count} waarschuwing",
+    "other": "{count} waarschuwingen"
+  },
+  "warnings.none": "Geen waarschuwingen",
+  "warnings.filter.label": "Waarschuwingen filteren op soort",
+  "warnings.filter.all": "Alle soorten",
+  "warnings.kind.unknown-macro": "Onbekende macro",
+  "warnings.kind.dynamic-macro": "Dynamische macro",
+  "warnings.kind.complex-table": "Complexe tabel",
+  "warnings.kind.missing-attachment": "Ontbrekende bijlage",
+  "warnings.kind.adf-extension": "Editorextensie",
+  "warnings.kind.unresolved-user": "Onbekende gebruiker",
+  "warnings.kind.attachment-too-large": "Bijlage te groot",
+  "warnings.kind.convert-failed": "Pagina niet geconverteerd",
+  "warnings.column.page": "Pagina",
+  "warnings.column.kind": "Soort",
+  "warnings.column.detail": "Details",
+  "warnings.pagination.label": "Waarschuwingspagina's",
+  "warnings.pagination.prev": "Vorige",
+  "warnings.pagination.next": "Volgende",
+  "warnings.pagination.page": "Pagina",
+  "errors.forbidden": "Je hebt geen toestemming om sommige van deze pagina's in Confluence te lezen.",
+  "errors.network": "Confluence is niet bereikbaar. Controleer je verbinding en probeer het opnieuw.",
+  "errors.back": "Terug"
 }

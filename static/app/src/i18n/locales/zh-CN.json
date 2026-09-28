@@ -74,5 +74,71 @@
     "other": "导出 {count} 个页面"
   },
   "studio.exportButtonUnknown": "导出",
-  "errors.tryAgain": "重试"
+  "errors.tryAgain": "重试",
+  "run.title": "正在导出为 Markdown",
+  "run.stage.scan": "扫描",
+  "run.stage.pages": "页面",
+  "run.stage.attachments": "附件",
+  "run.stage.pack": "打包",
+  "run.scanned": {
+    "other": "已检查 {count} 项"
+  },
+  "run.counter": {
+    "other": "第 {done} / {count} 个页面"
+  },
+  "run.counterAttachments": {
+    "other": "第 {done} / {count} 个附件"
+  },
+  "run.packing": "正在打包 zip",
+  "run.elapsed": "已用时间：{time}",
+  "run.eta": "预计剩余 {time}",
+  "run.keepOpen": "下载开始前请不要关闭此标签页。",
+  "run.cancel": "取消",
+  "run.cancelled": "导出已取消。你的选择已保留。",
+  "result.title": "导出完成",
+  "result.started": "下载已开始。",
+  "result.downloadAgain": "再次下载",
+  "result.newExport": "新建导出",
+  "result.pages": "页面",
+  "result.attachments": "附件",
+  "result.size": "大小",
+  "result.time": "用时",
+  "result.changed": "已更改",
+  "result.unchanged": "未更改",
+  "result.deleted": "已删除",
+  "result.full.options-changed": "由于格式选项与上一次导出不同，已进行完整导出。不再生成的文件列在 export-deleted.txt 中。",
+  "result.full.other-source": "由于上一次导出来自其他站点、空间或页面，已进行完整导出。",
+  "result.missing": {
+    "other": "上一次导出中有 {count} 个页面未找到——它们已被删除或你无权查看。其文件列在 export-deleted.txt 中。"
+  },
+  "result.apply.title": "应用此更新",
+  "result.apply.step1": "将 zip 放在存放上一次导出的 docs 文件夹旁边。",
+  "result.apply.step2": "运行此命令：它会覆盖已更改的文件，并删除 export-deleted.txt 中列出的文件。",
+  "result.apply.step3": "用 git status 检查更改并提交。",
+  "result.apply.copy": "复制",
+  "result.apply.copied": "已复制",
+  "warnings.title": {
+    "other": "{count} 条警告"
+  },
+  "warnings.none": "没有警告",
+  "warnings.filter.label": "按类型筛选警告",
+  "warnings.filter.all": "所有类型",
+  "warnings.kind.unknown-macro": "未知宏",
+  "warnings.kind.dynamic-macro": "动态宏",
+  "warnings.kind.complex-table": "复杂表格",
+  "warnings.kind.missing-attachment": "附件缺失",
+  "warnings.kind.adf-extension": "编辑器扩展",
+  "warnings.kind.unresolved-user": "未知用户",
+  "warnings.kind.attachment-too-large": "附件过大",
+  "warnings.kind.convert-failed": "页面未转换",
+  "warnings.column.page": "页面",
+  "warnings.column.kind": "类型",
+  "warnings.column.detail": "详情",
+  "warnings.pagination.label": "警告分页",
+  "warnings.pagination.prev": "上一页",
+  "warnings.pagination.next": "下一页",
+  "warnings.pagination.page": "页",
+  "errors.forbidden": "你无权读取 Confluence 中的部分页面。",
+  "errors.network": "无法连接 Confluence。请检查网络连接后重试。",
+  "errors.back": "返回"
 }

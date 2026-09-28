@@ -3,7 +3,8 @@ import { routeConfluence, SPACE } from './fixtures.js';
 
 /**
  * Local stand-in for @forge/bridge used by `vite --mode preview`. Query parameters:
- * `locale` (Confluence locale), `theme` (light|dark), `state` (e.g. unlicensed), `target` (page id), `entry`.
+ * `locale` (Confluence locale), `theme` (light|dark), `state` (unlicensed | running | done | done-update | failed), `target` (page id), `entry`.
+ * `running` holds the export on page labels after RUNNING_LABELS answers; `failed` answers 403 to page body requests.
  */
 function params() {
   const search = new URLSearchParams(globalThis.location?.search ?? '');
@@ -61,9 +62,21 @@ export async function invoke(key) {
   throw new Error(`preview: no resolver for ${key}`);
 }
 
-/** Forge `requestConfluence`: routes the REST path to the fixture space with 30–80 ms latency. */
+const RUNNING_LABELS = 22;
+let labelRequests = 0;
+const forever = () => new Promise(() => {});
+
+/** Forge `requestConfluence`: routes the REST path to the fixture space with 30–80 ms latency; `state` may stall or fail the export. */
 export async function requestConfluence(path) {
   await latency();
+  const { state } = params();
+  if (state === 'failed' && path.includes('body-format=storage')) {
+    return new Response(JSON.stringify({ statusCode: 403, message: 'preview: forbidden' }), { status: 403, headers: { 'content-type': 'application/json' } });
+  }
+  if (state === 'running' && /\/labels/.test(path)) {
+    labelRequests += 1;
+    if (labelRequests > RUNNING_LABELS) await forever();
+  }
   return routeConfluence(path);
 }
 

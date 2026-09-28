@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { WARNING_KINDS } from '../src/core/convert/index.js';
+import { PIPELINE_WARNING_KINDS } from '../src/export/pipeline.js';
 import { createT, resolveLocale, SUPPORTED_LOCALES, localeDictionaries, formatBytes } from '../src/i18n/index.js';
 
 const en = localeDictionaries['en-US'];
@@ -35,6 +37,11 @@ describe('locale files', () => {
         expect([...placeholders(dict[key][category])].every((p) => placeholders(value.other).has(p))).toBe(true);
       }
     }
+  });
+  it('names every warning kind the converter and the pipeline emit', () => {
+    const kinds = [...WARNING_KINDS, ...PIPELINE_WARNING_KINDS];
+    expect(kinds).toContain('attachment-too-large');
+    expect(kinds.filter((kind) => typeof en[`warnings.kind.${kind}`] !== 'string')).toEqual([]);
   });
   it.each(SUPPORTED_LOCALES)('%s has no empty strings', (locale) => {
     const flat = Object.values(localeDictionaries[locale]).flatMap((v) => (typeof v === 'string' ? [v] : Object.values(v)));

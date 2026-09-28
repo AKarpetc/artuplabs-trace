@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import Button from '@atlaskit/button/new';
 import EmptyState from '@atlaskit/empty-state';
+import SectionMessage from '@atlaskit/section-message';
 import Spinner from '@atlaskit/spinner';
 import { router } from '@forge/bridge';
-import { Box, Flex, Stack, xcss } from '@atlaskit/primitives';
+import { Box, Flex, Stack, Text, xcss } from '@atlaskit/primitives';
 import { errorMessage } from '../api.js';
 import { AppHeader } from '../components/AppHeader.jsx';
 import { DownloadIcon, QuestionCircleIcon } from '../components/icons.js';
@@ -13,13 +14,17 @@ import { useT } from '../i18n/index.js';
 import { EmptyIllustration } from '../illustrations/EmptyIllustration.jsx';
 import { LockIllustration } from '../illustrations/LockIllustration.jsx';
 import { createBridgeClient } from '../infra/bridge.js';
-import { exportFileName } from '../infra/download.js';
+import { exportFileName, saveBlob } from '../infra/download.js';
+import { FailureView } from './FailureView.jsx';
 import { FormatStep } from './FormatStep.jsx';
 import { ModeStep } from './ModeStep.jsx';
 import { OutputPreview } from './OutputPreview.jsx';
+import { ResultView } from './ResultView.jsx';
+import { RunningView } from './RunningView.jsx';
 import { ScopeStep } from './ScopeStep.jsx';
 import { useAccess } from './useAccess.js';
 import { useExportForm } from './useExportForm.js';
+import { useExportRun } from './useExportRun.js';
 import { usePreview } from './usePreview.js';
 
 const HELP_URL = 'https://artuplabs.com/docs/export/';
@@ -78,44 +83,69 @@ function ExportBar({ form, total, onStart }) {
   );
 }
 
-function Studio({ createClient, form, onStart }) {
+function Header({ createClient, spaceKey }) {
   const t = useT();
-  const preview = usePreview({ createClient, target: form.target, options: form.options, names: form.names, siteUrl: form.form.siteUrl });
-  const spaceName = useSpaceName(createClient, form.spaceKey);
+  const spaceName = useSpaceName(createClient, spaceKey);
   const help = (
     <Button appearance="subtle" iconBefore={QuestionCircleIcon} onClick={() => router.open(HELP_URL)}>
       {t('studio.help')}
     </Button>
   );
+  return <AppHeader subtitle={t('studio.subtitle')} spaceName={spaceName ? `${spaceKey} · ${spaceName}` : spaceKey} actions={help} />;
+}
+
+function Studio({ createClient, form, onStart, cancelled }) {
+  const t = useT();
+  const preview = usePreview({ createClient, target: form.target, options: form.options, names: form.names, siteUrl: form.form.siteUrl });
   const main = (
     <Stack space="space.400">
+      {cancelled ? <SectionMessage appearance="information"><Text>{t('run.cancelled')}</Text></SectionMessage> : null}
       <ScopeStep number={1} form={form} createClient={createClient} />
       <FormatStep number={2} form={form} />
       <ModeStep number={3} form={form} />
       <ExportBar form={form} total={preview.total} onStart={onStart} />
     </Stack>
   );
+  return <PageLayout main={main} aside={<OutputPreview preview={preview} />} />;
+}
+
+function Workspace({ context, createClient, save, onStart }) {
+  const form = useExportForm(context);
+  const run = useExportRun({ context, createClient, save });
+  const start = (chosen) => {
+    onStart?.(chosen);
+    run.start(chosen);
+  };
+  const newExport = () => {
+    form.setPreviousFile(null);
+    form.setModeChoice('full');
+    run.reset();
+  };
+  let body;
+  if (run.state === 'running') {
+    body = <RunningView progress={run.progress} startedAt={run.startedAt} onCancel={run.cancel} />;
+  } else if (run.state === 'done') {
+    body = <ResultView result={run.result} siteUrl={context?.siteUrl ?? ''} spaceKey={form.spaceKey} onDownloadAgain={run.downloadAgain} onNewExport={newExport} />;
+  } else if (run.state === 'failed') {
+    body = <FailureView error={run.error} onRetry={run.retry} onBack={run.reset} />;
+  } else {
+    body = <Studio createClient={createClient} form={form} onStart={start} cancelled={run.state === 'cancelled'} />;
+  }
   return (
     <Stack space="space.400">
-      <AppHeader subtitle={t('studio.subtitle')} spaceName={spaceName ? `${form.spaceKey} · ${spaceName}` : form.spaceKey} actions={help} />
-      <PageLayout main={main} aside={<OutputPreview preview={preview} />} />
+      <Header createClient={createClient} spaceKey={form.spaceKey} />
+      {body}
     </Stack>
   );
 }
 
 /**
- * Space page: licence gate, then the export studio (scope, format, mode, live preview).
- * `onStart(form)` receives the chosen target, options and previous manifest; `createClient({ signal })` overrides the bridge client.
+ * Space page: licence gate, then the export studio (scope, format, mode, live preview) and the export run views.
+ * `onStart(form)` observes each start; `createClient({ signal })` and `save(fileName, blob)` override the bridge client and the download.
  */
-export function StudioApp({ context, createClient = createBridgeClient, onStart }) {
+export function StudioApp({ context, createClient = createBridgeClient, save = saveBlob, onStart }) {
   const t = useT();
   const access = useAccess();
-  const form = useExportForm(context);
-  const [, setStarted] = useState(null);
-  const start = (chosen) => {
-    setStarted(chosen);
-    onStart?.(chosen);
-  };
   let content;
   if (access.status === 'loading') {
     content = <Box xcss={centerStyles}><Spinner size="large" label={t('loading')} /></Box>;
@@ -131,7 +161,7 @@ export function StudioApp({ context, createClient = createBridgeClient, onStart 
       />
     );
   } else {
-    content = <Studio createClient={createClient} form={form} onStart={start} />;
+    content = <Workspace context={context} createClient={createClient} save={save} onStart={onStart} />;
   }
   return <Box xcss={pageStyles}>{content}</Box>;
 }

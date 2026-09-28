@@ -78,5 +78,76 @@
     "other": "Ekspordi {count} lehte"
   },
   "studio.exportButtonUnknown": "Ekspordi",
-  "errors.tryAgain": "Proovi uuesti"
+  "errors.tryAgain": "Proovi uuesti",
+  "run.title": "Eksportimine Markdowni",
+  "run.stage.scan": "Skannimine",
+  "run.stage.pages": "Lehed",
+  "run.stage.attachments": "Manused",
+  "run.stage.pack": "Pakkimine",
+  "run.scanned": {
+    "one": "{count} üksus kontrollitud",
+    "other": "{count} üksust kontrollitud"
+  },
+  "run.counter": {
+    "one": "{done}/{count} leht",
+    "other": "{done}/{count} lehte"
+  },
+  "run.counterAttachments": {
+    "one": "{done}/{count} manus",
+    "other": "{done}/{count} manust"
+  },
+  "run.packing": "Zip-faili pakkimine",
+  "run.elapsed": "Kulunud: {time}",
+  "run.eta": "Jäänud umbes {time}",
+  "run.keepOpen": "Hoidke see vaheleht avatuna, kuni allalaadimine algab.",
+  "run.cancel": "Tühista",
+  "run.cancelled": "Eksport tühistati. Teie valikud on alles.",
+  "result.title": "Eksport on valmis",
+  "result.started": "Allalaadimine algas.",
+  "result.downloadAgain": "Laadi uuesti alla",
+  "result.newExport": "Uus eksport",
+  "result.pages": "Lehed",
+  "result.attachments": "Manused",
+  "result.size": "Suurus",
+  "result.time": "Aeg",
+  "result.changed": "Muudetud",
+  "result.unchanged": "Muutmata",
+  "result.deleted": "Kustutatud",
+  "result.full.options-changed": "Tehti täielik eksport, sest vormingu valikud erinevad eelmisest ekspordist. Failid, mida enam ei looda, on loetletud failis export-deleted.txt.",
+  "result.full.other-source": "Tehti täielik eksport, sest eelmine eksport pärineb teiselt saidilt, ruumist või lehelt.",
+  "result.missing": {
+    "one": "Eelmisest ekspordist ei leitud {count} lehte – see on kustutatud või te ei näe seda. Selle failid on loetletud failis export-deleted.txt.",
+    "other": "Eelmisest ekspordist ei leitud {count} lehte – need on kustutatud või te ei näe neid. Nende failid on loetletud failis export-deleted.txt."
+  },
+  "result.apply.title": "Rakenda see värskendus",
+  "result.apply.step1": "Pange zip-fail eelmist eksporti sisaldava kausta docs kõrvale.",
+  "result.apply.step2": "Käivitage see käsk: see kirjutab muudetud failid üle ja eemaldab failis export-deleted.txt loetletud failid.",
+  "result.apply.step3": "Vaadake muudatused üle käsuga git status ja tehke commit.",
+  "result.apply.copy": "Kopeeri",
+  "result.apply.copied": "Kopeeritud",
+  "warnings.title": {
+    "one": "{count} hoiatus",
+    "other": "{count} hoiatust"
+  },
+  "warnings.none": "Hoiatusi pole",
+  "warnings.filter.label": "Filtreeri hoiatusi tüübi järgi",
+  "warnings.filter.all": "Kõik tüübid",
+  "warnings.kind.unknown-macro": "Tundmatu makro",
+  "warnings.kind.dynamic-macro": "Dünaamiline makro",
+  "warnings.kind.complex-table": "Keeruline tabel",
+  "warnings.kind.missing-attachment": "Puuduv manus",
+  "warnings.kind.adf-extension": "Redaktori laiendus",
+  "warnings.kind.unresolved-user": "Tundmatu kasutaja",
+  "warnings.kind.attachment-too-large": "Liiga suur manus",
+  "warnings.kind.convert-failed": "Lehte ei teisendatud",
+  "warnings.column.page": "Leht",
+  "warnings.column.kind": "Tüüp",
+  "warnings.column.detail": "Üksikasjad",
+  "warnings.pagination.label": "Hoiatuste lehed",
+  "warnings.pagination.prev": "Eelmine",
+  "warnings.pagination.next": "Järgmine",
+  "warnings.pagination.page": "Leht",
+  "errors.forbidden": "Teil pole õigust lugeda mõnda neist Confluence'i lehtedest.",
+  "errors.network": "Confluence'iga ei saa ühendust. Kontrollige ühendust ja proovige uuesti.",
+  "errors.back": "Tagasi"
 }

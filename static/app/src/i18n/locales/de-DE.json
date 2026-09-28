@@ -78,5 +78,76 @@
     "other": "{count} Seiten exportieren"
   },
   "studio.exportButtonUnknown": "Exportieren",
-  "errors.tryAgain": "Erneut versuchen"
+  "errors.tryAgain": "Erneut versuchen",
+  "run.title": "Export nach Markdown läuft",
+  "run.stage.scan": "Prüfen",
+  "run.stage.pages": "Seiten",
+  "run.stage.attachments": "Anhänge",
+  "run.stage.pack": "Packen",
+  "run.scanned": {
+    "one": "{count} Element geprüft",
+    "other": "{count} Elemente geprüft"
+  },
+  "run.counter": {
+    "one": "{done} von {count} Seite",
+    "other": "{done} von {count} Seiten"
+  },
+  "run.counterAttachments": {
+    "one": "{done} von {count} Anhang",
+    "other": "{done} von {count} Anhängen"
+  },
+  "run.packing": "Zip-Datei wird gepackt",
+  "run.elapsed": "Vergangen: {time}",
+  "run.eta": "Noch etwa {time}",
+  "run.keepOpen": "Lassen Sie diesen Tab geöffnet, bis der Download beginnt.",
+  "run.cancel": "Abbrechen",
+  "run.cancelled": "Export abgebrochen. Ihre Auswahl bleibt erhalten.",
+  "result.title": "Export fertig",
+  "result.started": "Der Download hat begonnen.",
+  "result.downloadAgain": "Erneut herunterladen",
+  "result.newExport": "Neuer Export",
+  "result.pages": "Seiten",
+  "result.attachments": "Anhänge",
+  "result.size": "Größe",
+  "result.time": "Dauer",
+  "result.changed": "Geändert",
+  "result.unchanged": "Unverändert",
+  "result.deleted": "Gelöscht",
+  "result.full.options-changed": "Es wurde ein vollständiger Export erstellt, weil die Formatoptionen vom vorherigen Export abweichen. Dateien, die nicht mehr erzeugt werden, stehen in export-deleted.txt.",
+  "result.full.other-source": "Es wurde ein vollständiger Export erstellt, weil der vorherige Export von einer anderen Site, einem anderen Bereich oder einer anderen Seite stammt.",
+  "result.missing": {
+    "one": "{count} Seite aus dem vorherigen Export wurde nicht gefunden – sie wurde gelöscht oder ist für Sie nicht sichtbar. Ihre Dateien stehen in export-deleted.txt.",
+    "other": "{count} Seiten aus dem vorherigen Export wurden nicht gefunden – sie wurden gelöscht oder sind für Sie nicht sichtbar. Ihre Dateien stehen in export-deleted.txt."
+  },
+  "result.apply.title": "Dieses Update anwenden",
+  "result.apply.step1": "Legen Sie die Zip-Datei neben den Ordner docs mit Ihrem vorherigen Export.",
+  "result.apply.step2": "Führen Sie diesen Befehl aus: Er überschreibt geänderte Dateien und entfernt die in export-deleted.txt aufgeführten Dateien.",
+  "result.apply.step3": "Prüfen Sie die Änderungen mit git status und committen Sie sie.",
+  "result.apply.copy": "Kopieren",
+  "result.apply.copied": "Kopiert",
+  "warnings.title": {
+    "one": "{count} Warnung",
+    "other": "{count} Warnungen"
+  },
+  "warnings.none": "Keine Warnungen",
+  "warnings.filter.label": "Warnungen nach Art filtern",
+  "warnings.filter.all": "Alle Arten",
+  "warnings.kind.unknown-macro": "Unbekanntes Makro",
+  "warnings.kind.dynamic-macro": "Dynamisches Makro",
+  "warnings.kind.complex-table": "Komplexe Tabelle",
+  "warnings.kind.missing-attachment": "Fehlender Anhang",
+  "warnings.kind.adf-extension": "Editor-Erweiterung",
+  "warnings.kind.unresolved-user": "Unbekannter Benutzer",
+  "warnings.kind.attachment-too-large": "Anhang zu groß",
+  "warnings.kind.convert-failed": "Seite nicht konvertiert",
+  "warnings.column.page": "Seite",
+  "warnings.column.kind": "Art",
+  "warnings.column.detail": "Details",
+  "warnings.pagination.label": "Warnungsseiten",
+  "warnings.pagination.prev": "Zurück",
+  "warnings.pagination.next": "Weiter",
+  "warnings.pagination.page": "Seite",
+  "errors.forbidden": "Sie haben keine Berechtigung, einige dieser Seiten in Confluence zu lesen.",
+  "errors.network": "Confluence ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+  "errors.back": "Zurück"
 }

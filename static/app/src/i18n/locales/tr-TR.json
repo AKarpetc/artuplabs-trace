@@ -78,5 +78,76 @@
     "other": "{count} sayfayı dışa aktar"
   },
   "studio.exportButtonUnknown": "Dışa aktar",
-  "errors.tryAgain": "Yeniden dene"
+  "errors.tryAgain": "Yeniden dene",
+  "run.title": "Markdown'a aktarılıyor",
+  "run.stage.scan": "Tarama",
+  "run.stage.pages": "Sayfalar",
+  "run.stage.attachments": "Ekler",
+  "run.stage.pack": "Paketleme",
+  "run.scanned": {
+    "one": "{count} öğe denetlendi",
+    "other": "{count} öğe denetlendi"
+  },
+  "run.counter": {
+    "one": "{count} sayfadan {done}",
+    "other": "{count} sayfadan {done}"
+  },
+  "run.counterAttachments": {
+    "one": "{count} ekten {done}",
+    "other": "{count} ekten {done}"
+  },
+  "run.packing": "Zip paketleniyor",
+  "run.elapsed": "Geçen süre: {time}",
+  "run.eta": "Yaklaşık {time} kaldı",
+  "run.keepOpen": "İndirme başlayana kadar bu sekmeyi açık tutun.",
+  "run.cancel": "İptal",
+  "run.cancelled": "Dışa aktarma iptal edildi. Seçimleriniz korundu.",
+  "result.title": "Dışa aktarma hazır",
+  "result.started": "İndirme başladı.",
+  "result.downloadAgain": "Yeniden indir",
+  "result.newExport": "Yeni dışa aktarma",
+  "result.pages": "Sayfalar",
+  "result.attachments": "Ekler",
+  "result.size": "Boyut",
+  "result.time": "Süre",
+  "result.changed": "Değişen",
+  "result.unchanged": "Değişmeyen",
+  "result.deleted": "Silinen",
+  "result.full.options-changed": "Biçim seçenekleri önceki dışa aktarmadan farklı olduğu için tam dışa aktarma yapıldı. Artık oluşturulmayan dosyalar export-deleted.txt dosyasında listelenir.",
+  "result.full.other-source": "Önceki dışa aktarma başka bir siteden, alandan veya sayfadan geldiği için tam dışa aktarma yapıldı.",
+  "result.missing": {
+    "one": "Önceki dışa aktarmadaki {count} sayfa bulunamadı; silinmiş veya görme izniniz yok. Dosyaları export-deleted.txt dosyasında listelenir.",
+    "other": "Önceki dışa aktarmadaki {count} sayfa bulunamadı; silinmiş veya görme izniniz yok. Dosyaları export-deleted.txt dosyasında listelenir."
+  },
+  "result.apply.title": "Bu güncellemeyi uygulayın",
+  "result.apply.step1": "Zip dosyasını önceki dışa aktarmanın bulunduğu docs klasörünün yanına koyun.",
+  "result.apply.step2": "Bu komutu çalıştırın: değişen dosyaların üzerine yazar ve export-deleted.txt dosyasındaki dosyaları kaldırır.",
+  "result.apply.step3": "Değişiklikleri git status ile gözden geçirip commit edin.",
+  "result.apply.copy": "Kopyala",
+  "result.apply.copied": "Kopyalandı",
+  "warnings.title": {
+    "one": "{count} uyarı",
+    "other": "{count} uyarı"
+  },
+  "warnings.none": "Uyarı yok",
+  "warnings.filter.label": "Uyarıları türe göre filtrele",
+  "warnings.filter.all": "Tüm türler",
+  "warnings.kind.unknown-macro": "Bilinmeyen makro",
+  "warnings.kind.dynamic-macro": "Dinamik makro",
+  "warnings.kind.complex-table": "Karmaşık tablo",
+  "warnings.kind.missing-attachment": "Eksik ek",
+  "warnings.kind.adf-extension": "Düzenleyici uzantısı",
+  "warnings.kind.unresolved-user": "Bilinmeyen kullanıcı",
+  "warnings.kind.attachment-too-large": "Ek çok büyük",
+  "warnings.kind.convert-failed": "Sayfa dönüştürülemedi",
+  "warnings.column.page": "Sayfa",
+  "warnings.column.kind": "Tür",
+  "warnings.column.detail": "Ayrıntı",
+  "warnings.pagination.label": "Uyarı sayfaları",
+  "warnings.pagination.prev": "Önceki",
+  "warnings.pagination.next": "Sonraki",
+  "warnings.pagination.page": "Sayfa",
+  "errors.forbidden": "Confluence'taki bu sayfaların bazılarını okuma izniniz yok.",
+  "errors.network": "Confluence'a ulaşılamıyor. Bağlantınızı kontrol edip yeniden deneyin.",
+  "errors.back": "Geri"
 }

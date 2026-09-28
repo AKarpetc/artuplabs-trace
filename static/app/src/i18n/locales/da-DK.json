@@ -78,5 +78,76 @@
     "other": "Eksportér {count} sider"
   },
   "studio.exportButtonUnknown": "Eksportér",
-  "errors.tryAgain": "Prøv igen"
+  "errors.tryAgain": "Prøv igen",
+  "run.title": "Eksporterer til Markdown",
+  "run.stage.scan": "Scanning",
+  "run.stage.pages": "Sider",
+  "run.stage.attachments": "Vedhæftede filer",
+  "run.stage.pack": "Pakning",
+  "run.scanned": {
+    "one": "{count} element kontrolleret",
+    "other": "{count} elementer kontrolleret"
+  },
+  "run.counter": {
+    "one": "{done} af {count} side",
+    "other": "{done} af {count} sider"
+  },
+  "run.counterAttachments": {
+    "one": "{done} af {count} vedhæftet fil",
+    "other": "{done} af {count} vedhæftede filer"
+  },
+  "run.packing": "Pakker zip-filen",
+  "run.elapsed": "Forløbet: {time}",
+  "run.eta": "Ca. {time} tilbage",
+  "run.keepOpen": "Hold denne fane åben, indtil downloadet starter.",
+  "run.cancel": "Annuller",
+  "run.cancelled": "Eksporten blev annulleret. Dine valg er bevaret.",
+  "result.title": "Eksporten er klar",
+  "result.started": "Downloadet er startet.",
+  "result.downloadAgain": "Download igen",
+  "result.newExport": "Ny eksport",
+  "result.pages": "Sider",
+  "result.attachments": "Vedhæftede filer",
+  "result.size": "Størrelse",
+  "result.time": "Tid",
+  "result.changed": "Ændret",
+  "result.unchanged": "Uændret",
+  "result.deleted": "Slettet",
+  "result.full.options-changed": "Der blev lavet en fuld eksport, fordi formatindstillingerne er forskellige fra den forrige eksport. Filer, der ikke længere oprettes, står i export-deleted.txt.",
+  "result.full.other-source": "Der blev lavet en fuld eksport, fordi den forrige eksport kommer fra et andet websted, et andet område eller en anden side.",
+  "result.missing": {
+    "one": "{count} side fra den forrige eksport blev ikke fundet – den er slettet, eller du kan ikke se den. Dens filer står i export-deleted.txt.",
+    "other": "{count} sider fra den forrige eksport blev ikke fundet – de er slettet, eller du kan ikke se dem. Deres filer står i export-deleted.txt."
+  },
+  "result.apply.title": "Anvend denne opdatering",
+  "result.apply.step1": "Læg zip-filen ved siden af mappen docs med din forrige eksport.",
+  "result.apply.step2": "Kør denne kommando: den overskriver ændrede filer og fjerner filerne i export-deleted.txt.",
+  "result.apply.step3": "Gennemgå ændringerne med git status, og commit dem.",
+  "result.apply.copy": "Kopiér",
+  "result.apply.copied": "Kopieret",
+  "warnings.title": {
+    "one": "{count} advarsel",
+    "other": "{count} advarsler"
+  },
+  "warnings.none": "Ingen advarsler",
+  "warnings.filter.label": "Filtrer advarsler efter type",
+  "warnings.filter.all": "Alle typer",
+  "warnings.kind.unknown-macro": "Ukendt makro",
+  "warnings.kind.dynamic-macro": "Dynamisk makro",
+  "warnings.kind.complex-table": "Kompleks tabel",
+  "warnings.kind.missing-attachment": "Manglende vedhæftet fil",
+  "warnings.kind.adf-extension": "Editorudvidelse",
+  "warnings.kind.unresolved-user": "Ukendt bruger",
+  "warnings.kind.attachment-too-large": "Vedhæftet fil for stor",
+  "warnings.kind.convert-failed": "Siden blev ikke konverteret",
+  "warnings.column.page": "Side",
+  "warnings.column.kind": "Type",
+  "warnings.column.detail": "Detaljer",
+  "warnings.pagination.label": "Advarselssider",
+  "warnings.pagination.prev": "Forrige",
+  "warnings.pagination.next": "Næste",
+  "warnings.pagination.page": "Side",
+  "errors.forbidden": "Du har ikke tilladelse til at læse nogle af disse sider i Confluence.",
+  "errors.network": "Confluence kunne ikke nås. Kontrollér din forbindelse, og prøv igen.",
+  "errors.back": "Tilbage"
 }

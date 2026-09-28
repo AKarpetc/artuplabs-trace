@@ -78,5 +78,76 @@
     "other": "Flytja út {count} síður"
   },
   "studio.exportButtonUnknown": "Flytja út",
-  "errors.tryAgain": "Reyna aftur"
+  "errors.tryAgain": "Reyna aftur",
+  "run.title": "Flytur út í Markdown",
+  "run.stage.scan": "Skönnun",
+  "run.stage.pages": "Síður",
+  "run.stage.attachments": "Viðhengi",
+  "run.stage.pack": "Pökkun",
+  "run.scanned": {
+    "one": "{count} atriði yfirfarið",
+    "other": "{count} atriði yfirfarin"
+  },
+  "run.counter": {
+    "one": "{done} af {count} síðu",
+    "other": "{done} af {count} síðum"
+  },
+  "run.counterAttachments": {
+    "one": "{done} af {count} viðhengi",
+    "other": "{done} af {count} viðhengjum"
+  },
+  "run.packing": "Pakkar zip-skránni",
+  "run.elapsed": "Liðinn tími: {time}",
+  "run.eta": "Um {time} eftir",
+  "run.keepOpen": "Hafðu þennan flipa opinn þar til niðurhalið hefst.",
+  "run.cancel": "Hætta við",
+  "run.cancelled": "Hætt var við útflutninginn. Valið þitt er óbreytt.",
+  "result.title": "Útflutningur tilbúinn",
+  "result.started": "Niðurhalið er hafið.",
+  "result.downloadAgain": "Sækja aftur",
+  "result.newExport": "Nýr útflutningur",
+  "result.pages": "Síður",
+  "result.attachments": "Viðhengi",
+  "result.size": "Stærð",
+  "result.time": "Tími",
+  "result.changed": "Breytt",
+  "result.unchanged": "Óbreytt",
+  "result.deleted": "Eytt",
+  "result.full.options-changed": "Allt var flutt út vegna þess að sniðstillingarnar eru aðrar en í fyrri útflutningi. Skrár sem ekki eru lengur búnar til eru taldar upp í export-deleted.txt.",
+  "result.full.other-source": "Allt var flutt út vegna þess að fyrri útflutningur kemur frá öðru vefsvæði, svæði eða síðu.",
+  "result.missing": {
+    "one": "{count} síða úr fyrri útflutningi fannst ekki – henni var eytt eða þú sérð hana ekki. Skrár hennar eru taldar upp í export-deleted.txt.",
+    "other": "{count} síður úr fyrri útflutningi fundust ekki – þeim var eytt eða þú sérð þær ekki. Skrár þeirra eru taldar upp í export-deleted.txt."
+  },
+  "result.apply.title": "Nota þessa uppfærslu",
+  "result.apply.step1": "Settu zip-skrána við hliðina á möppunni docs með fyrri útflutningi.",
+  "result.apply.step2": "Keyrðu þessa skipun: hún skrifar yfir breyttar skrár og fjarlægir skrárnar í export-deleted.txt.",
+  "result.apply.step3": "Farðu yfir breytingarnar með git status og gerðu commit.",
+  "result.apply.copy": "Afrita",
+  "result.apply.copied": "Afritað",
+  "warnings.title": {
+    "one": "{count} viðvörun",
+    "other": "{count} viðvaranir"
+  },
+  "warnings.none": "Engar viðvaranir",
+  "warnings.filter.label": "Sía viðvaranir eftir tegund",
+  "warnings.filter.all": "Allar tegundir",
+  "warnings.kind.unknown-macro": "Óþekkt fjölvi",
+  "warnings.kind.dynamic-macro": "Breytilegt fjölvi",
+  "warnings.kind.complex-table": "Flókin tafla",
+  "warnings.kind.missing-attachment": "Viðhengi vantar",
+  "warnings.kind.adf-extension": "Viðbót ritils",
+  "warnings.kind.unresolved-user": "Óþekktur notandi",
+  "warnings.kind.attachment-too-large": "Of stórt viðhengi",
+  "warnings.kind.convert-failed": "Síða ekki umbreytt",
+  "warnings.column.page": "Síða",
+  "warnings.column.kind": "Tegund",
+  "warnings.column.detail": "Nánar",
+  "warnings.pagination.label": "Síður viðvarana",
+  "warnings.pagination.prev": "Fyrri",
+  "warnings.pagination.next": "Næsta",
+  "warnings.pagination.page": "Síða",
+  "errors.forbidden": "Þú hefur ekki heimild til að lesa sumar þessara síðna í Confluence.",
+  "errors.network": "Ekki náðist samband við Confluence. Athugaðu tenginguna og reyndu aftur.",
+  "errors.back": "Til baka"
 }

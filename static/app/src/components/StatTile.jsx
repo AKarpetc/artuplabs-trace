@@ -19,10 +19,10 @@ const tileStyles = xcss({
 const valueStyles = xcss({ font: 'font.heading.large', color: 'color.text', overflowWrap: 'anywhere' });
 
 /** Metric card: tone-coloured icon and subtle label above a large value. */
-export function StatTile({ label, value, tone = 'neutral', icon }) {
+export function StatTile({ label, value, tone = 'neutral', icon, testId }) {
   const Icon = glyph(icon);
   return (
-    <Box xcss={tileStyles}>
+    <Box xcss={tileStyles} testId={testId} data-tone={tone}>
       <Stack space="space.100">
         <Inline space="space.075" alignBlock="center">
           {Icon ? <Icon label="" color={token(TONE_ICON[tone] ?? TONE_ICON.neutral)} /> : null}

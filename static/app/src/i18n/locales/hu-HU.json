@@ -78,5 +78,76 @@
     "other": "{count} oldal exportálása"
   },
   "studio.exportButtonUnknown": "Exportálás",
-  "errors.tryAgain": "Újrapróbálás"
+  "errors.tryAgain": "Újrapróbálás",
+  "run.title": "Exportálás Markdown formátumba",
+  "run.stage.scan": "Beolvasás",
+  "run.stage.pages": "Oldalak",
+  "run.stage.attachments": "Mellékletek",
+  "run.stage.pack": "Csomagolás",
+  "run.scanned": {
+    "one": "{count} elem ellenőrizve",
+    "other": "{count} elem ellenőrizve"
+  },
+  "run.counter": {
+    "one": "{done}/{count} oldal",
+    "other": "{done}/{count} oldal"
+  },
+  "run.counterAttachments": {
+    "one": "{done}/{count} melléklet",
+    "other": "{done}/{count} melléklet"
+  },
+  "run.packing": "A zip csomagolása",
+  "run.elapsed": "Eltelt idő: {time}",
+  "run.eta": "Még kb. {time}",
+  "run.keepOpen": "Tartsa nyitva ezt a lapot, amíg a letöltés el nem indul.",
+  "run.cancel": "Mégse",
+  "run.cancelled": "Az exportálás megszakítva. A beállításai megmaradtak.",
+  "result.title": "Az export elkészült",
+  "result.started": "A letöltés elindult.",
+  "result.downloadAgain": "Letöltés újra",
+  "result.newExport": "Új exportálás",
+  "result.pages": "Oldalak",
+  "result.attachments": "Mellékletek",
+  "result.size": "Méret",
+  "result.time": "Idő",
+  "result.changed": "Módosult",
+  "result.unchanged": "Változatlan",
+  "result.deleted": "Törölve",
+  "result.full.options-changed": "Teljes exportálás történt, mert a formátumbeállítások eltérnek az előző exporttól. A már nem létrehozott fájlok listája az export-deleted.txt fájlban található.",
+  "result.full.other-source": "Teljes exportálás történt, mert az előző export másik webhelyről, területről vagy oldalról származik.",
+  "result.missing": {
+    "one": "Az előző export {count} oldala nem található – törölték, vagy Ön nem láthatja. A fájljai az export-deleted.txt fájlban vannak felsorolva.",
+    "other": "Az előző export {count} oldala nem található – törölték őket, vagy Ön nem láthatja őket. A fájljaik az export-deleted.txt fájlban vannak felsorolva."
+  },
+  "result.apply.title": "A frissítés alkalmazása",
+  "result.apply.step1": "Tegye a zip-fájlt az előző exportot tartalmazó docs mappa mellé.",
+  "result.apply.step2": "Futtassa ezt a parancsot: felülírja a módosult fájlokat, és eltávolítja az export-deleted.txt fájlban felsorolt fájlokat.",
+  "result.apply.step3": "Ellenőrizze a változásokat a git status paranccsal, és commitolja őket.",
+  "result.apply.copy": "Másolás",
+  "result.apply.copied": "Másolva",
+  "warnings.title": {
+    "one": "{count} figyelmeztetés",
+    "other": "{count} figyelmeztetés"
+  },
+  "warnings.none": "Nincs figyelmeztetés",
+  "warnings.filter.label": "Figyelmeztetések szűrése típus szerint",
+  "warnings.filter.all": "Minden típus",
+  "warnings.kind.unknown-macro": "Ismeretlen makró",
+  "warnings.kind.dynamic-macro": "Dinamikus makró",
+  "warnings.kind.complex-table": "Összetett táblázat",
+  "warnings.kind.missing-attachment": "Hiányzó melléklet",
+  "warnings.kind.adf-extension": "Szerkesztőbővítmény",
+  "warnings.kind.unresolved-user": "Ismeretlen felhasználó",
+  "warnings.kind.attachment-too-large": "Túl nagy melléklet",
+  "warnings.kind.convert-failed": "Az oldal nincs konvertálva",
+  "warnings.column.page": "Oldal",
+  "warnings.column.kind": "Típus",
+  "warnings.column.detail": "Részletek",
+  "warnings.pagination.label": "Figyelmeztetések oldalai",
+  "warnings.pagination.prev": "Előző",
+  "warnings.pagination.next": "Következő",
+  "warnings.pagination.page": "Oldal",
+  "errors.forbidden": "Nincs jogosultsága e lapok némelyikének olvasásához a Confluence-ben.",
+  "errors.network": "A Confluence nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
+  "errors.back": "Vissza"
 }
