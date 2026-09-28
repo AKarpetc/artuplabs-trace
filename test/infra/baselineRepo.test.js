@@ -48,8 +48,17 @@ describe('diffCounts', () => {
   it('counts status-changed only when version and links both match but status differs', async () => {
     h.answers.push({ rows: [{}] }, { rows: [{ n: 0 }] }, { rows: [{ n: 0 }] });
     await baselineRepo.diffCounts(10, 20);
-    expect(h.calls[0].query).toContain('l.version_id = r.version_id AND l.links_hash = r.links_hash AND l.status_name <> r.status_name');
+    expect(h.calls[0].query).toContain(
+      "l.version_id = r.version_id AND l.links_hash = r.links_hash AND l.status_name <> '' AND r.status_name <> '' AND l.status_name <> r.status_name",
+    );
     expect(h.calls[0].params).toEqual([20, 10]);
+  });
+
+  it('excludes an empty status_name (pre-v007 default) from status_changed on either side', async () => {
+    h.answers.push({ rows: [{}] }, { rows: [{ n: 0 }] }, { rows: [{ n: 0 }] });
+    await baselineRepo.diffCounts(10, 20);
+    expect(h.calls[0].query).toContain("l.status_name <> ''");
+    expect(h.calls[0].query).toContain("r.status_name <> ''");
   });
 });
 
@@ -65,10 +74,23 @@ describe('diffPage', () => {
     }]);
   });
 
-  it('widens the left-side WHERE clause to surface a status-only change', async () => {
+  it('widens the left-side WHERE clause to surface a status-only change, excluding an empty status_name on either side', async () => {
     h.answers.push({ rows: [] }, { rows: [] });
     await baselineRepo.diffPage(10, 20, '', 50);
-    expect(h.calls[0].query).toContain('l.status_name <> r.status_name');
+    expect(h.calls[0].query).toContain("(l.status_name <> '' AND r.status_name <> '' AND l.status_name <> r.status_name)");
+  });
+
+  it('treats a row with an empty status_name on one or both sides as unchanged, not status-changed', async () => {
+    h.answers.push(
+      { rows: [
+        { issue_id: '1', lv: 100, rv: 100, lh: 'h1', rh: 'h1', ls: '', rs: 'Done' },
+        { issue_id: '2', lv: 100, rv: 100, lh: 'h1', rh: 'h1', ls: '', rs: '' },
+      ] },
+      { rows: [] },
+      { rows: [{ id: 100, issue_key: 'REQ-1', summary: 'Sum 1' }] },
+    );
+    const page = await baselineRepo.diffPage(10, 20, '', 50);
+    expect(page.map((r) => r.change)).toEqual(['unchanged', 'unchanged']);
   });
 
   it('keeps issue-id ordering and the limit across left-side and added-side rows', async () => {

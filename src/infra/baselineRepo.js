@@ -88,7 +88,7 @@ export async function diffCounts(leftId, rightId) {
   const both = await run(`SELECT
       SUM(CASE WHEN l.version_id <> r.version_id THEN 1 ELSE 0 END) AS changed,
       SUM(CASE WHEN l.version_id = r.version_id AND l.links_hash <> r.links_hash THEN 1 ELSE 0 END) AS links_changed,
-      SUM(CASE WHEN l.version_id = r.version_id AND l.links_hash = r.links_hash AND l.status_name <> r.status_name THEN 1 ELSE 0 END) AS status_changed
+      SUM(CASE WHEN l.version_id = r.version_id AND l.links_hash = r.links_hash AND l.status_name <> '' AND r.status_name <> '' AND l.status_name <> r.status_name THEN 1 ELSE 0 END) AS status_changed
     FROM baseline_member l JOIN baseline_member r ON r.issue_id = l.issue_id AND r.baseline_id = ?
     WHERE l.baseline_id = ?`, [rightId, leftId]);
   const removed = await run(`SELECT COUNT(*) AS n FROM baseline_member l
@@ -117,7 +117,7 @@ export async function diffPage(leftId, rightId, afterIssueId, limit) {
   const lim = clampLimit(limit);
   const leftSide = await run(`SELECT l.issue_id, l.version_id AS lv, r.version_id AS rv, l.links_hash AS lh, r.links_hash AS rh, l.status_name AS ls, r.status_name AS rs
     FROM baseline_member l LEFT JOIN baseline_member r ON r.issue_id = l.issue_id AND r.baseline_id = ?
-    WHERE l.baseline_id = ? AND l.issue_id > ? AND (r.issue_id IS NULL OR l.version_id <> r.version_id OR l.links_hash <> r.links_hash OR l.status_name <> r.status_name)
+    WHERE l.baseline_id = ? AND l.issue_id > ? AND (r.issue_id IS NULL OR l.version_id <> r.version_id OR l.links_hash <> r.links_hash OR (l.status_name <> '' AND r.status_name <> '' AND l.status_name <> r.status_name))
     ORDER BY l.issue_id LIMIT ${lim}`, [rightId, leftId, afterIssueId ?? '']);
   const addedSide = await run(`SELECT r.issue_id, NULL AS lv, r.version_id AS rv, NULL AS lh, r.links_hash AS rh, NULL AS ls, r.status_name AS rs
     FROM baseline_member r LEFT JOIN baseline_member l ON l.issue_id = r.issue_id AND l.baseline_id = ?

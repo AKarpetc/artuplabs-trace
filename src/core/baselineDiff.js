@@ -14,6 +14,9 @@ export function classifyDiffRow({ leftVersionId, rightVersionId, leftLinksHash, 
   if (leftLinksHash !== rightLinksHash) {
     return 'links-changed';
   }
+  if (leftStatus === '' || rightStatus === '') {
+    return 'unchanged';
+  }
   return leftStatus !== rightStatus ? 'status-changed' : 'unchanged';
 }
 

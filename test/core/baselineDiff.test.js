@@ -28,6 +28,18 @@ describe('classifyDiffRow', () => {
       leftVersionId: 5, rightVersionId: 5, leftLinksHash: 'a', rightLinksHash: 'b', leftStatus: 'To Do', rightStatus: 'Done',
     })).toBe('links-changed');
   });
+
+  it('treats an empty status on either side as unknown, not a change (pre-v007 baselines default to \'\')', () => {
+    expect(classifyDiffRow({
+      leftVersionId: 5, rightVersionId: 5, leftLinksHash: 'a', rightLinksHash: 'a', leftStatus: '', rightStatus: 'Done',
+    })).toBe('unchanged');
+    expect(classifyDiffRow({
+      leftVersionId: 5, rightVersionId: 5, leftLinksHash: 'a', rightLinksHash: 'a', leftStatus: 'To Do', rightStatus: '',
+    })).toBe('unchanged');
+    expect(classifyDiffRow({
+      leftVersionId: 5, rightVersionId: 5, leftLinksHash: 'a', rightLinksHash: 'a', leftStatus: '', rightStatus: '',
+    })).toBe('unchanged');
+  });
 });
 
 describe('baselineChecksum', () => {
