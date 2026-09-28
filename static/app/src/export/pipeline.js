@@ -1,4 +1,5 @@
 import { collectMentions, storageToMarkdown } from '../core/convert/index.js';
+import { placeholder } from '../core/convert/escape.js';
 import { renderFrontMatter } from '../core/frontMatter.js';
 import { planUpdate } from '../core/increment.js';
 import { planAttachments, relativePath } from '../core/links.js';
@@ -13,7 +14,6 @@ import { scanTree } from './tree.js';
 /** Warning kinds the pipeline adds on top of the converter's WARNING_KINDS. */
 export const PIPELINE_WARNING_KINDS = ['attachment-too-large', 'convert-failed'];
 
-const CONVERT_FAILED = '<!-- confluence:convert-failed -->\n';
 const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const abortError = () => new DOMException('Aborted', 'AbortError');
 
@@ -209,7 +209,7 @@ function convertOne(job, id, content, used) {
     const result = job.convert(content.pages.get(id).body ?? '', makeConvertContext(job, id, content, used, linked));
     return { ...result, links: [...result.links, ...linked] };
   } catch (error) {
-    return { markdown: CONVERT_FAILED, links: [...linked], warnings: [{ kind: 'convert-failed', detail: String(error?.message ?? error) }] };
+    return { markdown: `${placeholder('convert-failed', presetOf(job.options.preset).flavor)}\n`, links: [...linked], warnings: [{ kind: 'convert-failed', detail: String(error?.message ?? error) }] };
   }
 }
 

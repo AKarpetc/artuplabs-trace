@@ -134,6 +134,20 @@ describe('runExport edge cases', () => {
     expect(PIPELINE_WARNING_KINDS).toEqual(['attachment-too-large', 'convert-failed']);
   });
 
+  it('writes the convert-failed placeholder in the flavour of the preset', async () => {
+    const convert = (xhtml, ctx) => {
+      if (xhtml.includes('Back to')) throw new Error('boom');
+      return storageToMarkdown(xhtml, ctx);
+    };
+    const bodies = {};
+    for (const preset of ['generic', 'docusaurus', 'mkdocs']) {
+      const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
+      const out = await files(await run(fake, { convert, options: { ...DEFAULT_OPTIONS, preset } }));
+      bodies[preset] = out['home/cafe.md'].split('---\n').slice(2).join('---\n');
+    }
+    expect(bodies).toEqual({ generic: '<!-- confluence:convert-failed -->\n', docusaurus: '{/* confluence:convert-failed */}\n', mkdocs: '<!-- confluence:convert-failed -->\n' });
+  });
+
   it('never reports titles of pages that are missing now and counts them only', async () => {
     const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
     const previous = JSON.parse((await files(await run(fake)))['export-manifest.json']);
@@ -222,7 +236,7 @@ describe('runExport edge cases', () => {
       generic: '> [!NOTE]\n> Hi {x}\n',
       hugo: '> [!NOTE]\n> Hi {x}\n',
       docusaurus: ':::note\n\nHi \\{x\\}\n\n:::\n',
-      mkdocs: '!!! note\n    Hi {x}\n',
+      mkdocs: '!!! note\n    Hi \\{x\\}\n',
     });
   });
 

@@ -38,9 +38,27 @@ What each preset writes into the page bodies:
   escaped (`\{`, `\}`), void tags are self-closed (`<br />`), merged-cell tables use
   `colSpan`/`rowSpan` and `<tbody>`, and a text line that MDX would read as `import`/`export` or
   as a directive fence (`:::`) is escaped.
-- **MkDocs** needs in `mkdocs.yml`:
-  `plugins: [awesome-pages]` and
-  `markdown_extensions: [admonition, pymdownx.tasklist, tables, attr_list, md_in_html]`.
+- **MkDocs** output is written for Python-Markdown: nested list items are indented by 4 spaces,
+  items of a list with multi-paragraph items are separated by blank lines, braces in text are
+  escaped (so `attr_list` cannot take `{#id}` or `{: .x }` from page text), and `<details>` and
+  merged-cell tables carry `markdown="1"` (cells `markdown="block"`) so `md_in_html` renders
+  their Markdown. Hard breaks stay `\` + newline. Install
+  `pip install mkdocs mkdocs-awesome-pages-plugin pymdown-extensions` and use in `mkdocs.yml`:
+
+  ```yaml
+  plugins:
+    - awesome-pages
+  markdown_extensions:
+    - admonition
+    - pymdownx.tasklist
+    - tables
+    - attr_list
+    - md_in_html
+    - pymdownx.superfences      # code blocks inside panels and list items
+    - pymdownx.tilde            # ~~strikethrough~~
+    - pymdownx.escapeall:       # every \-escape, and \ + newline as a line break
+        hardbreak: true
+  ```
 - **Hugo** renders the alerts as styled blocks only with a blockquote render hook
   (`layouts/_markup/render-blockquote.html` that checks `.Type "alert"`; many themes ship one),
   merged-cell tables and `<details>` only with `markup.goldmark.renderer.unsafe = true`, and

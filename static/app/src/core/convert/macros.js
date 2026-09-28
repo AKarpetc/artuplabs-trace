@@ -71,7 +71,7 @@ export function renderMacro(node, ctx) {
   if (name === 'code' || name === 'noformat') return fence(textOf(plain), name === 'code' ? param(node, 'language') : '');
   if (PANELS[name]) return admonition(PANELS[name], param(node, 'title'), body(), ctx.flavor);
   if (name === 'panel') return quote([param(node, 'title') && `**${escapeText(param(node, 'title'), ctx.flavor)}**`, body()].filter(Boolean).join('\n\n'));
-  if (name === 'expand') return `<details>\n<summary>${escapeHtml(param(node, 'title') || 'Details', ctx.flavor)}</summary>\n\n${body()}\n\n</details>`;
+  if (name === 'expand') return `<details${ctx.flavor === 'mkdocs' ? ' markdown="1"' : ''}>\n<summary>${escapeHtml(param(node, 'title') || 'Details', ctx.flavor)}</summary>\n\n${body()}\n\n</details>`;
   if (BODY_ONLY.has(name)) return body();
   if (name === 'children') return ctx.childLinks().map((c) => `- ${link(escapeText(c.title, ctx.flavor), c.href)}`).join('\n');
   if (INLINE.has(name)) return renderInlineMacro(node, ctx);

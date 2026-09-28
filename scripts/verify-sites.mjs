@@ -192,6 +192,10 @@ markdown_extensions:
   - tables
   - attr_list
   - md_in_html
+  - pymdownx.superfences
+  - pymdownx.tilde
+  - pymdownx.escapeall:
+      hardbreak: true
 `;
 
 function verifyMkdocs(args) {

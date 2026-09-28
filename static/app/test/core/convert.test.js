@@ -334,9 +334,9 @@ describe('flavors', () => {
     ['unknownMacro', '<!-- confluence:drawio -->\n\nfallback\n'],
     ['dynamicMacro', '<!-- confluence:toc -->\n'],
     ['breakInCell', '| A |\n| --- |\n| x<br>y |\n'],
-    ['braces', 'a {x} b `{y}`\n\n```\n{z}\n```\n'],
-    ['complexTable', '<table>\n<tr>\n<th colspan="2">\n\nH\n\n</th>\n</tr>\n<tr>\n<td rowspan="2">\n\n- a\\\n  b\n\n</td>\n<td>\n\n{b}\n\n</td>\n</tr>\n</table>\n'],
-    ['panel', '> **P {1}**\n>\n> x\n'],
+    ['braces', 'a \\{x\\} b `{y}`\n\n```\n{z}\n```\n'],
+    ['complexTable', '<table markdown="1">\n<tr markdown="1">\n<th colspan="2" markdown="block">\n\nH\n\n</th>\n</tr>\n<tr markdown="1">\n<td rowspan="2" markdown="block">\n\n- a\\\n    b\n\n</td>\n<td markdown="block">\n\n\\{b\\}\n\n</td>\n</tr>\n</table>\n'],
+    ['panel', '> **P \\{1\\}**\n>\n> x\n'],
   ])('mkdocs: %s', (key, expected) => expect(convert('mkdocs')(key)).toBe(expected));
 
   it('mdx keeps admonition kinds for every panel', () => {
@@ -368,6 +368,21 @@ describe('flavors', () => {
 
   it('mkdocs collapses a multi-line title and escapes Markdown in it', () => {
     expect(md(macro('tip', { title: 'a *b*\n c' }, rich('<p>x</p>')), { flavor: 'mkdocs' })).toBe('!!! tip "a \\*b\\* c"\n    x\n');
+  });
+
+  it.each([
+    ['nested bullets', '<ul><li>a<ul><li>b<ul><li>c</li></ul></li></ul></li><li>d</li></ul>', '- a\n    - b\n        - c\n- d\n'],
+    ['nested ordered', '<ol><li>a<ol><li>b</li><li>c</li></ol></li><li>d</li></ol>', '1. a\n    1. b\n    2. c\n2. d\n'],
+    ['loose ordered items are separated by a blank line', '<ol start="3"><li><p>x</p><p>y</p></li><li>z</li></ol>', '3. x\n\n    y\n\n4. z\n'],
+    ['nested task list', '<ac:task-list><ac:task><ac:task-status>complete</ac:task-status><ac:task-body>a<ac:task-list><ac:task><ac:task-status>incomplete</ac:task-status><ac:task-body>b</ac:task-body></ac:task></ac:task-list></ac:task-body></ac:task></ac:task-list>', '- [x] a\n\n    - [ ] b\n'],
+    ['details parse their Markdown', '<ac:structured-macro ac:name="expand"><ac:rich-text-body><ul><li><strong>x</strong></li></ul></ac:rich-text-body></ac:structured-macro>', '<details markdown="1">\n<summary>Details</summary>\n\n- **x**\n\n</details>\n'],
+    ['attribute lists cannot swallow text', '<h2>Title {#id}</h2><p>para {: .x }</p>', '## Title \\{#id\\}\n\npara \\{: .x \\}\n'],
+  ])('mkdocs: %s', (name, input, expected) => expect(md(input, { flavor: 'mkdocs' })).toBe(expected));
+
+  it('gfm and mdx keep 2-space nesting, tight ordered lists and plain details', () => {
+    const inputs = ['<ul><li>a<ul><li>b</li></ul></li></ul>', '<ol start="3"><li><p>x</p><p>y</p></li><li>z</li></ol>', '<ac:structured-macro ac:name="expand"><ac:rich-text-body><p>x</p></ac:rich-text-body></ac:structured-macro>'];
+    const expected = ['- a\n  - b\n', '3. x\n\n   y\n4. z\n', '<details>\n<summary>Details</summary>\n\nx\n\n</details>\n'];
+    for (const flavor of ['gfm', 'mdx']) expect(inputs.map((input) => md(input, { flavor }))).toEqual(expected);
   });
 
   it('same input and flavor give identical output', () => {

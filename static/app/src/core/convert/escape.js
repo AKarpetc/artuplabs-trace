@@ -1,10 +1,11 @@
 const MARKDOWN_SPECIAL = /[\\`*_[\]<>|~]/g;
-const MDX_SPECIAL = /[\\`*_[\]<>|~{}]/g;
+const BRACED_SPECIAL = /[\\`*_[\]<>|~{}]/g;
+const BRACED_FLAVORS = new Set(['mdx', 'mkdocs']);
 const BRACE_REFERENCES = { '{': '&#x7B;', '}': '&#x7D;' };
 
-/** Escapes Markdown-significant characters in inline text, including "&" that starts an HTML/XML entity; the mdx flavor also escapes braces. */
+/** Escapes Markdown-significant characters in inline text, including "&" that starts an HTML/XML entity; the mdx and mkdocs flavors also escape braces (MDX expressions, attribute lists). */
 export function escapeText(text, flavor) {
-  const marked = text.replace(flavor === 'mdx' ? MDX_SPECIAL : MARKDOWN_SPECIAL, (c) => `\\${c}`);
+  const marked = text.replace(BRACED_FLAVORS.has(flavor) ? BRACED_SPECIAL : MARKDOWN_SPECIAL, (c) => `\\${c}`);
   return marked.replace(/&(?=#?[0-9a-zA-Z]+;)/g, '\\&');
 }
 

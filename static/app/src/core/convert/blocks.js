@@ -44,8 +44,9 @@ function paragraph(nodes, ctx) {
   return text ? text.split('\n').map((line) => escapeLineStart(line, ctx.flavor)).join('\n') : '';
 }
 
-function indentItem(marker, body) {
-  const pad = ' '.repeat(marker.length + 1);
+/** Indents a list item's continuation lines under its marker; mkdocs (Python-Markdown) needs at least 4 spaces to nest. */
+function indentItem(marker, body, flavor) {
+  const pad = ' '.repeat(flavor === 'mkdocs' ? Math.max(4, marker.length + 1) : marker.length + 1);
   const [first, ...rest] = body.split('\n');
   return [`${marker} ${first}`.trimEnd(), ...rest.map((line) => (line ? pad + line : line))].join('\n');
 }
@@ -55,11 +56,13 @@ function renderList(node, ctx) {
   const rawStart = attr(node, 'start');
   const parsedStart = Number(rawStart);
   const start = rawStart !== '' && Number.isInteger(parsedStart) ? parsedStart : 1;
-  return elements(node).filter((li) => li.name === 'li').map((li, index) => {
+  const items = elements(node).filter((li) => li.name === 'li').map((li, index) => {
     const blocks = renderBlockArray(li.children, ctx);
     const loose = elements(li).some((c) => c.name === 'p') && blocks.length > 1;
-    return indentItem(ordered ? `${start + index}.` : '-', blocks.join(loose ? '\n\n' : '\n'));
-  }).join('\n');
+    return { loose, text: indentItem(ordered ? `${start + index}.` : '-', blocks.join(loose ? '\n\n' : '\n'), ctx.flavor) };
+  });
+  const separator = ctx.flavor === 'mkdocs' && items.some((item) => item.loose) ? '\n\n' : '\n';
+  return items.map((item) => item.text).join(separator);
 }
 
 function renderTaskList(node, ctx) {
@@ -68,7 +71,7 @@ function renderTaskList(node, ctx) {
     const body = elements(task).find((c) => c.name === 'ac:task-body');
     const checkbox = `[${textOf(status).trim() === 'complete' ? 'x' : ' '}]`;
     const [first, ...rest] = renderBlockArray(body?.children, ctx).join('\n\n').split('\n');
-    return indentItem('-', [`${checkbox} ${first}`.trimEnd(), ...rest].join('\n'));
+    return indentItem('-', [`${checkbox} ${first}`.trimEnd(), ...rest].join('\n'), ctx.flavor);
   }).join('\n');
 }
 
