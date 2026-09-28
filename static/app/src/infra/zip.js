@@ -1,6 +1,18 @@
 import { strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough } from 'fflate';
 import { MANIFEST_FILE } from '../core/manifest.js';
 
+const MIN_MTIME = new Date(1980, 0, 1);
+const MAX_MTIME = new Date(2099, 11, 31);
+
+/** Clamps a mtime into the DOS date range fflate accepts (1980-01-01..2099-12-31); an invalid or missing Date falls back to the minimum. */
+function clampMtime(mtime) {
+  const time = mtime instanceof Date ? mtime.getTime() : NaN;
+  if (!Number.isFinite(time)) return MIN_MTIME;
+  if (time < MIN_MTIME.getTime()) return MIN_MTIME;
+  if (time > MAX_MTIME.getTime()) return MAX_MTIME;
+  return mtime;
+}
+
 /** Streaming zip writer; text is deflated, binaries are stored as-is. Returns the zip as a Blob. */
 export function createZipWriter() {
   const parts = [];
@@ -26,11 +38,13 @@ export function createZipWriter() {
   };
   return {
     addText(path, text, mtime) {
-      add(new ZipDeflate(path, { level: 6, mtime }), strToU8(text));
+      const file = new ZipDeflate(path, { level: 6 });
+      file.mtime = clampMtime(mtime);
+      add(file, strToU8(text));
     },
     addBinary(path, data, mtime) {
       const file = new ZipPassThrough(path);
-      file.mtime = mtime;
+      file.mtime = clampMtime(mtime);
       add(file, data);
     },
     finish() {

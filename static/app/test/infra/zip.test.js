@@ -7,6 +7,31 @@ async function blobBytes(blob) {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
+/** Reads each entry's DOS mod-date (year/month/day) from a zip's central directory. */
+function readDosDates(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let eocd = -1;
+  for (let i = bytes.length - 22; i >= 0; i -= 1) {
+    if (view.getUint32(i, true) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  }
+  const count = view.getUint16(eocd + 10, true);
+  const dates = {};
+  let offset = view.getUint32(eocd + 16, true);
+  for (let i = 0; i < count; i += 1) {
+    const modDate = view.getUint16(offset + 14, true);
+    const nameLength = view.getUint16(offset + 28, true);
+    const extraLength = view.getUint16(offset + 30, true);
+    const commentLength = view.getUint16(offset + 32, true);
+    const name = new TextDecoder().decode(bytes.slice(offset + 46, offset + 46 + nameLength));
+    dates[name] = { year: ((modDate >> 9) & 0x7f) + 1980, month: (modDate >> 5) & 0xf, day: modDate & 0x1f };
+    offset += 46 + nameLength + extraLength + commentLength;
+  }
+  return dates;
+}
+
 describe('createZipWriter', () => {
   it('writes text files, a Cyrillic-named text file and a binary file that read back byte-identical', async () => {
     const writer = createZipWriter();
@@ -29,6 +54,16 @@ describe('createZipWriter', () => {
     writer.addText('a.md', 'hello', new Date());
     await writer.finish();
     expect(writer.size()).toBeGreaterThan(0);
+  });
+
+  it('clamps an out-of-range mtime (new Date(0)) to 1980-01-01 for both text and binary entries', async () => {
+    const writer = createZipWriter();
+    writer.addText('a.md', 'hi', new Date(0));
+    writer.addBinary('b.bin', new Uint8Array([1]), new Date(0));
+    const blob = await writer.finish();
+    const dates = readDosDates(await blobBytes(blob));
+    expect(dates['a.md']).toEqual({ year: 1980, month: 1, day: 1 });
+    expect(dates['b.bin']).toEqual({ year: 1980, month: 1, day: 1 });
   });
 });
 

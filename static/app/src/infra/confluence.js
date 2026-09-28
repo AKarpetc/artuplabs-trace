@@ -25,7 +25,15 @@ export function createConfluenceClient({ request, sleep, concurrency = 6, signal
   const send = (path, parse) => run(async () => {
     for (let attempt = 0; ; attempt += 1) {
       checkAbort();
-      const response = await request(path, { headers: { Accept: 'application/json' } });
+      let response;
+      try {
+        response = await request(path, { headers: { Accept: 'application/json' } });
+      } catch (error) {
+        if (error?.name === 'AbortError') throw error;
+        if (attempt >= 4) throw new ConfluenceError(0, path);
+        await sleep(Math.min(30, 2 ** attempt) * 1000);
+        continue;
+      }
       if (response.ok) return parse(response);
       const retriable = response.status === 429 || response.status >= 500;
       if (!retriable || attempt >= 4) throw new ConfluenceError(response.status, path);
@@ -36,7 +44,13 @@ export function createConfluenceClient({ request, sleep, concurrency = 6, signal
   const getJson = (path) => send(path, (r) => r.json());
   const all = async (path) => {
     const results = [];
-    for (let next = path; next;) {
+    const seen = new Set();
+    let next = path;
+    let pageCount = 0;
+    while (next) {
+      if (seen.has(next) || pageCount >= 1000) throw new ConfluenceError(508, path);
+      seen.add(next);
+      pageCount += 1;
       const page = await getJson(next);
       results.push(...(page.results ?? []));
       next = page._links?.next ?? null;
@@ -59,7 +73,9 @@ export function createConfluenceClient({ request, sleep, concurrency = 6, signal
       return rows.map((r) => ({ id: String(r.id), title: r.title, position: r.childPosition ?? 0 })).sort((a, b) => a.position - b.position);
     },
     async getPages(ids, { withBody }) {
-      const batches = await Promise.all(chunks(ids, BATCH).map((batch) => all(`/wiki/api/v2/pages?id=${batch.join(',')}&limit=${BATCH}${withBody ? '&body-format=storage' : ''}`)));
+      const validIds = ids.filter((id) => /^\d+$/.test(id));
+      if (validIds.length === 0) return [];
+      const batches = await Promise.all(chunks(validIds, BATCH).map((batch) => all(`/wiki/api/v2/pages?id=${batch.map(encodeURIComponent).join(',')}&limit=${BATCH}${withBody ? '&body-format=storage' : ''}`)));
       return batches.flat().map((p) => ({
         id: String(p.id), title: p.title, parentId: p.parentId ? String(p.parentId) : null, spaceId: String(p.spaceId),
         version: { number: p.version?.number ?? 0, createdAt: p.version?.createdAt ?? '', authorId: p.version?.authorId ?? null },
@@ -87,8 +103,8 @@ export function createConfluenceClient({ request, sleep, concurrency = 6, signal
       return result;
     },
     async searchPages(spaceKey, text) {
-      const escaped = String(text).replace(/["\\]/g, '');
-      const cql = `type=page AND space="${spaceKey}" AND title~"${escaped}*"`;
+      const sanitize = (value) => String(value).replace(/["\\]/g, '');
+      const cql = `type=page AND space="${sanitize(spaceKey)}" AND title~"${sanitize(text)}*"`;
       const page = await getJson(`/wiki/rest/api/search?cql=${encodeURIComponent(cql)}&limit=20`);
       return (page.results ?? []).map((r) => ({ id: String(r.content?.id ?? r.id), title: r.content?.title ?? r.title }));
     },
