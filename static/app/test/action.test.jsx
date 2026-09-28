@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { DEFAULT_OPTIONS } from '../src/core/presets.js';
 import { I18nProvider, localeDictionaries } from '../src/i18n/index.js';
+import { ConfluenceError } from '../src/infra/confluence.js';
 import { createFakeConfluence } from './fixtures/fakeConfluence.js';
 
 const { invoke, close } = vi.hoisted(() => ({ invoke: vi.fn(), close: vi.fn() }));
@@ -31,12 +32,13 @@ function contextFor(content) {
   return { siteUrl: SITE, locale: 'en_US', extension: { type: 'confluence:contentAction', space: { key: 'ENG', id: '5' }, content } };
 }
 
-function renderAction({ content = { id: '10', type: 'page' }, locale = 'en-US', onStart } = {}) {
+function renderAction({ content = { id: '10', type: 'page' }, locale = 'en-US', onStart, wrap = (client) => client } = {}) {
   const fake = createFakeConfluence({ space: SPACE, pages: PAGES, users: {} });
   const save = vi.fn();
+  const client = wrap(fake.client);
   render(
     <I18nProvider locale={locale}>
-      <ActionApp context={contextFor(content)} createClient={() => fake.client} save={save} onStart={onStart} />
+      <ActionApp context={contextFor(content)} createClient={() => client} save={save} onStart={onStart} />
     </I18nProvider>,
   );
   return { fake, save };
@@ -151,6 +153,41 @@ describe('page action modal', () => {
     fireEvent.click(screen.getByTestId('action-close'));
     expect(close).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('action-export')).toBeNull();
+  });
+
+  it('shows a load failure with Try again, and recovers on retry', async () => {
+    let failures = 1;
+    const getPages = vi.fn();
+    const wrap = (client) => ({
+      ...client,
+      getPages: getPages.mockImplementation(async (ids, options) => {
+        if (failures > 0) {
+          failures -= 1;
+          throw new ConfluenceError(0, '/wiki/api/v2/pages');
+        }
+        return client.getPages(ids, options);
+      }),
+    });
+    renderAction({ wrap });
+    expect(await screen.findByText(en['errors.network'])).toBeInTheDocument();
+    expect(screen.queryByTestId('action-export')).toBeNull();
+    expect(screen.getByTestId('action-close')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: en['errors.tryAgain'] }));
+    expect(await screen.findByRole('heading', { name: 'Export “Runbooks”' })).toBeInTheDocument();
+    expect(getPages).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText('This page and 2 subpages')).toBeInTheDocument();
+    expect(screen.getByTestId('action-export')).toBeEnabled();
+  });
+
+  it('keeps the branch choice without a number when the count fails', async () => {
+    const wrap = (client) => ({ ...client, countPages: async () => { throw new ConfluenceError(500, 'search'); } });
+    renderAction({ wrap });
+    const branch = await screen.findByTestId('action-branch');
+    expect(await within(branch).findByText(en['action.withChildrenUnknown'])).toBeInTheDocument();
+    expect(branch).not.toHaveAttribute('aria-disabled');
+    fireEvent.click(branch);
+    await waitFor(() => expect(exportButton()).toHaveTextContent(en['studio.exportButtonUnknown']));
+    expect(exportButton()).toBeEnabled();
   });
 
   it('shows only the licence empty state when unlicensed', async () => {

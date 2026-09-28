@@ -65,9 +65,8 @@ const compactGlyphStyles = xcss({ width: '16px', height: '16px', lineHeight: '0'
 const bodyStyles = xcss({ minWidth: '0', flexGrow: 1 });
 
 /**
- * Radio-like selectable card (role="radio", Space/Enter select) with a tinted icon tile,
- * a semibold title, an optional badge and a wrapping description; `tabIndex` overrides the default tab stop.
- * `compact` renders a smaller tile and the title only, for segmented rows; a non-string `title` (a skeleton) renders as is.
+ * Radio-like card (Space/Enter select): tinted icon tile, title (string or node), badge and description;
+ * `compact` keeps a smaller tile and the title only, `tabIndex` overrides the tab stop.
  */
 export const ChoiceCard = forwardRef(function ChoiceCard({
   selected, onSelect, icon, accent = 'blue', title, description, badge, disabled = false, testId, tabIndex, compact = false,
@@ -133,9 +132,8 @@ function targetIndex(options, from, key) {
 }
 
 /**
- * Labelled radiogroup of ChoiceCards with roving focus: one tab stop (selected or first enabled card),
- * arrows move focus and selection with wrap, Home/End jump, disabled cards are skipped; `compact` shrinks every card
- * and `gridStyles` (xcss) may override the grid, e.g. with media queries.
+ * Labelled radiogroup of ChoiceCards with roving focus (arrows wrap, Home/End jump, disabled skipped);
+ * `compact` shrinks the cards and `gridStyles` (xcss) may override the grid.
  */
 export function ChoiceGroup({ label, value, options, onChange, columns = 'repeat(auto-fit, minmax(240px, 1fr))', compact = false, gridStyles }) {
   const cards = useRef([]);

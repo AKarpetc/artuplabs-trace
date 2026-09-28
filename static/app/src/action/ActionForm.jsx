@@ -117,7 +117,7 @@ export function ActionForm({ form, subpages, createClient, cancelled, onStart, o
       </Stack>
       <MoreOptions form={form} />
       <OutputPreview preview={preview} limit={TREE_LIMIT} compact />
-      <Box xcss={footerStyles}>
+      <Box xcss={footerStyles} testId="action-footer">
         <Flex gap="space.100" justifyContent="end" wrap="wrap">
           <Button appearance="subtle" onClick={onCancel} testId="action-cancel">{t('run.cancel')}</Button>
           <Button appearance="primary" iconAfter={DownloadIcon} isDisabled={!form.ready} onClick={() => onStart(form.form)} testId="action-export">
