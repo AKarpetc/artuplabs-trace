@@ -1,9 +1,9 @@
 import { setGlobalTheme } from '@atlaskit/tokens/set-global-theme';
-import { routeConfluence, SPACE } from './fixtures.js';
+import { PAGES, routeConfluence, SPACE } from './fixtures.js';
 
 /**
  * Local stand-in for @forge/bridge used by `vite --mode preview`. Query parameters:
- * `locale` (Confluence locale), `theme` (light|dark), `state` (unlicensed | form-update | running | done | done-update | failed), `target` (page id), `entry`.
+ * `locale` (Confluence locale), `theme` (light|dark), `fixture` (showcase), `state` (unlicensed | form-update | running | done | done-update | failed), `target` (page id), `entry`.
  * The action entry opens on `target`, or on the "Runbooks" page (ten subpages) when none is given.
  * `running` holds the export on page labels after RUNNING_LABELS answers; `failed` answers 403 to page body requests.
  */
@@ -18,7 +18,7 @@ function params() {
   };
 }
 
-const ACTION_PAGE = '100029';
+const ACTION_PAGE = PAGES.find((page) => page.title === 'Runbooks').id;
 
 const wait = (ms) => new Promise((resolve) => {
   setTimeout(resolve, ms);

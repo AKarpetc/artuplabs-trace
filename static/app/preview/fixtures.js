@@ -1,16 +1,19 @@
 /**
  * Fixture Confluence space for the local preview: 60 pages with Cyrillic, CJK, long and
  * colliding titles, 5 attachments and macros that make the converter report warnings.
+ * `?fixture=showcase` swaps in an English handbook (with one Cyrillic and one accented branch) for listing screenshots.
  */
 
-export const SPACE = { id: '98001', key: 'DOCS', name: 'Product Documentation' };
+const SHOWCASE = new URLSearchParams(globalThis.location?.search ?? '').get('fixture') === 'showcase';
+
+export const SPACE = { id: '98001', key: 'DOCS', name: SHOWCASE ? 'Engineering Handbook' : 'Product Documentation' };
 
 const LONG_TITLE = 'A deliberately long page title that keeps going to check wrapping in every view of the export studio, including the tree preview, the report table and the success screen, because real Confluence spaces really do contain titles like this one — 250 chars';
 
 const USERS = { 'u-ann': 'Ann Lee', 'u-boris': 'Борис Петров', 'u-chen': '陈伟' };
 const AUTHORS = ['u-ann', 'u-boris', 'u-chen', 'u-gone'];
 
-const OUTLINE = [
+const DEFAULT_OUTLINE = [
   ['Product documentation', [
     ['Getting started', ['Installation', 'Configuration', 'First export', 'Troubleshooting', 'FAQ']],
     ['Архитектура системы', ['Обзор компонентов', 'Хранилище данных', 'Ёж', 'Еж', 'Очереди сообщений']],
@@ -23,6 +26,21 @@ const OUTLINE = [
   ]],
   ['Archive', ['Old roadmap 2024', 'Meeting notes 2025-01-14', 'Meeting notes 2025-02-11', 'Retired API v1', 'Legacy migration guide', 'Brainstorm ideas', 'Draft: pricing page']],
 ];
+
+const SHOWCASE_OUTLINE = [
+  ['Engineering handbook', [
+    ['Getting started', ['Installation', 'Configuration', 'First export', 'Troubleshooting', 'FAQ']],
+    ['Architecture', ['Overview', ['Services', ['API gateway', 'Export worker', 'Scheduler']], 'Data storage', 'Security model']],
+    ['API reference', ['Authentication', 'Endpoints', 'Errors', 'Rate limits', 'Webhooks']],
+    ['Runbooks', ['Deploy to production', 'Roll back a release', 'Rotate credentials', 'Restore a backup', 'Scale the workers',
+      'Incident response', 'On-call handover', 'Database failover', 'Cache warm-up', 'Disaster recovery drill']],
+    ['Руководство по эксплуатации', ['Обзор компонентов', 'Мониторинг']],
+    ['Référence des paramètres', ['Paramètres généraux', 'Sécurité']],
+    ['Release notes', ['Release notes 2026.09', 'Release notes 2026.08']],
+  ]],
+];
+
+const OUTLINE = SHOWCASE ? SHOWCASE_OUTLINE : DEFAULT_OUTLINE;
 
 const ATTACHMENTS = {
   Installation: [{ title: 'setup-wizard.png', mediaType: 'image/png', fileSize: 48213 }],
