@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "將 Confluence 內容匯出為可直接提交 Git 的 Markdown",
+  "loading": "載入中…",
+  "errors.generic": "發生錯誤：{message}",
+  "errors.bad-request": "請求無效，請重新載入頁面後再試一次。",
+  "errors.unlicensed": "您的 ArtUp Export 授權未啟用。",
+  "unlicensed.title": "ArtUp Export 需要有效授權",
+  "unlicensed.body": "請聯絡您的 Confluence 管理員，在「管理應用程式」中開始試用或續訂。",
+  "time.seconds": "{seconds} 秒",
+  "time.minutesSeconds": "{minutes} 分 {seconds} 秒"
+}

@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "将 Confluence 内容导出为可直接提交 Git 的 Markdown",
+  "loading": "加载中…",
+  "errors.generic": "出现错误：{message}",
+  "errors.bad-request": "请求无效，请重新加载页面后重试。",
+  "errors.unlicensed": "您的 ArtUp Export 许可证未激活。",
+  "unlicensed.title": "ArtUp Export 需要有效的许可证",
+  "unlicensed.body": "请联系您的 Confluence 管理员在“管理应用”中开始试用或续订。",
+  "time.seconds": "{seconds} 秒",
+  "time.minutesSeconds": "{minutes} 分 {seconds} 秒"
+}

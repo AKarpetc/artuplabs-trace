@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "Git-klar Markdown fra Confluence",
+  "loading": "Laster…",
+  "errors.generic": "Noe gikk galt: {message}",
+  "errors.bad-request": "Forespørselen var ugyldig. Last inn siden på nytt og prøv igjen.",
+  "errors.unlicensed": "ArtUp Export-lisensen din er ikke aktiv.",
+  "unlicensed.title": "ArtUp Export krever en aktiv lisens",
+  "unlicensed.body": "Be Confluence-administratoren starte en prøveperiode eller fornye abonnementet under Administrer apper.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

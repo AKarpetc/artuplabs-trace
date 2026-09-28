@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "Confluence'tan Git'e hazır Markdown",
+  "loading": "Yükleniyor…",
+  "errors.generic": "Bir şeyler ters gitti: {message}",
+  "errors.bad-request": "İstek geçerli değildi. Sayfayı yeniden yükleyip tekrar deneyin.",
+  "errors.unlicensed": "ArtUp Export lisansınız etkin değil.",
+  "unlicensed.title": "ArtUp Export etkin bir lisans gerektirir",
+  "unlicensed.body": "Confluence yöneticinizden Uygulamaları Yönet bölümünde deneme sürümü başlatmasını veya aboneliği yenilemesini isteyin.",
+  "time.seconds": "{seconds} sn",
+  "time.minutesSeconds": "{minutes} dk {seconds} sn"
+}

@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "Git-klare Markdown vanuit Confluence",
+  "loading": "Laden…",
+  "errors.generic": "Er is iets misgegaan: {message}",
+  "errors.bad-request": "Het verzoek was ongeldig. Laad de pagina opnieuw en probeer het nogmaals.",
+  "errors.unlicensed": "Uw ArtUp Export-licentie is niet actief.",
+  "unlicensed.title": "ArtUp Export heeft een actieve licentie nodig",
+  "unlicensed.body": "Vraag uw Confluence-beheerder om een proefperiode te starten of het abonnement te verlengen bij Apps beheren.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

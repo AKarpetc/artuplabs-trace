@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "Git-kész Markdown a Confluence-ből",
+  "loading": "Betöltés…",
+  "errors.generic": "Hiba történt: {message}",
+  "errors.bad-request": "A kérés érvénytelen volt. Töltse be újra az oldalt, és próbálja újra.",
+  "errors.unlicensed": "Az ArtUp Export licence nem aktív.",
+  "unlicensed.title": "Az ArtUp Export aktív licencet igényel",
+  "unlicensed.body": "Kérje meg a Confluence rendszergazdáját, hogy indítson próbaidőszakot, vagy újítsa meg az előfizetést az Alkalmazások kezelése menüben.",
+  "time.seconds": "{seconds} mp",
+  "time.minutesSeconds": "{minutes} perc {seconds} mp"
+}

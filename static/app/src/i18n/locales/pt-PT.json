@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "Markdown pronto para o Git a partir do Confluence",
+  "loading": "A carregar…",
+  "errors.generic": "Ocorreu um erro: {message}",
+  "errors.bad-request": "O pedido não era válido. Recarregue a página e tente novamente.",
+  "errors.unlicensed": "A sua licença do ArtUp Export não está ativa.",
+  "unlicensed.title": "O ArtUp Export precisa de uma licença ativa",
+  "unlicensed.body": "Peça ao administrador do Confluence para iniciar um período experimental ou renovar a subscrição em Gerir aplicações.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

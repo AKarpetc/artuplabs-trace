@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "Markdown připravený pro Git přímo z Confluence",
+  "loading": "Načítání…",
+  "errors.generic": "Něco se pokazilo: {message}",
+  "errors.bad-request": "Požadavek nebyl platný. Načtěte stránku znovu a zkuste to znovu.",
+  "errors.unlicensed": "Vaše licence ArtUp Export není aktivní.",
+  "unlicensed.title": "ArtUp Export vyžaduje aktivní licenci",
+  "unlicensed.body": "Požádejte správce Confluence, aby spustil zkušební verzi nebo obnovil předplatné v části Spravovat aplikace.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

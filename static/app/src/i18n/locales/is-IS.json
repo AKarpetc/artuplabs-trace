@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "Git-tilbúið Markdown beint úr Confluence",
+  "loading": "Hleð…",
+  "errors.generic": "Eitthvað fór úrskeiðis: {message}",
+  "errors.bad-request": "Beiðnin var ógild. Endurhladdu síðuna og reyndu aftur.",
+  "errors.unlicensed": "ArtUp Export leyfið þitt er ekki virkt.",
+  "unlicensed.title": "ArtUp Export þarfnast virks leyfis",
+  "unlicensed.body": "Biddu Confluence-stjórnandann þinn að hefja prufuáskrift eða endurnýja áskriftina undir Stjórna forritum.",
+  "time.seconds": "{seconds} sek",
+  "time.minutesSeconds": "{minutes} mín {seconds} sek"
+}

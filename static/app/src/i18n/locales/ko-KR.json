@@ -1,0 +1,12 @@
+{
+  "app.name": "ArtUp Export",
+  "app.tagline": "Confluence에서 Git에 바로 사용할 수 있는 Markdown으로 내보내기",
+  "loading": "불러오는 중…",
+  "errors.generic": "문제가 발생했습니다: {message}",
+  "errors.bad-request": "요청이 올바르지 않습니다. 페이지를 새로고침한 후 다시 시도하세요.",
+  "errors.unlicensed": "ArtUp Export 라이선스가 활성화되어 있지 않습니다.",
+  "unlicensed.title": "ArtUp Export에는 활성 라이선스가 필요합니다",
+  "unlicensed.body": "Confluence 관리자에게 '앱 관리'에서 체험판을 시작하거나 구독을 갱신하도록 요청하세요.",
+  "time.seconds": "{seconds}초",
+  "time.minutesSeconds": "{minutes}분 {seconds}초"
+}
