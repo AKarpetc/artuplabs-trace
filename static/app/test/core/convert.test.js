@@ -292,3 +292,87 @@ describe('fixtures', () => {
     expect(storageToMarkdown(xhtml, fixtureCtx).markdown).toBe(expected);
   });
 });
+
+describe('flavors', () => {
+  const macro = (name, params, body) => `<ac:structured-macro ac:name="${name}">${Object.entries(params).map(([k, v]) => `<ac:parameter ac:name="${k}">${v}</ac:parameter>`).join('')}${body}</ac:structured-macro>`;
+  const rich = (inner) => `<ac:rich-text-body>${inner}</ac:rich-text-body>`;
+  const inputs = {
+    infoWithTitle: macro('info', { title: 'Heads up' }, rich('<p>Body</p><p>More</p>')),
+    warningNoTitle: macro('warning', {}, rich('<p>W</p>')),
+    nested: macro('info', {}, rich(`<p>out</p>${macro('tip', { title: 'In' }, rich('<p>in</p>'))}`)),
+    unknownMacro: macro('drawio', {}, rich('<p>fallback</p>')),
+    dynamicMacro: macro('toc', {}, ''),
+    breakInCell: '<table><tbody><tr><th>A</th></tr><tr><td>x<br/>y</td></tr></tbody></table>',
+    braces: '<p>a {x} b <code>{y}</code></p><pre>{z}</pre>',
+    complexTable: '<table><tbody><tr><th colspan="2">H</th></tr><tr><td rowspan="2"><ul><li>a<br/>b</li></ul></td><td>{b}</td></tr></tbody></table>',
+    panel: macro('panel', { title: 'P {1}' }, rich('<p>x</p>')),
+  };
+  const convert = (flavor) => (key) => storageToMarkdown(inputs[key], ctx(flavor ? { flavor } : {})).markdown;
+
+  it('gfm is the default and matches an explicit gfm flavor', () => {
+    for (const key of Object.keys(inputs)) expect(convert('gfm')(key)).toBe(convert(undefined)(key));
+    expect(convert('gfm')('infoWithTitle')).toBe('> [!NOTE]\n> **Heads up**\n> Body\n>\n> More\n');
+    expect(convert('gfm')('dynamicMacro')).toBe('<!-- confluence:toc -->\n');
+  });
+
+  it.each([
+    ['infoWithTitle', ':::note[Heads up]\n\nBody\n\nMore\n\n:::\n'],
+    ['warningNoTitle', ':::danger\n\nW\n\n:::\n'],
+    ['nested', '::::note\n\nout\n\n:::tip[In]\n\nin\n\n:::\n\n::::\n'],
+    ['unknownMacro', '{/* confluence:drawio */}\n\nfallback\n'],
+    ['dynamicMacro', '{/* confluence:toc */}\n'],
+    ['breakInCell', '| A |\n| --- |\n| x<br />y |\n'],
+    ['braces', 'a \\{x\\} b `{y}`\n\n```\n{z}\n```\n'],
+    ['complexTable', '<table>\n<tbody>\n<tr>\n<th colSpan="2">\n\nH\n\n</th>\n</tr>\n<tr>\n<td rowSpan="2">\n\n- a\\\n  b\n\n</td>\n<td>\n\n\\{b\\}\n\n</td>\n</tr>\n</tbody>\n</table>\n'],
+    ['panel', '> **P \\{1\\}**\n>\n> x\n'],
+  ])('mdx: %s', (key, expected) => expect(convert('mdx')(key)).toBe(expected));
+
+  it.each([
+    ['infoWithTitle', '!!! note "Heads up"\n    Body\n\n    More\n'],
+    ['warningNoTitle', '!!! danger\n    W\n'],
+    ['nested', '!!! note\n    out\n\n    !!! tip "In"\n        in\n'],
+    ['unknownMacro', '<!-- confluence:drawio -->\n\nfallback\n'],
+    ['dynamicMacro', '<!-- confluence:toc -->\n'],
+    ['breakInCell', '| A |\n| --- |\n| x<br>y |\n'],
+    ['braces', 'a {x} b `{y}`\n\n```\n{z}\n```\n'],
+    ['complexTable', '<table>\n<tr>\n<th colspan="2">\n\nH\n\n</th>\n</tr>\n<tr>\n<td rowspan="2">\n\n- a\\\n  b\n\n</td>\n<td>\n\n{b}\n\n</td>\n</tr>\n</table>\n'],
+    ['panel', '> **P {1}**\n>\n> x\n'],
+  ])('mkdocs: %s', (key, expected) => expect(convert('mkdocs')(key)).toBe(expected));
+
+  it('mdx keeps admonition kinds for every panel', () => {
+    const kinds = ['info', 'tip', 'note', 'warning'].map((name) => storageToMarkdown(macro(name, {}, rich('<p>b</p>')), ctx({ flavor: 'mdx' })).markdown.split('\n')[0]);
+    expect(kinds).toEqual([':::note', ':::tip', ':::warning', ':::danger']);
+  });
+
+  it('mdx escapes braces in summaries, keeps anchors valid and never emits autolinks', () => {
+    const expand = macro('expand', { title: 'a {b} &lt;c&gt;' }, rich('<p>x</p>'));
+    expect(md(expand, { flavor: 'mdx' })).toBe('<details>\n<summary>a &#x7B;b&#x7D; &lt;c&gt;</summary>\n\nx\n\n</details>\n');
+    expect(md(`<p>${macro('anchor', { '': 'setup' }, '')}Setup</p>`, { flavor: 'mdx' })).toBe('<a id="setup"></a>Setup\n');
+    expect(md('<p><a href="https://e.com/a">https://e.com/a</a> <a href="https://e.com/b"></a></p>', { flavor: 'mdx' })).toBe('[https://e.com/a](https://e.com/a) [https://e.com/b](https://e.com/b)\n');
+  });
+
+  it('mdx escapes a paragraph line that MDX would read as an import or export', () => {
+    expect(md('<p>import data first</p><p>export it<br/>import it</p><p>exported file</p>', { flavor: 'mdx' })).toBe('&#105;mport data first\n\n&#101;xport it\\\n&#105;mport it\n\nexported file\n');
+    expect(md('<p>import data first</p>')).toBe('import data first\n');
+  });
+
+  it('mdx escapes a paragraph line that Docusaurus would read as a directive fence', () => {
+    expect(md('<p>:::note</p><p>::leaf and a:b</p><p>x<br/>:::tip</p>', { flavor: 'mdx' })).toBe('\\:::note\n\n\\::leaf and a:b\n\nx\\\n\\:::tip\n');
+    expect(md('<p>:::note</p>')).toBe(':::note\n');
+  });
+
+  it('mdx closes the outer fence of a nested admonition with more colons than any inner fence', () => {
+    const deep = macro('info', {}, rich(macro('note', {}, rich(macro('tip', {}, rich('<p>x</p>'))))));
+    expect(md(deep, { flavor: 'mdx' })).toBe(':::::note\n\n::::warning\n\n:::tip\n\nx\n\n:::\n\n::::\n\n:::::\n');
+  });
+
+  it('mkdocs collapses a multi-line title and escapes Markdown in it', () => {
+    expect(md(macro('tip', { title: 'a *b*\n c' }, rich('<p>x</p>')), { flavor: 'mkdocs' })).toBe('!!! tip "a \\*b\\* c"\n    x\n');
+  });
+
+  it('same input and flavor give identical output', () => {
+    for (const flavor of ['gfm', 'mdx', 'mkdocs']) {
+      for (const key of Object.keys(inputs)) expect(convert(flavor)(key)).toBe(convert(flavor)(key));
+    }
+  });
+});

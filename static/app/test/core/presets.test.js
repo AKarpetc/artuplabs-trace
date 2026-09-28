@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { planPaths } from '../../src/core/paths.js';
-import { DEFAULT_OPTIONS, presetFiles, presetOf } from '../../src/core/presets.js';
+import { DEFAULT_OPTIONS, PRESETS, presetFiles, presetOf } from '../../src/core/presets.js';
 import { treeOf } from '../fixtures/tree.js';
 
 const tree = treeOf([['1', 'Guide'], ['2', 'Intro', '1'], ['3', 'Deep Dive', '1'], ['4', 'Part', '3'], ['5', 'FAQ']]);
+
+describe('preset flavours', () => {
+  it('declares the Markdown flavour each site generator reads', () => {
+    expect(Object.fromEntries(Object.entries(PRESETS).map(([key, preset]) => [key, preset.flavor]))).toEqual({ generic: 'gfm', hugo: 'gfm', docusaurus: 'mdx', mkdocs: 'mkdocs' });
+    expect(presetOf('unknown').flavor).toBe('gfm');
+  });
+});
 
 describe('presetFiles', () => {
   it('writes nothing for generic and hugo', () => {
@@ -29,7 +36,7 @@ describe('presetFiles', () => {
     ]);
   });
   it('knows every preset', () => {
-    expect(presetOf('hugo')).toEqual({ indexFile: '_index.md', orderKey: 'weight', extras: null });
+    expect(presetOf('hugo')).toEqual({ indexFile: '_index.md', orderKey: 'weight', extras: null, flavor: 'gfm' });
     expect(presetOf('unknown')).toEqual(presetOf('generic'));
   });
 });

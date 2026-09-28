@@ -25,6 +25,27 @@ Keep it with the exported files: it is what makes the next export an update.
 | Docusaurus | `index.md` | `sidebar_position` | `_category_.json` per folder (label, position) |
 | MkDocs | `index.md` | — | `.pages` per folder (for `mkdocs-awesome-pages-plugin`) |
 
+What each preset writes into the page bodies:
+
+| Preset | Info / tip / note / warning panels | Placeholder for a dynamic or unknown macro |
+|---|---|---|
+| Generic Markdown, Hugo | GitHub alerts: `> [!NOTE]`, `[!TIP]`, `[!WARNING]`, `[!CAUTION]` | `<!-- confluence:NAME -->` |
+| Docusaurus | `:::note[Title]` … `:::` (`note`, `tip`, `warning`, `danger`); a panel nested in a panel gets a longer outer fence (`::::`) | `{/* confluence:NAME */}` |
+| MkDocs | `!!! note "Title"` with the body indented by 4 spaces (`note`, `tip`, `warning`, `danger`) | `<!-- confluence:NAME -->` |
+
+- A plain `panel` macro is a blockquote in every preset. Code blocks and inline code are never escaped.
+- **Docusaurus** builds the export with its default `markdown.format: 'mdx'`: braces in text are
+  escaped (`\{`, `\}`), void tags are self-closed (`<br />`), merged-cell tables use
+  `colSpan`/`rowSpan` and `<tbody>`, and a text line that MDX would read as `import`/`export` or
+  as a directive fence (`:::`) is escaped.
+- **MkDocs** needs in `mkdocs.yml`:
+  `plugins: [awesome-pages]` and
+  `markdown_extensions: [admonition, pymdownx.tasklist, tables, attr_list, md_in_html]`.
+- **Hugo** renders the alerts as styled blocks only with a blockquote render hook
+  (`layouts/_markup/render-blockquote.html` that checks `.Type "alert"`; many themes ship one),
+  merged-cell tables and `<details>` only with `markup.goldmark.renderer.unsafe = true`, and
+  resolves links between `.md` files with `markup.goldmark.renderHooks.link.enableDefault = true`.
+
 A page with children becomes a folder with the index file; a page without children is `<name>.md`.
 File names are ASCII slugs of the titles; sibling collisions (including ones that differ only by
 case or accents) get the page id appended, and a page keeps its file name on later exports.
@@ -82,7 +103,18 @@ node scripts/acceptance.mjs update --space EXPT --previous data/full-1.zip --out
 node scripts/acceptance.mjs edit --space EXPT          # edits the dev test space
 node scripts/verify-zero-diff.mjs data/full-1.zip data/full-2.zip
 node scripts/verify-zero-diff.mjs data/full-1.zip data/full-2.zip data/update.zip data/full-3.zip
+node scripts/verify-sites.mjs data/full-docusaurus.zip --preset docusaurus --workdir /tmp/sites
+node scripts/verify-sites.mjs data/full-mkdocs.zip --preset mkdocs --workdir /tmp/sites
+node scripts/verify-sites.mjs data/full-hugo.zip --preset hugo --workdir /tmp/sites
 ```
+
+`verify-sites.mjs` builds a real site from an export zip, installing everything under
+`--workdir` (a Docusaurus 3 classic site, a Python venv with MkDocs, the `hugo-extended` npm
+package when `hugo` is not on `PATH`; prints `hugo: not run` when neither works). It exits
+non-zero when the build fails, prints the sidebar/nav order of the top levels next to the
+Confluence tree from `export-manifest.json` (`--depth`, default 2), and counts built pages with
+styled admonitions and pages that show literal markers such as `[!NOTE]`. The Hugo check uses a
+bare site with no theme and no render hooks.
 
 `acceptance.mjs` runs the same pipeline as the app (`static/app/src/export/pipeline.js`) in
 Node 22 with a fetch adapter and basic auth instead of the Forge bridge. `edit` needs the seed

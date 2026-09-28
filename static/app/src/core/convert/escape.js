@@ -1,19 +1,36 @@
-/** Escapes Markdown-significant characters in inline text, including "&" that starts an HTML/XML entity. */
-export function escapeText(text) {
-  const marked = text.replace(/[\\`*_[\]<>|~]/g, (c) => `\\${c}`);
+const MARKDOWN_SPECIAL = /[\\`*_[\]<>|~]/g;
+const MDX_SPECIAL = /[\\`*_[\]<>|~{}]/g;
+const BRACE_REFERENCES = { '{': '&#x7B;', '}': '&#x7D;' };
+
+/** Escapes Markdown-significant characters in inline text, including "&" that starts an HTML/XML entity; the mdx flavor also escapes braces. */
+export function escapeText(text, flavor) {
+  const marked = text.replace(flavor === 'mdx' ? MDX_SPECIAL : MARKDOWN_SPECIAL, (c) => `\\${c}`);
   return marked.replace(/&(?=#?[0-9a-zA-Z]+;)/g, '\\&');
 }
 
-/** Escapes a line start that Markdown would read as a heading, quote, list item, ordered list, setext underline or thematic break. */
-export function escapeLineStart(line) {
+/** Escapes a line start that Markdown would read as a heading, quote, list item, ordered list, setext underline or thematic break; the mdx flavor also escapes a directive fence and an ESM import/export. */
+export function escapeLineStart(line, flavor) {
   if (/^\s*(#{1,6}|>|[-+*])(\s|$)/.test(line)) return line.replace(/^(\s*)/, '$1\\');
   if (/^\s*(=+|-{2,}|\*{3,}|_{3,})\s*$/.test(line)) return line.replace(/^(\s*)/, '$1\\');
+  if (flavor === 'mdx' && /^\s*::/.test(line)) return line.replace(/^(\s*)/, '$1\\');
+  if (flavor === 'mdx' && /^\s*(import|export)(\s|$)/.test(line)) return line.replace(/^(\s*)([ie])/, (m, space, c) => `${space}&#${c.charCodeAt(0)};`);
   return line.replace(/^(\s*\d+)([.)])(\s|$)/, '$1\\$2$3');
 }
 
-/** Escapes text for HTML element content and attributes. */
-export function escapeHtml(text) {
-  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/** Escapes text for HTML element content and attributes; the mdx flavor also turns braces into character references. */
+export function escapeHtml(text, flavor) {
+  const escaped = String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return flavor === 'mdx' ? escaped.replace(/[{}]/g, (c) => BRACE_REFERENCES[c]) : escaped;
+}
+
+/** Placeholder for content the converter cannot render: an HTML comment, or an MDX expression comment for the mdx flavor. */
+export function placeholder(name, flavor) {
+  return flavor === 'mdx' ? `{/* confluence:${name} */}` : `<!-- confluence:${name} -->`;
+}
+
+/** HTML line break, self-closed for the mdx flavor. */
+export function lineBreakTag(flavor) {
+  return flavor === 'mdx' ? '<br />' : '<br>';
 }
 
 /** Inline code span whose fence is longer than any backtick run inside; newlines flatten to spaces, empty text yields ''. */

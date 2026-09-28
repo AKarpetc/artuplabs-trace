@@ -1,6 +1,6 @@
 import { encodeLinkTarget } from '../links.js';
 import { attr, childTag, extractEdgeBreak, textOf } from './parse.js';
-import { codeSpan, escapeText } from './escape.js';
+import { codeSpan, escapeText, lineBreakTag, placeholder } from './escape.js';
 import { isMacroTag, renderInlineMacro } from './macros.js';
 
 const EMOTICONS = {
@@ -56,7 +56,7 @@ function siblingChar(nodes, index, step) {
 }
 
 function hardBreakToken(ctx) {
-  return ctx.inTable ? '<br>' : ctx.inHeading ? ' ' : '\\\n';
+  return ctx.inTable ? lineBreakTag(ctx.flavor) : ctx.inHeading ? ' ' : '\\\n';
 }
 
 /** Wraps emphasis content in Markdown marks, falling back to an HTML tag when GFM flanking rules would break the marks; a hard break at the mark's own edge moves outside it instead of becoming the mark's last/first character. */
@@ -95,55 +95,55 @@ function acLink(node, ctx) {
   const contentEntity = childTag(node, 'ri:content-entity');
   const rich = childTag(node, 'ac:link-body');
   const plain = childTag(node, 'ac:plain-text-link-body');
-  const body = rich ? renderInline(rich.children, ctx).trim() : plain ? escapeText(textOf(plain)) : '';
+  const body = rich ? renderInline(rich.children, ctx).trim() : plain ? escapeText(textOf(plain), ctx.flavor) : '';
   const anchor = attr(node, 'ac:anchor');
   if (user) {
     const id = attr(user, 'ri:account-id');
     const name = ctx.resolveUser(id);
     if (!name) ctx.warn('unresolved-user', id);
-    return `@${escapeText(name ?? 'unknown-user')}`;
+    return `@${escapeText(name ?? 'unknown-user', ctx.flavor)}`;
   }
   if (attachment) {
     const name = attr(attachment, 'ri:filename');
     const href = ctx.attachment(name, childTag(attachment, 'ri:page'));
     if (!href) ctx.warn('missing-attachment', name);
-    return href ? link(body || escapeText(name), href) : body || escapeText(name);
+    return href ? link(body || escapeText(name, ctx.flavor), href) : body || escapeText(name, ctx.flavor);
   }
   if (page || blogPost) {
     const ref = page || blogPost;
     const title = attr(ref, 'ri:content-title');
     const target = ctx.page({ title, spaceKey: attr(ref, 'ri:space-key') });
-    return link(body || escapeText(title), withAnchor(target.href, anchor));
+    return link(body || escapeText(title, ctx.flavor), withAnchor(target.href, anchor));
   }
   if (space) {
     const key = attr(space, 'ri:space-key');
-    return link(body || escapeText(key), `${ctx.siteUrl}/wiki/spaces/${key}`);
+    return link(body || escapeText(key, ctx.flavor), `${ctx.siteUrl}/wiki/spaces/${key}`);
   }
   if (contentEntity) {
     const id = attr(contentEntity, 'ri:content-id');
-    return link(body || escapeText(id), `${ctx.siteUrl}/wiki/pages/viewpage.action?pageId=${id}`);
+    return link(body || escapeText(id, ctx.flavor), `${ctx.siteUrl}/wiki/pages/viewpage.action?pageId=${id}`);
   }
   if (url) {
     const value = attr(url, 'ri:value');
-    return link(body || escapeText(value), value);
+    return link(body || escapeText(value, ctx.flavor), value);
   }
-  if (anchor) return link(body || escapeText(anchor), `#${anchor}`);
+  if (anchor) return link(body || escapeText(anchor, ctx.flavor), `#${anchor}`);
   if (body) return body;
   ctx.warn('unknown-macro', 'ac:link');
-  return '<!-- confluence:ac:link -->';
+  return placeholder('ac:link', ctx.flavor);
 }
 
 function acImage(node, ctx) {
   const attachment = childTag(node, 'ri:attachment');
   const url = childTag(node, 'ri:url');
-  const alt = escapeText(attr(node, 'ac:alt') || attr(node, 'ac:title'));
+  const alt = escapeText(attr(node, 'ac:alt') || attr(node, 'ac:title'), ctx.flavor);
   if (url) return `![${alt}](${encodeLinkTarget(attr(url, 'ri:value'))})`;
   if (!attachment) return '';
   const name = attr(attachment, 'ri:filename');
   const href = ctx.attachment(name, childTag(attachment, 'ri:page'));
   if (!href) {
     ctx.warn('missing-attachment', name);
-    return alt || escapeText(name);
+    return alt || escapeText(name, ctx.flavor);
   }
   return `![${alt}](${encodeLinkTarget(href)})`;
 }
@@ -153,8 +153,8 @@ function emoticon(node) {
 }
 
 function inlineNode(node, ctx) {
-  if (node.type === 'text') return escapeText(node.data.replace(/\s+/g, ' '));
-  if (node.type === 'cdata') return escapeText(textOf(node));
+  if (node.type === 'text') return escapeText(node.data.replace(/\s+/g, ' '), ctx.flavor);
+  if (node.type === 'cdata') return escapeText(textOf(node), ctx.flavor);
   if (node.type !== 'tag') return '';
   if (isMacroTag(node.name)) return renderInlineMacro(node, ctx);
   const inner = () => renderInline(node.children, ctx);
@@ -162,11 +162,11 @@ function inlineNode(node, ctx) {
     case 'code': return codeSpan(textOf(node), ctx.inTable);
     case 'br': return hardBreakToken(ctx);
     case 'sub': case 'sup': return `<${node.name}>${inner()}</${node.name}>`;
-    case 'a': return attr(node, 'href') ? link(inner() || escapeText(attr(node, 'href')), attr(node, 'href')) : inner();
+    case 'a': return attr(node, 'href') ? link(inner() || escapeText(attr(node, 'href'), ctx.flavor), attr(node, 'href')) : inner();
     case 'ac:link': return acLink(node, ctx);
     case 'ac:image': return acImage(node, ctx);
     case 'ac:emoticon': return emoticon(node);
-    case 'time': return escapeText(attr(node, 'datetime'));
+    case 'time': return escapeText(attr(node, 'datetime'), ctx.flavor);
     case 'ac:placeholder': return '';
     case 'script': case 'style': return '';
     default: return inner();

@@ -4,7 +4,7 @@ import { planUpdate } from '../core/increment.js';
 import { planAttachments, relativePath } from '../core/links.js';
 import { buildManifest, DELETED_FILE, isSafePath, MANIFEST_FILE, previousNames, sameOptions, sameSource } from '../core/manifest.js';
 import { planPaths } from '../core/paths.js';
-import { presetFiles } from '../core/presets.js';
+import { presetFiles, presetOf } from '../core/presets.js';
 import { toSlug } from '../core/slug.js';
 import { exportFileName } from '../infra/download.js';
 import { createZipWriter } from '../infra/zip.js';
@@ -181,6 +181,7 @@ export function makeConvertContext(job, id, content, used, linked) {
   const inExport = (ref) => (!ref.spaceKey || ref.spaceKey === spaceKey ? titles.get(ref.title) ?? null : null);
   return {
     siteUrl,
+    flavor: presetOf(job.options.preset).flavor,
     resolvePage(ref) {
       const target = inExport(ref);
       if (target) return { id: target, href: relativePath(from, plan.get(target).path) };

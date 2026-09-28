@@ -41,7 +41,7 @@ function trimBoundaryBreaks(nodes) {
 
 function paragraph(nodes, ctx) {
   const text = renderInline(trimBoundaryBreaks(nodes), ctx).trim();
-  return text ? text.split('\n').map(escapeLineStart).join('\n') : '';
+  return text ? text.split('\n').map((line) => escapeLineStart(line, ctx.flavor)).join('\n') : '';
 }
 
 function indentItem(marker, body) {

@@ -9,13 +9,14 @@ export function collectMentions(xhtml) {
   return [...new Set([...String(xhtml ?? '').matchAll(/ri:account-id="([^"]+)"/g)].map((m) => m[1]))];
 }
 
-/** Converts Confluence storage format to Markdown and reports links, attachments and warnings. */
+/** Converts Confluence storage format to Markdown (flavor gfm, mdx or mkdocs; gfm by default) and reports links, attachments and warnings. */
 export function storageToMarkdown(xhtml, context) {
   const links = new Set();
   const attachments = new Set();
   const warnings = [];
   const ctx = {
     siteUrl: context.siteUrl,
+    flavor: context.flavor ?? 'gfm',
     inTable: false,
     resolveUser: context.resolveUser,
     childLinks: context.childLinks,

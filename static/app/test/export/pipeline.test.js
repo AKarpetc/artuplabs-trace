@@ -209,6 +209,23 @@ describe('runExport edge cases', () => {
     expect(JSON.parse(out['home/_category_.json'])).toEqual({ label: 'Home', position: 10 });
   });
 
+  it('emits the admonition flavour of the chosen preset', async () => {
+    const withPanel = pages();
+    withPanel[2].body = '<ac:structured-macro ac:name="info"><ac:rich-text-body><p>Hi {x}</p></ac:rich-text-body></ac:structured-macro>';
+    const outputs = {};
+    for (const preset of ['generic', 'hugo', 'docusaurus', 'mkdocs']) {
+      const fake = createFakeConfluence({ space: eng, pages: withPanel, users: {} });
+      const out = await files(await run(fake, { options: { ...DEFAULT_OPTIONS, preset } }));
+      outputs[preset] = out['home/cafe.md'].split('---\n').slice(2).join('---\n');
+    }
+    expect(outputs).toEqual({
+      generic: '> [!NOTE]\n> Hi {x}\n',
+      hugo: '> [!NOTE]\n> Hi {x}\n',
+      docusaurus: ':::note\n\nHi \\{x\\}\n\n:::\n',
+      mkdocs: '!!! note\n    Hi {x}\n',
+    });
+  });
+
   it('rejects with AbortError when aborted before start', async () => {
     const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
     const controller = new AbortController();

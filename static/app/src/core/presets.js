@@ -1,9 +1,9 @@
-/** Output presets: index file name, front-matter order key and extra navigation files. */
+/** Output presets: index file name, front-matter order key, extra navigation files and the Markdown flavor the converter writes. */
 export const PRESETS = {
-  generic: { indexFile: 'index.md', orderKey: 'weight', extras: null },
-  hugo: { indexFile: '_index.md', orderKey: 'weight', extras: null },
-  docusaurus: { indexFile: 'index.md', orderKey: 'sidebar_position', extras: 'category' },
-  mkdocs: { indexFile: 'index.md', orderKey: null, extras: 'pages' },
+  generic: { indexFile: 'index.md', orderKey: 'weight', extras: null, flavor: 'gfm' },
+  hugo: { indexFile: '_index.md', orderKey: 'weight', extras: null, flavor: 'gfm' },
+  docusaurus: { indexFile: 'index.md', orderKey: 'sidebar_position', extras: 'category', flavor: 'mdx' },
+  mkdocs: { indexFile: 'index.md', orderKey: null, extras: 'pages', flavor: 'mkdocs' },
 };
 
 /** Default export options shown in the studio. */
