@@ -4,7 +4,7 @@ A Forge app for Jira Cloud that gives a project a lightweight requirements-trace
 
 - Tracks configured Jira issue types as "requirements" and shows what percentage of them are covered by a linked "verification" issue (e.g. a Story linked to a Task).
 - Flags "suspect" links: a requirement changed after a link to it was confirmed, so the confirmation may be stale. A single click re-confirms the link against the requirement's current fingerprint.
-- Captures point-in-time baselines of a project's requirements and diffs any two baselines to show what changed (added, removed, content changed, links changed), paged and exportable as CSV. Each diff row shows the status in both baselines, but a status-only change is not listed as a difference in v1.
+- Captures point-in-time baselines of a project's requirements and diffs any two baselines to show what changed (added, removed, content changed, links changed, status changed), paged and exportable as CSV. Each diff row shows the status in both baselines.
 - Reads Jira only: no new issue types, no custom fields, no writes to issue data. All syncing runs through a checkpointed background job within a fixed Jira API points budget.
 - Issue deletions are applied to the cache immediately. Other issue and link changes reach it through an incremental sync that starts about a minute after the Jira event, plus an hourly reconcile and a weekly full sync.
 - The fingerprint that decides when a link becomes suspect covers the requirement's summary and description. In v1 these fields are fixed and cannot be configured.

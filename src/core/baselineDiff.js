@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 
 /** Classifies one issue between a left and right baseline. */
-export function classifyDiffRow({ leftVersionId, rightVersionId, leftLinksHash, rightLinksHash }) {
+export function classifyDiffRow({ leftVersionId, rightVersionId, leftLinksHash, rightLinksHash, leftStatus, rightStatus }) {
   if (leftVersionId == null) {
     return 'added';
   }
@@ -11,7 +11,10 @@ export function classifyDiffRow({ leftVersionId, rightVersionId, leftLinksHash, 
   if (String(leftVersionId) !== String(rightVersionId)) {
     return 'changed';
   }
-  return leftLinksHash === rightLinksHash ? 'unchanged' : 'links-changed';
+  if (leftLinksHash !== rightLinksHash) {
+    return 'links-changed';
+  }
+  return leftStatus !== rightStatus ? 'status-changed' : 'unchanged';
 }
 
 /** SHA-256 over sorted issueId:fingerprint:linksHash triples; proves a baseline was not altered. */

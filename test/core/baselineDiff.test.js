@@ -13,6 +13,21 @@ describe('classifyDiffRow', () => {
   it('content change wins over link change', () => {
     expect(classifyDiffRow({ leftVersionId: 5, rightVersionId: 6, leftLinksHash: 'a', rightLinksHash: 'b' })).toBe('changed');
   });
+
+  it('detects status-changed when version and links match but status differs', () => {
+    expect(classifyDiffRow({
+      leftVersionId: 5, rightVersionId: 5, leftLinksHash: 'a', rightLinksHash: 'a', leftStatus: 'To Do', rightStatus: 'Done',
+    })).toBe('status-changed');
+  });
+
+  it('content change and link change both win over a status difference', () => {
+    expect(classifyDiffRow({
+      leftVersionId: 5, rightVersionId: 6, leftLinksHash: 'a', rightLinksHash: 'a', leftStatus: 'To Do', rightStatus: 'Done',
+    })).toBe('changed');
+    expect(classifyDiffRow({
+      leftVersionId: 5, rightVersionId: 5, leftLinksHash: 'a', rightLinksHash: 'b', leftStatus: 'To Do', rightStatus: 'Done',
+    })).toBe('links-changed');
+  });
 });
 
 describe('baselineChecksum', () => {

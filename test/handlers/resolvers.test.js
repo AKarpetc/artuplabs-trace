@@ -55,6 +55,7 @@ vi.mock('../../src/handlers/worker', () => ({
 const { resolverHandler } = await import('../../src/handlers/resolvers');
 const settings = await import('../../src/infra/settings');
 const worker = await import('../../src/handlers/worker');
+const baselineRepo = await import('../../src/infra/baselineRepo');
 const { normalizeConfig } = await import('../../src/core/config');
 
 function call(key, payload = {}, context = {}) {
@@ -149,5 +150,15 @@ describe('saveSettings', () => {
     expect(settings.saveConfig).not.toHaveBeenCalled();
     expect(worker.startSync).not.toHaveBeenCalled();
     expect(h.kvsStore.has('projects')).toBe(false);
+  });
+});
+
+describe('exportCsv diff', () => {
+  it('carries a status-changed row into the Change column alongside its before/after status', async () => {
+    baselineRepo.diffPage
+      .mockResolvedValueOnce([{ issueId: '1', issueKey: 'REQ-1', summary: 'Sum', change: 'status-changed', leftStatus: 'To Do', rightStatus: 'Done' }])
+      .mockResolvedValueOnce([]);
+    const res = await call('exportCsv', { kind: 'diff', leftId: '1', rightId: '2' });
+    expect(res.csv).toContain('REQ-1,Sum,status-changed,To Do,Done');
   });
 });
