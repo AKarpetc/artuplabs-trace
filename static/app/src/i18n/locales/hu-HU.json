@@ -4,7 +4,7 @@
   "loading": "Betöltés…",
   "errors.generic": "Hiba történt: {message}",
   "errors.bad-request": "A kérés érvénytelen volt. Töltse be újra az oldalt, és próbálja újra.",
-  "errors.unlicensed": "Az ArtUp Export licence nem aktív.",
+  "errors.unlicensed": "Az ArtUp Export-licenc nem aktív.",
   "unlicensed.title": "Az ArtUp Export aktív licencet igényel",
   "unlicensed.body": "Kérje meg a Confluence rendszergazdáját, hogy indítson próbaidőszakot, vagy újítsa meg az előfizetést az Alkalmazások kezelése menüben.",
   "time.seconds": "{seconds} mp",
@@ -114,7 +114,7 @@
   "result.unchanged": "Változatlan",
   "result.deleted": "Törölve",
   "result.full.options-changed": "Teljes exportálás történt, mert a formátumbeállítások eltérnek az előző exporttól. A már nem létrehozott fájlok listája az export-deleted.txt fájlban található.",
-  "result.full.other-source": "Teljes exportálás történt, mert az előző export másik webhelyről, területről vagy oldalról származik.",
+  "result.full.other-source": "Teljes exportálás történt, mert az előző export másik webhelyről, térből vagy oldalról származik.",
   "result.missing": {
     "one": "Az előző export {count} oldala nem található – törölték, vagy Ön nem láthatja. A fájljai az export-deleted.txt fájlban vannak felsorolva.",
     "other": "Az előző export {count} oldala nem található – törölték őket, vagy Ön nem láthatja őket. A fájljaik az export-deleted.txt fájlban vannak felsorolva."
@@ -147,7 +147,7 @@
   "warnings.pagination.prev": "Előző",
   "warnings.pagination.next": "Következő",
   "warnings.pagination.page": "Oldal",
-  "errors.forbidden": "Nincs jogosultsága e lapok némelyikének olvasásához a Confluence-ben.",
+  "errors.forbidden": "Nincs jogosultsága az oldalak némelyikének olvasásához a Confluence-ben.",
   "errors.network": "A Confluence nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
   "errors.back": "Vissza",
   "action.title": "„{title}” exportálása",

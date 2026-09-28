@@ -1,4 +1,4 @@
-import { createContext, createElement, useContext, useMemo } from 'react';
+import { createContext, createElement, useContext, useEffect, useMemo } from 'react';
 
 /** Confluence locale codes ArtUp Export ships translations for. */
 export const SUPPORTED_LOCALES = [
@@ -83,12 +83,15 @@ export function createT(locale, dictionaries) {
 
 const I18nContext = createContext(null);
 
-/** Provides a translate function for the resolved Confluence locale to descendants. */
+/** Provides a translate function for the resolved Confluence locale to descendants and marks the document language. */
 export function I18nProvider({ locale, children }) {
   const value = useMemo(() => {
     const resolved = resolveLocale(locale);
     return { locale: resolved, t: createT(resolved, localeDictionaries) };
   }, [locale]);
+  useEffect(() => {
+    if (typeof document !== 'undefined') document.documentElement.lang = value.locale;
+  }, [value.locale]);
   return createElement(I18nContext.Provider, { value }, children);
 }
 

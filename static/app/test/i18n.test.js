@@ -1,7 +1,9 @@
+import { createElement } from 'react';
+import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { WARNING_KINDS } from '../src/core/convert/index.js';
 import { PIPELINE_WARNING_KINDS } from '../src/export/pipeline.js';
-import { createT, resolveLocale, SUPPORTED_LOCALES, localeDictionaries, formatBytes } from '../src/i18n/index.js';
+import { createT, I18nProvider, resolveLocale, SUPPORTED_LOCALES, localeDictionaries, formatBytes } from '../src/i18n/index.js';
 
 const en = localeDictionaries['en-US'];
 const placeholders = (s) => new Set([...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
@@ -73,5 +75,12 @@ describe('formatBytes', () => {
   it('uses locale units', () => {
     expect(formatBytes('en-US', 1536)).toBe('1.5 kB');
     expect(formatBytes('en-US', 5 * 1024 * 1024)).toBe('5 MB');
+  });
+});
+
+describe('I18nProvider', () => {
+  it('marks the document language with the resolved locale', () => {
+    render(createElement(I18nProvider, { locale: 'ja_JP' }, createElement('span', null, 'x')));
+    expect(document.documentElement.lang).toBe('ja-JP');
   });
 });

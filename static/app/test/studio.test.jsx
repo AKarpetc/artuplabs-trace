@@ -76,7 +76,7 @@ describe('export studio', () => {
   it('shows only the licence empty state when unlicensed', async () => {
     invoke.mockImplementation(async () => ({ licensed: false }));
     renderStudio();
-    expect(await screen.findByText('ArtUp Export needs an active licence')).toBeInTheDocument();
+    expect(await screen.findByText('ArtUp Export needs an active license')).toBeInTheDocument();
     expect(screen.queryByTestId('studio-export')).toBeNull();
     expect(screen.queryByRole('radiogroup')).toBeNull();
   });

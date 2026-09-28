@@ -3,7 +3,7 @@
   "app.tagline": "Markdown připravený pro Git přímo z Confluence",
   "loading": "Načítání…",
   "errors.generic": "Něco se pokazilo: {message}",
-  "errors.bad-request": "Požadavek nebyl platný. Načtěte stránku znovu a zkuste to znovu.",
+  "errors.bad-request": "Požadavek nebyl platný. Načtěte stránku znovu a zkuste to ještě jednou.",
   "errors.unlicensed": "Vaše licence ArtUp Export není aktivní.",
   "unlicensed.title": "ArtUp Export vyžaduje aktivní licenci",
   "unlicensed.body": "Požádejte správce Confluence, aby spustil zkušební verzi nebo obnovil předplatné v části Spravovat aplikace.",
@@ -127,7 +127,7 @@
   "result.changed": "Změněno",
   "result.unchanged": "Beze změny",
   "result.deleted": "Smazáno",
-  "result.full.options-changed": "Byl proveden úplný export, protože se volby formátu liší od předchozího exportu. Soubory, které se již nevytvářejí, jsou uvedeny v export-deleted.txt.",
+  "result.full.options-changed": "Byl proveden úplný export, protože se možnosti formátu liší od předchozího exportu. Soubory, které se již nevytvářejí, jsou uvedeny v export-deleted.txt.",
   "result.full.other-source": "Byl proveden úplný export, protože předchozí export pochází z jiného webu, prostoru nebo stránky.",
   "result.missing": {
     "one": "{count} stránka z předchozího exportu nebyla nalezena – byla smazána nebo ji nevidíte. Její soubory jsou uvedeny v export-deleted.txt.",
@@ -138,7 +138,7 @@
   "result.apply.title": "Jak použít tuto aktualizaci",
   "result.apply.step1": "Umístěte zip vedle složky docs s předchozím exportem.",
   "result.apply.step2": "Spusťte tento příkaz: přepíše změněné soubory a odstraní soubory uvedené v export-deleted.txt.",
-  "result.apply.step3": "Zkontrolujte změny pomocí git status a zapište je commitem.",
+  "result.apply.step3": "Zkontrolujte změny pomocí git status a vytvořte commit.",
   "result.apply.copy": "Kopírovat",
   "result.apply.copied": "Zkopírováno",
   "warnings.title": {

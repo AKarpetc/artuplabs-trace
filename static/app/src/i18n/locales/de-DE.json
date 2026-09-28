@@ -8,7 +8,7 @@
   "unlicensed.title": "ArtUp Export benötigt eine aktive Lizenz",
   "unlicensed.body": "Bitten Sie Ihren Confluence-Administrator, unter „Apps verwalten“ eine Testversion zu starten oder das Abonnement zu verlängern.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} Min {seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s",
   "fileTree.label": "Dateien im Export",
   "fileTree.more": {
     "one": "+{count} weitere Datei",
@@ -45,7 +45,7 @@
   "attachments.all": "Alle Anhänge",
   "attachments.referenced": "Nur auf Seiten verwendete",
   "attachments.none": "Keine Anhänge",
-  "attachments.maxSize": "Dateien überspringen größer als",
+  "attachments.maxSize": "Dateien überspringen, die größer sind als",
   "step.mode.title": "Modus",
   "step.mode.description": "Alles exportieren oder nur, was sich seit dem letzten Export geändert hat.",
   "mode.full.title": "Vollständiger Export",
@@ -96,8 +96,8 @@
     "one": "{done} von {count} Anhang",
     "other": "{done} von {count} Anhängen"
   },
-  "run.packing": "Zip-Datei wird gepackt",
-  "run.elapsed": "Vergangen: {time}",
+  "run.packing": "ZIP-Datei wird gepackt",
+  "run.elapsed": "Verstrichen: {time}",
   "run.eta": "Noch etwa {time}",
   "run.keepOpen": "Lassen Sie diesen Tab geöffnet, bis der Download beginnt.",
   "run.cancel": "Abbrechen",
@@ -114,13 +114,13 @@
   "result.unchanged": "Unverändert",
   "result.deleted": "Gelöscht",
   "result.full.options-changed": "Es wurde ein vollständiger Export erstellt, weil die Formatoptionen vom vorherigen Export abweichen. Dateien, die nicht mehr erzeugt werden, stehen in export-deleted.txt.",
-  "result.full.other-source": "Es wurde ein vollständiger Export erstellt, weil der vorherige Export von einer anderen Site, einem anderen Bereich oder einer anderen Seite stammt.",
+  "result.full.other-source": "Es wurde ein vollständiger Export erstellt, weil der vorherige Export von einer anderen Website, einem anderen Bereich oder einer anderen Seite stammt.",
   "result.missing": {
-    "one": "{count} Seite aus dem vorherigen Export wurde nicht gefunden – sie wurde gelöscht oder ist für Sie nicht sichtbar. Ihre Dateien stehen in export-deleted.txt.",
-    "other": "{count} Seiten aus dem vorherigen Export wurden nicht gefunden – sie wurden gelöscht oder sind für Sie nicht sichtbar. Ihre Dateien stehen in export-deleted.txt."
+    "one": "{count} Seite aus dem vorherigen Export wurde nicht gefunden – sie wurde gelöscht oder ist für Sie nicht sichtbar. Die zugehörigen Dateien stehen in export-deleted.txt.",
+    "other": "{count} Seiten aus dem vorherigen Export wurden nicht gefunden – sie wurden gelöscht oder sind für Sie nicht sichtbar. Die zugehörigen Dateien stehen in export-deleted.txt."
   },
   "result.apply.title": "Dieses Update anwenden",
-  "result.apply.step1": "Legen Sie die Zip-Datei neben den Ordner docs mit Ihrem vorherigen Export.",
+  "result.apply.step1": "Legen Sie die ZIP-Datei neben den Ordner docs, der Ihren vorherigen Export enthält.",
   "result.apply.step2": "Führen Sie diesen Befehl aus: Er überschreibt geänderte Dateien und entfernt die in export-deleted.txt aufgeführten Dateien.",
   "result.apply.step3": "Prüfen Sie die Änderungen mit git status und committen Sie sie.",
   "result.apply.copy": "Kopieren",

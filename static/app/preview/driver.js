@@ -49,8 +49,13 @@ async function loadPrevious() {
   await until(() => document.querySelector('[data-testid="mode-update"][aria-checked="true"]'));
 }
 
-/** Drives the studio for `?state=running|done|done-update|failed`: optionally loads a previous export, then presses Export. */
+/** Drives the studio for `?state=form-update|running|done|done-update|failed`: optionally loads a previous export, then presses Export unless the state is a form. */
 export async function drive(state) {
+  if (state === 'form-update') {
+    await until(() => document.querySelector('[data-testid="front-matter"]'));
+    await loadPrevious();
+    return;
+  }
   if (!RUN_STATES.includes(state)) return;
   await until(() => document.querySelector('[data-testid="front-matter"]'));
   if (state === 'done-update') await loadPrevious();

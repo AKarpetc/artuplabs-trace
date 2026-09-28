@@ -27,7 +27,7 @@
   "picker.placeholder": "输入页面标题进行搜索",
   "picker.noResults": "没有此标题的页面",
   "step.format.title": "格式",
-  "step.format.description": "匹配你用于发布的站点生成器，或保持普通 Markdown。",
+  "step.format.description": "匹配您用于发布的站点生成器，或保持普通 Markdown。",
   "preset.generic.title": "通用 Markdown",
   "preset.generic.description": "带 YAML front-matter 的 Markdown，适用于任何仓库。",
   "preset.hugo.description": "带 _index.md 和 weight 的章节文件夹。",
@@ -37,7 +37,7 @@
   "order.weight": "写入 front-matter",
   "order.prefix": "文件名使用数字前缀",
   "fileNames.label": "文件名",
-  "fileNames.ascii": "ASCII（音译）",
+  "fileNames.ascii": "ASCII（转写）",
   "fileNames.unicode": "Unicode（保留原文字）",
   "fileNames.help": "ASCII 文件名在任何地方都可用：URL、Windows 和旧版工具。",
   "attachments.label": "附件",
@@ -84,17 +84,17 @@
     "other": "已检查 {count} 项"
   },
   "run.counter": {
-    "other": "第 {done} / {count} 个页面"
+    "other": "{done} / {count} 个页面"
   },
   "run.counterAttachments": {
-    "other": "第 {done} / {count} 个附件"
+    "other": "{done} / {count} 个附件"
   },
   "run.packing": "正在打包 zip",
   "run.elapsed": "已用时间：{time}",
   "run.eta": "预计剩余 {time}",
   "run.keepOpen": "下载开始前请不要关闭此标签页。",
   "run.cancel": "取消",
-  "run.cancelled": "导出已取消。你的选择已保留。",
+  "run.cancelled": "导出已取消。您的选择已保留。",
   "result.title": "导出完成",
   "result.started": "下载已开始。",
   "result.downloadAgain": "再次下载",
@@ -106,13 +106,13 @@
   "result.changed": "已更改",
   "result.unchanged": "未更改",
   "result.deleted": "已删除",
-  "result.full.options-changed": "由于格式选项与上一次导出不同，已进行完整导出。不再生成的文件列在 export-deleted.txt 中。",
-  "result.full.other-source": "由于上一次导出来自其他站点、空间或页面，已进行完整导出。",
+  "result.full.options-changed": "由于格式选项与上次导出不同，已进行完整导出。不再生成的文件列在 export-deleted.txt 中。",
+  "result.full.other-source": "由于上次导出来自其他站点、空间或页面，已进行完整导出。",
   "result.missing": {
-    "other": "上一次导出中有 {count} 个页面未找到——它们已被删除或你无权查看。其文件列在 export-deleted.txt 中。"
+    "other": "上次导出中有 {count} 个页面未找到——它们已被删除或您无权查看。其文件列在 export-deleted.txt 中。"
   },
   "result.apply.title": "应用此更新",
-  "result.apply.step1": "将 zip 放在存放上一次导出的 docs 文件夹旁边。",
+  "result.apply.step1": "将 zip 放在存放上次导出的 docs 文件夹旁边。",
   "result.apply.step2": "运行此命令：它会覆盖已更改的文件，并删除 export-deleted.txt 中列出的文件。",
   "result.apply.step3": "用 git status 检查更改并提交。",
   "result.apply.copy": "复制",
@@ -138,7 +138,7 @@
   "warnings.pagination.prev": "上一页",
   "warnings.pagination.next": "下一页",
   "warnings.pagination.page": "页",
-  "errors.forbidden": "你无权读取 Confluence 中的部分页面。",
+  "errors.forbidden": "您无权读取 Confluence 中的部分页面。",
   "errors.network": "无法连接 Confluence。请检查网络连接后重试。",
   "errors.back": "返回",
   "action.title": "导出“{title}”",

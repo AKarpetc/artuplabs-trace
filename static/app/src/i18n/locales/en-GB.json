@@ -116,8 +116,8 @@
   "result.full.options-changed": "A full export was made because the format options differ from the previous export. Files that are no longer produced are listed in export-deleted.txt.",
   "result.full.other-source": "A full export was made because the previous export comes from another site, space or page.",
   "result.missing": {
-    "one": "{count} page from the previous export was not found — it was deleted or you can't see it. Its files are listed in export-deleted.txt.",
-    "other": "{count} pages from the previous export were not found — they were deleted or you can't see them. Their files are listed in export-deleted.txt."
+    "one": "{count} page from the previous export was not found — it was deleted or you can’t see it. Its files are listed in export-deleted.txt.",
+    "other": "{count} pages from the previous export were not found — they were deleted or you can’t see them. Their files are listed in export-deleted.txt."
   },
   "result.apply.title": "Apply this update",
   "result.apply.step1": "Put the zip next to the docs folder that holds your previous export.",
@@ -147,7 +147,7 @@
   "warnings.pagination.prev": "Previous",
   "warnings.pagination.next": "Next",
   "warnings.pagination.page": "Page",
-  "errors.forbidden": "You don't have permission to read some of these pages in Confluence.",
+  "errors.forbidden": "You don’t have permission to read some of these pages in Confluence.",
   "errors.network": "Confluence could not be reached. Check your connection and try again.",
   "errors.back": "Back",
   "action.title": "Export ‘{title}’",

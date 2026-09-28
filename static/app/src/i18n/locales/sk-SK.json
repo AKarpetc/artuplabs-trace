@@ -3,7 +3,7 @@
   "app.tagline": "Markdown pripravený pre Git priamo z Confluence",
   "loading": "Načítava sa…",
   "errors.generic": "Niečo sa pokazilo: {message}",
-  "errors.bad-request": "Požiadavka nebola platná. Znova načítajte stránku a skúste to znova.",
+  "errors.bad-request": "Požiadavka nebola platná. Znova načítajte stránku a skúste to ešte raz.",
   "errors.unlicensed": "Vaša licencia ArtUp Export nie je aktívna.",
   "unlicensed.title": "ArtUp Export vyžaduje aktívnu licenciu",
   "unlicensed.body": "Požiadajte administrátora Confluence, aby spustil skúšobnú verziu alebo obnovil predplatné v časti Spravovať aplikácie.",
@@ -127,8 +127,8 @@
   "result.changed": "Zmenené",
   "result.unchanged": "Bez zmeny",
   "result.deleted": "Odstránené",
-  "result.full.options-changed": "Bol vykonaný úplný export, pretože sa voľby formátu líšia od predchádzajúceho exportu. Súbory, ktoré sa už nevytvárajú, sú uvedené v export-deleted.txt.",
-  "result.full.other-source": "Bol vykonaný úplný export, pretože predchádzajúci export pochádza z inej lokality, priestoru alebo stránky.",
+  "result.full.options-changed": "Bol vykonaný úplný export, pretože sa možnosti formátu líšia od predchádzajúceho exportu. Súbory, ktoré sa už nevytvárajú, sú uvedené v export-deleted.txt.",
+  "result.full.other-source": "Bol vykonaný úplný export, pretože predchádzajúci export pochádza z iného webu, priestoru alebo stránky.",
   "result.missing": {
     "one": "{count} stránka z predchádzajúceho exportu sa nenašla – bola odstránená alebo ju nevidíte. Jej súbory sú uvedené v export-deleted.txt.",
     "few": "{count} stránky z predchádzajúceho exportu sa nenašli – boli odstránené alebo ich nevidíte. Ich súbory sú uvedené v export-deleted.txt.",
@@ -138,7 +138,7 @@
   "result.apply.title": "Ako použiť túto aktualizáciu",
   "result.apply.step1": "Umiestnite zip vedľa priečinka docs s predchádzajúcim exportom.",
   "result.apply.step2": "Spustite tento príkaz: prepíše zmenené súbory a odstráni súbory uvedené v export-deleted.txt.",
-  "result.apply.step3": "Skontrolujte zmeny pomocou git status a zapíšte ich commitom.",
+  "result.apply.step3": "Skontrolujte zmeny pomocou git status a vytvorte commit.",
   "result.apply.copy": "Kopírovať",
   "result.apply.copied": "Skopírované",
   "warnings.title": {

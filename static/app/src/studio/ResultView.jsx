@@ -21,6 +21,7 @@ const cardStyles = xcss({
   minWidth: '0',
 });
 const compactCardStyles = xcss({ padding: 'space.300' });
+const disclosureCardStyles = xcss({ paddingBlock: 'space.200', paddingInline: 'space.250' });
 const heroTextStyles = xcss({ minWidth: '0', flexGrow: 1, flexBasis: '280px' });
 const illustrationStyles = xcss({ flexShrink: 0, lineHeight: '0' });
 const fileStyles = xcss({ fontFamily: 'font.family.code', fontSize: '14px', lineHeight: '20px', color: 'color.text', overflowWrap: 'anywhere' });
@@ -84,12 +85,12 @@ function CopyButton({ text }) {
   );
 }
 
-function ApplyHelp({ fileName, compact }) {
+function ApplyHelp({ fileName }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const command = applyCommand(fileName);
   return (
-    <Box xcss={[cardStyles, compact && compactCardStyles]}>
+    <Box xcss={[cardStyles, disclosureCardStyles]}>
       <Stack space="space.200">
         <Box>
           <Button appearance="subtle" iconBefore={open ? ChevronDownIcon : ChevronRightIcon} onClick={() => setOpen(!open)} aria-expanded={open} testId="apply-toggle">
@@ -162,7 +163,7 @@ export function ResultView({ result, siteUrl, spaceKey, onDownloadAgain, onNewEx
       {result.stats.missing > 0 ? (
         <SectionMessage appearance="warning"><Text>{t('result.missing', { count: result.stats.missing })}</Text></SectionMessage>
       ) : null}
-      {showApply ? <ApplyHelp fileName={result.fileName} compact={compact} /> : null}
+      {showApply ? <ApplyHelp fileName={result.fileName} /> : null}
       {result.warnings.length > 0 ? (
         <Box xcss={card}>
           <WarningsTable warnings={result.warnings} siteUrl={siteUrl} spaceKey={spaceKey} />

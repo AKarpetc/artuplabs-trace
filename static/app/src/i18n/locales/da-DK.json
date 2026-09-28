@@ -63,7 +63,7 @@
   "drop.error.newer-version": "Denne eksport er lavet med en nyere version af ArtUp Export. Opdatér appen, og prøv igen.",
   "drop.error.no-manifest-in-zip": "Denne zip indeholder ingen export-manifest.json.",
   "drop.error.too-large": "Filen er større end {size}. Slip i stedet export-manifest.json fra zip-filen.",
-  "drop.full.other-source": "Der laves en fuld eksport, fordi den forrige eksport kommer fra et andet site, område eller en anden side.",
+  "drop.full.other-source": "Der laves en fuld eksport, fordi den forrige eksport kommer fra et andet websted, et andet område eller en anden side.",
   "drop.full.options-changed": "Der laves en fuld eksport, fordi formatindstillingerne afviger fra den forrige eksport. Filer, der ikke længere dannes, listes til sletning.",
   "preview.title": "Eksempel på resultatet",
   "preview.more": {

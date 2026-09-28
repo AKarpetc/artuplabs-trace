@@ -27,7 +27,7 @@
   "picker.placeholder": "輸入頁面標題以搜尋",
   "picker.noResults": "沒有此標題的頁面",
   "step.format.title": "格式",
-  "step.format.description": "配合你用來發佈的網站產生器，或維持一般 Markdown。",
+  "step.format.description": "配合您用來發佈的網站產生器，或維持一般 Markdown。",
   "preset.generic.title": "通用 Markdown",
   "preset.generic.description": "附 YAML front-matter 的 Markdown，適用於任何儲存庫。",
   "preset.hugo.description": "含 _index.md 與 weight 的章節資料夾。",
@@ -37,7 +37,7 @@
   "order.weight": "寫入 front-matter",
   "order.prefix": "檔名加上數字前綴",
   "fileNames.label": "檔名",
-  "fileNames.ascii": "ASCII（音譯）",
+  "fileNames.ascii": "ASCII（轉寫）",
   "fileNames.unicode": "Unicode（保留原始文字）",
   "fileNames.help": "ASCII 檔名在任何地方都能使用：URL、Windows 與舊版工具。",
   "attachments.label": "附件",
@@ -84,17 +84,17 @@
     "other": "已檢查 {count} 項"
   },
   "run.counter": {
-    "other": "第 {done} / {count} 個頁面"
+    "other": "{done} / {count} 個頁面"
   },
   "run.counterAttachments": {
-    "other": "第 {done} / {count} 個附件"
+    "other": "{done} / {count} 個附件"
   },
   "run.packing": "正在封裝 zip",
   "run.elapsed": "已用時間：{time}",
   "run.eta": "預計剩餘 {time}",
   "run.keepOpen": "下載開始前請勿關閉此分頁。",
   "run.cancel": "取消",
-  "run.cancelled": "匯出已取消。你的選擇已保留。",
+  "run.cancelled": "匯出已取消。您的選擇已保留。",
   "result.title": "匯出完成",
   "result.started": "下載已開始。",
   "result.downloadAgain": "再次下載",
@@ -106,13 +106,13 @@
   "result.changed": "已變更",
   "result.unchanged": "未變更",
   "result.deleted": "已刪除",
-  "result.full.options-changed": "由於格式選項與上一次匯出不同，已進行完整匯出。不再產生的檔案列在 export-deleted.txt 中。",
-  "result.full.other-source": "由於上一次匯出來自其他網站、空間或頁面，已進行完整匯出。",
+  "result.full.options-changed": "由於格式選項與上次匯出不同，已進行完整匯出。不再產生的檔案列在 export-deleted.txt 中。",
+  "result.full.other-source": "由於上次匯出來自其他網站、空間或頁面，已進行完整匯出。",
   "result.missing": {
-    "other": "上一次匯出中有 {count} 個頁面找不到——它們已被刪除或你無權檢視。其檔案列在 export-deleted.txt 中。"
+    "other": "上次匯出中有 {count} 個頁面找不到——它們已被刪除或您無權檢視。其檔案列在 export-deleted.txt 中。"
   },
   "result.apply.title": "套用此更新",
-  "result.apply.step1": "將 zip 放在存放上一次匯出的 docs 資料夾旁邊。",
+  "result.apply.step1": "將 zip 放在存放上次匯出的 docs 資料夾旁邊。",
   "result.apply.step2": "執行此命令：它會覆寫已變更的檔案，並刪除 export-deleted.txt 中列出的檔案。",
   "result.apply.step3": "以 git status 檢查變更並提交。",
   "result.apply.copy": "複製",
@@ -138,7 +138,7 @@
   "warnings.pagination.prev": "上一頁",
   "warnings.pagination.next": "下一頁",
   "warnings.pagination.page": "頁",
-  "errors.forbidden": "你沒有權限讀取 Confluence 中的部分頁面。",
+  "errors.forbidden": "您沒有權限讀取 Confluence 中的部分頁面。",
   "errors.network": "無法連線至 Confluence。請檢查網路連線後再試一次。",
   "errors.back": "返回",
   "action.title": "匯出「{title}」",

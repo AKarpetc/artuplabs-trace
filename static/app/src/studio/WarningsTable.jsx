@@ -22,6 +22,7 @@ const linkStyles = xcss({ overflowWrap: 'anywhere', color: 'color.link', textDec
 const detailStyles = xcss({ fontFamily: 'font.family.code', fontSize: '12px', lineHeight: '20px', color: 'color.text.subtle', overflowWrap: 'anywhere' });
 const filterStyles = xcss({ minWidth: '220px', maxWidth: '100%', flexGrow: 0 });
 const tableStyles = xcss({ minWidth: '0', overflowX: 'auto' });
+const unpagedStyles = xcss({ marginBlockEnd: 'space.negative.300' });
 
 /** Confluence URL of a page in the exported space. */
 export function pageUrl(siteUrl, spaceKey, pageId) {
@@ -94,7 +95,7 @@ export function WarningsTable({ warnings, siteUrl, spaceKey }) {
           />
         </Box>
       </Flex>
-      <Box xcss={tableStyles}>
+      <Box xcss={[tableStyles, visible.length <= ROWS_PER_PAGE && unpagedStyles]}>
         <DynamicTable
           head={head}
           rows={rows}
