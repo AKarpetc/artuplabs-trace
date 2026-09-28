@@ -379,6 +379,12 @@ describe('flavors', () => {
     ['attribute lists cannot swallow text', '<h2>Title {#id}</h2><p>para {: .x }</p>', '## Title \\{#id\\}\n\npara \\{: .x \\}\n'],
   ])('mkdocs: %s', (name, input, expected) => expect(md(input, { flavor: 'mkdocs' })).toBe(expected));
 
+  it('mkdocs separates adjacent lists so Python-Markdown does not merge them; gfm unchanged', () => {
+    const input = '<ul><li>a</li></ul><ol><li>b</li></ol><ac:task-list><ac:task><ac:task-status>incomplete</ac:task-status><ac:task-body>c</ac:task-body></ac:task></ac:task-list><p>p</p><ul><li>d</li></ul>';
+    expect(md(input, { flavor: 'mkdocs' })).toBe('- a\n\n<!-- -->\n\n1. b\n\n<!-- -->\n\n- [ ] c\n\np\n\n- d\n');
+    expect(md(input)).toBe('- a\n\n1. b\n\n- [ ] c\n\np\n\n- d\n');
+  });
+
   it('gfm and mdx keep 2-space nesting, tight ordered lists and plain details', () => {
     const inputs = ['<ul><li>a<ul><li>b</li></ul></li></ul>', '<ol start="3"><li><p>x</p><p>y</p></li><li>z</li></ol>', '<ac:structured-macro ac:name="expand"><ac:rich-text-body><p>x</p></ac:rich-text-body></ac:structured-macro>'];
     const expected = ['- a\n  - b\n', '3. x\n\n   y\n4. z\n', '<details>\n<summary>Details</summary>\n\nx\n\n</details>\n'];

@@ -108,13 +108,20 @@ function renderBlock(node, ctx) {
   }
 }
 
-/** Renders block and loose inline content to an array of Markdown blocks. */
+const LIST_TAGS = new Set(['ul', 'ol', 'ac:task-list']);
+const LIST_SEPARATOR = '<!-- -->';
+
+/** Renders block and loose inline content to an array of Markdown blocks; mkdocs gets an empty comment between adjacent lists, which Python-Markdown would merge. */
 export function renderBlockArray(nodes, ctx) {
   const out = [];
   let run = [];
+  let lastList = false;
   const flush = () => {
     const text = paragraph(run, ctx);
-    if (text) out.push(text);
+    if (text) {
+      out.push(text);
+      lastList = false;
+    }
     run = [];
   };
   for (const node of nodes ?? []) {
@@ -124,7 +131,11 @@ export function renderBlockArray(nodes, ctx) {
     }
     flush();
     const block = renderBlock(node, ctx);
-    if (block.trim()) out.push(block);
+    if (!block.trim()) continue;
+    const list = LIST_TAGS.has(node.name);
+    if (list && lastList && ctx.flavor === 'mkdocs') out.push(LIST_SEPARATOR);
+    out.push(block);
+    lastList = list;
   }
   flush();
   return out;
