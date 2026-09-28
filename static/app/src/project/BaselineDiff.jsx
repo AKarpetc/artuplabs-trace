@@ -15,6 +15,7 @@ const CHANGE_APPEARANCE = {
   removed: 'removed',
   changed: 'moved',
   'links-changed': 'inprogress',
+  'status-changed': 'new',
 };
 
 /** Difference between two baselines: change counts, a paged table of changed requirements and a CSV export. */
@@ -61,6 +62,7 @@ export function BaselineDiff({ projectId, projectKey, leftId, rightId }) {
               removed: formatNumber(locale, counts.removed),
               changed: formatNumber(locale, counts.changed),
               linksChanged: formatNumber(locale, counts.linksChanged),
+              statusChanged: formatNumber(locale, counts.statusChanged),
             })}
           </Text>
         ) : <span />}
