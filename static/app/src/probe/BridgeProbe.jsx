@@ -9,8 +9,36 @@ const ZIP_TEST_LABEL = 'Zip download test';
 const RUNNING_LABEL = 'Running…';
 const NO_ATTACHMENT_LABEL = 'No attachment found within 30 pages';
 const ZIP_SAVED_LABEL = 'Zip bytes written';
+const ATTACHMENT_ERROR_LABEL = 'Attachment test failed';
+const ZIP_ERROR_LABEL = 'Zip test failed';
 const ZIP_FILE_NAME = 'artup-export-probe.zip';
 const MAX_PAGES = 30;
+
+/** Error from one named step of the attachment probe (space, homepage, attachments search, download). */
+class ProbeStepError extends Error {
+  constructor(step, message) {
+    super(message);
+    this.name = 'ProbeStepError';
+    this.step = step;
+  }
+}
+
+/** Runs `fn`, tagging any rejection with `step` unless it already carries one. */
+async function withStep(step, fn) {
+  try {
+    return await fn();
+  } catch (cause) {
+    if (cause instanceof ProbeStepError) throw cause;
+    throw new ProbeStepError(step, cause?.message ?? String(cause));
+  }
+}
+
+async function fetchJson(path, step) {
+  return withStep(step, async () => {
+    const res = await requestConfluence(path);
+    return res.json();
+  });
+}
 
 /** Snapshot of the view.getContext() fields this probe inspects. */
 function contextSnapshot(context) {
@@ -18,25 +46,22 @@ function contextSnapshot(context) {
   return { locale, siteUrl, environmentType, license, extension, moduleKey };
 }
 
-async function fetchJson(path) {
-  const res = await requestConfluence(path);
-  return res.json();
-}
-
 /** Depth-first walk of the space's page tree, up to MAX_PAGES pages, looking for any page with an attachment. */
 async function findAttachment(spaceKey) {
-  const spacesRes = await fetchJson(`/wiki/api/v2/spaces?keys=${encodeURIComponent(spaceKey)}`);
+  const spacesRes = await fetchJson(`/wiki/api/v2/spaces?keys=${encodeURIComponent(spaceKey)}`, 'space');
   const homepageId = spacesRes?.results?.[0]?.homepageId;
-  if (!homepageId) return null;
+  if (!homepageId) {
+    throw new ProbeStepError('homepage', 'The space response has no homepageId');
+  }
   const stack = [homepageId];
   let visited = 0;
   while (stack.length > 0 && visited < MAX_PAGES) {
     const pageId = stack.pop();
     visited += 1;
-    const attachmentsRes = await fetchJson(`/wiki/api/v2/pages/${pageId}/attachments?limit=1`);
+    const attachmentsRes = await fetchJson(`/wiki/api/v2/pages/${pageId}/attachments?limit=1`, 'attachments search');
     const attachment = attachmentsRes?.results?.[0];
     if (attachment) return attachment;
-    const childrenRes = await fetchJson(`/wiki/api/v2/pages/${pageId}/children`);
+    const childrenRes = await fetchJson(`/wiki/api/v2/pages/${pageId}/children`, 'attachments search');
     for (const child of childrenRes?.results ?? []) {
       stack.push(child.id);
     }
@@ -46,12 +71,20 @@ async function findAttachment(spaceKey) {
 
 /** Downloads the attachment via requestConfluence and compares the received byte count to its declared fileSize. */
 async function downloadAttachment(attachment) {
+  if (!attachment.downloadLink) {
+    throw new ProbeStepError('download', 'The attachment has no downloadLink');
+  }
   const start = performance.now();
-  const response = await requestConfluence(`/wiki${attachment.downloadLink}`);
-  const typeofArrayBuffer = typeof response.arrayBuffer;
-  const typeofBlob = typeof response.blob;
-  const buffer = await response.clone().arrayBuffer();
-  const blob = await response.blob();
+  const { buffer, blob, typeofArrayBuffer, typeofBlob } = await withStep('download', async () => {
+    const response = await requestConfluence(`/wiki${attachment.downloadLink}`);
+    const responseTypeofArrayBuffer = typeof response.arrayBuffer;
+    const responseTypeofBlob = typeof response.blob;
+    const responseBuffer = await response.clone().arrayBuffer();
+    const responseBlob = await response.blob();
+    return {
+      buffer: responseBuffer, blob: responseBlob, typeofArrayBuffer: responseTypeofArrayBuffer, typeofBlob: responseTypeofBlob,
+    };
+  });
   const elapsedMs = Math.round(performance.now() - start);
   const bytes = buffer.byteLength;
   return {
@@ -86,6 +119,12 @@ function runZipTest() {
   return zipped.byteLength;
 }
 
+/** Renders a ProbeStepError (or any Error) as "step: message" / just the message. */
+function describeError(error) {
+  if (error instanceof ProbeStepError) return `(${error.step}): ${error.message}`;
+  return `: ${error?.message ?? String(error)}`;
+}
+
 /**
  * Ruling R10: temporary development-only probe verifying the requestConfluence
  * attachment-download bridge and the fflate zip path. Deleted in Task 12.
@@ -93,21 +132,32 @@ function runZipTest() {
 export function BridgeProbe({ context }) {
   const [attachmentRunning, setAttachmentRunning] = useState(false);
   const [attachmentResult, setAttachmentResult] = useState(null);
+  const [attachmentError, setAttachmentError] = useState(null);
   const [zipBytes, setZipBytes] = useState(null);
+  const [zipError, setZipError] = useState(null);
   const spaceKey = context?.extension?.space?.key ?? '';
 
   const onAttachmentTest = async () => {
     setAttachmentRunning(true);
     setAttachmentResult(null);
+    setAttachmentError(null);
     try {
       setAttachmentResult(await runAttachmentTest(spaceKey));
+    } catch (error) {
+      setAttachmentError(error);
     } finally {
       setAttachmentRunning(false);
     }
   };
 
   const onZipTest = () => {
-    setZipBytes(runZipTest());
+    setZipError(null);
+    setZipBytes(null);
+    try {
+      setZipBytes(runZipTest());
+    } catch (error) {
+      setZipError(error);
+    }
   };
 
   return (
@@ -119,11 +169,13 @@ export function BridgeProbe({ context }) {
         </Button>
       </Box>
       {attachmentRunning ? <pre>{RUNNING_LABEL}</pre> : null}
+      {attachmentError ? <pre>{`${ATTACHMENT_ERROR_LABEL} ${describeError(attachmentError)}`}</pre> : null}
       {attachmentResult && !attachmentResult.found ? <pre>{NO_ATTACHMENT_LABEL}</pre> : null}
       {attachmentResult && attachmentResult.found ? <pre>{JSON.stringify(attachmentResult, null, 2)}</pre> : null}
       <Box>
         <Button onClick={onZipTest}>{ZIP_TEST_LABEL}</Button>
       </Box>
+      {zipError ? <pre>{`${ZIP_ERROR_LABEL} ${describeError(zipError)}`}</pre> : null}
       {zipBytes !== null ? <pre>{`${ZIP_SAVED_LABEL}: ${zipBytes}`}</pre> : null}
     </Stack>
   );
