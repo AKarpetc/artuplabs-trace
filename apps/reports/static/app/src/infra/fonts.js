@@ -24,12 +24,12 @@ function bytesOfDataUrl(url) {
 }
 
 /** Loads the fonts for the scripts present (Latin always); CJK and Korean chunks are fetched only when needed. */
-export async function loadFonts(scripts) {
+export async function loadFonts(scripts, sources = SOURCES) {
   const wanted = ['latin', ...['cjk', 'korean'].filter((s) => scripts.has(s))];
   const files = {};
   const families = {};
   await Promise.all(wanted.map(async (script) => {
-    const source = SOURCES[script];
+    const source = sources[script];
     const [normal, bold] = await Promise.all([source.normal[1](), source.bold[1]()]);
     files[source.normal[0]] = bytesOfDataUrl(normal.default);
     files[source.bold[0]] = bytesOfDataUrl(bold.default);

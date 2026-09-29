@@ -1,4 +1,4 @@
-import { fitImage } from '../core/imageSize.js';
+import { fitImage, isImageIntact } from '../core/imageSize.js';
 import { tableGrid } from '../core/tableGrid.js';
 import { splitRuns } from '../core/textRuns.js';
 import { PALETTE } from './palette.js';
@@ -15,6 +15,7 @@ export const MARGIN = 57;
 const PX_TO_PT = 0.75;
 const LIST_INDENT = 15;
 const QUOTE_INDENT = 16;
+const CELL_PADDING = 8;
 const CHUNK = 0x8000;
 const HEX = /^[0-9a-fA-F]{6}$/;
 const HEADING_SIZES = [18, 15, 13, 12, 11, 10];
@@ -95,7 +96,7 @@ function tableBlock(table, ctx) {
   if (!table.rows?.length) return [];
   const grid = tableGrid(table);
   const width = grid[0].length;
-  const inner = (colspan) => ({ ...ctx, indent: 0, box: Math.max(ctx.content / 4, (ctx.box - ctx.indent) * colspan / width) });
+  const inner = (colspan) => ({ ...ctx, indent: 0, box: Math.max(ctx.content / 4, (ctx.box - ctx.indent) * colspan / width - CELL_PADDING) });
   const body = grid.map((slots) => slots.map((slot) => {
     if (!slot.origin) return {};
     return {
@@ -114,18 +115,21 @@ function codeBlock(code, ctx) {
 
 function panelBlock(panel, ctx) {
   const fill = PALETTE.panel[panel.kind] ?? PALETTE.panel.info;
-  const nodes = blocksOf(panel.blocks ?? [], { ...ctx, indent: 0, box: ctx.box - ctx.indent });
+  const nodes = blocksOf(panel.blocks ?? [], { ...ctx, indent: 0, box: ctx.box - ctx.indent - CELL_PADDING });
   return [boxed({ ...stackOrBlank(nodes), fillColor: hash(fill) })];
 }
 
 function imageBlock(image, ctx) {
   const found = image.attachmentId ? ctx.images.get(image.attachmentId) : null;
   const mime = IMAGE_MIME[found?.type];
-  if (!found?.bytes || !mime) {
+  const usable = Boolean(found?.bytes) && ctx.withImages && Boolean(mime) && isImageIntact(found.bytes, found.type);
+  if (!usable) {
+    if (found?.bytes) ctx.stats.imagesDropped += 1;
     return [{ text: plainRuns(`[${ctx.labels.imageUnavailable}: ${image.alt ?? ''}]`, ctx), italics: true, margin: PARA_MARGIN() }];
   }
   const room = Math.max(ctx.content / 4, ctx.box - ctx.indent);
   const size = fitImage({ width: found.width, height: found.height }, room / PX_TO_PT);
+  ctx.stats.imagesEmbedded += 1;
   return [{ image: `data:${mime};base64,${base64Of(found.bytes)}`, width: Math.min(room, size.width * PX_TO_PT), margin: PARA_MARGIN() }];
 }
 
@@ -166,12 +170,12 @@ function headingStyles() {
   return Object.fromEntries(HEADING_SIZES.map((fontSize, i) => [`h${i + 1}`, { fontSize, bold: true, margin: [0, i < 2 ? 10 : 6, 0, 4] }]));
 }
 
-/** Builds a pdfmake document definition for a built-in layout spec, with the scripts it needs and the number of emoji dropped. */
-export function buildPdfDefinition({ spec, images, labels, meta }) {
+/** Builds a pdfmake definition for a built-in layout spec with the scripts it needs and the emoji and images dropped; withImages false puts placeholders everywhere. */
+export function buildPdfDefinition({ spec, images, labels, meta, withImages = true }) {
   const paper = PAPER[spec.paper] ?? PAPER.A4;
   const content = paper.width - 2 * MARGIN;
-  const stats = { scripts: new Set(['latin']), emojiDropped: 0 };
-  const ctx = { images: images ?? new Map(), labels, stats, content, box: content, indent: 0 };
+  const stats = { scripts: new Set(['latin']), emojiDropped: 0, imagesDropped: 0, imagesEmbedded: 0 };
+  const ctx = { images: images ?? new Map(), labels, stats, content, box: content, indent: 0, withImages };
   const body = blocksOf(spec.blocks ?? [], ctx);
   const small = { fontSize: 8, color: hash(PALETTE.muted), margin: [MARGIN, 16, MARGIN, 0] };
   const metaStack = { stack: (spec.metaLines ?? []).map((line) => ({ text: plainRuns(line, ctx) })), ...small };
@@ -186,12 +190,18 @@ export function buildPdfDefinition({ spec, images, labels, meta }) {
     footer: (page, pages) => ({ text: `${page} / ${pages}`, alignment: 'right', fontSize: 8, color: hash(PALETTE.muted), margin: [MARGIN, 20, MARGIN, 0] }),
     content: body,
   };
-  return { definition, scripts: stats.scripts, emojiDropped: stats.emojiDropped };
+  return { definition, scripts: stats.scripts, emojiDropped: stats.emojiDropped, imagesDropped: stats.imagesDropped, imagesEmbedded: stats.imagesEmbedded };
 }
 
-/** Renders a built-in layout spec to PDF bytes with the injected engine and font loader. */
+/** Renders a built-in layout spec to PDF bytes; when the engine rejects the document, renders it once more with every image as a placeholder. */
 export async function renderPdf({ spec, images, labels, meta, engine, loadFonts }) {
-  const { definition, scripts, emojiDropped } = buildPdfDefinition({ spec, images, labels, meta });
-  const fonts = await loadFonts(scripts);
-  return { bytes: await engine.render(definition, fonts), emojiDropped };
+  const first = buildPdfDefinition({ spec, images, labels, meta });
+  const fonts = await loadFonts(first.scripts);
+  try {
+    return { bytes: await engine.render(first.definition, fonts), emojiDropped: first.emojiDropped, imagesDropped: first.imagesDropped };
+  } catch (error) {
+    if (!first.imagesEmbedded) throw error;
+    const plain = buildPdfDefinition({ spec, images, labels, meta, withImages: false });
+    return { bytes: await engine.render(plain.definition, fonts), emojiDropped: plain.emojiDropped, imagesDropped: plain.imagesDropped };
+  }
 }

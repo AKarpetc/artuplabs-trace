@@ -58,7 +58,9 @@ async function main() {
     const result = JSON.parse(await page.title());
     const external = requests.filter((url) => !url.startsWith(vite.base) && !url.startsWith('data:') && !url.startsWith('blob:'));
     console.log(JSON.stringify({ ...result, external }));
-    if (!(result.ok && result.head === '%PDF') || external.length) process.exitCode = 1;
+    const scripts = result.scripts ?? [];
+    const fontsUsed = scripts.includes('cjk') && scripts.includes('korean');
+    if (!(result.ok && result.head === '%PDF' && fontsUsed) || external.length) process.exitCode = 1;
   } finally {
     await browser.close();
     vite.stop();

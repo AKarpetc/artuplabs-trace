@@ -246,12 +246,35 @@ describe('buildPdfDefinition images', () => {
     const images = new Map([['att-1', { bytes: pngBytes(1400, 700), type: 'png', width: 1400, height: 700 }]]);
     const table = { type: 'table', header: false, rows: [{ cells: [cell([image]), cell([para('b')])] }] };
     const [node] = content([table], { images });
-    expect(node.table.body[0][0].stack[0].width <= A4_CONTENT / 2).toBe(true);
+    expect(node.table.body[0][0].stack[0].width).toEqual(A4_CONTENT / 2 - 8);
   });
 
   it('writes the placeholder for a GIF, which a PDF cannot embed', () => {
     const images = new Map([['att-1', { bytes: new Uint8Array([0x47, 0x49, 0x46, 0x38]), type: 'gif', width: 10, height: 10 }]]);
     expect(textOf(content([image], { images })[0])).toEqual('[Image unavailable: diagram]');
+  });
+
+  it('shrinks an image inside a panel by the panel padding', () => {
+    const images = new Map([['att-1', { bytes: pngBytes(1400, 700), type: 'png', width: 1400, height: 700 }]]);
+    const [node] = content([{ type: 'panel', kind: 'info', blocks: [image] }], { images });
+    expect(node.table.body[0][0].stack[0].width).toEqual(A4_CONTENT - 8);
+  });
+
+  it('replaces a truncated PNG with the placeholder and counts it', () => {
+    const bytes = pngBytes(64, 40);
+    const images = new Map([['att-1', { bytes: bytes.slice(0, bytes.length - 20), type: 'png', width: 64, height: 40 }]]);
+    const built = build([image], { images });
+    expect([textOf(built.definition.content[0]), built.imagesDropped]).toEqual(['[Image unavailable: diagram]', 1]);
+  });
+
+  it('builds every image as a placeholder when images are turned off', () => {
+    const images = new Map([['att-1', { bytes: pngBytes(64, 40), type: 'png', width: 64, height: 40 }]]);
+    const built = buildPdfDefinition({ spec: spec([image, image]), images, labels, meta, withImages: false });
+    expect([built.definition.content.map(textOf), built.imagesDropped]).toEqual([['[Image unavailable: diagram]', '[Image unavailable: diagram]'], 2]);
+  });
+
+  it('does not count an image that never had bytes as dropped', () => {
+    expect(build([image]).imagesDropped).toEqual(0);
   });
 
   it('writes an italic placeholder when the image has no bytes', () => {
@@ -260,6 +283,42 @@ describe('buildPdfDefinition images', () => {
 });
 
 describe('renderPdf', () => {
+  const image = { type: 'image', attachmentId: 'att-1', alt: 'diagram' };
+  const fonts = async () => ({ files: {}, families: {} });
+  const hasImage = (definition) => JSON.stringify(definition.content).includes('data:image/');
+
+  it('renders a valid PDF when an attachment is a truncated PNG', async () => {
+    const bytes = pngBytes(64, 40);
+    const images = new Map([['att-1', { bytes: bytes.slice(0, bytes.length - 20), type: 'png', width: 64, height: 40 }]]);
+    const result = await renderPdf({ spec: spec([image, para('after')]), images, labels, meta, engine: createNodePdfEngine(), loadFonts });
+    expect([new TextDecoder().decode(result.bytes.slice(0, 4)), result.imagesDropped]).toEqual(['%PDF', 1]);
+  }, 60000);
+
+  it('renders once more without images when the engine rejects an image', async () => {
+    const images = new Map([['att-1', { bytes: pngBytes(64, 40), type: 'png', width: 64, height: 40 }]]);
+    const calls = [];
+    const engine = { async render(definition) {
+      calls.push(hasImage(definition));
+      if (hasImage(definition)) throw new Error('Incomplete or corrupt PNG file');
+      return new Uint8Array([1]);
+    } };
+    const result = await renderPdf({ spec: spec([image, image]), images, labels, meta, engine, loadFonts: fonts });
+    expect({ calls, bytes: [...result.bytes], imagesDropped: result.imagesDropped }).toEqual({ calls: [true, false], bytes: [1], imagesDropped: 2 });
+  });
+
+  it('rethrows when the render without images fails too', async () => {
+    const images = new Map([['att-1', { bytes: pngBytes(64, 40), type: 'png', width: 64, height: 40 }]]);
+    const engine = { async render() { throw new Error('engine down'); } };
+    await expect(renderPdf({ spec: spec([image]), images, labels, meta, engine, loadFonts: fonts })).rejects.toThrow('engine down');
+  });
+
+  it('rethrows at once when the failed document had no images', async () => {
+    let calls = 0;
+    const engine = { async render() { calls += 1; throw new Error('engine down'); } };
+    const outcome = await renderPdf({ spec: spec([para('a')]), images: new Map(), labels, meta, engine, loadFonts: fonts }).catch((error) => error.message);
+    expect([outcome, calls]).toEqual(['engine down', 1]);
+  });
+
   it('renders every block type across page breaks into one PDF', async () => {
     const images = new Map([['att-1', { bytes: pngBytes(1400, 700), type: 'png', width: 1400, height: 700 }]]);
     const list = (ordered) => ({ type: 'list', ordered, start: 2, items: [{ blocks: [para('item'), { type: 'list', ordered: !ordered, start: 1, items: [{ blocks: [para('sub')] }] }] }, { blocks: [] }] });

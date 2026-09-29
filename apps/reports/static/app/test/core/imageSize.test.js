@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { fitImage, readImageInfo } from '../../src/core/imageSize.js';
+import { fitImage, isImageIntact, readImageInfo } from '../../src/core/imageSize.js';
+import { pngBytes } from '../fixtures/images.js';
 
 function png(width, height) {
   const b = new Uint8Array(24);
@@ -46,5 +47,40 @@ describe('fitImage', () => {
   });
   it('uses a 16:10 box when the size is unknown', () => {
     expect(fitImage({ width: 0, height: 0 }, 640)).toEqual({ width: 640, height: 400 });
+  });
+});
+
+describe('isImageIntact', () => {
+  const jpeg = (tail) => new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, ...tail]);
+
+  it('accepts a complete PNG', () => {
+    expect(isImageIntact(pngBytes(32, 20), 'png')).toBe(true);
+  });
+
+  it('rejects a PNG cut off before its end chunk', () => {
+    const bytes = pngBytes(32, 20);
+    expect(isImageIntact(bytes.slice(0, bytes.length - 20), 'png')).toBe(false);
+  });
+
+  it('rejects a PNG whose first chunk is not IHDR', () => {
+    const bytes = pngBytes(32, 20);
+    bytes.set([0x41, 0x42, 0x43, 0x44], 12);
+    expect(isImageIntact(bytes, 'png')).toBe(false);
+  });
+
+  it('accepts a JPEG that ends with EOI', () => {
+    expect(isImageIntact(jpeg([0x01, 0x02, 0xff, 0xd9]), 'jpg')).toBe(true);
+  });
+
+  it('accepts a JPEG with a little padding after EOI', () => {
+    expect(isImageIntact(jpeg([0x01, 0xff, 0xd9, 0x00, 0x00]), 'jpg')).toBe(true);
+  });
+
+  it('rejects a JPEG without EOI', () => {
+    expect(isImageIntact(jpeg([0x01, 0x02, 0x03, 0x04]), 'jpg')).toBe(false);
+  });
+
+  it('rejects a type a PDF cannot embed', () => {
+    expect(isImageIntact(new Uint8Array([0x47, 0x49, 0x46, 0x38]), 'gif')).toBe(false);
   });
 });
