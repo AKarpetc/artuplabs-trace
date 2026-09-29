@@ -4,6 +4,7 @@ import { renderFileName } from '../core/filename.js';
 import { BULK_BATCH, ISSUE_CONCURRENCY, MAX_DOC_ISSUES } from '../core/limits.js';
 import { JiraError } from '../infra/jira.js';
 import { createPool } from '../infra/pool.js';
+import { createBatchReader } from './batch.js';
 import { createConsumer } from './consumers.js';
 import { ReportError } from './errors.js';
 import { downloadImages } from './images.js';
@@ -21,8 +22,6 @@ function asReportError(error) {
   return error.status === 400 ? new ReportError('jql', { messages: error.messages }) : new ReportError('network', { status: error.status });
 }
 
-const truncated = (page, key) => (page?.total ?? 0) > (page?.[key]?.length ?? 0);
-
 function chunk(list, size) {
   const out = [];
   for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
@@ -36,6 +35,11 @@ async function resolveJql({ client, entry, jql }) {
   if (entry.kind === 'board') return withOrder((await client.boardJql(entry.boardId)).jql);
   throw new ReportError('no-jql');
 }
+
+/**
+ * @typedef {{ issues: number, total: number, skipped: number, seconds: number, retries: number, imagesMissing: number }} FileStats
+ * imagesMissing: unique attachment ids that could not be downloaded or read, plus images the PDF renderer dropped.
+ */
 
 /** Export run over an injected client (or a factory given onRetry) and renderers: read ids, fetch in batches, complete, images, build; failed batches can be retried or skipped into a partial file. */
 export function createExportRun({
@@ -55,32 +59,15 @@ export function createExportRun({
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   };
 
-  const complete = async (issue) => {
-    const f = issue.fields ?? {};
-    const [comments, worklogs] = await Promise.all([
-      plan.comments && truncated(f.comment, 'comments') ? client.listComments(issue.id) : null,
-      plan.worklogs && truncated(f.worklog, 'worklogs') ? client.listWorklogs(issue.id) : null,
-    ]);
-    if (!comments && !worklogs) return issue;
-    const fields = { ...f };
-    if (comments) fields.comment = { ...f.comment, comments, total: comments.length };
-    if (worklogs) fields.worklog = { ...f.worklog, worklogs, total: worklogs.length };
-    return { ...issue, fields };
-  };
-
-  const readBatch = async (ids) => {
-    const { issues, errors } = await client.bulkFetch(ids, fetchOptions);
-    const position = new Map(ids.map((id, i) => [id, i]));
-    const ordered = [...issues].sort((a, b) => (position.get(String(a.id)) ?? 0) - (position.get(String(b.id)) ?? 0));
-    const completed = await Promise.all(ordered.map(complete));
-    return { items: completed.map((issue) => consumer.consume(issue)), skipped: errors.length, project: completed[0]?.fields?.project?.key ?? '' };
-  };
+  const readBatch = createBatchReader({ client, plan, fetchOptions, consumer });
 
   const readBatches = async (batches) => {
     await Promise.all(batches.map((batch) => runBatch(async () => {
       checkAbort();
       try {
-        batch.result = await readBatch(batch.ids);
+        const result = await readBatch(batch.ids);
+        checkAbort();
+        batch.result = result;
         batch.failed = false;
         state.read += batch.ids.length;
         onProgress({ phase: 'read', done: state.read, total: state.ids.length });
@@ -103,6 +90,9 @@ export function createExportRun({
       }
       checkAbort();
       state.ids = await client.searchIds(state.jql, limit > 0 ? { limit } : {});
+      if (format !== 'xlsx' && state.ids.length > MAX_DOC_ISSUES) {
+        throw new ReportError('too-many-for-document', { count: state.ids.length, max: MAX_DOC_ISSUES });
+      }
     } catch (error) {
       throw asReportError(error);
     }
@@ -114,13 +104,15 @@ export function createExportRun({
   const build = async (partial) => {
     const present = state.batches.filter((b) => b.result);
     const items = present.flatMap((b) => b.result.items);
-    const { images, missing } = await downloadImages({ client, ids: consumer.imageIds(items), cache: imageCache, onProgress });
+    const fileMeta = { ...meta, jql: state.jql, count: items.length, ...(partial ? { partial: { done: state.read, total: state.ids.length } } : {}) };
+    const { images, missing } = await downloadImages({ client, ids: consumer.imageIds(items), cache: imageCache, onProgress, signal });
     checkAbort();
     onProgress({ phase: 'build', done: 0, total: 1 });
-    const fileMeta = { ...meta, jql: state.jql, count: items.length, ...(partial ? { partial: { done: state.read, total: state.ids.length } } : {}) };
     const rendered = await consumer.render({ items, meta: fileMeta, images, renderers });
     checkAbort();
-    const warnings = [...consumer.warnings(items, missing)];
+    images.clear();
+    imageCache.clear();
+    const warnings = [...present.flatMap((b) => b.result.warnings), ...consumer.warnings(items, missing)];
     if (rendered.emojiDropped > 0) warnings.push({ kind: 'pdf-emoji', detail: String(rendered.emojiDropped) });
     const fileName = renderFileName({
       pattern: template.fileNamePattern ?? meta.fileNamePattern,
@@ -151,18 +143,27 @@ export function createExportRun({
     return { status: 'done', file: await build(false) };
   };
 
+  const released = (fn) => async () => {
+    try {
+      return await fn();
+    } catch (error) {
+      if (isAbort(error)) imageCache.clear();
+      throw error;
+    }
+  };
+
   return {
-    async start() {
+    start: released(async () => {
       state.started = clock();
       await prepare();
       onProgress({ phase: 'read', done: 0, total: state.ids.length });
       await readBatches(state.batches);
       return outcome();
-    },
-    async retryMissing() {
+    }),
+    retryMissing: released(async () => {
       await readBatches(state.batches.filter((b) => b.failed));
       return outcome();
-    },
-    buildPartial: () => build(true),
+    }),
+    buildPartial: released(() => build(true)),
   };
 }

@@ -45,11 +45,14 @@ function fakeClient({ count = 3, fields = () => ({}), ...overrides } = {}) {
 }
 
 function fakeRenderers({ emojiDropped = 0, imagesDropped = 0 } = {}) {
+  const seen = [];
+  const snap = (input) => seen.push(input.images ? new Map(input.images) : null);
   return {
+    seen,
     xlsx: vi.fn(async () => new Uint8Array([1])),
-    docx: vi.fn(async () => new Uint8Array([1])),
-    pdf: vi.fn(async () => ({ bytes: new Uint8Array([1]), emojiDropped, imagesDropped })),
-    docxTemplate: vi.fn(async () => new Uint8Array([1])),
+    docx: vi.fn(async (input) => { snap(input); return new Uint8Array([1]); }),
+    pdf: vi.fn(async (input) => { snap(input); return { bytes: new Uint8Array([1]), emojiDropped, imagesDropped }; }),
+    docxTemplate: vi.fn(async (input) => { snap(input); return new Uint8Array([1]); }),
   };
 }
 
@@ -340,7 +343,7 @@ describe('createExportRun: images', () => {
     const client = imageClient();
     const { exportRun, renderers } = run({ client, template: SINGLE_DOCX });
     const { file } = await exportRun.start();
-    const images = renderers.docx.mock.calls[0][0].images;
+    const images = renderers.seen[0];
     expect({
       downloads: client.attachmentBytes.mock.calls.map(([id]) => id).sort(),
       images: [...images.entries()],
@@ -365,7 +368,7 @@ describe('createExportRun: images', () => {
     });
     const { exportRun, renderers } = run({ client, template: SINGLE_DOCX });
     const { file } = await exportRun.start();
-    expect({ thumbnails: client.attachmentThumbnail.mock.calls, images: [...renderers.docx.mock.calls[0][0].images.keys()], missing: file.stats.imagesMissing })
+    expect({ thumbnails: client.attachmentThumbnail.mock.calls, images: [...renderers.seen[0].keys()], missing: file.stats.imagesMissing })
       .toEqual({ thumbnails: [['A']], images: ['A'], missing: 0 });
   });
 
@@ -375,7 +378,7 @@ describe('createExportRun: images', () => {
     const { exportRun, renderers } = run({ client, template });
     await exportRun.start();
     const input = renderers.docxTemplate.mock.calls[0][0];
-    expect({ template: input.template, keys: input.issues.map((i) => [i.key, i.fields]), images: input.images.size, count: input.meta.count })
+    expect({ template: input.template, keys: input.issues.map((i) => [i.key, i.fields]), images: renderers.seen[0].size, count: input.meta.count })
       .toEqual({ template: new Uint8Array([9]), keys: [['RPT-1', { Team: 'Core' }]], images: 0, count: 1 });
   });
 });
@@ -414,5 +417,87 @@ describe('createExportRun: file', () => {
       ],
       missing: 2,
     });
+  });
+});
+
+describe('createExportRun: isolation and release', () => {
+  it('keeps the embedded comments and warns when one issue cannot be completed, leaving the batch intact', async () => {
+    const comment = { id: '1', body: doc(para('first')), author: { displayName: 'Ann' } };
+    const client = fakeClient({
+      count: 100,
+      fields: (id) => ({ comment: { total: id === '5' ? 3 : 1, comments: [comment] } }),
+      listComments: vi.fn(async (id) => { throw new JiraError(404, `/rest/api/3/issue/${id}/comment`); }),
+    });
+    const { exportRun } = run({ client, template: builtinById('xlsx-comments') });
+    const outcome = await exportRun.start();
+    expect({ status: outcome.status, issues: outcome.file.stats.issues, skipped: outcome.file.stats.skipped, warnings: outcome.file.warnings }).toEqual({
+      status: 'done', issues: 100, skipped: 0, warnings: [{ kind: 'issue-incomplete', detail: 'comments', issueKey: 'RPT-5' }],
+    });
+  });
+
+  it('skips an issue that cannot be consumed, warns and counts it as skipped', async () => {
+    const client = fakeClient({ fields: (id) => (id === '2' ? { comment: { total: 1, comments: [null] } } : {}) });
+    const { exportRun, renderers } = run({ client, template: LIST_DOCX });
+    const outcome = await exportRun.start();
+    expect({
+      status: outcome.status,
+      stats: [outcome.file.stats.issues, outcome.file.stats.skipped],
+      keys: renderers.docx.mock.calls[0][0].spec.blocks[1].rows.slice(1).map((r) => r.cells[0].blocks[0].runs[0].text),
+      warnings: outcome.file.warnings,
+    }).toEqual({
+      status: 'done',
+      stats: [2, 1],
+      keys: ['RPT-1', 'RPT-3'],
+      warnings: [{ kind: 'issue-failed', detail: expect.stringContaining('author'), issueKey: 'RPT-2' }],
+    });
+  });
+
+  it('does not keep a transient image failure: a later build downloads the image again', async () => {
+    let calls = 0;
+    const fail = () => { throw new JiraError(500, '/rest/api/3/attachment/content/A'); };
+    const bytes = () => PNG.buffer.slice(PNG.byteOffset, PNG.byteOffset + PNG.byteLength);
+    const client = fakeClient({
+      count: 1,
+      fields: () => ({ attachment: [attachment('A')] }),
+      attachmentBytes: vi.fn(async () => { calls += 1; return calls === 1 ? fail() : bytes(); }),
+      attachmentThumbnail: vi.fn(async () => fail()),
+    });
+    const { exportRun, renderers } = run({ client, template: SINGLE_DOCX });
+    const first = await exportRun.start();
+    const second = await exportRun.buildPartial();
+    expect({ missing: [first.file.stats.imagesMissing, second.stats.imagesMissing], shown: renderers.seen.map((m) => [...m.keys()]) })
+      .toEqual({ missing: [1, 0], shown: [[], ['A']] });
+  });
+
+  it('downloads images again after a successful build instead of holding them', async () => {
+    const client = fakeClient({ count: 1, fields: () => ({ attachment: [attachment('A')] }) });
+    const { exportRun } = run({ client, template: SINGLE_DOCX });
+    await exportRun.start();
+    await exportRun.buildPartial();
+    expect(client.attachmentBytes.mock.calls).toEqual([['A'], ['A']]);
+  });
+
+  it('stops an in-flight batch from reporting progress after cancel', async () => {
+    const controller = new AbortController();
+    const bulkFetch = vi.fn(async (batch) => {
+      if (batch[0] === '1') {
+        await new Promise((r) => setTimeout(r, 2));
+        controller.abort();
+        throw abortError();
+      }
+      await new Promise((r) => setTimeout(r, 10));
+      return { issues: batch.map((id) => issueOf(id)), errors: [] };
+    });
+    const { exportRun, onProgress } = run({ client: fakeClient({ count: 200, bulkFetch }), signal: controller.signal });
+    await expect(exportRun.start()).rejects.toMatchObject({ name: 'AbortError' });
+    await new Promise((r) => setTimeout(r, 30));
+    expect(onProgress.mock.calls.map(([e]) => e).filter((e) => e.phase === 'read')).toEqual([{ phase: 'read', done: 0, total: 200 }]);
+  });
+
+  it('refuses a Word or PDF run when the id search finds more than 2 000 issues though the estimate was lower', async () => {
+    const client = fakeClient({ searchIds: vi.fn(async () => ids(2001)), approximateCount: vi.fn(async () => 5) });
+    const { exportRun } = run({ client, template: SINGLE_DOCX });
+    await expect(exportRun.start()).rejects.toEqual(new ReportError('too-many-for-document', { count: 2001, max: 2000 }));
+    expect(client.bulkFetch).not.toHaveBeenCalled();
   });
 });
