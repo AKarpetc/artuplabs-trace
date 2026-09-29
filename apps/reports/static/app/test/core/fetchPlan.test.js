@@ -21,6 +21,13 @@ describe('BUILTINS', () => {
   });
 });
 
+describe('planFetch prototype keys', () => {
+  it('yields only real field ids for tags named like inherited properties', () => {
+    const tags = ['constructor', 'toString', '__proto__', 'hasOwnProperty'].map((name) => ({ name, kind: 'value', children: [] }));
+    expect(planFetch({ format: 'docx', kind: 'docx', placeholders: tags }, catalog)).toEqual({ fields: BASE, comments: false, worklogs: false, images: false, rendered: false, missing: [] });
+  });
+});
+
 describe('planFetch', () => {
   it('reads only the columns of an Excel template plus the base fields', () => {
     const plan = planFetch({ format: 'xlsx', kind: 'columns', columns: ['key', 'labels', 'customfield_99999'], rowMode: 'issue', groupBy: null, summary: false }, catalog);

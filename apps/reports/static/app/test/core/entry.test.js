@@ -14,6 +14,17 @@ describe('entryFromContext', () => {
   it('falls back to the JQL when no selected key is valid', () => {
     expect(entryFromContext({ type: 'jira:issueNavigatorAction', jql: 'project = RPT', issueKeys: ['bad key'] })).toEqual({ kind: 'jql', jql: 'project = RPT' });
   });
+  it('de-duplicates selected keys', () => {
+    expect(entryFromContext({ type: 'jira:issueNavigatorAction', issueKeys: ['RPT-1', 'rpt-1', 'RPT-2'] })).toEqual({ kind: 'jql', jql: 'key in (RPT-1, RPT-2)' });
+  });
+  it('ignores non-array keys without throwing', () => {
+    expect(entryFromContext({ type: 'jira:issueNavigatorAction', jql: 'project = RPT', issueKeys: 'RPT-1' })).toEqual({ kind: 'jql', jql: 'project = RPT' });
+    expect(entryFromContext({ type: 'jira:issueNavigatorAction', issues: { length: 1 } })).toEqual({ kind: 'none' });
+  });
+  it('rejects ids that are not plain positive integers', () => {
+    const ids = ['1e21', true, [7], 1e21, '7.5', '-3', ' 7'];
+    expect(ids.map((id) => entryFromContext({ type: 'jira:boardAction', board: { id } }))).toEqual(ids.map(() => ({ kind: 'none' })));
+  });
   it('reads board and backlog ids', () => {
     expect(entryFromContext({ type: 'jira:boardAction', board: { id: '7' } })).toEqual({ kind: 'board', boardId: 7 });
     expect(entryFromContext({ type: 'jira:backlogAction', board: { id: 7 } })).toEqual({ kind: 'board', boardId: 7 });

@@ -5,16 +5,17 @@
 const KEY = /^[A-Z][A-Z0-9_]*-\d+$/i;
 
 const idOf = (value) => {
+  if (typeof value !== 'number' && !(typeof value === 'string' && /^\d+$/.test(value))) return null;
   const n = Number(value);
-  return Number.isInteger(n) && n > 0 ? n : null;
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
 };
 
 const PROJECT_KEY = /^[A-Z][A-Z0-9_]+$/;
 
 function navigatorEntry(extension) {
-  const keys = (extension.issueKeys ?? extension.issues?.map((i) => i?.key) ?? [])
-    .filter((k) => typeof k === 'string' && KEY.test(k))
-    .map((k) => k.toUpperCase());
+  const raw = extension.issueKeys ?? (Array.isArray(extension.issues) ? extension.issues.map((i) => i?.key) : []);
+  const list = Array.isArray(raw) ? raw : [];
+  const keys = [...new Set(list.filter((k) => typeof k === 'string' && KEY.test(k)).map((k) => k.toUpperCase()))];
   if (keys.length) return { kind: 'jql', jql: `key in (${keys.join(', ')})` };
   if (typeof extension.jql === 'string' && extension.jql.trim()) {
     return { kind: 'jql', jql: extension.jql.trim() };

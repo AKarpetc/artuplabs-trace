@@ -43,11 +43,11 @@ function planTags(tags, catalog) {
       const field = resolveField(catalog, custom[1]);
       if (field) fields.push(field.id);
       else missing.push(custom[1]);
-    } else if (LOOP_FIELD[tag.name]) {
+    } else if (Object.hasOwn(LOOP_FIELD, tag.name)) {
       fields.push(LOOP_FIELD[tag.name]);
       if (tag.name === 'comments') flags.comments = true;
       if (tag.name === 'worklogs') flags.worklogs = true;
-    } else if (ISSUE_TAGS[tag.name]) {
+    } else if (Object.hasOwn(ISSUE_TAGS, tag.name) && ISSUE_TAGS[tag.name]) {
       fields.push(ISSUE_TAGS[tag.name]);
     }
     if (tag.kind === 'raw') {

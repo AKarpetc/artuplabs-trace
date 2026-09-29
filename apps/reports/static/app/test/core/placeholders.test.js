@@ -26,6 +26,17 @@ describe('checkTemplateTags', () => {
   });
 });
 
+describe('checkTemplateTags prototype keys', () => {
+  it('flags inherited property names as unknown tags', () => {
+    const names = ['constructor', 'toString', '__proto__'];
+    const errors = checkTemplateTags(names.map(v));
+    expect(errors.map((e) => [e.kind, e.tag])).toEqual(names.map((n) => ['unknown-tag', n]));
+  });
+  it('flags a rich inherited name without throwing', () => {
+    expect(checkTemplateTags([raw('constructor')]).map((e) => e.kind)).toEqual(['unknown-tag']);
+  });
+});
+
 describe('suggest', () => {
   it('returns the nearest name within two edits, else null', () => {
     expect(suggest('asignee', ['assignee', 'status'])).toBe('assignee');

@@ -18,7 +18,7 @@ const SPECIAL = {
 /** Resolves a template column reference to a Jira field or a pseudo-column; unknown fields are marked missing. */
 export function resolveColumn(catalog, ref) {
   if (PSEUDO_COLUMNS.has(ref)) return { ref, id: ref, field: null, pseudo: true, missing: false };
-  const field = SPECIAL[ref] ? SPECIAL[ref](catalog) : resolveField(catalog, ref);
+  const field = Object.hasOwn(SPECIAL, ref) ? SPECIAL[ref](catalog) : resolveField(catalog, ref);
   if (!field) return { ref, id: ref, field: null, pseudo: false, missing: true };
   return { ref, id: field.id, field, pseudo: false, missing: false };
 }

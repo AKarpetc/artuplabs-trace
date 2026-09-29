@@ -65,7 +65,9 @@ export function suggest(name, candidates) {
   return best;
 }
 
-const allowedIn = (scope) => [...(ITEM_TAGS[scope] ?? []), ...Object.keys(ISSUE_TAGS), ...DOC_TAGS];
+const own = (table, scope) => (Object.hasOwn(table, scope) ? table[scope] : []);
+
+const allowedIn = (scope) => [...own(ITEM_TAGS, scope), ...Object.keys(ISSUE_TAGS), ...DOC_TAGS];
 
 /** Checks template tags against the vocabulary of their scope; returns the errors found. */
 export function checkTemplateTags(tags, { fieldNames = [] } = {}) {
@@ -81,7 +83,7 @@ export function checkTemplateTags(tags, { fieldNames = [] } = {}) {
       if (tag.kind === 'loop') walk(tag.children, scope);
       return;
     }
-    if (tag.kind === 'loop' && (LOOPS[scope] ?? []).includes(tag.name)) {
+    if (tag.kind === 'loop' && own(LOOPS, scope).includes(tag.name)) {
       walk(tag.children, tag.name);
       return;
     }
@@ -90,7 +92,7 @@ export function checkTemplateTags(tags, { fieldNames = [] } = {}) {
       errors.push({ kind: 'unknown-tag', tag: tag.name, suggestion: suggest(tag.name, allowed) });
       return;
     }
-    if (tag.kind === 'raw' && !(RICH_TAGS[scope] ?? []).includes(tag.name)) {
+    if (tag.kind === 'raw' && !own(RICH_TAGS, scope).includes(tag.name)) {
       errors.push({ kind: 'not-rich', tag: tag.name });
       return;
     }

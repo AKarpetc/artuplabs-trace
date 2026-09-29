@@ -19,6 +19,11 @@ describe('resolveColumn', () => {
     expect(resolveColumn(catalog, '@storyPoints').id).toBe('customfield_10016');
     expect(resolveColumn(catalog, '@sprint').id).toBe('customfield_10020');
   });
+  it('does not resolve inherited property names', () => {
+    expect(['constructor', 'toString', '__proto__'].map((ref) => resolveColumn(catalog, ref))).toEqual(
+      ['constructor', 'toString', '__proto__'].map((ref) => ({ ref, id: ref, field: null, pseudo: false, missing: true })),
+    );
+  });
   it('marks a field that is not on the site as missing', () => {
     expect(resolveColumn(catalog, 'customfield_99999')).toEqual({ ref: 'customfield_99999', id: 'customfield_99999', field: null, pseudo: false, missing: true });
   });
