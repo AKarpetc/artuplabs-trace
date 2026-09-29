@@ -11,7 +11,7 @@ function preventUnload(event) {
 }
 
 /**
- * Export run state machine: idle → running → done | failed | cancelled; the zip downloads once on success.
+ * Export run state machine: idle → running → done | failed | cancelled; the zip downloads once on success; `continueAnyway` reruns above the 1 GB guard.
  * `createClient({ signal })`, `save(fileName, blob)` and `clock()` are injectable for tests and the preview.
  */
 export function useExportRun({ context, createClient = createBridgeClient, save = saveBlob, clock = Date.now } = {}) {
@@ -37,6 +37,7 @@ export function useExportRun({ context, createClient = createBridgeClient, save 
         signal: current.signal,
         onProgress: (progress) => setRun((prev) => (prev.state === 'running' && controller.current === current ? { ...prev, progress } : prev)),
         now: new Date(clock()),
+        allowLarge: Boolean(form.allowLarge),
       });
       if (controller.current === current) running.current = false;
       if (current.signal.aborted) return;
@@ -68,6 +69,10 @@ export function useExportRun({ context, createClient = createBridgeClient, save 
     if (run.form) start(run.form);
   }, [run.form, start]);
 
+  const continueAnyway = useCallback(() => {
+    if (run.form) start({ ...run.form, allowLarge: true });
+  }, [run.form, start]);
+
   const downloadAgain = useCallback(() => {
     if (run.result) save(run.result.fileName, run.result.blob);
   }, [run.result, save]);
@@ -80,5 +85,5 @@ export function useExportRun({ context, createClient = createBridgeClient, save 
 
   useEffect(() => () => controller.current?.abort(), []);
 
-  return { ...run, start, cancel, reset, retry, downloadAgain };
+  return { ...run, start, cancel, reset, retry, continueAnyway, downloadAgain };
 }

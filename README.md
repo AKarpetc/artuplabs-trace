@@ -84,6 +84,20 @@ What each preset writes into the page bodies:
 A page with children becomes a folder with the index file; a page without children is `<name>.md`.
 File names are ASCII slugs of the titles; sibling collisions (including ones that differ only by
 case or accents) get the page id appended, and a page keeps its file name on later exports.
+A Confluence folder becomes a plain directory named like a page, without an index file; Docusaurus
+gets a `_category_.json` and MkDocs a `.pages` with the folder title. Empty folders are skipped.
+
+Paths grow with the tree depth: every level adds a directory named after its page, and a slug keeps
+up to 80 characters. A deep tree with long titles can pass the 260-character path limit of
+Windows tools that are not long-path aware (Explorer's zip extraction, older Git for Windows). On
+Windows, unzip into a short folder such as `C:\docs`, enable long paths
+(`git config --global core.longpaths true`), or export a deep branch on its own.
+
+Attachments are checked before download: if the attachments to download add up to more than 1 GB,
+the export stops and suggests a lower **Skip files larger than** limit, **Only those used on
+pages**, or a single branch; **Continue anyway** goes on. Above 4 GB the export is refused, because
+the zip is built in the browser without ZIP64 and cannot hold more. Each attachment is added to the
+zip as soon as it is downloaded.
 
 ### Update workflow
 
@@ -100,8 +114,10 @@ unzip -o <zip> -d docs && cd docs && if [ -f export-deleted.txt ]; then while IF
 4. `git status` shows the pages that changed in Confluence. Exporting again without changes in
    Confluence gives byte-identical files, so `git status` stays clean.
 
-If the space, root page or path options differ from the previous manifest, the app says so and runs
-a full export instead.
+If the space, root page, export scope (space, page and children, or one page) or path options differ
+from the previous manifest, the app says so and runs a full export instead. A page whose labels
+changed is rewritten even when its version did not change. `export-deleted.txt` only ever lists
+files the app writes itself (`.md` pages, files in `.assets` folders, `_category_.json`, `.pages`).
 
 ## Data handling
 

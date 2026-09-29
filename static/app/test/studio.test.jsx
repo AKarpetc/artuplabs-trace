@@ -198,6 +198,27 @@ describe('export studio', () => {
     expect(screen.getByTestId('mode-update')).toHaveAttribute('aria-checked', 'false');
   });
 
+  it('shows a search error in the picker, distinct from no results', async () => {
+    const fake = createFakeConfluence({ space: SPACE, pages: PAGES, users: {} });
+    const client = {
+      ...fake.client,
+      async searchPages(key, text) {
+        if (text === 'Boom') throw new Error('search down');
+        return [];
+      },
+    };
+    const en = localeDictionaries['en-US'];
+    renderStudio({ createClient: () => client });
+    fireEvent.click(await screen.findByTestId('scope-branch'));
+    const input = screen.getByLabelText('Page to export');
+    fireEvent.change(input, { target: { value: 'Boom' } });
+    expect(await screen.findByText(en['picker.searchError'])).toBeInTheDocument();
+    expect(screen.queryByText(en['picker.noResults'])).toBeNull();
+    fireEvent.change(input, { target: { value: 'Nothing' } });
+    expect(await screen.findByText(en['picker.noResults'])).toBeInTheDocument();
+    expect(screen.queryByText(en['picker.searchError'])).toBeNull();
+  });
+
   it('keeps only the latest picker search when responses arrive out of order', async () => {
     const fake = createFakeConfluence({ space: SPACE, pages: PAGES, users: {} });
     const answers = { Ca: [{ id: '2', title: 'Getting started', ancestors: [] }], Caf: [{ id: '3', title: 'Café', ancestors: ['Engineering'] }] };

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Label } from '@atlaskit/form';
 import { Box, Stack, Text, xcss } from '@atlaskit/primitives';
 import { AsyncSelect } from '@atlaskit/select';
@@ -20,11 +20,12 @@ function OptionLabel(option, { context }) {
   );
 }
 
-/** Async page search in the current space (only the latest request counts); the chosen page shows its breadcrumb path below the field. */
+/** Async page search in the current space (only the latest request counts, a failed search says so); the chosen page shows its breadcrumb path below the field. */
 export function PagePicker({ createClient, spaceKey, value, onChange }) {
   const t = useT();
   const id = useId();
   const latest = useRef({ request: 0, controller: null });
+  const [failed, setFailed] = useState(false);
   useEffect(() => () => latest.current.controller?.abort(), []);
   const load = useCallback(async (input) => {
     const text = input.trim();
@@ -36,8 +37,11 @@ export function PagePicker({ createClient, spaceKey, value, onChange }) {
     if (!text) return [];
     try {
       const results = await createClient({ signal: controller.signal }).searchPages(spaceKey, text);
-      return request === latest.current.request ? results.map(toOption) : [];
+      if (request !== latest.current.request) return [];
+      setFailed(false);
+      return results.map(toOption);
     } catch {
+      if (request === latest.current.request && !controller.signal.aborted) setFailed(true);
       return [];
     }
   }, [createClient, spaceKey]);
@@ -53,7 +57,10 @@ export function PagePicker({ createClient, spaceKey, value, onChange }) {
         onChange={(option) => onChange(option?.page ?? null)}
         formatOptionLabel={OptionLabel}
         placeholder={t('picker.placeholder')}
-        noOptionsMessage={({ inputValue }) => (inputValue.trim() ? t('picker.noResults') : t('picker.placeholder'))}
+        noOptionsMessage={({ inputValue }) => {
+          if (!inputValue.trim()) return t('picker.placeholder');
+          return failed ? t('picker.searchError') : t('picker.noResults');
+        }}
         loadingMessage={() => t('loading')}
         isClearable
       />

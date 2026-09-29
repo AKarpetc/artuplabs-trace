@@ -1,6 +1,8 @@
 import { unzipSync, strFromU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { runExport, PIPELINE_WARNING_KINDS } from '../../src/export/pipeline.js';
+import { ExportSizeError } from '../../src/export/errors.js';
+import { createZipWriter } from '../../src/infra/zip.js';
 import { scanTree } from '../../src/export/tree.js';
 import { DEFAULT_OPTIONS } from '../../src/core/presets.js';
 import { labelsHash, parseManifest } from '../../src/core/manifest.js';
@@ -578,5 +580,68 @@ describe('runExport file embeds', () => {
     const out = await files(await run(fake, { options: { ...DEFAULT_OPTIONS, attachments: 'referenced' } }));
     expect(out['home/api.md']).toContain('[d.png](api.assets/d.png)');
     expect(out['home/api.assets/d.png']).toEqual([...PNG]);
+  });
+});
+
+describe('runExport attachment size guard', () => {
+  const eng = { id: '5', key: 'ENG', name: 'Eng' };
+  const GB = 1000 ** 3;
+  const sized = (sizes, body = '<p>x</p>') => [
+    { id: '1', title: 'Home', parentId: null, position: 0, version: 1, authorId: 'u1', labels: [], body, attachments: sizes.map((size, i) => ({ id: `a${i}`, title: `f${i}.bin`, version: 1, bytes: PNG, fileSize: size })) },
+  ];
+  const noLimit = { ...DEFAULT_OPTIONS, maxAttachmentMb: 0 };
+
+  it('stops before downloading when the planned attachments add up to more than 1 GB', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: sized([0.6 * GB, 0.5 * GB]), users: {} });
+    const error = await run(fake, { options: noLimit }).catch((e) => e);
+    expect(error).toBeInstanceOf(ExportSizeError);
+    expect(error).toMatchObject({ kind: 'large', bytes: 1.1 * GB });
+    expect(fake.calls.download).toBe(0);
+    expect(fake.calls.getPages).toBe(1);
+  });
+
+  it('continues above 1 GB when allowed', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: sized([0.6 * GB, 0.5 * GB]), users: {} });
+    const out = await files(await run(fake, { options: noLimit, allowLarge: true }));
+    expect(Object.keys(out)).toEqual(expect.arrayContaining(['home.assets/f0.bin', 'home.assets/f1.bin']));
+  });
+
+  it('refuses more than 4 GiB even when allowed, since a zip cannot hold it', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: sized([3 * GB, 2 * GB]), users: {} });
+    await expect(run(fake, { options: noLimit, allowLarge: true })).rejects.toMatchObject({ name: 'ExportSizeError', kind: 'zip-limit', bytes: 5 * GB });
+  });
+
+  it('counts only attachments that will be downloaded', async () => {
+    const referenced = createFakeConfluence({ space: eng, pages: sized([2 * GB, 10], '<p><ac:image><ri:attachment ri:filename="f1.bin"/></ac:image></p>'), users: {} });
+    const out = await files(await run(referenced, { options: { ...noLimit, attachments: 'referenced' } }));
+    expect(Object.keys(out)).toContain('home.assets/f1.bin');
+    const skipped = createFakeConfluence({ space: eng, pages: sized([2 * GB, 10]), users: {} });
+    expect((await run(skipped, { options: { ...DEFAULT_OPTIONS, maxAttachmentMb: 50 } })).stats.skippedAttachments).toBe(1);
+  });
+
+  it('adds each attachment to the zip as soon as its download completes', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: sized([10, 10]), users: {} });
+    const events = [];
+    let releaseFirst;
+    const firstGate = new Promise((resolve) => {
+      releaseFirst = resolve;
+    });
+    const download = fake.client.download;
+    fake.client.download = async (link) => {
+      if (link.endsWith('/a0')) await firstGate;
+      const bytes = await download(link);
+      events.push(`downloaded ${link.split('/').pop()}`);
+      if (link.endsWith('/a1')) setTimeout(releaseFirst, 0);
+      return bytes;
+    };
+    const createZip = () => {
+      const zip = createZipWriter();
+      return { ...zip, addBinary: (path, data, mtime) => {
+        events.push(`zipped ${path}`);
+        zip.addBinary(path, data, mtime);
+      } };
+    };
+    await run(fake, { createZip });
+    expect(events).toEqual(['downloaded a1', 'zipped home.assets/f1.bin', 'downloaded a0', 'zipped home.assets/f0.bin']);
   });
 });

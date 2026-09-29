@@ -9,10 +9,16 @@ import { presetFiles, presetOf } from '../core/presets.js';
 import { toSlug } from '../core/slug.js';
 import { exportFileName } from '../infra/download.js';
 import { createZipWriter } from '../infra/zip.js';
+import { ExportSizeError } from './errors.js';
 import { scanTree } from './tree.js';
 
 /** Warning kinds the pipeline adds on top of the converter's WARNING_KINDS. */
 export const PIPELINE_WARNING_KINDS = ['attachment-too-large', 'convert-failed'];
+
+/** Planned attachment bytes (1 GB) above which an export stops unless the user allows it. */
+export const LARGE_EXPORT_BYTES = 1024 ** 3;
+/** Planned attachment bytes a zip without ZIP64 can never hold. */
+export const ZIP_LIMIT_BYTES = 4 * 1024 ** 3;
 
 const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const abortError = () => new DOMException('Aborted', 'AbortError');
@@ -273,21 +279,28 @@ function keptAttachments(job, used, fetchIds) {
   }));
 }
 
-async function writeAttachments(job, kept, downloadIds) {
-  const items = [...kept].flatMap(([pageId, list]) => list.filter((a) => downloadIds.has(a.id)).map((a) => ({ pageId, attachment: a })));
+function downloadItems(kept, downloadIds) {
+  return [...kept].flatMap(([pageId, list]) => list.filter((a) => downloadIds.has(a.id)).map((a) => ({ pageId, attachment: a })));
+}
+
+function checkSize(job, items) {
+  const bytes = items.reduce((sum, { attachment }) => sum + (Number(attachment.fileSize) || 0), 0);
+  if (bytes > ZIP_LIMIT_BYTES) throw new ExportSizeError('zip-limit', bytes);
+  if (bytes > LARGE_EXPORT_BYTES && !job.allowLarge) throw new ExportSizeError('large', bytes);
+}
+
+async function writeAttachments(job, items) {
   const total = items.length;
   let done = 0;
   job.onProgress({ stage: 'attachments', done, total });
   throwIfAborted(job.signal);
-  const blobs = await job.wait(Promise.all(items.map(async ({ attachment }) => {
+  await job.wait(Promise.all(items.map(async ({ pageId, attachment }) => {
     const bytes = await job.client.download(attachment.downloadLink);
+    throwIfAborted(job.signal);
+    job.zip.addBinary(job.attachments.paths.get(pageId).get(attachment.id), bytes, new Date(attachment.createdAt));
     done += 1;
     job.onProgress({ stage: 'attachments', done, total });
-    return bytes;
   })));
-  items.forEach(({ pageId, attachment }, index) => {
-    job.zip.addBinary(job.attachments.paths.get(pageId).get(attachment.id), blobs[index], new Date(attachment.createdAt));
-  });
   return total;
 }
 
@@ -342,12 +355,12 @@ function statsOf(job, stats, extra) {
   return { pages: pageIds(job).length, ...extra, ...stats, missing: stats.missing + vanished };
 }
 
-function createJob({ client, target, options, previousManifest, siteUrl, signal, onProgress, convert }) {
+function createJob({ client, target, options, previousManifest, siteUrl, signal, onProgress, convert, allowLarge }) {
   const source = sourceOf(target, siteUrl);
   const emit = (progress) => {
     if (!signal?.aborted) onProgress(progress);
   };
-  const job = { client, target, options, previousManifest, siteUrl, spaceKey: target.spaceKey, source, signal, onProgress: emit, convert };
+  const job = { client, target, options, previousManifest, siteUrl, spaceKey: target.spaceKey, source, signal, onProgress: emit, convert, allowLarge };
   let scanned = 0;
   job.startTicks = () => {
     scanned = job.tree.nodes.size;
@@ -361,11 +374,13 @@ function createJob({ client, target, options, previousManifest, siteUrl, signal,
 
 /**
  * Runs a full or update export in the browser and returns the zip with stats and warnings.
- * `client` must be created with the same `signal` so in-flight requests stop on cancel.
+ * `client` must be created with the same `signal` so in-flight requests stop on cancel; attachments above 1 GB need `allowLarge`.
  */
-export async function runExport({ client, target, options, previousManifest, siteUrl, signal, onProgress, now, convert = storageToMarkdown }) {
+export async function runExport({
+  client, target, options, previousManifest, siteUrl, signal, onProgress, now, convert = storageToMarkdown, allowLarge = false, createZip = createZipWriter,
+}) {
   throwIfAborted(signal);
-  const job = createJob({ client, target, options, previousManifest, siteUrl, signal, onProgress, convert });
+  const job = createJob({ client, target, options, previousManifest, siteUrl, signal, onProgress, convert, allowLarge });
   job.tree = await job.wait(scanTree(client, target, job.onProgress, signal));
   job.startTicks();
   await loadMetadata(job);
@@ -373,15 +388,18 @@ export async function runExport({ client, target, options, previousManifest, sit
   let content = null;
   while (!content) {
     changes = await prepare(job);
+    if (options.attachments === 'all') checkSize(job, downloadItems(job.attachments.candidates, changes.downloadIds));
     content = await fetchContent(job, changes.fetchIds);
   }
-  job.zip = createZipWriter();
+  job.zip = createZip();
   const used = new Set();
   const converted = writePages(job, content, used);
   const kept = keptAttachments(job, used, changes.fetchIds);
   const { downloadIds, deletePaths: planned } = planChanges(job, kept);
   const deletePaths = planned.filter(isDeletablePath);
-  const attachments = await writeAttachments(job, kept, downloadIds);
+  const items = downloadItems(kept, downloadIds);
+  checkSize(job, items);
+  const attachments = await writeAttachments(job, items);
   const warnings = collectWarnings(job, converted);
   const blob = await pack(job, finalManifestPages(job, content, converted, kept), warnings, deletePaths);
   const extra = { written: converted.size, attachments, skippedAttachments: job.attachments.skipped.length, deleted: deletePaths.length, bytes: blob.size };

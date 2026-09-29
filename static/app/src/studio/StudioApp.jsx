@@ -121,7 +121,7 @@ function Workspace({ context, createClient, save, onStart }) {
   } else if (run.state === 'done') {
     body = <ResultView result={run.result} siteUrl={context?.siteUrl ?? ''} spaceKey={form.spaceKey} onDownloadAgain={run.downloadAgain} onNewExport={newExport} />;
   } else if (run.state === 'failed') {
-    body = <FailureView error={run.error} onRetry={run.retry} onBack={run.reset} />;
+    body = <FailureView error={run.error} onRetry={run.retry} onBack={run.reset} onContinue={run.continueAnyway} />;
   } else {
     body = <Studio createClient={createClient} form={form} onStart={start} cancelled={run.state === 'cancelled'} />;
   }

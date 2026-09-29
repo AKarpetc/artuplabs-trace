@@ -54,7 +54,7 @@ export function createFakeConfluence({ space, pages, users = {} }) {
       count('listAttachments');
       if (!byId.has(pageId) || isFolder(byId.get(pageId))) throw notFound(`page ${pageId}`);
       return (byId.get(pageId)?.attachments ?? []).map((a) => ({
-        id: a.id, title: a.title, fileSize: a.bytes.length, mediaType: '', version: a.version,
+        id: a.id, title: a.title, fileSize: a.fileSize ?? a.bytes.length, mediaType: '', version: a.version,
         createdAt: createdAt(a.version), downloadLink: `/download/${pageId}/${a.id}`,
       }));
     },

@@ -171,6 +171,60 @@ describe('export run', () => {
     expect(await screen.findByText(en['errors.network'])).toBeInTheDocument();
   });
 
+  it.each([
+    [404, () => en['errors.notFound']],
+    [500, () => en['errors.confluenceStatus'].replace('{status}', '500')],
+    [429, () => en['errors.confluenceStatus'].replace('{status}', '429')],
+  ])('shows friendly text instead of the raw error for Confluence status %s', async (status, text) => {
+    setup({
+      wrap: (client) => ({
+        ...client,
+        async getPages(ids, options) {
+          if (options.withBody) throw new ConfluenceError(status, 'page 123');
+          return client.getPages(ids, options);
+        },
+      }),
+    });
+    await startExport();
+    const failed = await screen.findByTestId('failure-view');
+    expect(within(failed).getByText(text())).toBeInTheDocument();
+    expect(failed).not.toHaveTextContent('confluence');
+    expect(failed).not.toHaveTextContent('page 123');
+  });
+
+  it('stops before a download above 1 GB with guidance, and continues when asked', async () => {
+    const big = [{ ...PAGES[0], attachments: [{ id: 'a1', title: 'video.mp4', version: 1, bytes: new Uint8Array([1]), fileSize: 1.5 * 1024 ** 3 }] }, ...PAGES.slice(1)];
+    const { save } = setup({ pages: big });
+    fireEvent.change(await screen.findByLabelText(en['attachments.maxSize']), { target: { value: '' } });
+    await startExport();
+    const failed = await screen.findByTestId('failure-view');
+    expect(failed).toHaveTextContent(/1\.5 GB/);
+    expect(within(failed).getByText(/lower the file size limit/i)).toBeInTheDocument();
+    fireEvent.click(within(failed).getByRole('button', { name: en['errors.continueAnyway'] }));
+    expect(await screen.findByTestId('result-view')).toBeInTheDocument();
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses an export above 4 GiB without a way to continue', async () => {
+    const huge = [{ ...PAGES[0], attachments: [{ id: 'a1', title: 'disk.img', version: 1, bytes: new Uint8Array([1]), fileSize: 5 * 1024 ** 3 }] }, ...PAGES.slice(1)];
+    setup({ pages: huge });
+    fireEvent.change(await screen.findByLabelText(en['attachments.maxSize']), { target: { value: '' } });
+    await startExport();
+    const failed = await screen.findByTestId('failure-view');
+    expect(failed).toHaveTextContent(/5 GB/);
+    expect(within(failed).queryByRole('button', { name: en['errors.continueAnyway'] })).toBeNull();
+    fireEvent.click(within(failed).getByRole('button', { name: en['errors.back'] }));
+    expect(await screen.findByTestId('studio-export')).toBeInTheDocument();
+  });
+
+  it('tells the user the download should start and how to get it if it did not', async () => {
+    setup();
+    await startExport();
+    const result = await screen.findByTestId('result-view');
+    expect(within(result).getByText(en['result.started'])).toBeInTheDocument();
+    expect(en['result.started']).toMatch(/should start automatically.*Download again/);
+  });
+
   it('summarises an update: changed, unchanged, deleted in warning tone, missing pages and how to apply it', async () => {
     const { fake, save } = setup();
     const file = await previousManifestFile(fake);
