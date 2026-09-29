@@ -48,17 +48,19 @@ function frame(ctx, withIndent = true) {
   };
 }
 
-function orderedReference(start, ctx) {
-  const value = Number.isInteger(start) && start > 0 ? start : 1;
-  ctx.starts.add(value);
-  return value === 1 ? 'artup-ordered' : `artup-ordered-${value}`;
+function orderedReference(start, level, ctx) {
+  const reference = `artup-ordered-${ctx.ordered.length + 1}`;
+  ctx.ordered.push({ reference, level, start: Number.isInteger(start) && start > 0 ? start : 1 });
+  return reference;
 }
+
+const imagePx = (ctx) => Math.max(ctx.contentPx / 4, ctx.boxPx - ctx.indent / 15);
 
 function listBlock(list, ctx) {
   const { docx } = ctx;
   const level = Math.min(ctx.level, MAX_LEVEL);
-  const numbering = list.ordered ? { reference: orderedReference(list.start, ctx), level, instance: ctx.instances.next() } : null;
-  const inner = { ...ctx, level: level + 1, indent: LIST_INDENT * (level + 1) };
+  const numbering = list.ordered ? { reference: orderedReference(list.start, level, ctx), level } : null;
+  const inner = { ...ctx, level: level + 1, indent: ctx.baseIndent + LIST_INDENT * (level + 1) };
   return (list.items ?? []).flatMap((item) => {
     const [first, ...rest] = item.blocks ?? [];
     const lead = first && (first.type === 'para' || first.type === 'heading') ? first : null;
@@ -80,14 +82,18 @@ function cellChildren(blocks, ctx) {
 function tableBlock(table, ctx) {
   const { docx } = ctx;
   if (!table.rows?.length) return [];
-  const inner = { ...ctx, indent: 0, quoted: false };
-  const rows = tableGrid(table).map((slots, r) => new docx.TableRow({
+  const grid = tableGrid(table);
+  const inner = (colspan) => ({
+    ...ctx, indent: 0, baseIndent: 0, quoted: false,
+    boxPx: Math.max(ctx.contentPx / 4, (ctx.boxPx * colspan) / grid[0].length),
+  });
+  const rows = grid.map((slots, r) => new docx.TableRow({
     ...(r === 0 && table.header ? { tableHeader: true } : {}),
     children: slots.filter((slot) => slot.origin).map((slot) => new docx.TableCell({
       ...(slot.colspan > 1 ? { columnSpan: slot.colspan } : {}),
       ...(slot.rowspan > 1 ? { rowSpan: slot.rowspan } : {}),
       ...(slot.cell.header ? { shading: { type: docx.ShadingType.CLEAR, fill: PALETTE.headerFill } } : {}),
-      children: cellChildren(slot.cell.blocks, inner),
+      children: cellChildren(slot.cell.blocks, inner(slot.colspan)),
     })),
   }));
   return [new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, rows })];
@@ -98,7 +104,7 @@ function panelBlock(panel, ctx) {
   const fill = PALETTE.panel[panel.kind] ?? PALETTE.panel.info;
   const cell = new docx.TableCell({
     shading: { type: docx.ShadingType.CLEAR, fill },
-    children: cellChildren(panel.blocks, { ...ctx, indent: 0, quoted: false }),
+    children: cellChildren(panel.blocks, { ...ctx, indent: 0, baseIndent: 0, quoted: false }),
   });
   return [new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, rows: [new docx.TableRow({ children: [cell] })] })];
 }
@@ -119,7 +125,7 @@ function imageBlock(image, ctx) {
     const text = `[${ctx.labels.imageUnavailable}: ${image.alt ?? ''}]`;
     return [new docx.Paragraph({ ...frame(ctx), children: [new docx.TextRun({ text, italics: true })] })];
   }
-  const size = fitImage({ width: found.width, height: found.height }, ctx.maxImagePx);
+  const size = fitImage({ width: found.width, height: found.height }, imagePx(ctx));
   return [new docx.Paragraph({
     ...frame(ctx),
     children: [new docx.ImageRun({ type: found.type, data: found.bytes, transformation: size })],
@@ -137,7 +143,7 @@ function block(b, ctx) {
     case 'list': return listBlock(b, ctx);
     case 'table': return tableBlock(b, ctx);
     case 'code': return codeBlock(b, ctx);
-    case 'quote': return blocksOf(b.blocks ?? [], { ...ctx, indent: ctx.indent + QUOTE_INDENT, quoted: true });
+    case 'quote': return blocksOf(b.blocks ?? [], { ...ctx, indent: ctx.indent + QUOTE_INDENT, baseIndent: ctx.indent + QUOTE_INDENT, quoted: true });
     case 'panel': return panelBlock(b, ctx);
     case 'rule': return [new docx.Paragraph({ border: { bottom: { style: docx.BorderStyle.SINGLE, size: 6, color: PALETTE.rule, space: 1 } } })];
     case 'image': return imageBlock(b, ctx);
@@ -150,14 +156,14 @@ function blocksOf(blocks, ctx) {
   return blocks.flatMap((b) => block(b, ctx));
 }
 
-function orderedConfig(start, docx) {
+function orderedConfig(list, docx) {
   return {
-    reference: start === 1 ? 'artup-ordered' : `artup-ordered-${start}`,
+    reference: list.reference,
     levels: Array.from({ length: MAX_LEVEL + 1 }, (_, level) => ({
       level,
       format: docx.LevelFormat.DECIMAL,
       text: `%${level + 1}.`,
-      start: level === 0 ? start : 1,
+      start: level === list.level ? list.start : 1,
       alignment: docx.AlignmentType.START,
       style: { paragraph: { indent: { left: LIST_INDENT * (level + 1), hanging: 360 } } },
     })),
@@ -178,12 +184,10 @@ const smallLine = (text, docx) => new docx.Paragraph({ children: [new docx.TextR
 /** Builds a docx Document for a built-in layout spec; images maps attachment ids to bytes, type and pixel size. */
 export function buildDocxDocument({ spec, images, labels, meta, docx }) {
   const paper = PAPER[spec.paper] ?? PAPER.A4;
-  let instance = 0;
+  const contentPx = (paper.width - 2 * MARGIN) / 15;
   const ctx = {
-    docx, images: images ?? new Map(), labels, level: 0, indent: 0, quoted: false,
-    maxImagePx: (paper.width - 2 * MARGIN) / 15,
-    starts: new Set([1]),
-    instances: { next: () => { instance += 1; return instance; } },
+    docx, images: images ?? new Map(), labels, level: 0, indent: 0, baseIndent: 0, quoted: false,
+    contentPx, boxPx: contentPx, ordered: [],
   };
   const children = blocksOf(spec.blocks ?? [], ctx);
   const footer = pageFooter(docx);
@@ -191,14 +195,14 @@ export function buildDocxDocument({ spec, images, labels, meta, docx }) {
     creator: meta.exportedBy,
     title: spec.title,
     description: `JQL: ${meta.jql}`,
-    numbering: { config: [...ctx.starts].map((start) => orderedConfig(start, docx)) },
+    numbering: { config: ctx.ordered.map((list) => orderedConfig(list, docx)) },
     sections: [{
       properties: {
         titlePage: true,
         page: { size: paper, margin: { top: MARGIN, right: MARGIN, bottom: MARGIN, left: MARGIN } },
       },
       headers: {
-        first: new docx.Header({ children: (spec.metaLines ?? []).map((line) => smallLine(line, docx)) }),
+        first: new docx.Header({ children: spec.metaLines?.length ? spec.metaLines.map((line) => smallLine(line, docx)) : [new docx.Paragraph({})] }),
         default: new docx.Header({ children: [smallLine(spec.title ?? '', docx)] }),
       },
       footers: { default: footer, first: pageFooter(docx) },

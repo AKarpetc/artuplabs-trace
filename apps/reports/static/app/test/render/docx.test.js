@@ -66,6 +66,11 @@ describe('renderDocx page setup', () => {
     expect([fields(reference('footer', 'default')), fields(reference('footer', 'first'))]).toEqual([['PAGE', 'NUMPAGES'], ['PAGE', 'NUMPAGES']]);
   });
 
+  it('writes a paragraph into the first-page header when there are no meta lines', async () => {
+    const { reference } = await render([para('a')], { metaLines: [] });
+    expect(/<w:p[ />]/.test(reference('header', 'first'))).toBe(true);
+  });
+
   it('writes the creator and a description with the JQL into the core properties', async () => {
     const { part } = await render([para('a')]);
     const core = part('docProps/core.xml');
@@ -136,6 +141,38 @@ describe('renderDocx lists', () => {
     const [numId] = numIds(doc);
     const num = new RegExp(`<w:num w:numId="${numId}"[^>]*>[\\s\\S]*?</w:num>`).exec(part('word/numbering.xml'))[0];
     expect(/<w:startOverride w:val="(\d+)"\/>/.exec(num)[1]).toEqual('3');
+  });
+
+  it('restarts nested ordered sub-lists and keeps each start at its own level', async () => {
+    const sub = (start, ...texts) => ({ type: 'list', ordered: true, start, items: texts.map((t) => ({ blocks: [para(t)] })) });
+    const { doc, part } = await render([{ type: 'list', ordered: false, start: 1, items: [
+      { blocks: [para('one'), sub(1, 'a', 'b')] },
+      { blocks: [para('two'), sub(5, 'c')] },
+    ] }]);
+    const numbering = part('word/numbering.xml');
+    const nested = all(/<w:p>([\s\S]*?)<\/w:p>/g, body(doc))
+      .filter((p) => p.includes('<w:ilvl w:val="1"/>'))
+      .map((p) => /<w:numId w:val="(\d+)"\/>/.exec(p)[1]);
+    const abstractOf = (numId) => new RegExp(`<w:num w:numId="${numId}"[^>]*>\\s*<w:abstractNumId w:val="(\\d+)"`).exec(numbering)[1];
+    const startAt = (numId, ilvl) => {
+      const num = new RegExp(`<w:num w:numId="${numId}"[^>]*>[\\s\\S]*?</w:num>`).exec(numbering)[0];
+      const override = new RegExp(`<w:lvlOverride w:ilvl="${ilvl}">\\s*<w:startOverride w:val="(\\d+)"`).exec(num);
+      if (override) return override[1];
+      const abstract = new RegExp(`<w:abstractNum [^>]*w:abstractNumId="${abstractOf(numId)}"[^>]*>[\\s\\S]*?</w:abstractNum>`).exec(numbering)[0];
+      return new RegExp(`<w:lvl w:ilvl="${ilvl}"[^>]*>\\s*<w:start w:val="(\\d+)"`).exec(abstract)[1];
+    };
+    const [first, , third] = nested;
+    expect({
+      sameListShares: nested[0] === nested[1],
+      distinctAbstracts: abstractOf(first) !== abstractOf(third),
+      starts: [startAt(first, 1), startAt(third, 1)],
+    }).toEqual({ sameListShares: true, distinctAbstracts: true, starts: ['1', '5'] });
+  });
+
+  it('indents an item continuation inside a quote by the quote and the list indent', async () => {
+    const { doc } = await render([{ type: 'quote', blocks: [{ type: 'list', ordered: false, start: 1, items: [{ blocks: [para('lead'), para('more')] }] }] }]);
+    const more = all(/<w:p>([\s\S]*?)<\/w:p>/g, body(doc)).find((p) => p.includes('more'));
+    expect(/<w:ind w:left="(\d+)"\/>/.exec(more)[1]).toEqual(String(567 + 720));
   });
 
   it('renders the other blocks of an item after its numbered paragraph', async () => {
@@ -254,6 +291,20 @@ describe('renderDocx images', () => {
     const images = new Map([['att-1', { bytes: pngBytes(320, 200), type: 'png', width: 320, height: 200 }]]);
     const { doc } = await render([{ type: 'image', attachmentId: 'att-1', alt: '', width: null, height: null }], { images });
     expect(/<wp:extent cx="(\d+)" cy="(\d+)"/.exec(doc).slice(1)).toEqual([String(320 * 9525), String(200 * 9525)]);
+  });
+
+  it('fits an image in a two-column table to half the content width', async () => {
+    const images = new Map([['att-1', { bytes: pngBytes(1400, 700), type: 'png', width: 1400, height: 700 }]]);
+    const image = { type: 'image', attachmentId: 'att-1', alt: '', width: null, height: null };
+    const { doc } = await render([{ type: 'table', header: false, rows: [{ cells: [cell([image]), cell([para('x')])] }] }], { images });
+    expect(Number(/<wp:extent cx="(\d+)"/.exec(doc)[1]) <= contentEmu / 2).toBe(true);
+  });
+
+  it('narrows an image in a list item by the list indent', async () => {
+    const images = new Map([['att-1', { bytes: pngBytes(1400, 700), type: 'png', width: 1400, height: 700 }]]);
+    const image = { type: 'image', attachmentId: 'att-1', alt: '', width: null, height: null };
+    const { doc } = await render([{ type: 'list', ordered: false, start: 1, items: [{ blocks: [para('lead'), image] }] }], { images });
+    expect(Number(/<wp:extent cx="(\d+)"/.exec(doc)[1]) <= contentEmu - (720 / 15) * 9525).toBe(true);
   });
 
   it('writes an italic placeholder for an image without bytes', async () => {
