@@ -24,9 +24,9 @@
 - [x] Если что-то не так, напишите в новой сессии номер пункта и что увидели.
 
 ### 3. Решить название и цену ArtUp Export (⏱ 10 мин)
-- [ ] Название: «ArtUp Export – Markdown for Git & Docs Sites» или вариант из [atlassian/listing-export/description.md](atlassian/listing-export/description.md).
-- [ ] Цена: рекомендую **B — $165/мес за 200 пользователей, до 10 бесплатно** ([pricing.md](atlassian/listing-export/pricing.md)).
-- [ ] Прочитать разделы про Export: https://artuplabs.com/privacy (§5), /security (§1.1, §2), /terms.
+- [x] Название: «ArtUp Export – Markdown for Git & Docs Sites» или вариант из [atlassian/listing-export/description.md](atlassian/listing-export/description.md).
+- [x] Цена: рекомендую **B — $165/мес за 200 пользователей, до 10 бесплатно** ([pricing.md](atlassian/listing-export/pricing.md)).
+- [x] Прочитать разделы про Export: https://artuplabs.com/privacy (§5), /security (§1.1, §2), /terms.
 
 ### 4. Подать листинг ArtUp Export (⏱ 30–40 мин)
 - [ ] 10 шагов с готовыми текстами и скриншотами — [atlassian/23_export_owner_steps.md](atlassian/23_export_owner_steps.md), шаг 3.

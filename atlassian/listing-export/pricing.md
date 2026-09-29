@@ -1,6 +1,6 @@
 # ArtUp Export — pricing draft
 
-Status: **decision for the owner.** Numbers to enter in the partner portal's pricing tool; nothing
+Status: **decided 2026-09-29 — option B ($165 @ 200 users, up to 10 users free).** Numbers to enter in the partner portal's pricing tool; nothing
 is submitted. The final price entry is the owner's.
 
 ## Anchor

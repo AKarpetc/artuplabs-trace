@@ -35,8 +35,8 @@
 
 ## Шаг 2. Два решения (👤 ⏱ 10 мин)
 
-- [ ] **Название** в листинге. Основной вариант: «ArtUp Export – Markdown for Git & Docs Sites». Ещё два варианта есть в [listing-export/description.md](listing-export/description.md).
-- [ ] **Цена.** Моя рекомендация — вариант **B: $165/мес за 200 пользователей, до 10 пользователей бесплатно**. Таблица ступеней — в [listing-export/pricing.md](listing-export/pricing.md), модель та же, что у Trace.
+- [x] **Название** в листинге (2026-09-29 владелец: основной вариант). Основной вариант: «ArtUp Export – Markdown for Git & Docs Sites». Ещё два варианта есть в [listing-export/description.md](listing-export/description.md).
+- [x] **Цена** (2026-09-29 владелец: вариант B). Моя рекомендация — вариант **B: $165/мес за 200 пользователей, до 10 пользователей бесплатно**. Таблица ступеней — в [listing-export/pricing.md](listing-export/pricing.md), модель та же, что у Trace.
 - [ ] Прочитайте новые разделы про Export на сайте (они уже опубликованы, правки внесу за минуту):
   - https://artuplabs.com/privacy (§5);
   - https://artuplabs.com/security (§1.1 и §2);
