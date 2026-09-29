@@ -1,6 +1,6 @@
 # ArtUp Labs Forge apps
 
-This repository holds the two Atlassian Forge apps published by ArtUp Labs.
+This repository holds everything for the ArtUp Labs Atlassian Marketplace business: the Forge apps, the site and the research and listing documents.
 
 | App | Folder | Product | Details |
 | --- | --- | --- | --- |
@@ -12,7 +12,20 @@ This repository holds the two Atlassian Forge apps published by ArtUp Labs.
 ```
 apps/trace/     ArtUp Trace: manifest.yml, src/ (resolvers), static/app/ (Custom UI), test/, scripts/
 apps/export/    ArtUp Export: same shape, plus locales/
+atlassian/      research, briefs, plans, Marketplace listing drafts and research tools (Russian)
+site/           artuplabs.com (Cloudflare Pages)
+STATE.md        where the Atlassian work stands and what is next (Russian)
 .github/        CI and Dependabot for both apps
+```
+
+Not in git (kept only on disk, see `.gitignore`): `.env` with Forge and Cloudflare tokens,
+`IE/` with the sole-proprietor documents, `atlassian/data/` research snapshots.
+
+Site deploy (from the repo root; README files are not published):
+
+```bash
+set -a && . ./.env && set +a
+rsync -a --exclude README.md site/ /tmp/artuplabs-site/ && npx wrangler pages deploy /tmp/artuplabs-site --project-name artuplabs --branch main
 ```
 
 Each app is self-contained: its own `package.json`, lockfiles, `manifest.yml` and Forge app id.

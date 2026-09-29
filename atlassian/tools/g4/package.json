@@ -1,0 +1,10 @@
+{
+  "name": "artup-export-g4-scratch",
+  "private": true,
+  "type": "module",
+  "description": "Scratch npm deps for ArtUp Export G4 measurement scripts (not a product package)",
+  "dependencies": {
+    "fflate": "^0.8.2",
+    "htmlparser2": "^9.1.0"
+  }
+}

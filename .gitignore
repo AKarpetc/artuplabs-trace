@@ -6,3 +6,9 @@ node_modules/
 **/static/app/screenshots/
 apps/export/data/
 .env
+atlassian/data/
+**/__pycache__/
+.forge-permissions.json
+IE/
+.wrangler/
+logs/

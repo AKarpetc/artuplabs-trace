@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ArtUp Labs — Apps for Jira and Confluence Cloud</title>
+  <meta name="description" content="ArtUp Labs makes Atlassian Forge apps: ArtUp Trace for requirements traceability in Jira Cloud, and ArtUp Export for git-ready Markdown from Confluence Cloud. Both run on Atlassian.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">A</span>ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html" aria-current="page">Home</a></li>
+          <li><a href="export/">ArtUp Export</a></li>
+          <li><a href="docs.html">Docs</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero hero-product" style="padding-bottom:3.5rem" aria-labelledby="hero-title">
+      <div class="container">
+        <p class="eyebrow">ArtUp Labs · Apps for Jira and Confluence Cloud</p>
+        <h1 id="hero-title">Small, focused apps for Jira and Confluence</h1>
+        <p class="lead"><strong>ArtUp Trace</strong> brings requirements traceability to Jira: coverage, suspect links and baselines on the issue links you already have. <strong>ArtUp Export</strong> turns Confluence pages and spaces into git-ready Markdown. Both are Forge apps with no external servers and no data egress.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="export/">Explore ArtUp Export</a>
+          <a class="btn btn-secondary" href="docs.html">ArtUp Trace docs</a>
+        </div>
+        <p class="meta" style="margin-top:1rem">Coming soon to the Atlassian Marketplace. Questions: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="apps-title">
+      <div class="container">
+        <h2 id="apps-title">Our apps</h2>
+        <p class="section-lead">Atlassian Forge apps that run on Atlassian: no external servers, no data egress.</p>
+        <ul class="products">
+          <li class="product">
+            <span class="tag">Jira Cloud</span>
+            <h3><img src="trace-icon.png" alt="" width="30" height="30">ArtUp Trace</h3>
+            <p>Requirements traceability on the issue links you already have: coverage, suspect links after a requirement changes, and baselines you can compare.</p>
+            <a class="more" href="docs.html">Trace documentation</a>
+          </li>
+          <li class="product">
+            <span class="tag">Confluence Cloud</span>
+            <h3><img src="export/icon.svg" alt="" width="30" height="30">ArtUp Export</h3>
+            <p>Export a page, a branch or a whole space to git-ready Markdown: full depth, Confluence order, stable paths, YAML front-matter, attachments and update exports. Presets for Hugo, Docusaurus and MkDocs.</p>
+            <a class="more" href="export/">Explore ArtUp Export</a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0" aria-labelledby="features-title">
+      <div class="container">
+        <h2 id="features-title">What ArtUp Trace does</h2>
+        <p class="section-lead">Built for teams who have to show that every requirement was verified, without leaving Jira.</p>
+        <ul class="features">
+          <li class="card">
+            <h3>Coverage</h3>
+            <p>See which requirements are covered by verification issues (tests or tasks) through native Jira issue links. You choose which issue types and link types count.</p>
+          </li>
+          <li class="card">
+            <h3>Suspect links</h3>
+            <p>When a requirement's summary or description changes after its link was confirmed, the link is marked suspect. Review and confirm one link or a selection at once.</p>
+          </li>
+          <li class="card">
+            <h3>Baselines</h3>
+            <p>Freeze a snapshot of your requirements and their links, then compare any two baselines to see what was added, removed or changed.</p>
+          </li>
+          <li class="card">
+            <h3>Export and issue panel</h3>
+            <p>Download a CSV export as a file for audits and reviews. The issue panel shows traceability right on the requirement.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" style="background:var(--bg-soft);border-top:1px solid var(--border);border-bottom:1px solid var(--border)" aria-labelledby="trust-title">
+      <div class="container">
+        <h2 id="trust-title">Your data stays on Atlassian</h2>
+        <p class="section-lead">ArtUp Trace is an Atlassian Forge app that runs on Atlassian. There are no ArtUp Labs servers in the path.</p>
+        <ul class="facts">
+          <li><strong>Runs on Atlassian</strong>No external servers, no data egress.</li>
+          <li><strong>Read-only in Jira</strong>Reads Jira as the current user and never writes to your issues.</li>
+          <li><strong>Least privilege</strong>Scopes: <code>read:jira-work</code>, <code>read:jira-user</code>, <code>storage:app</code>.</li>
+          <li><strong>No trackers</strong>No third-party analytics in the app or on this site.</li>
+          <li><strong>26 languages</strong>Follows your Jira language, with light and dark themes.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="links-title">
+      <div class="container">
+        <h2 id="links-title">Resources</h2>
+        <ul class="link-grid">
+          <li><a href="support.html">Support<span>How to get help and response times</span></a></li>
+          <li><a href="security.html">Security<span>Architecture and vulnerability reporting</span></a></li>
+          <li><a href="privacy.html">Privacy Policy<span>What data is stored and where</span></a></li>
+          <li><a href="terms.html">Terms<span>End User License Agreement</span></a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="export/">ArtUp Export</a></li>
+          <li><a href="docs.html">Docs</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security — ArtUp Labs</title>
+  <meta name="description" content="Security architecture, access scopes, vulnerability reporting and incident response for ArtUp Trace for Jira Cloud and ArtUp Export for Confluence Cloud.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">A</span>ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="export/">ArtUp Export</a></li>
+          <li><a href="docs.html">Docs</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html" aria-current="page">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="doc">
+    <h1>Security</h1>
+    <p class="meta">ArtUp Trace for Jira Cloud · ArtUp Export for Confluence Cloud · Last updated: 2026-09-29</p>
+
+    <div class="notice">
+      <p><strong>In short:</strong> ArtUp Trace is an Atlassian Forge app with the "Runs on Atlassian" designation. There are no ArtUp Labs servers in the path, no outbound network calls, and no third-party trackers. The App reads Jira as the current user, checks Jira permissions on every action, and never writes to your issues. ArtUp Export reads Confluence as the current user, converts pages in the user's browser, stores nothing and never writes to Confluence.</p>
+    </div>
+
+    <nav class="toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">Contents</h2>
+      <ol>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#scopes">Access scopes and permissions</a></li>
+        <li><a href="#app-security">Application security controls</a></li>
+        <li><a href="#dependencies">Dependency and supply-chain security</a></li>
+        <li><a href="#accounts">Account and workstation security</a></li>
+        <li><a href="#reporting">Reporting a vulnerability</a></li>
+        <li><a href="#incident-response">Incident response</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="architecture">1. Architecture</h2>
+    <p>ArtUp Trace is built entirely on <strong>Atlassian Forge</strong> and carries Atlassian's <strong>"Runs on Atlassian"</strong> designation. This means:</p>
+    <ul>
+      <li>The App's code executes inside Atlassian's infrastructure, not on a server operated by ArtUp Labs. <strong>ArtUp Labs runs no external servers</strong> for the App.</li>
+      <li>The App has <strong>no outbound network calls (no egress)</strong>. It cannot send Jira data anywhere outside Atlassian.</li>
+      <li>The App's own data (project settings, requirement and link records, baselines, sync job metadata) is stored only in Forge SQL and Forge storage, in the customer's data residency region as handled by Atlassian.</li>
+      <li>The App and this website load <strong>no third-party analytics, trackers or advertising scripts</strong>.</li>
+    </ul>
+    <p>See the <a href="privacy.html">Privacy Policy</a> for the full list of what is stored.</p>
+    <h3 id="export-architecture">1.1 ArtUp Export</h3>
+    <p>ArtUp Export is also built entirely on Atlassian Forge, with no external servers, no Connect modules and only bundled resources.</p>
+    <ul>
+      <li>Pages, attachments, labels and user names are read <strong>in the user's browser</strong>, through Atlassian's API and with that user's Confluence permissions. Conversion to Markdown and packing of the zip happen in the browser, and the zip is downloaded to the user's device.</li>
+      <li>The app has <strong>no outbound network calls (no egress)</strong>. Confluence content is not sent to the app's backend, to ArtUp Labs or anywhere outside Atlassian and the user's browser.</li>
+      <li>The app <strong>stores no data</strong>: no Forge storage is used, although the <code>storage:app</code> scope is declared for future versions.</li>
+      <li>Its only backend function returns whether the licence is active. It receives no page content, so its Forge logs contain no Confluence content.</li>
+    </ul>
+
+    <h2 id="scopes">2. Access scopes and permissions</h2>
+    <p>The App follows the principle of least privilege. It requests only the Atlassian scopes it needs, and nothing more:</p>
+    <div class="table-wrap">
+      <table>
+        <caption>ArtUp Trace — requested Atlassian scopes</caption>
+        <thead>
+          <tr><th scope="col">Scope</th><th scope="col">Used for</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>read:jira-work</code></td><td>Read issues, issue links and project data needed to compute coverage and detect suspect links.</td></tr>
+          <tr><td><code>read:jira-user</code></td><td>Read basic information about the current user, used for the per-action Jira permission check.</td></tr>
+          <tr><td><code>storage:app</code></td><td>Store the App's own settings, requirement/link records and baselines in Forge storage.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>ArtUp Trace requests <strong>no write scopes for Jira issues</strong>. It reads Jira data <strong>as the current user</strong>, so it can only see what that user is already permitted to see in your Jira site, and it <strong>never writes to Jira issues</strong>.</p>
+    <p>Beyond the scopes above, the App performs a <strong>Jira permission check on every user-facing action</strong> before it acts — for example before showing an issue's traceability data or before recording a link confirmation — so a user cannot use the App to see or affect anything their own Jira permissions would not already allow.</p>
+    <p>ArtUp Export requests only read scopes. It reads Confluence <strong>as the current user</strong>, so pages the user cannot see are not exported, and it <strong>never writes to Confluence</strong>.</p>
+    <div class="table-wrap">
+      <table>
+        <caption>ArtUp Export — requested Atlassian scopes</caption>
+        <thead>
+          <tr><th scope="col">Scope</th><th scope="col">Used for</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>read:page:confluence</code></td><td>Read pages, their content and versions.</td></tr>
+          <tr><td><code>read:space:confluence</code></td><td>Find the space and its top-level pages.</td></tr>
+          <tr><td><code>read:hierarchical-content:confluence</code></td><td>Read the page tree in Confluence order.</td></tr>
+          <tr><td><code>read:attachment:confluence</code></td><td>List and download page attachments.</td></tr>
+          <tr><td><code>read:label:confluence</code></td><td>Read page labels for the front-matter.</td></tr>
+          <tr><td><code>read:confluence-user</code></td><td>Read display names of page authors and mentioned users.</td></tr>
+          <tr><td><code>search:confluence</code></td><td>Find pages by title in the page picker.</td></tr>
+          <tr><td><code>storage:app</code></td><td>Declared for future versions; not used by the current version, which stores nothing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="app-security">3. Application security controls</h2>
+    <ul>
+      <li><strong>Permission checks on every action.</strong> Every user-facing operation re-checks the calling user's Jira permissions at the time of the request; nothing is cached in a way that could grant stale access.</li>
+      <li><strong>Input validation.</strong> All input from the front end, from Jira webhooks, and from imported data (for example CSV or configuration values) is validated before it is stored or used to build a query, to guard against malformed or malicious input.</li>
+      <li><strong>No egress, no trackers.</strong> Because the App cannot make outbound network calls, there is no path for it to exfiltrate data even if a dependency were compromised.</li>
+      <li><strong>ArtUp Export: untrusted files are checked.</strong> A previous export dropped in for an update is read in the browser, and paths from its manifest that could point outside the export folder are refused.</li>
+      <li><strong>Least-privilege storage.</strong> Only the fields needed for traceability are stored; see the <a href="privacy.html#what">Privacy Policy</a> for the exact list. Full issue description text is never stored, only a change-detection hash.</li>
+    </ul>
+
+    <h2 id="dependencies">4. Dependency and supply-chain security</h2>
+    <ul>
+      <li><strong>Automated scanning.</strong> <code>npm audit</code> runs as part of the build, and Dependabot is enabled on the source repository to flag known vulnerabilities in dependencies and open update pull requests automatically.</li>
+      <li><strong>Review before release.</strong> Dependencies are checked for known vulnerabilities before every release, not only on a schedule.</li>
+      <li><strong>Minimal dependency footprint.</strong> The App uses as few third-party packages as practical, to reduce supply-chain exposure.</li>
+    </ul>
+
+    <h2 id="accounts">5. Account and workstation security</h2>
+    <ul>
+      <li><strong>Multi-factor authentication (MFA)</strong> is enabled on the developer's Atlassian, source control, email, DNS and app-store accounts.</li>
+      <li><strong>Full-disk encryption</strong> and automatic OS updates are enabled on the development workstation.</li>
+      <li>Unique, generated passwords are used and kept in a password manager.</li>
+      <li>Secrets and credentials are kept out of source control and rotated periodically and immediately after any suspected exposure.</li>
+    </ul>
+
+    <h2 id="reporting">6. Reporting a vulnerability</h2>
+    <p>If you believe you have found a security vulnerability in ArtUp Trace, ArtUp Export or on this website, please email <a href="mailto:security@artuplabs.com">security@artuplabs.com</a> with:</p>
+    <ul>
+      <li>a description of the issue and its potential impact;</li>
+      <li>steps to reproduce it, including any request or response details that help us confirm it;</li>
+      <li>whether any customer data was, to your knowledge, affected.</li>
+    </ul>
+    <p>Please do not include Jira or Confluence content beyond what is strictly needed to demonstrate the issue, and do not test against customer sites you do not control. We will <strong>acknowledge your report within 24 hours</strong> and keep you updated as we investigate and fix it. We currently do not run a paid bug bounty programme.</p>
+
+    <h2 id="incident-response">7. Incident response</h2>
+    <p>ArtUp Labs follows a written incident response plan for every Marketplace app, owned by the security contact below and reviewed at least once a year and after every incident.</p>
+    <h3>7.1 What counts as an incident</h3>
+    <ul>
+      <li>Unauthorised access to customer data held by an app (Forge SQL, Forge storage).</li>
+      <li>A vulnerability in an app that exposes customer data or lets a user act beyond their Jira or Confluence permissions.</li>
+      <li>Compromise of a developer account, workstation, source repository or deployment credentials (Atlassian account, Forge token, source control, domain/DNS, email).</li>
+      <li>A report from Atlassian (Marketplace Security ticket, bug report) or from a customer about any of the above.</li>
+    </ul>
+    <h3>7.2 Detection channels</h3>
+    <ul>
+      <li><a href="mailto:security@artuplabs.com">security@artuplabs.com</a> and <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>, checked daily on business days.</li>
+      <li>Atlassian Marketplace Security (AMS) tickets on ecosystem.atlassian.net.</li>
+      <li>The Forge developer console: app logs, invocation errors and alerts.</li>
+      <li>Dependency alerts (<code>npm audit</code>, Dependabot).</li>
+    </ul>
+    <h3>7.3 Response steps</h3>
+    <div class="table-wrap">
+      <table>
+        <caption>Incident response steps and target times</caption>
+        <thead>
+          <tr><th scope="col">Step</th><th scope="col">Target time</th><th scope="col">Action</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Acknowledge</td><td>24 hours</td><td>Confirm receipt to the reporter; open an internal incident record (date, source, affected apps, versions).</td></tr>
+          <tr><td>Triage</td><td>24 hours</td><td>Rate severity (Critical / High / Medium / Low); decide whether customer data is affected.</td></tr>
+          <tr><td>Notify Atlassian</td><td>within 24 hours of becoming aware of an incident affecting customers</td><td>Raise a P1 ticket with Atlassian Marketplace Security and keep it updated until closed.</td></tr>
+          <tr><td>Contain</td><td>as soon as possible</td><td>Rotate compromised credentials (Atlassian API tokens, Forge credentials, source control, DNS, email); revoke sessions; if needed, ship a version that disables the affected feature, or ask Atlassian to pause the app.</td></tr>
+          <tr><td>Fix</td><td>within the Marketplace Security Bug Fix Policy due dates for the severity</td><td>Patch, test, deploy to production, and confirm the fix with the reporter or Atlassian.</td></tr>
+          <tr><td>Notify customers</td><td>within 72 hours of identification, when their data is affected</td><td>Email the technical and billing contacts of affected installations: what happened, what data, what we did, and what they should do.</td></tr>
+          <tr><td>Close</td><td>after the fix is verified</td><td>Write a short post-incident review: root cause, timeline, and what changes prevent a repeat.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>7.4 Preventive controls</h3>
+    <ul>
+      <li>Full-disk encryption and automatic OS updates on the development workstation.</li>
+      <li>Multi-factor authentication on Atlassian, source control, email, DNS and app-store accounts.</li>
+      <li>Unique passwords kept in a password manager; secrets kept out of source control and rotated regularly and after any suspected exposure.</li>
+      <li>The Apps run on Atlassian (Forge) with no external egress, least-privilege scopes, and a permission check on every user-facing operation.</li>
+      <li>Dependencies are checked for known vulnerabilities before every release.</li>
+    </ul>
+
+    <h2 id="contact">8. Contact</h2>
+    <p>Security contact: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a>. For general questions, see our <a href="support.html">Support page</a>. For what data is stored and how, see our <a href="privacy.html">Privacy Policy</a>.</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="export/">ArtUp Export</a></li>
+          <li><a href="docs.html">Docs</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
