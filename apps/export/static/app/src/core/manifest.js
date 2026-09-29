@@ -1,0 +1,110 @@
+export const MANIFEST_FILE = 'export-manifest.json';
+export const DELETED_FILE = 'export-deleted.txt';
+export const MANIFEST_FORMAT = 'artup-export';
+export const MANIFEST_VERSION = 1;
+const PATH_OPTIONS = ['preset', 'ordering', 'fileNames', 'attachments'];
+
+const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const byId = (a, b) => a.id.length - b.id.length || byText(a.id, b.id);
+const byNumeric = (a, b) => a.length - b.length || byText(a, b);
+
+/** Short stable hash (FNV-1a, 8 hex digits) of a page's label names, independent of their order. */
+export function labelsHash(labels) {
+  const text = JSON.stringify([...labels].sort());
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193) >>> 0;
+  return hash.toString(16).padStart(8, '0');
+}
+
+function manifestEntry(p) {
+  if (p.type === 'folder') {
+    return { id: p.id, type: 'folder', title: p.title, parentId: p.parentId ?? null, path: p.path, name: p.name, weight: p.weight, links: [], attachments: [] };
+  }
+  return {
+    id: p.id, title: p.title, parentId: p.parentId ?? null, version: p.version, labelsHash: p.labelsHash, path: p.path, name: p.name, weight: p.weight,
+    links: [...new Set(p.links)].sort(byNumeric),
+    attachments: [...p.attachments].sort(byId).map((a) => ({ id: a.id, version: a.version, path: a.path })),
+  };
+}
+
+/** Serializes the export state; folders are entries with `type: 'folder'` and no version; pages sorted by path, no timestamps, so unchanged content gives identical text. */
+export function buildManifest({ siteUrl, spaceKey, rootPageId, kind, options, pages, warnings }) {
+  const manifest = {
+    format: MANIFEST_FORMAT,
+    version: MANIFEST_VERSION,
+    source: { siteUrl, spaceKey, rootPageId: rootPageId ?? null, kind },
+    options: Object.fromEntries(PATH_OPTIONS.map((key) => [key, options[key]])),
+    pages: [...pages].sort((a, b) => byText(a.path, b.path)).map(manifestEntry),
+    warnings: [...warnings]
+      .map((w) => ({ pageId: w.pageId, kind: w.kind, detail: w.detail }))
+      .sort((a, b) => byNumeric(a.pageId, b.pageId) || byText(a.kind, b.kind) || byText(a.detail, b.detail)),
+  };
+  return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+/** True for a relative forward-slash path with no empty, `.` or `..` segments, backslash, control or line-separator character, or drive prefix. */
+export function isSafePath(path) {
+  if (typeof path !== 'string' || path === '' || /[\\\u0000-\u001f\u007f\u2028\u2029]/.test(path) || /^[A-Za-z]:/.test(path)) return false;
+  return path.split('/').every((segment) => segment !== '' && segment !== '.' && segment !== '..');
+}
+
+const PROTECTED_FILES = new Set([MANIFEST_FILE, DELETED_FILE]);
+
+/** True only for a safe path shaped like a file the app writes: a page `.md`, a file under a `.assets` folder, `_category_.json` or `.pages`. */
+export function isDeletablePath(path) {
+  if (!isSafePath(path)) return false;
+  const segments = path.split('/');
+  const leaf = segments[segments.length - 1];
+  const dirs = segments.slice(0, -1);
+  if (PROTECTED_FILES.has(leaf)) return false;
+  if (dirs.some((segment) => segment.startsWith('.')) || (leaf.startsWith('.') && leaf !== '.pages')) return false;
+  return leaf.endsWith('.md') || leaf === '_category_.json' || leaf === '.pages' || dirs.some((segment) => segment.endsWith('.assets'));
+}
+
+function isValidAttachment(a) {
+  return Boolean(a) && typeof a === 'object'
+    && typeof a.id === 'string' && isSafePath(a.path) && typeof a.version === 'number';
+}
+
+function isValidPage(p) {
+  return Boolean(p) && typeof p === 'object'
+    && typeof p.id === 'string' && isSafePath(p.path) && typeof p.name === 'string'
+    && (p.type === 'folder' || typeof p.version === 'number') && typeof p.weight === 'number'
+    && (p.labelsHash === undefined || typeof p.labelsHash === 'string')
+    && Array.isArray(p.links) && Array.isArray(p.attachments) && p.attachments.every(isValidAttachment);
+}
+
+function isValidWarning(w) {
+  return Boolean(w) && typeof w === 'object' && typeof w.pageId === 'string' && typeof w.kind === 'string' && typeof w.detail === 'string';
+}
+
+/** Parses and validates a manifest text. */
+export function parseManifest(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return { ok: false, error: 'not-json' };
+  }
+  if (data?.format !== MANIFEST_FORMAT || !Array.isArray(data.pages)) return { ok: false, error: 'not-manifest' };
+  if (data.version > MANIFEST_VERSION) return { ok: false, error: 'newer-version' };
+  if (!data.pages.every(isValidPage)) return { ok: false, error: 'not-manifest' };
+  if (data.warnings !== undefined && !(Array.isArray(data.warnings) && data.warnings.every(isValidWarning))) return { ok: false, error: 'not-manifest' };
+  return { ok: true, manifest: data };
+}
+
+/** Page id → file name used in the previous export. */
+export function previousNames(manifest) {
+  return new Map(manifest.pages.map((p) => [p.id, p.name]));
+}
+
+/** True when the manifest was made from the same site, space, root page and target kind; a manifest without a kind is another source. */
+export function sameSource(manifest, { siteUrl, spaceKey, rootPageId, kind }) {
+  const s = manifest.source ?? {};
+  return s.siteUrl === siteUrl && s.spaceKey === spaceKey && (s.rootPageId ?? null) === (rootPageId ?? null) && s.kind === kind;
+}
+
+/** True when the options that shape paths match. */
+export function sameOptions(manifest, options) {
+  return PATH_OPTIONS.every((key) => manifest.options?.[key] === options[key]);
+}

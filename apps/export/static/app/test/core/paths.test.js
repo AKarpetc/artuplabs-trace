@@ -1,0 +1,106 @@
+import { describe, expect, it } from 'vitest';
+import { planPaths } from '../../src/core/paths.js';
+import { DEFAULT_OPTIONS } from '../../src/core/presets.js';
+import { treeOf } from '../fixtures/tree.js';
+
+const paths = (plan) => Object.fromEntries([...plan].map(([id, p]) => [id, p.path]));
+
+describe('planPaths', () => {
+  const tree = treeOf([
+    ['1', 'Engineering'], ['2', 'Getting Started', '1'], ['3', 'API', '1'], ['4', 'Auth', '3'], ['5', 'Café', null],
+  ]);
+
+  it('makes directories for parents and files for leaves, in Confluence order', () => {
+    const plan = planPaths(tree, DEFAULT_OPTIONS, new Map());
+    expect(paths(plan)).toEqual({
+      1: 'engineering/index.md', 2: 'engineering/getting-started.md', 3: 'engineering/api/index.md',
+      4: 'engineering/api/auth.md', 5: 'cafe.md',
+    });
+    expect(plan.get('3')).toMatchObject({ weight: 20, isIndex: true, name: 'api' });
+  });
+
+  it('uses _index.md for Hugo', () => {
+    expect(planPaths(tree, { ...DEFAULT_OPTIONS, preset: 'hugo' }, new Map()).get('3').path).toBe('engineering/api/_index.md');
+  });
+
+  it('adds zero-padded prefixes when ordering is prefix', () => {
+    const plan = planPaths(tree, { ...DEFAULT_OPTIONS, ordering: 'prefix' }, new Map());
+    expect(plan.get('4').path).toBe('010-engineering/020-api/010-auth.md');
+    expect(plan.get('4').name).toBe('auth');
+  });
+
+  it('resolves case-insensitive collisions: lowest id keeps the plain name', () => {
+    const plan = planPaths(treeOf([['20', 'Notes'], ['7', 'notes'], ['9', 'NOTES'], ['30', 'API'], ['31', 'api']]), DEFAULT_OPTIONS, new Map());
+    expect(paths(plan)).toEqual({ 20: 'notes-20.md', 7: 'notes.md', 9: 'notes-9.md', 30: 'api.md', 31: 'api-31.md' });
+  });
+
+  it('collides titles that transliterate to the same slug', () => {
+    const plan = planPaths(treeOf([['1', 'Café'], ['2', 'Cafe']]), DEFAULT_OPTIONS, new Map());
+    expect(paths(plan)).toEqual({ 1: 'cafe.md', 2: 'cafe-2.md' });
+  });
+
+  it('keeps names from the previous export when still valid', () => {
+    const previous = new Map([['9', 'notes-9']]);
+    const plan = planPaths(treeOf([['9', 'Notes']]), DEFAULT_OPTIONS, previous);
+    expect(plan.get('9').path).toBe('notes-9.md');
+  });
+
+  it('drops a previous name that no longer matches the title', () => {
+    const plan = planPaths(treeOf([['9', 'Renamed']]), DEFAULT_OPTIONS, new Map([['9', 'notes']]));
+    expect(plan.get('9').path).toBe('renamed.md');
+  });
+
+  it('falls back to page-<id> when the title has no usable characters', () => {
+    expect(planPaths(treeOf([['42', '设计文档']]), DEFAULT_OPTIONS, new Map()).get('42').path).toBe('page-42.md');
+  });
+
+  it('widens the prefix for more than 99 siblings', () => {
+    const rows = Array.from({ length: 120 }, (_, i) => [String(i + 1), `P${i + 1}`]);
+    const plan = planPaths(treeOf(rows), { ...DEFAULT_OPTIONS, ordering: 'prefix' }, new Map());
+    expect(plan.get('1').path).toBe('0010-p1.md');
+    expect(plan.get('120').path).toBe('1200-p120.md');
+  });
+
+  it('is deterministic', () => {
+    expect(paths(planPaths(tree, DEFAULT_OPTIONS, new Map()))).toEqual(paths(planPaths(tree, DEFAULT_OPTIONS, new Map())));
+  });
+
+  it('resolves a fallback collision against a name another sibling already took directly', () => {
+    const plan = planPaths(treeOf([['3', 'notes-9'], ['5', 'Notes'], ['9', 'Notes']]), DEFAULT_OPTIONS, new Map());
+    const result = paths(plan);
+    expect(new Set(Object.values(result).map((p) => p.toLowerCase())).size).toBe(3);
+    expect(result).toEqual({ 3: 'notes-9.md', 5: 'notes.md', 9: 'notes-9-2.md' });
+  });
+
+  it('repeats the same collision-resolved names when fed back as previous names', () => {
+    const rows = treeOf([['3', 'notes-9'], ['5', 'Notes'], ['9', 'Notes']]);
+    const first = planPaths(rows, DEFAULT_OPTIONS, new Map());
+    const previous = new Map([...first].map(([id, entry]) => [id, entry.name]));
+    expect(paths(planPaths(rows, DEFAULT_OPTIONS, previous))).toEqual(paths(first));
+  });
+
+  it("resolves a fallback that collides with another sibling's sticky previous name", () => {
+    const rows = treeOf([['2', 'Foo'], ['5', 'Foo'], ['9', 'Foo 5']]);
+    const plan = planPaths(rows, DEFAULT_OPTIONS, new Map([['9', 'foo-5']]));
+    const result = paths(plan);
+    expect(new Set(Object.values(result).map((p) => p.toLowerCase())).size).toBe(3);
+    expect(result).toEqual({ 2: 'foo.md', 5: 'foo-5-2.md', 9: 'foo-5.md' });
+  });
+
+  it('turns a Confluence folder into a plain directory without an index file, named and weighted like a page', () => {
+    const withFolder = treeOf([['1', 'Home'], ['2', 'Intro', '1'], ['3', 'Folder test', '1', 'folder'], ['4', 'Page in folder', '3'], ['5', 'Intro', '3']]);
+    const plan = planPaths(withFolder, DEFAULT_OPTIONS, new Map());
+    expect(paths(plan)).toEqual({ 1: 'home/index.md', 2: 'home/intro.md', 3: 'home/folder-test', 4: 'home/folder-test/page-in-folder.md', 5: 'home/folder-test/intro.md' });
+    expect(plan.get('3')).toEqual({ path: 'home/folder-test', name: 'folder-test', weight: 20, isIndex: false, isFolder: true });
+    const prefixed = planPaths(withFolder, { ...DEFAULT_OPTIONS, ordering: 'prefix' }, new Map());
+    expect(prefixed.get('4').path).toBe('010-home/020-folder-test/010-page-in-folder.md');
+  });
+
+  it('applies the collision rules to a folder and a page with the same title', () => {
+    const clash = treeOf([['1', 'Home'], ['7', 'Guides', '1'], ['3', 'Guides', '1', 'folder'], ['4', 'Inside', '3']]);
+    const plan = planPaths(clash, DEFAULT_OPTIONS, new Map());
+    expect(plan.get('3').path).toBe('home/guides');
+    expect(plan.get('7').path).toBe('home/guides-7.md');
+    expect(planPaths(clash, DEFAULT_OPTIONS, new Map([['3', 'guides-3'], ['7', 'guides']])).get('3').path).toBe('home/guides-3');
+  });
+});
