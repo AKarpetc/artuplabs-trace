@@ -6,4 +6,5 @@ export const PALETTE = {
   codeFill: 'F7F8F9',
   panel: { info: 'E9F2FF', note: 'F3F0FF', warning: 'FFF7D6', error: 'FFECEB', success: 'DCFFF1' },
   text: '172B4D',
+  muted: '626F86',
 };
