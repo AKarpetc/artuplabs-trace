@@ -17,25 +17,26 @@ async function rootsOf(client, target, signal) {
 
 /**
  * Scans the export target breadth-first, level by level; nodes in discovery order, children in Confluence order.
+ * Confluence folders become nodes with `type: 'folder'` and are walked like pages.
  * `maxDepth` limits the levels read below the roots (the preview reads two).
  */
 export async function scanTree(client, target, onProgress, signal, { maxDepth = Infinity } = {}) {
   throwIfAborted(signal);
   const nodes = new Map();
-  const add = ({ id, title, parentId }) => nodes.set(id, { id, title, parentId, childIds: [] });
+  const add = ({ id, title, parentId, type }) => nodes.set(id, { id, title, parentId, childIds: [], ...(type === 'folder' ? { type } : {}) });
   const roots = [...new Map((await rootsOf(client, target, signal)).map((r) => [r.id, r])).values()];
   throwIfAborted(signal);
   roots.forEach(add);
   onProgress({ stage: 'scan', done: nodes.size, total: 0 });
   let level = target.kind === 'page' ? [] : roots.map((r) => r.id);
   for (let depth = 0; level.length > 0 && depth < maxDepth; depth += 1) {
-    const children = await Promise.all(level.map((id) => client.listChildren(id)));
+    const children = await Promise.all(level.map((id) => client.listChildren(id, nodes.get(id).type ?? 'page')));
     throwIfAborted(signal);
     const next = [];
     level.forEach((parentId, index) => {
       for (const child of children[index]) {
         if (nodes.has(child.id)) continue;
-        add({ id: child.id, title: child.title, parentId });
+        add({ id: child.id, title: child.title, parentId, type: child.type });
         nodes.get(parentId).childIds.push(child.id);
         next.push(child.id);
       }

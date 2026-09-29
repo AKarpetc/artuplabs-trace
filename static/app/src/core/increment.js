@@ -1,11 +1,12 @@
-/** Decides what an update export fetches, downloads and deletes relative to the previous manifest. */
+/** Decides what an update export fetches, downloads and deletes relative to the previous manifest; folder entries only keep names stable. */
 export function planUpdate({ previous, versions, plan, attachments, attachmentPlan }) {
   const fetchIds = new Set();
   const downloadIds = new Set();
   const deletes = new Set();
   const gone = new Set();
   const stats = { added: 0, changed: 0, moved: 0, relinked: 0, missing: 0, unchanged: 0 };
-  const byId = new Map(previous.pages.map((p) => [p.id, p]));
+  const previousPages = previous.pages.filter((p) => p.type !== 'folder');
+  const byId = new Map(previousPages.map((p) => [p.id, p]));
 
   for (const [id, version] of versions) {
     const old = byId.get(id);
@@ -26,14 +27,14 @@ export function planUpdate({ previous, versions, plan, attachments, attachmentPl
       stats.changed += 1;
     }
   }
-  for (const old of previous.pages) {
+  for (const old of previousPages) {
     if (versions.has(old.id)) continue;
     gone.add(old.id);
     stats.missing += 1;
     deletes.add(old.path);
     old.attachments.forEach((a) => deletes.add(a.path));
   }
-  for (const old of previous.pages) {
+  for (const old of previousPages) {
     if (versions.has(old.id) && !fetchIds.has(old.id) && old.links.some((id) => gone.has(id))) {
       fetchIds.add(old.id);
       stats.relinked += 1;

@@ -7,13 +7,44 @@ const json = (body, status = 200, headers = {}) => ({
 });
 
 describe('confluence client', () => {
-  it('follows pagination and sorts children by position', async () => {
+  it('follows pagination and sorts direct children (pages and folders) by position', async () => {
     const request = vi.fn(async (path) => {
-      if (path === '/wiki/api/v2/pages/1/children?limit=250') return json({ results: [{ id: '3', title: 'B', childPosition: 2 }], _links: { next: '/wiki/api/v2/pages/1/children?cursor=x&limit=250' } });
-      return json({ results: [{ id: '2', title: 'A', childPosition: 1 }], _links: {} });
+      if (path === '/wiki/api/v2/pages/1/direct-children?limit=250') {
+        return json({ results: [{ id: '3', type: 'folder', title: 'B', childPosition: 2 }, { id: '7', type: 'whiteboard', title: 'W', childPosition: 0 }], _links: { next: '/wiki/api/v2/pages/1/direct-children?cursor=x&limit=250' } });
+      }
+      return json({ results: [{ id: '2', type: 'page', title: 'A', childPosition: 1 }], _links: {} });
     });
     const client = createConfluenceClient({ request, sleep: async () => {} });
-    expect(await client.listChildren('1')).toEqual([{ id: '2', title: 'A', position: 1 }, { id: '3', title: 'B', position: 2 }]);
+    expect(await client.listChildren('1')).toEqual([{ id: '2', title: 'A', position: 1, type: 'page' }, { id: '3', title: 'B', position: 2, type: 'folder' }]);
+  });
+
+  it('lists the direct children of a folder through the folders endpoint', async () => {
+    const request = vi.fn(async () => json({ results: [{ id: '9', type: 'page', title: 'In folder', childPosition: 5 }] }));
+    const client = createConfluenceClient({ request, sleep: async () => {} });
+    expect(await client.listChildren('3', 'folder')).toEqual([{ id: '9', title: 'In folder', position: 5, type: 'page' }]);
+    expect(request.mock.calls.map((c) => c[0])).toEqual(['/wiki/api/v2/folders/3/direct-children?limit=250']);
+  });
+
+  it('falls back to the page children endpoint when direct-children is not found', async () => {
+    const request = vi.fn(async (path) => (path.includes('direct-children') ? json({}, 404) : json({ results: [{ id: '2', title: 'A', childPosition: 1 }] })));
+    const client = createConfluenceClient({ request, sleep: async () => {} });
+    expect(await client.listChildren('1')).toEqual([{ id: '2', title: 'A', position: 1, type: 'page' }]);
+    expect(request.mock.calls.map((c) => c[0])).toEqual(['/wiki/api/v2/pages/1/direct-children?limit=250', '/wiki/api/v2/pages/1/children?limit=250']);
+  });
+
+  it('reads labels of many pages through CQL in batches of 100', async () => {
+    const ids = Array.from({ length: 150 }, (_, i) => String(i + 1));
+    const request = vi.fn(async (path) => {
+      const cql = new URL(`https://h${path}`).searchParams.get('cql');
+      const batch = cql.match(/id in \(([^)]*)\)/)[1].split(',');
+      return json({ results: batch.map((id) => ({ content: { id, metadata: { labels: { results: id === '2' ? [{ name: 'b' }, { name: 'a' }] : [] } } } })) });
+    });
+    const labels = await createConfluenceClient({ request, sleep: async () => {} }).getLabelsOf(ids);
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(request.mock.calls[0][0]).toContain('expand=content.metadata.labels');
+    expect(labels.size).toBe(150);
+    expect(labels.get('2')).toEqual(['b', 'a']);
+    expect(labels.get('1')).toEqual([]);
   });
 
   it('retries 429 using Retry-After, then succeeds', async () => {
@@ -57,15 +88,34 @@ describe('confluence client', () => {
     expect(await client.getUsers(['u1'])).toEqual(new Map([['u1', 'Ann']]));
   });
 
-  it('retries a rejecting request with the same backoff, then throws ConfluenceError status 0 after 5 attempts', async () => {
+  it('retries a rejecting request with the same backoff, then throws ConfluenceError status 0 after 8 attempts', async () => {
     const sleep = vi.fn(async () => {});
     const request = vi.fn(async () => {
       throw new TypeError('network down');
     });
     const client = createConfluenceClient({ request, sleep });
     await expect(client.getSpace('ENG')).rejects.toMatchObject({ name: 'ConfluenceError', status: 0 });
-    expect(request).toHaveBeenCalledTimes(5);
-    expect(sleep.mock.calls.map((c) => c[0])).toEqual([1000, 2000, 4000, 8000]);
+    expect(request).toHaveBeenCalledTimes(8);
+    expect(sleep.mock.calls.map((c) => c[0])).toEqual([1000, 2000, 4000, 8000, 16000, 30000, 30000]);
+  });
+
+  it('honours a long Retry-After up to 120 seconds', async () => {
+    const sleep = vi.fn(async () => {});
+    const request = vi.fn()
+      .mockResolvedValueOnce(json({}, 429, { 'retry-after': '90' }))
+      .mockResolvedValueOnce(json({}, 503, { 'retry-after': '600' }))
+      .mockResolvedValueOnce(json({ results: [{ id: '5', key: 'ENG', name: 'Eng', homepageId: '6' }] }));
+    const client = createConfluenceClient({ request, sleep });
+    expect((await client.getSpace('ENG')).id).toBe('5');
+    expect(sleep.mock.calls.map((c) => c[0])).toEqual([90000, 120000]);
+  });
+
+  it('gives up on a throttled request after 8 attempts', async () => {
+    const sleep = vi.fn(async () => {});
+    const request = vi.fn(async () => json({}, 429, { 'retry-after': '1' }));
+    const client = createConfluenceClient({ request, sleep });
+    await expect(client.getSpace('ENG')).rejects.toMatchObject({ name: 'ConfluenceError', status: 429 });
+    expect(request).toHaveBeenCalledTimes(8);
   });
 
   it('succeeds on the 2nd attempt after one rejecting request', async () => {

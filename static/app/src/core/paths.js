@@ -31,7 +31,7 @@ function nameSiblings(ids, nodes, options, previousNames) {
   return names;
 }
 
-/** Plans a stable file path per page: parents become folders with an index file, leaves become .md files. */
+/** Plans a stable file path per page: parents become folders with an index file, leaves become .md files, Confluence folders become plain directories. */
 export function planPaths(tree, options, previousNames) {
   const preset = presetOf(options.preset);
   const plan = new Map();
@@ -43,6 +43,11 @@ export function planPaths(tree, options, previousNames) {
       const weight = (index + 1) * 10;
       const name = names.get(id);
       const shown = options.ordering === 'prefix' ? `${String(weight).padStart(width, '0')}-${name}` : name;
+      if (node.type === 'folder') {
+        plan.set(id, { path: join(dir, shown), name, weight, isIndex: false, isFolder: true });
+        walk(node.childIds, join(dir, shown));
+        return;
+      }
       const isIndex = node.childIds.length > 0;
       plan.set(id, { path: isIndex ? join(dir, shown, preset.indexFile) : join(dir, `${shown}.md`), name, weight, isIndex });
       if (isIndex) walk(node.childIds, join(dir, shown));

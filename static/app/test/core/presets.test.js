@@ -39,4 +39,23 @@ describe('presetFiles', () => {
     expect(presetOf('hugo')).toEqual({ indexFile: '_index.md', orderKey: 'weight', extras: null, flavor: 'gfm' });
     expect(presetOf('unknown')).toEqual(presetOf('generic'));
   });
+
+  const withFolder = treeOf([['1', 'Home'], ['2', 'Intro', '1'], ['3', 'Folder test', '1', 'folder'], ['4', 'Page in folder', '3']]);
+
+  it('writes a _category_.json for a folder in docusaurus', () => {
+    const options = { ...DEFAULT_OPTIONS, preset: 'docusaurus' };
+    expect(presetFiles(withFolder, planPaths(withFolder, options, new Map()), options)).toEqual([
+      { path: 'home/_category_.json', content: '{\n  "label": "Home",\n  "position": 10\n}\n' },
+      { path: 'home/folder-test/_category_.json', content: '{\n  "label": "Folder test",\n  "position": 20\n}\n' },
+    ]);
+  });
+
+  it('writes a .pages file with the folder title and no index entry in mkdocs', () => {
+    const options = { ...DEFAULT_OPTIONS, preset: 'mkdocs' };
+    expect(presetFiles(withFolder, planPaths(withFolder, options, new Map()), options)).toEqual([
+      { path: '.pages', content: 'nav:\n  - "home"\n' },
+      { path: 'home/.pages', content: 'title: "Home"\nnav:\n  - "index.md"\n  - "intro.md"\n  - "folder-test"\n' },
+      { path: 'home/folder-test/.pages', content: 'title: "Folder test"\nnav:\n  - "page-in-folder.md"\n' },
+    ]);
+  });
 });

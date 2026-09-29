@@ -166,14 +166,14 @@ describe('runExport edge cases', () => {
   it('never lists unsafe paths from a crafted previous manifest for deletion', async () => {
     const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
     const previous = JSON.parse((await files(await run(fake)))['export-manifest.json']);
-    ['../outside.md', '/etc/passwd', 'home/../../x.md', 'home\\x.md'].forEach((path, i) => previous.pages.push({
+    ['../outside.md', '/etc/passwd', 'home/../../x.md', 'home\\x.md', 'evil\n/Users/victim/.zshrc', '.github/ci.md', 'export-manifest.json', 'mkdocs.yml'].forEach((path, i) => previous.pages.push({
       id: String(90 + i), title: `Gone ${i}`, parentId: '1', version: 1, path, name: 'x', weight: 40 + i, links: [], attachments: [],
     }));
-    previous.pages.push({ id: '99', title: 'Gone', parentId: '1', version: 1, path: 'home/gone.md', name: 'gone', weight: 99, links: [], attachments: [] });
+    previous.pages.push({ id: '99', title: 'Gone', parentId: '1', version: 1, path: 'home/gone.md', name: 'gone', weight: 99, links: [], attachments: [{ id: 'x1', version: 1, path: 'home/.ssh/id_rsa' }, { id: 'x2', version: 1, path: 'home/gone.assets/a.png' }] });
     const result = await run(fake, { previousManifest: previous });
     const out = await files(result);
-    expect(result.deletePaths).toEqual(['home/gone.md']);
-    expect(out['export-deleted.txt']).toBe('home/gone.md\n');
+    expect(result.deletePaths).toEqual(['home/gone.assets/a.png', 'home/gone.md']);
+    expect(out['export-deleted.txt']).toBe('home/gone.assets/a.png\nhome/gone.md\n');
   });
 
   it('reports full stats and a dated file name', async () => {
@@ -281,6 +281,14 @@ describe('scanTree', () => {
     const single = await scanTree(fake.client, { kind: 'page', spaceKey: 'ENG', pageId: '13' }, () => {});
     expect(single.rootIds).toEqual(['13']);
     expect(single.nodes.get('13')).toEqual({ id: '13', title: 'A1', parentId: '10', childIds: [] });
+  });
+
+  it('walks into folders and marks them as folder nodes', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: [...rows(), { id: '20', type: 'folder', title: 'F', parentId: '11', position: 0 }, { id: '21', title: 'In F', parentId: '20', position: 0, version: 1, attachments: [] }], users: {} });
+    const tree = await scanTree(fake.client, { kind: 'space', spaceKey: 'ENG' }, () => {});
+    expect(tree.nodes.get('11').childIds).toEqual(['20']);
+    expect(tree.nodes.get('20')).toEqual({ id: '20', title: 'F', parentId: '11', childIds: ['21'], type: 'folder' });
+    expect(tree.nodes.get('21')).toEqual({ id: '21', title: 'In F', parentId: '20', childIds: [] });
   });
 
   it('stops after maxDepth levels below the roots', async () => {
@@ -421,5 +429,97 @@ describe('runExport fix round 1', () => {
     expect(Object.keys(out).sort()).toEqual(['api.assets/d.png', 'api.md', 'cafe.md', 'export-manifest.json']);
     expect(result.stats).toMatchObject({ pages: 2, missing: 1 });
     expect(out['cafe.md']).toContain('[Home](https://x.atlassian.net/wiki/display/ENG/Home)');
+  });
+});
+
+describe('runExport with Confluence folders', () => {
+  const eng = { id: '5', key: 'ENG', name: 'Eng' };
+  const withFolder = () => [
+    ...pages(),
+    { id: '40', type: 'folder', title: 'Folder test', parentId: '1', position: 2 },
+    { id: '41', title: 'Page in folder', parentId: '40', position: 0, version: 1, authorId: 'u1', labels: [], body: '<p>Inside</p>', attachments: [{ id: 'a9', title: 'f.png', version: 1, bytes: PNG }] },
+    { id: '42', type: 'folder', title: 'Empty folder', parentId: '1', position: 3 },
+  ];
+  const spy = (fake) => {
+    const asked = [];
+    const getPages = fake.client.getPages;
+    fake.client.getPages = (ids, opts) => {
+      asked.push(...ids);
+      return getPages(ids, opts);
+    };
+    return asked;
+  };
+
+  it('exports pages inside a folder into a plain directory and records the folder in the manifest', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: withFolder(), users: {} });
+    const asked = spy(fake);
+    const result = await run(fake);
+    const out = await files(result);
+    expect(Object.keys(out).sort()).toEqual([
+      'export-manifest.json', 'home/api.assets/d.png', 'home/api.md', 'home/cafe.md', 'home/folder-test/page-in-folder.assets/f.png',
+      'home/folder-test/page-in-folder.md', 'home/index.md',
+    ]);
+    expect(out['home/folder-test/page-in-folder.md']).toContain('parent_id: "40"');
+    expect(asked).not.toContain('40');
+    expect(asked).not.toContain('42');
+    const manifest = JSON.parse(out['export-manifest.json']);
+    expect(manifest.pages.find((p) => p.id === '40')).toEqual({ id: '40', type: 'folder', title: 'Folder test', parentId: '1', path: 'home/folder-test', name: 'folder-test', weight: 30, links: [], attachments: [] });
+    expect(manifest.pages.some((p) => p.id === '42')).toBe(false);
+    expect(result.stats).toMatchObject({ pages: 4, written: 4, added: 4 });
+  });
+
+  it('lists a folder in the parent children macro as its directory', async () => {
+    const list = withFolder();
+    list[0].body = '<ac:structured-macro ac:name="children"/>';
+    const out = await files(await run(createFakeConfluence({ space: eng, pages: list, users: {} })));
+    expect(out['home/index.md']).toContain('- [Folder test](folder-test)');
+  });
+
+  it('writes folder navigation files for docusaurus and mkdocs', async () => {
+    const docusaurus = await files(await run(createFakeConfluence({ space: eng, pages: withFolder(), users: {} }), { options: { ...DEFAULT_OPTIONS, preset: 'docusaurus' } }));
+    expect(docusaurus['home/folder-test/_category_.json']).toBe('{\n  "label": "Folder test",\n  "position": 30\n}\n');
+    const mkdocs = await files(await run(createFakeConfluence({ space: eng, pages: withFolder(), users: {} }), { options: { ...DEFAULT_OPTIONS, preset: 'mkdocs' } }));
+    expect(mkdocs['home/folder-test/.pages']).toBe('title: "Folder test"\nnav:\n  - "page-in-folder.md"\n');
+    expect(mkdocs['home/.pages']).toContain('  - "folder-test"\n');
+    expect(mkdocs['home/.pages']).not.toContain('empty-folder');
+  });
+
+  it('keeps an unchanged export with folders as a no-op update', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: withFolder(), users: {} });
+    const first = await files(await run(fake));
+    const result = await run(fake, { previousManifest: JSON.parse(first['export-manifest.json']) });
+    const out = await files(result);
+    expect(Object.keys(out)).toEqual(['export-manifest.json']);
+    expect(out['export-manifest.json']).toBe(first['export-manifest.json']);
+    expect(result.stats).toMatchObject({ missing: 0, unchanged: 4, deleted: 0 });
+  });
+
+  it('moves the pages of a renamed folder and never lists the folder directory for deletion', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: withFolder(), users: {} });
+    const previousManifest = JSON.parse((await files(await run(fake)))['export-manifest.json']);
+    fake.update('40', { title: 'Renamed folder' });
+    const result = await run(fake, { previousManifest });
+    const out = await files(result);
+    expect(Object.keys(out).sort()).toEqual([
+      'export-deleted.txt', 'export-manifest.json', 'home/renamed-folder/page-in-folder.assets/f.png', 'home/renamed-folder/page-in-folder.md',
+    ]);
+    expect(out['export-deleted.txt']).toBe('home/folder-test/page-in-folder.assets/f.png\nhome/folder-test/page-in-folder.md\n');
+    expect(result.stats).toMatchObject({ moved: 1, missing: 0 });
+  });
+
+  it('drops a removed folder from the manifest without counting it as a missing page', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: withFolder(), users: {} });
+    const previousManifest = JSON.parse((await files(await run(fake)))['export-manifest.json']);
+    fake.remove('40');
+    const result = await run(fake, { previousManifest });
+    const out = await files(result);
+    expect(out['home/page-in-folder.md']).toContain('Inside');
+    expect(JSON.parse(out['export-manifest.json']).pages.some((p) => p.id === '40')).toBe(false);
+    expect(result.stats).toMatchObject({ moved: 1, missing: 0 });
+  });
+
+  it('exports a branch rooted above a folder', async () => {
+    const out = await files(await run(createFakeConfluence({ space: eng, pages: withFolder(), users: {} }), { target: { kind: 'branch', spaceKey: 'ENG', pageId: '1' } }));
+    expect(Object.keys(out)).toContain('home/folder-test/page-in-folder.md');
   });
 });

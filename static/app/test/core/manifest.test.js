@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildManifest, isSafePath, parseManifest, previousNames, sameOptions, sameSource } from '../../src/core/manifest.js';
+import { buildManifest, isDeletablePath, isSafePath, parseManifest, previousNames, sameOptions, sameSource } from '../../src/core/manifest.js';
 import { DEFAULT_OPTIONS } from '../../src/core/presets.js';
 
 const page = (id, path, over = {}) => ({ id, title: `T${id}`, parentId: null, version: 1, path, name: path.replace(/\.md$/, ''), weight: 10, links: [], attachments: [], ...over });
@@ -45,6 +45,7 @@ describe('manifest', () => {
 
   it.each([
     '/etc/passwd', '../x.md', 'a/../../x.md', 'a//b.md', 'a/./b.md', 'a\\b.md', 'a\u0000.md', 'C:/x.md', '', 'a/',
+    'evil\n/Users/victim/.zshrc', 'x\r\n/tmp/a.md', 'a\tb.md', 'a\u001fb.md', 'a\u007fb.md', 'a\u2028b.md', 'a\u2029b.md',
   ])('rejects the unsafe page path %j', (path) => {
     const text = buildManifest({ ...input, pages: [page('1', path)] });
     expect(parseManifest(text)).toEqual({ ok: false, error: 'not-manifest' });
@@ -64,4 +65,33 @@ describe('manifest', () => {
     const extra = { ...input, warnings: input.warnings.map((w) => ({ ...w, extraKey: 'ignored' })) };
     expect(buildManifest(extra)).toBe(buildManifest(input));
   });
+
+  it('writes a folder as an entry without a version and reads it back', () => {
+    const folder = { id: '40', type: 'folder', title: 'Folder test', parentId: '1', path: 'a/folder-test', name: 'folder-test', weight: 20, version: 7, links: ['3'], attachments: [] };
+    const text = buildManifest({ ...input, pages: [...input.pages, folder] });
+    const entry = JSON.parse(text).pages.find((p) => p.id === '40');
+    expect(entry).toEqual({ id: '40', type: 'folder', title: 'Folder test', parentId: '1', path: 'a/folder-test', name: 'folder-test', weight: 20, links: [], attachments: [] });
+    expect(parseManifest(text).ok).toBe(true);
+    const pageWithoutVersion = JSON.stringify({ format: 'artup-export', version: 1, pages: [{ ...entry, type: undefined }], warnings: [] });
+    expect(parseManifest(pageWithoutVersion)).toEqual({ ok: false, error: 'not-manifest' });
+  });
+
+  it('rejects a crafted manifest whose page path hides a newline', () => {
+    const text = JSON.stringify({ format: 'artup-export', version: 1, source: {}, options: {}, pages: [page('999', 'evil\n/Users/victim/.zshrc')], warnings: [] });
+    expect(parseManifest(text)).toEqual({ ok: false, error: 'not-manifest' });
+  });
+});
+
+describe('isDeletablePath', () => {
+  it.each([
+    'a.md', 'home/api/index.md', 'home/_index.md', 'home/api.assets/v1.2.png', 'home/api.assets/sub/file', 'home/_category_.json', '_category_.json',
+    '.pages', 'home/.pages',
+  ])('allows the written shape %j', (path) => expect(isDeletablePath(path)).toBe(true));
+
+  it.each([
+    'export-manifest.json', 'docs/export-manifest.json', 'export-deleted.txt', 'a/export-deleted.txt', 'a.assets/export-manifest.json',
+    '.git/config', '.github/workflows/ci.yml', 'home/.env.md', 'home/.hidden/a.md', '.pages/a.md', 'a.assets/.htaccess',
+    'README.txt', 'home/config.yml', 'package.json', 'a.assets', 'home/api.assets', 'mkdocs.yml',
+    'evil\n/Users/victim/.zshrc', '../x.md', '/etc/x.md',
+  ])('refuses %j', (path) => expect(isDeletablePath(path)).toBe(false));
 });

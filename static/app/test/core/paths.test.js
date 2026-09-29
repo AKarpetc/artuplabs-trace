@@ -86,4 +86,21 @@ describe('planPaths', () => {
     expect(new Set(Object.values(result).map((p) => p.toLowerCase())).size).toBe(3);
     expect(result).toEqual({ 2: 'foo.md', 5: 'foo-5-2.md', 9: 'foo-5.md' });
   });
+
+  it('turns a Confluence folder into a plain directory without an index file, named and weighted like a page', () => {
+    const withFolder = treeOf([['1', 'Home'], ['2', 'Intro', '1'], ['3', 'Folder test', '1', 'folder'], ['4', 'Page in folder', '3'], ['5', 'Intro', '3']]);
+    const plan = planPaths(withFolder, DEFAULT_OPTIONS, new Map());
+    expect(paths(plan)).toEqual({ 1: 'home/index.md', 2: 'home/intro.md', 3: 'home/folder-test', 4: 'home/folder-test/page-in-folder.md', 5: 'home/folder-test/intro.md' });
+    expect(plan.get('3')).toEqual({ path: 'home/folder-test', name: 'folder-test', weight: 20, isIndex: false, isFolder: true });
+    const prefixed = planPaths(withFolder, { ...DEFAULT_OPTIONS, ordering: 'prefix' }, new Map());
+    expect(prefixed.get('4').path).toBe('010-home/020-folder-test/010-page-in-folder.md');
+  });
+
+  it('applies the collision rules to a folder and a page with the same title', () => {
+    const clash = treeOf([['1', 'Home'], ['7', 'Guides', '1'], ['3', 'Guides', '1', 'folder'], ['4', 'Inside', '3']]);
+    const plan = planPaths(clash, DEFAULT_OPTIONS, new Map());
+    expect(plan.get('3').path).toBe('home/guides');
+    expect(plan.get('7').path).toBe('home/guides-7.md');
+    expect(planPaths(clash, DEFAULT_OPTIONS, new Map([['3', 'guides-3'], ['7', 'guides']])).get('3').path).toBe('home/guides-3');
+  });
 });

@@ -149,8 +149,18 @@ function ancestorsOf(page) {
   return chain;
 }
 
+function labelsById(cql, url) {
+  const ids = cql.match(/^id in \(([\d,]*)\)$/)[1].split(',').filter((id) => BY_ID.has(id));
+  const limit = Number(url.searchParams.get('limit')) || 20;
+  const results = ids.slice(0, limit).map((id) => ({
+    content: { id, type: 'page', title: BY_ID.get(id).title, metadata: { labels: { results: BY_ID.get(id).labels.map((name) => ({ prefix: 'global', name })) } } },
+  }));
+  return json({ results, size: results.length, totalSize: ids.length });
+}
+
 function search(url) {
   const cql = url.searchParams.get('cql') ?? '';
+  if (cql.startsWith('id in (')) return labelsById(cql, url);
   const text = (cql.match(/title~"([^"]*)\*?"/)?.[1] ?? '').replace(/\*$/, '').toLowerCase();
   const ancestor = cql.match(/ancestor=(\d+)/)?.[1] ?? null;
   const limit = Number(url.searchParams.get('limit')) || 20;
@@ -174,6 +184,8 @@ const ROUTES = [
   }],
   [/^\/wiki\/api\/v2\/spaces\/(\d+)\/pages$/, (url, [, spaceId]) => (spaceId === SPACE.id
     ? paged(PAGES.filter((page) => page.parentId === null).map(pageSummary), url) : notFound(url.pathname))],
+  [/^\/wiki\/api\/v2\/pages\/(\d+)\/direct-children$/, (url, [, id]) => (BY_ID.has(id)
+    ? paged(PAGES.filter((page) => page.parentId === id).map((page) => ({ ...pageSummary(page), type: 'page' })), url) : notFound(url.pathname))],
   [/^\/wiki\/api\/v2\/pages\/(\d+)\/children$/, (url, [, id]) => (BY_ID.has(id)
     ? paged(PAGES.filter((page) => page.parentId === id).map(pageSummary), url) : notFound(url.pathname))],
   [/^\/wiki\/api\/v2\/pages\/(\d+)\/labels$/, (url, [, id]) => (BY_ID.has(id)

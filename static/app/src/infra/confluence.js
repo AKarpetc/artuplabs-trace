@@ -2,6 +2,11 @@ import { createPool } from './pool.js';
 
 const BATCH = 250;
 const USERS_BATCH = 100;
+const CQL_BATCH = 100;
+const MAX_ATTEMPTS = 8;
+const MAX_RETRY_AFTER_S = 120;
+const MAX_BACKOFF_S = 30;
+const TREE_TYPES = new Set(['page', 'folder']);
 
 /** Confluence REST failure with its HTTP status. */
 export class ConfluenceError extends Error {
@@ -32,15 +37,15 @@ export function createConfluenceClient({ request, sleep, concurrency = 6, signal
         response = await request(path, { headers: { Accept: 'application/json' } });
       } catch (error) {
         if (error?.name === 'AbortError') throw error;
-        if (attempt >= 4) throw new ConfluenceError(0, path);
-        await sleep(Math.min(30, 2 ** attempt) * 1000);
+        if (attempt >= MAX_ATTEMPTS - 1) throw new ConfluenceError(0, path);
+        await sleep(Math.min(MAX_BACKOFF_S, 2 ** attempt) * 1000);
         continue;
       }
       if (response.ok) return parse(response);
       const retriable = response.status === 429 || response.status >= 500;
-      if (!retriable || attempt >= 4) throw new ConfluenceError(response.status, path);
+      if (!retriable || attempt >= MAX_ATTEMPTS - 1) throw new ConfluenceError(response.status, path);
       const header = Number(response.headers.get('retry-after'));
-      await sleep(Math.min(30, Number.isFinite(header) && header > 0 ? header : 2 ** attempt) * 1000);
+      await sleep((Number.isFinite(header) && header > 0 ? Math.min(MAX_RETRY_AFTER_S, header) : Math.min(MAX_BACKOFF_S, 2 ** attempt)) * 1000);
     }
   });
   const getJson = (path) => send(path, (r) => r.json());
@@ -70,9 +75,16 @@ export function createConfluenceClient({ request, sleep, concurrency = 6, signal
       const rows = await all(`/wiki/api/v2/spaces/${spaceId}/pages?depth=root&limit=${BATCH}`);
       return rows.map((r) => ({ id: String(r.id), title: r.title, position: r.position ?? 0 })).sort((a, b) => a.position - b.position);
     },
-    async listChildren(pageId) {
-      const rows = await all(`/wiki/api/v2/pages/${pageId}/children?limit=${BATCH}`);
-      return rows.map((r) => ({ id: String(r.id), title: r.title, position: r.childPosition ?? 0 })).sort((a, b) => a.position - b.position);
+    async listChildren(id, type = 'page') {
+      const toRow = (r) => ({ id: String(r.id), title: r.title, position: r.childPosition ?? 0, type: r.type ?? 'page' });
+      let rows;
+      try {
+        rows = await all(`/wiki/api/v2/${type === 'folder' ? 'folders' : 'pages'}/${id}/direct-children?limit=${BATCH}`);
+      } catch (error) {
+        if (type === 'folder' || error?.status !== 404) throw error;
+        rows = await all(`/wiki/api/v2/pages/${id}/children?limit=${BATCH}`);
+      }
+      return rows.map(toRow).filter((r) => TREE_TYPES.has(r.type)).sort((a, b) => a.position - b.position);
     },
     async getPages(ids, { withBody }) {
       const validIds = ids.filter((id) => /^\d+$/.test(id));
@@ -86,6 +98,18 @@ export function createConfluenceClient({ request, sleep, concurrency = 6, signal
     },
     async getLabels(pageId) {
       return (await all(`/wiki/api/v2/pages/${pageId}/labels?limit=${BATCH}`)).map((l) => l.name);
+    },
+    async getLabelsOf(ids) {
+      const result = new Map();
+      const validIds = [...new Set(ids)].filter((id) => /^\d+$/.test(id));
+      for (const batch of chunks(validIds, CQL_BATCH)) {
+        const cql = `id in (${batch.join(',')})`;
+        const page = await getJson(`/wiki/rest/api/search?cql=${encodeURIComponent(cql)}&limit=${CQL_BATCH}&expand=content.metadata.labels`);
+        (page.results ?? []).forEach((r) => {
+          if (r.content?.id) result.set(String(r.content.id), (r.content.metadata?.labels?.results ?? []).map((l) => l.name));
+        });
+      }
+      return result;
     },
     async listAttachments(pageId) {
       return (await all(`/wiki/api/v2/pages/${pageId}/attachments?limit=${BATCH}`)).map((a) => ({

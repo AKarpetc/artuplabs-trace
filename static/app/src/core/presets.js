@@ -37,15 +37,19 @@ function entryName(entry) {
   return entry.isIndex ? parts[parts.length - 2] : parts[parts.length - 1];
 }
 
+function dirOfEntry(entry) {
+  return entry.isFolder ? entry.path : dirOf(entry.path);
+}
+
 function categoryFiles(tree, plan) {
-  return [...plan].filter(([, entry]) => entry.isIndex).map(([id, entry]) => ({
-    path: `${dirOf(entry.path)}/_category_.json`,
+  return [...plan].filter(([, entry]) => entry.isIndex || entry.isFolder).map(([id, entry]) => ({
+    path: `${dirOfEntry(entry)}/_category_.json`,
     content: `${JSON.stringify({ label: tree.nodes.get(id).title, position: entry.weight }, null, 2)}\n`,
   }));
 }
 
 function pagesFile(dir, title, indexFile, childIds, plan) {
-  const nav = [...(title === null ? [] : [indexFile]), ...childIds.map((id) => entryName(plan.get(id)))];
+  const nav = [...(indexFile === null ? [] : [indexFile]), ...childIds.map((id) => entryName(plan.get(id)))];
   const head = title === null ? '' : `title: ${yamlString(title)}\n`;
   return {
     path: dir ? `${dir}/.pages` : '.pages',
@@ -54,13 +58,13 @@ function pagesFile(dir, title, indexFile, childIds, plan) {
 }
 
 function mkdocsFiles(tree, plan, preset) {
-  const files = [pagesFile('', null, preset.indexFile, tree.rootIds, plan)];
+  const files = [pagesFile('', null, null, tree.rootIds, plan)];
   const visit = (ids) => {
     for (const id of ids) {
       const entry = plan.get(id);
       const node = tree.nodes.get(id);
-      if (!entry.isIndex) continue;
-      files.push(pagesFile(dirOf(entry.path), node.title, preset.indexFile, node.childIds, plan));
+      if (!entry.isIndex && !entry.isFolder) continue;
+      files.push(pagesFile(dirOfEntry(entry), node.title, entry.isFolder ? null : preset.indexFile, node.childIds, plan));
       visit(node.childIds);
     }
   };

@@ -70,10 +70,10 @@ export function usePreview({ createClient, target, options, names, siteUrl }) {
     if (!scan.tree) return null;
     const plan = planPaths(scan.tree, options, names);
     const extras = presetFiles(scan.tree, plan, options).map((file) => file.path);
-    const paths = [...[...plan.values()].map((entry) => entry.path), ...extras, MANIFEST_FILE];
+    const paths = [...[...plan.values()].filter((entry) => !entry.isFolder).map((entry) => entry.path), ...extras, MANIFEST_FILE];
     const entry = scan.first ? plan.get(scan.first.id) : null;
     const frontMatter = entry ? renderFrontMatter({ ...scan.first, weight: entry.weight }, options) : null;
-    return { paths, frontMatter, scanned: scan.tree.nodes.size };
+    return { paths, frontMatter, scanned: [...scan.tree.nodes.values()].filter((node) => node.type !== 'folder').length };
   }, [scan, options, names]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);

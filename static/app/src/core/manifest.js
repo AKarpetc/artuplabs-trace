@@ -8,18 +8,25 @@ const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const byId = (a, b) => a.id.length - b.id.length || byText(a.id, b.id);
 const byNumeric = (a, b) => a.length - b.length || byText(a, b);
 
-/** Serializes the export state; pages sorted by path, no timestamps, so unchanged content gives identical text. */
+function manifestEntry(p) {
+  if (p.type === 'folder') {
+    return { id: p.id, type: 'folder', title: p.title, parentId: p.parentId ?? null, path: p.path, name: p.name, weight: p.weight, links: [], attachments: [] };
+  }
+  return {
+    id: p.id, title: p.title, parentId: p.parentId ?? null, version: p.version, path: p.path, name: p.name, weight: p.weight,
+    links: [...new Set(p.links)].sort(byNumeric),
+    attachments: [...p.attachments].sort(byId).map((a) => ({ id: a.id, version: a.version, path: a.path })),
+  };
+}
+
+/** Serializes the export state; folders are entries with `type: 'folder'` and no version; pages sorted by path, no timestamps, so unchanged content gives identical text. */
 export function buildManifest({ siteUrl, spaceKey, rootPageId, options, pages, warnings }) {
   const manifest = {
     format: MANIFEST_FORMAT,
     version: MANIFEST_VERSION,
     source: { siteUrl, spaceKey, rootPageId: rootPageId ?? null },
     options: Object.fromEntries(PATH_OPTIONS.map((key) => [key, options[key]])),
-    pages: [...pages].sort((a, b) => byText(a.path, b.path)).map((p) => ({
-      id: p.id, title: p.title, parentId: p.parentId ?? null, version: p.version, path: p.path, name: p.name, weight: p.weight,
-      links: [...new Set(p.links)].sort(byNumeric),
-      attachments: [...p.attachments].sort(byId).map((a) => ({ id: a.id, version: a.version, path: a.path })),
-    })),
+    pages: [...pages].sort((a, b) => byText(a.path, b.path)).map(manifestEntry),
     warnings: [...warnings]
       .map((w) => ({ pageId: w.pageId, kind: w.kind, detail: w.detail }))
       .sort((a, b) => byNumeric(a.pageId, b.pageId) || byText(a.kind, b.kind) || byText(a.detail, b.detail)),
@@ -27,10 +34,23 @@ export function buildManifest({ siteUrl, spaceKey, rootPageId, options, pages, w
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
-/** True for a relative forward-slash path with no empty, `.` or `..` segments, backslash, NUL or drive prefix. */
+/** True for a relative forward-slash path with no empty, `.` or `..` segments, backslash, control or line-separator character, or drive prefix. */
 export function isSafePath(path) {
-  if (typeof path !== 'string' || path === '' || /[\\\u0000]/.test(path) || /^[A-Za-z]:/.test(path)) return false;
+  if (typeof path !== 'string' || path === '' || /[\\\u0000-\u001f\u007f\u2028\u2029]/.test(path) || /^[A-Za-z]:/.test(path)) return false;
   return path.split('/').every((segment) => segment !== '' && segment !== '.' && segment !== '..');
+}
+
+const PROTECTED_FILES = new Set([MANIFEST_FILE, DELETED_FILE]);
+
+/** True only for a safe path shaped like a file the app writes: a page `.md`, a file under a `.assets` folder, `_category_.json` or `.pages`. */
+export function isDeletablePath(path) {
+  if (!isSafePath(path)) return false;
+  const segments = path.split('/');
+  const leaf = segments[segments.length - 1];
+  const dirs = segments.slice(0, -1);
+  if (PROTECTED_FILES.has(leaf)) return false;
+  if (dirs.some((segment) => segment.startsWith('.')) || (leaf.startsWith('.') && leaf !== '.pages')) return false;
+  return leaf.endsWith('.md') || leaf === '_category_.json' || leaf === '.pages' || dirs.some((segment) => segment.endsWith('.assets'));
 }
 
 function isValidAttachment(a) {
@@ -41,7 +61,7 @@ function isValidAttachment(a) {
 function isValidPage(p) {
   return Boolean(p) && typeof p === 'object'
     && typeof p.id === 'string' && isSafePath(p.path) && typeof p.name === 'string'
-    && typeof p.version === 'number' && typeof p.weight === 'number'
+    && (p.type === 'folder' || typeof p.version === 'number') && typeof p.weight === 'number'
     && Array.isArray(p.links) && Array.isArray(p.attachments) && p.attachments.every(isValidAttachment);
 }
 

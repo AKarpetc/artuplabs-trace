@@ -41,6 +41,14 @@ describe('preview fixture Confluence', () => {
     expect(Math.max(...titles.map((title) => title.length))).toBeGreaterThanOrEqual(250);
   });
 
+  it('answers direct children and labels of many pages at once', async () => {
+    const c = client();
+    expect((await c.listChildren(PAGES[0].id)).every((row) => row.type === 'page')).toBe(true);
+    const labels = await c.getLabelsOf([PAGES[0].id, PAGES[1].id]);
+    expect(labels.get(PAGES[0].id)).toEqual(['docs', 'reviewed']);
+    expect(labels.get(PAGES[1].id)).toEqual(PAGES[1].labels);
+  });
+
   it('pages through children with cursor links and answers 404 for unknown paths', async () => {
     const first = await (await routeConfluence(`/wiki/api/v2/pages/${PAGES[0].id}/children?limit=2`)).json();
     expect(first.results).toHaveLength(2);
