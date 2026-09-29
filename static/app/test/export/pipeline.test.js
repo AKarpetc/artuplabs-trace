@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { runExport, PIPELINE_WARNING_KINDS } from '../../src/export/pipeline.js';
 import { scanTree } from '../../src/export/tree.js';
 import { DEFAULT_OPTIONS } from '../../src/core/presets.js';
+import { labelsHash, parseManifest } from '../../src/core/manifest.js';
 import { storageToMarkdown } from '../../src/core/convert/index.js';
 import { createFakeConfluence } from '../fixtures/fakeConfluence.js';
 
@@ -521,5 +522,50 @@ describe('runExport with Confluence folders', () => {
   it('exports a branch rooted above a folder', async () => {
     const out = await files(await run(createFakeConfluence({ space: eng, pages: withFolder(), users: {} }), { target: { kind: 'branch', spaceKey: 'ENG', pageId: '1' } }));
     expect(Object.keys(out)).toContain('home/folder-test/page-in-folder.md');
+  });
+});
+
+describe('runExport sources and labels', () => {
+  const eng = { id: '5', key: 'ENG', name: 'Eng' };
+  const manifestOf = async (result) => parseManifest((await files(result))['export-manifest.json']).manifest;
+
+  it('treats a branch manifest reused for a single-page export as another source', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: pages(), users: { u1: 'Ann', u2: 'Bo' } });
+    const manifest = await manifestOf(await run(fake, { target: { kind: 'branch', spaceKey: 'ENG', pageId: '1' } }));
+    expect(manifest.source).toEqual({ siteUrl: 'https://x.atlassian.net', spaceKey: 'ENG', rootPageId: '1', kind: 'branch' });
+    const single = await run(fake, { target: { kind: 'page', spaceKey: 'ENG', pageId: '1' }, previousManifest: manifest });
+    expect(single).toMatchObject({ mode: 'full', fullReason: 'other-source', deletePaths: [] });
+    expect(single.stats.missing).toBe(0);
+    expect(Object.keys(await files(single)).sort()).toEqual(['export-manifest.json', 'home.md']);
+  });
+
+  it('treats a manifest without a target kind as another source', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
+    const manifest = await manifestOf(await run(fake));
+    delete manifest.source.kind;
+    expect(await run(fake, { previousManifest: manifest })).toMatchObject({ mode: 'full', fullReason: 'other-source' });
+  });
+
+  it('records a labels hash per page and rewrites an unchanged page whose labels changed', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
+    const previousManifest = await manifestOf(await run(fake));
+    expect(previousManifest.pages.find((p) => p.id === '1').labelsHash).toBe(labelsHash(['doc']));
+    fake.update('3', { labels: ['reviewed', 'faq'] });
+    const result = await run(fake, { previousManifest });
+    const out = await files(result);
+    expect(Object.keys(out).sort()).toEqual(['export-manifest.json', 'home/cafe.md']);
+    expect(out['home/cafe.md']).toContain('labels:\n  - "faq"\n  - "reviewed"\n');
+    expect(result.stats).toMatchObject({ changed: 1, unchanged: 2 });
+    expect(JSON.parse(out['export-manifest.json']).pages.find((p) => p.id === '3').labelsHash).toBe(labelsHash(['faq', 'reviewed']));
+  });
+
+  it('reads labels in one batch for an update and per page only for fetched pages', async () => {
+    const fake = createFakeConfluence({ space: eng, pages: pages(), users: {} });
+    const previousManifest = await manifestOf(await run(fake));
+    expect(fake.calls.getLabelsOf).toBe(0);
+    const labelsBefore = fake.calls.getLabels;
+    await run(fake, { previousManifest });
+    expect(fake.calls.getLabelsOf).toBe(1);
+    expect(fake.calls.getLabels).toBe(labelsBefore);
   });
 });

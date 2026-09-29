@@ -3,7 +3,7 @@ import { placeholder } from '../core/convert/escape.js';
 import { renderFrontMatter } from '../core/frontMatter.js';
 import { planUpdate } from '../core/increment.js';
 import { planAttachments, relativePath } from '../core/links.js';
-import { buildManifest, DELETED_FILE, isDeletablePath, MANIFEST_FILE, previousNames, sameOptions, sameSource } from '../core/manifest.js';
+import { buildManifest, DELETED_FILE, isDeletablePath, labelsHash, MANIFEST_FILE, previousNames, sameOptions, sameSource } from '../core/manifest.js';
 import { planPaths } from '../core/paths.js';
 import { presetFiles, presetOf } from '../core/presets.js';
 import { toSlug } from '../core/slug.js';
@@ -76,6 +76,14 @@ async function loadMetadata(job) {
   job.meta = new Map(rows.map((p) => [p.id, p]));
   dropNodes(job, ids.filter((id) => !job.meta.has(id)));
   for (const id of pageIds(job)) job.tree.nodes.get(id).title = job.meta.get(id).title;
+  if (job.decision.mode !== 'update') return;
+  const labels = await job.wait(job.client.getLabelsOf(pageIds(job)));
+  job.labelHashes = new Map([...labels].map(([id, names]) => [id, labelsHash(names)]));
+}
+
+/** Manifest source of an export target: site, space, root page and target kind. */
+export function sourceOf(target, siteUrl) {
+  return { siteUrl, spaceKey: target.spaceKey, rootPageId: target.kind === 'space' ? null : target.pageId, kind: target.kind };
 }
 
 /** Update when the previous manifest has the same source and path options; otherwise full, with the reason. */
@@ -157,6 +165,7 @@ function planChanges(job, kept) {
     plan: job.plan,
     attachments: kept,
     attachmentPlan: restrictPaths(job, kept),
+    labels: job.labelHashes,
   }));
 }
 
@@ -291,8 +300,9 @@ export function finalManifestPages(job, content, converted, kept) {
     if (isFolder(node)) return { id, type: 'folder', title: node.title, parentId: node.parentId ?? null, path, name, weight, links: [], attachments: [] };
     const page = content.pages.get(id) ?? job.meta.get(id);
     const links = converted.has(id) ? converted.get(id).links : previous.get(id)?.links ?? [];
+    const hash = content.labels.has(id) ? labelsHash(content.labels.get(id)) : previous.get(id)?.labelsHash;
     const attachments = kept.get(id).map((a) => ({ id: a.id, version: a.version, path: job.attachments.paths.get(id).get(a.id) }));
-    return { id, title: page.title, parentId: page.parentId ?? null, version: page.version.number, path, name, weight, links, attachments };
+    return { id, title: page.title, parentId: page.parentId ?? null, version: page.version.number, labelsHash: hash, path, name, weight, links, attachments };
   });
 }
 
@@ -333,7 +343,7 @@ function statsOf(job, stats, extra) {
 }
 
 function createJob({ client, target, options, previousManifest, siteUrl, signal, onProgress, convert }) {
-  const source = { siteUrl, spaceKey: target.spaceKey, rootPageId: target.kind === 'space' ? null : target.pageId };
+  const source = sourceOf(target, siteUrl);
   const emit = (progress) => {
     if (!signal?.aborted) onProgress(progress);
   };

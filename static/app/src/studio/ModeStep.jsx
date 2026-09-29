@@ -94,7 +94,7 @@ function Status({ form }) {
   if (previous.error) return <SectionMessage appearance="error">{t(`drop.error.${previous.error}`, { size: formatBytes(locale, MAX_PREVIOUS_BYTES) })}</SectionMessage>;
   if (modeChoice !== 'update') return null;
   if (fullReason) return <SectionMessage appearance="warning">{t(`drop.full.${fullReason}`)}</SectionMessage>;
-  return <SectionMessage appearance="success">{t('drop.loaded', { count: previous.manifest.pages.length })}</SectionMessage>;
+  return <SectionMessage appearance="success">{t('drop.loaded', { count: previous.manifest.pages.filter((p) => p.type !== 'folder').length })}</SectionMessage>;
 }
 
 /** Full or update cards, the drop zone for the previous zip or manifest, and what the dropped file means. */

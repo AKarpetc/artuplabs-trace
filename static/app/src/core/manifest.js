@@ -8,23 +8,31 @@ const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const byId = (a, b) => a.id.length - b.id.length || byText(a.id, b.id);
 const byNumeric = (a, b) => a.length - b.length || byText(a, b);
 
+/** Short stable hash (FNV-1a, 8 hex digits) of a page's label names, independent of their order. */
+export function labelsHash(labels) {
+  const text = JSON.stringify([...labels].sort());
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193) >>> 0;
+  return hash.toString(16).padStart(8, '0');
+}
+
 function manifestEntry(p) {
   if (p.type === 'folder') {
     return { id: p.id, type: 'folder', title: p.title, parentId: p.parentId ?? null, path: p.path, name: p.name, weight: p.weight, links: [], attachments: [] };
   }
   return {
-    id: p.id, title: p.title, parentId: p.parentId ?? null, version: p.version, path: p.path, name: p.name, weight: p.weight,
+    id: p.id, title: p.title, parentId: p.parentId ?? null, version: p.version, labelsHash: p.labelsHash, path: p.path, name: p.name, weight: p.weight,
     links: [...new Set(p.links)].sort(byNumeric),
     attachments: [...p.attachments].sort(byId).map((a) => ({ id: a.id, version: a.version, path: a.path })),
   };
 }
 
 /** Serializes the export state; folders are entries with `type: 'folder'` and no version; pages sorted by path, no timestamps, so unchanged content gives identical text. */
-export function buildManifest({ siteUrl, spaceKey, rootPageId, options, pages, warnings }) {
+export function buildManifest({ siteUrl, spaceKey, rootPageId, kind, options, pages, warnings }) {
   const manifest = {
     format: MANIFEST_FORMAT,
     version: MANIFEST_VERSION,
-    source: { siteUrl, spaceKey, rootPageId: rootPageId ?? null },
+    source: { siteUrl, spaceKey, rootPageId: rootPageId ?? null, kind },
     options: Object.fromEntries(PATH_OPTIONS.map((key) => [key, options[key]])),
     pages: [...pages].sort((a, b) => byText(a.path, b.path)).map(manifestEntry),
     warnings: [...warnings]
@@ -62,7 +70,12 @@ function isValidPage(p) {
   return Boolean(p) && typeof p === 'object'
     && typeof p.id === 'string' && isSafePath(p.path) && typeof p.name === 'string'
     && (p.type === 'folder' || typeof p.version === 'number') && typeof p.weight === 'number'
+    && (p.labelsHash === undefined || typeof p.labelsHash === 'string')
     && Array.isArray(p.links) && Array.isArray(p.attachments) && p.attachments.every(isValidAttachment);
+}
+
+function isValidWarning(w) {
+  return Boolean(w) && typeof w === 'object' && typeof w.pageId === 'string' && typeof w.kind === 'string' && typeof w.detail === 'string';
 }
 
 /** Parses and validates a manifest text. */
@@ -76,6 +89,7 @@ export function parseManifest(text) {
   if (data?.format !== MANIFEST_FORMAT || !Array.isArray(data.pages)) return { ok: false, error: 'not-manifest' };
   if (data.version > MANIFEST_VERSION) return { ok: false, error: 'newer-version' };
   if (!data.pages.every(isValidPage)) return { ok: false, error: 'not-manifest' };
+  if (data.warnings !== undefined && !(Array.isArray(data.warnings) && data.warnings.every(isValidWarning))) return { ok: false, error: 'not-manifest' };
   return { ok: true, manifest: data };
 }
 
@@ -84,10 +98,10 @@ export function previousNames(manifest) {
   return new Map(manifest.pages.map((p) => [p.id, p.name]));
 }
 
-/** True when the manifest was made from the same site, space and root page. */
-export function sameSource(manifest, { siteUrl, spaceKey, rootPageId }) {
+/** True when the manifest was made from the same site, space, root page and target kind; a manifest without a kind is another source. */
+export function sameSource(manifest, { siteUrl, spaceKey, rootPageId, kind }) {
   const s = manifest.source ?? {};
-  return s.siteUrl === siteUrl && s.spaceKey === spaceKey && (s.rootPageId ?? null) === (rootPageId ?? null);
+  return s.siteUrl === siteUrl && s.spaceKey === spaceKey && (s.rootPageId ?? null) === (rootPageId ?? null) && s.kind === kind;
 }
 
 /** True when the options that shape paths match. */

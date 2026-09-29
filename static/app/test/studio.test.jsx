@@ -62,7 +62,7 @@ function manifestFile(options = DEFAULT_OPTIONS, name = 'export-manifest.json') 
   const pages = PAGES.map((p, i) => ({
     id: p.id, title: p.title, parentId: p.parentId, version: p.version, path: `p${i}.md`, name: `p${i}`, weight: 10, links: [], attachments: [],
   }));
-  const text = buildManifest({ siteUrl: SITE, spaceKey: 'ENG', rootPageId: null, options, pages, warnings: [] });
+  const text = buildManifest({ siteUrl: SITE, spaceKey: 'ENG', rootPageId: null, kind: 'space', options, pages, warnings: [] });
   return new File([text], name, { type: 'application/json' });
 }
 

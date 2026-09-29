@@ -89,4 +89,29 @@ describe('planUpdate', () => {
     expect(result.stats).toEqual({ added: 0, changed: 0, moved: 0, relinked: 0, missing: 0, unchanged: 1 });
     expect(holds(result.stats, versions)).toBe(true);
   });
+
+  it('refetches an unchanged page whose labels hash differs, and one from a manifest without hashes', () => {
+    const versions = new Map([['1', 1], ['2', 1], ['3', 1], ['4', 1]]);
+    const result = planUpdate({
+      previous: prev([
+        { id: '1', version: 1, path: 'a.md', labelsHash: 'aaaa' }, { id: '2', version: 1, path: 'b.md', labelsHash: 'bbbb' },
+        { id: '3', version: 1, path: 'c.md' }, { id: '4', version: 1, path: 'd.md', labelsHash: 'dddd' },
+      ]),
+      versions, plan: plan([['1', 'a.md'], ['2', 'b.md'], ['3', 'c.md'], ['4', 'd.md']]), attachments: null, attachmentPlan: new Map(),
+      labels: new Map([['1', 'aaaa'], ['2', 'cccc'], ['3', 'eeee']]),
+    });
+    expect([...result.fetchIds].sort()).toEqual(['2', '3']);
+    expect(result.stats).toEqual({ added: 0, changed: 2, moved: 0, relinked: 0, missing: 0, unchanged: 2 });
+    expect(holds(result.stats, versions)).toBe(true);
+  });
+
+  it('ignores folder entries when deciding what to fetch or delete', () => {
+    const versions = new Map([['2', 1]]);
+    const result = planUpdate({
+      previous: prev([{ id: '40', type: 'folder', path: 'home/folder' }, { id: '2', version: 1, path: 'home/folder/b.md' }]),
+      versions, plan: plan([['2', 'home/folder/b.md']]), attachments: null, attachmentPlan: new Map(),
+    });
+    expect(result.deletePaths).toEqual([]);
+    expect(result.stats).toEqual({ added: 0, changed: 0, moved: 0, relinked: 0, missing: 0, unchanged: 1 });
+  });
 });

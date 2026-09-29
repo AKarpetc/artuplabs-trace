@@ -1,5 +1,8 @@
-/** Decides what an update export fetches, downloads and deletes relative to the previous manifest; folder entries only keep names stable. */
-export function planUpdate({ previous, versions, plan, attachments, attachmentPlan }) {
+/**
+ * Decides what an update export fetches, downloads and deletes relative to the previous manifest; folder entries only keep names stable.
+ * `labels` maps page id → current labels hash; a page whose hash differs from the manifest is refetched.
+ */
+export function planUpdate({ previous, versions, plan, attachments, attachmentPlan, labels = new Map() }) {
   const fetchIds = new Set();
   const downloadIds = new Set();
   const deletes = new Set();
@@ -22,7 +25,7 @@ export function planUpdate({ previous, versions, plan, attachments, attachmentPl
       stats.moved += 1;
       deletes.add(old.path);
       old.attachments.forEach((a) => deletes.add(a.path));
-    } else if (old.version !== version || old.weight !== now.weight) {
+    } else if (old.version !== version || old.weight !== now.weight || (labels.has(id) && old.labelsHash !== labels.get(id))) {
       fetchIds.add(id);
       stats.changed += 1;
     }

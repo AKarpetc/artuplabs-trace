@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { parseManifest } from '../core/manifest.js';
 import { DEFAULT_OPTIONS } from '../core/presets.js';
-import { decideMode } from '../export/pipeline.js';
+import { decideMode, sourceOf } from '../export/pipeline.js';
 import { readManifestFromFile } from '../infra/zip.js';
 
 const NO_NAMES = new Map();
@@ -59,7 +59,7 @@ export function useExportForm(context, initial = {}) {
   const useManifest = modeChoice === 'update' && manifest !== null;
   const decision = useMemo(() => decideMode(
     useManifest ? manifest : null,
-    { siteUrl, spaceKey, rootPageId: target.kind === 'space' ? null : target.pageId },
+    sourceOf({ ...target, spaceKey }, siteUrl),
     options,
   ), [useManifest, manifest, siteUrl, spaceKey, target, options]);
   const hasTarget = Boolean(spaceKey) && (target.kind === 'space' || Boolean(target.pageId));

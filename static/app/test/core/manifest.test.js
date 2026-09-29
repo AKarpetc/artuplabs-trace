@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildManifest, isDeletablePath, isSafePath, parseManifest, previousNames, sameOptions, sameSource } from '../../src/core/manifest.js';
+import { buildManifest, isDeletablePath, isSafePath, labelsHash, parseManifest, previousNames, sameOptions, sameSource } from '../../src/core/manifest.js';
 import { DEFAULT_OPTIONS } from '../../src/core/presets.js';
 
 const page = (id, path, over = {}) => ({ id, title: `T${id}`, parentId: null, version: 1, path, name: path.replace(/\.md$/, ''), weight: 10, links: [], attachments: [], ...over });
 const input = {
-  siteUrl: 'https://x.atlassian.net', spaceKey: 'ENG', rootPageId: null, options: DEFAULT_OPTIONS,
+  siteUrl: 'https://x.atlassian.net', spaceKey: 'ENG', rootPageId: null, kind: 'space', options: DEFAULT_OPTIONS,
   pages: [page('2', 'b.md', { links: ['9', '1'] }), page('1', 'a.md', { attachments: [{ id: 'att2', version: 1, path: 'a.assets/z.png' }, { id: 'att1', version: 3, path: 'a.assets/y.png' }] })],
   warnings: [{ pageId: '2', kind: 'unknown-macro', detail: 'drawio' }, { pageId: '1', kind: 'dynamic-macro', detail: 'toc' }],
 };
@@ -27,8 +27,8 @@ describe('manifest', () => {
     const result = parseManifest(buildManifest(input));
     expect(result.ok).toBe(true);
     expect(previousNames(result.manifest)).toEqual(new Map([['1', 'a'], ['2', 'b']]));
-    expect(sameSource(result.manifest, { siteUrl: 'https://x.atlassian.net', spaceKey: 'ENG', rootPageId: null })).toBe(true);
-    expect(sameSource(result.manifest, { siteUrl: 'https://x.atlassian.net', spaceKey: 'HR', rootPageId: null })).toBe(false);
+    expect(sameSource(result.manifest, { siteUrl: 'https://x.atlassian.net', spaceKey: 'ENG', rootPageId: null, kind: 'space' })).toBe(true);
+    expect(sameSource(result.manifest, { siteUrl: 'https://x.atlassian.net', spaceKey: 'HR', rootPageId: null, kind: 'space' })).toBe(false);
     expect(sameOptions(result.manifest, DEFAULT_OPTIONS)).toBe(true);
     expect(sameOptions(result.manifest, { ...DEFAULT_OPTIONS, preset: 'hugo' })).toBe(false);
     expect(sameOptions(result.manifest, { ...DEFAULT_OPTIONS, maxAttachmentMb: 10 })).toBe(true);
@@ -74,6 +74,41 @@ describe('manifest', () => {
     expect(parseManifest(text).ok).toBe(true);
     const pageWithoutVersion = JSON.stringify({ format: 'artup-export', version: 1, pages: [{ ...entry, type: undefined }], warnings: [] });
     expect(parseManifest(pageWithoutVersion)).toEqual({ ok: false, error: 'not-manifest' });
+  });
+
+  it('records the target kind and treats another kind or a missing kind as another source', () => {
+    const branch = parseManifest(buildManifest({ ...input, rootPageId: '1', kind: 'branch' })).manifest;
+    expect(branch.source).toEqual({ siteUrl: 'https://x.atlassian.net', spaceKey: 'ENG', rootPageId: '1', kind: 'branch' });
+    const source = { siteUrl: 'https://x.atlassian.net', spaceKey: 'ENG', rootPageId: '1' };
+    expect(sameSource(branch, { ...source, kind: 'branch' })).toBe(true);
+    expect(sameSource(branch, { ...source, kind: 'page' })).toBe(false);
+    const older = { ...branch, source: { siteUrl: 'https://x.atlassian.net', spaceKey: 'ENG', rootPageId: '1' } };
+    expect(sameSource(older, { ...source, kind: 'branch' })).toBe(false);
+  });
+
+  it('stores a short stable labels hash that ignores label order', () => {
+    expect(labelsHash(['b', 'a'])).toBe(labelsHash(['a', 'b']));
+    expect(labelsHash([])).not.toBe(labelsHash(['a']));
+    expect(labelsHash(['a', 'b'])).not.toBe(labelsHash(['ab']));
+    expect(labelsHash(['draft'])).toMatch(/^[0-9a-f]{8}$/);
+    const text = buildManifest({ ...input, pages: [page('1', 'a.md', { labelsHash: labelsHash(['x']) })] });
+    expect(JSON.parse(text).pages[0].labelsHash).toBe(labelsHash(['x']));
+    expect(parseManifest(text).ok).toBe(true);
+    const bad = JSON.stringify({ ...JSON.parse(text), pages: [{ ...JSON.parse(text).pages[0], labelsHash: 7 }] });
+    expect(parseManifest(bad)).toEqual({ ok: false, error: 'not-manifest' });
+  });
+
+  it.each([
+    [{}], ['x'], [[null]], [[{ pageId: 1, kind: 'k', detail: 'd' }]], [[{ pageId: '1', kind: 'k' }]], [[{ pageId: '1', kind: 'k', detail: {} }]],
+  ])('rejects malformed warnings %j', (warnings) => {
+    const text = JSON.stringify({ ...JSON.parse(buildManifest(input)), warnings });
+    expect(parseManifest(text)).toEqual({ ok: false, error: 'not-manifest' });
+  });
+
+  it('accepts a manifest without warnings', () => {
+    const { warnings, ...rest } = JSON.parse(buildManifest(input));
+    expect(warnings).toHaveLength(2);
+    expect(parseManifest(JSON.stringify(rest)).ok).toBe(true);
   });
 
   it('rejects a crafted manifest whose page path hides a newline', () => {
