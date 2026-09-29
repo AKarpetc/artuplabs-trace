@@ -1,0 +1,22 @@
+/** Issue ids per search page. */
+export const ID_PAGE = 5000;
+/** Issues per bulkfetch call. */
+export const BULK_BATCH = 100;
+/** Parallel issue requests. */
+export const ISSUE_CONCURRENCY = 6;
+/** Parallel attachment downloads. */
+export const MEDIA_CONCURRENCY = 12;
+/** Attempts per request, first try included. */
+export const MAX_ATTEMPTS = 6;
+/** Largest Word or PDF export. */
+export const MAX_DOC_ISSUES = 2000;
+/** Characters Excel accepts in one cell. */
+export const EXCEL_CELL_LIMIT = 32767;
+/** Largest customer .docx template. */
+export const TEMPLATE_MAX_BYTES = 2 * 1024 * 1024;
+/** Raw bytes per stored template part. */
+export const TEMPLATE_PART_BYTES = 150 * 1024;
+/** Parts needed for the largest template. */
+export const TEMPLATE_MAX_PARTS = Math.ceil(TEMPLATE_MAX_BYTES / TEMPLATE_PART_BYTES);
+/** Issues shown in the Excel preview. */
+export const PREVIEW_ISSUES = 5;
