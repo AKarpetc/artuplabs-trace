@@ -1,14 +1,28 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: /
+    directory: /apps/trace
     schedule:
       interval: weekly
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
-    directory: /static/app
+    directory: /apps/trace/static/app
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: npm
+    directory: /apps/export
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: npm
+    directory: /apps/export/static/app
     schedule:
       interval: weekly
     ignore:

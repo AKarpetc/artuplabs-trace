@@ -15,13 +15,53 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: |
-            package-lock.json
-            static/app/package-lock.json
-      - run: npm ci
-      - run: npm ci --prefix static/app
-      - run: npm run lint
-      - run: npm test
-      - run: npm run test:ui
-      - run: npm run build:ui
-      - run: npm audit --omit=dev --audit-level=high
-      - run: npm audit --omit=dev --audit-level=high --prefix static/app
+            apps/trace/package-lock.json
+            apps/trace/static/app/package-lock.json
+            apps/export/package-lock.json
+            apps/export/static/app/package-lock.json
+
+      - name: "Trace: install"
+        working-directory: apps/trace
+        run: |
+          npm ci
+          npm ci --prefix static/app
+      - name: "Trace: lint"
+        working-directory: apps/trace
+        run: npm run lint
+      - name: "Trace: test"
+        working-directory: apps/trace
+        run: npm test
+      - name: "Trace: UI test"
+        working-directory: apps/trace
+        run: npm run test:ui
+      - name: "Trace: UI build"
+        working-directory: apps/trace
+        run: npm run build:ui
+      - name: "Trace: audit"
+        working-directory: apps/trace
+        run: |
+          npm audit --omit=dev --audit-level=high
+          npm audit --omit=dev --audit-level=high --prefix static/app
+
+      - name: "Export: install"
+        working-directory: apps/export
+        run: |
+          npm ci
+          npm ci --prefix static/app
+      - name: "Export: lint"
+        working-directory: apps/export
+        run: npm run lint
+      - name: "Export: test"
+        working-directory: apps/export
+        run: npm test
+      - name: "Export: UI test"
+        working-directory: apps/export
+        run: npm run test:ui
+      - name: "Export: UI build"
+        working-directory: apps/export
+        run: npm run build:ui
+      - name: "Export: audit"
+        working-directory: apps/export
+        run: |
+          npm audit --omit=dev --audit-level=high
+          npm audit --omit=dev --audit-level=high --prefix static/app

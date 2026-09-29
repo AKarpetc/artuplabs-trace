@@ -26,7 +26,7 @@ Minimise the amount of scopes that you use, and only add additional scopes when 
 # Architecture Tips
 
 When calling product APIs, it is often simpler to make API requests on the frontend using `requestJira`, `requestConfluence`, etc from the `@forge/bridge` package, rather than using a resolver on the backend.
-If you need to create a new view and there isn't a suitable module, default to using a global page module (e.g. jira-globa-page-ui-kit in Jira).
+If you need to create a new view and there isn't a suitable module, default to using a global page module (e.g. confluence-global-page-ui-kit in Confluence).
 Focus on using the simplest possible solution for a problem.
 Seek clarification from the user on any unclear requirements.
 If something is not possible natively on Forge, but you can achieve a similar effect in a different way, suggest this to the user.
@@ -45,16 +45,16 @@ After creating the app ALWAYS review the contents of the app directory before ed
 
 # UI Development
 
-The front-end is Custom UI, living in `static/app`: a React 18 app using Atlaskit components and design tokens (`token('...')`, `xcss`) for styling. Never hard-code colours (no hex/rgb/named colours) so both light and dark Jira themes work.
-Vite builds each module to `static/app/dist/<module>/index.html`, matching the `resources` paths declared in `manifest.yml`. Always run `npm run build:ui` (from the repo root) before every `forge deploy`.
+The front-end is Custom UI, living in `static/app`: a React 18 app using Atlaskit components and design tokens (`token('...')`, `xcss`) for styling. Never hard-code colours (no hex/rgb/named colours) so both light and dark Confluence themes work.
+Vite builds each module to `static/app/dist/<module>/index.html`, matching the `resources` paths declared in `manifest.yml`. Always run `npm run build:ui` (from the app folder) before every `forge deploy`.
 Every user-visible string goes through `t('key')`; `static/app/src/i18n/locales/en-US.json` is the source of truth for keys, and all 26 locale files must stay in sync with it. A missing key falls back to the en-US text, never the raw key.
 No external egress and no remote fonts or CDNs — everything the UI needs must be bundled, so `forge eligibility` stays eligible for Runs on Atlassian.
 If your resolver no longer contains any definitions, you may delete it and remove it from the manifest.
 
 # Storing Data
 
-Entity properties allow apps to store key-value data against Jira entities (Comments, Dashboard items, Issues, Issue types, Projects, Users and Workflow transitions) and Confluence content.
-Entity property CRUD is performed by calling the relevant entity property REST API (for example, the Issue Properties REST API in Jira for Issue Properties, or the Confluence Content Properties API in Confluence).
+Entity properties allow apps to store key-value data against Confluence content.
+Entity property CRUD is performed by calling the Confluence Content Properties REST API.
 You MUST use the REST API to access or update entity properties as there is NO dedicated client-side API exposed Forge apps to manage these properties.
 
 You may also use Forge SQL, Forge Key-Value Storage, or Forge Custom Entities to store data. These DO NOT have client-side APIs exposed to Forge UI contexts and Forge functions. Storage APIs must be called using .asApp() SDK methods from backend resolvers.
@@ -92,10 +92,6 @@ You MUST redeploy AND THEN reinstall the app if you add additional scopes or egr
 When tunnelling, you MUST redeploy the app and restart the tunnel if you change the manifest.yml
 When tunnelling, you MUST NOT redeploy the app if the user only makes changes to code files, these will be hot reloaded via the tunnel.
 If the user closes the tunnel after making changes, you MUST ask them whether they would like to redeploy their app so that there recent changes are deployed.
-
-# Modules
-
-The `jira:entityProperty` module DOES NOT have a `keyConfigurations` property.
 
 # Debugging
 
