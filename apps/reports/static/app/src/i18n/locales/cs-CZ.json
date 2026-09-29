@@ -8,5 +8,10 @@
   "errors.too-large": "Soubor je větší než 2 MB.",
   "errors.bad-request": "Požadavek nebyl platný.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Sestavy z Jiry v Excelu, Wordu a PDF",
+  "loading": "Načítání…",
+  "unlicensed.title": "ArtUp Reports vyžaduje aktivní licenci",
+  "unlicensed.body": "Požádejte správce Jira, aby spustil zkušební verzi nebo obnovil předplatné v části Spravovat aplikace.",
+  "errors.tryAgain": "Zkusit znovu"
 }

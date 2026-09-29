@@ -8,5 +8,10 @@
   "errors.too-large": "Tiedosto on suurempi kuin 2 Mt.",
   "errors.bad-request": "Pyyntö ei ollut kelvollinen.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Jira-raportit Excelinä, Wordinä ja PDF:nä",
+  "loading": "Ladataan…",
+  "unlicensed.title": "ArtUp Reports vaatii aktiivisen lisenssin",
+  "unlicensed.body": "Pyydä Jira-pääkäyttäjää aloittamaan kokeilujakso tai uusimaan tilaus kohdassa Hallinnoi sovelluksia.",
+  "errors.tryAgain": "Yritä uudelleen"
 }

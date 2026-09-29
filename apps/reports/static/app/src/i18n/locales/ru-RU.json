@@ -8,5 +8,10 @@
   "errors.too-large": "Файл больше 2 МБ.",
   "errors.bad-request": "Некорректный запрос.",
   "time.seconds": "{seconds} с",
-  "time.minutesSeconds": "{minutes} мин {seconds} с"
+  "time.minutesSeconds": "{minutes} мин {seconds} с",
+  "app.tagline": "Отчёты из Jira в Excel, Word и PDF",
+  "loading": "Загрузка…",
+  "unlicensed.title": "Для ArtUp Reports нужна активная лицензия",
+  "unlicensed.body": "Попросите администратора Jira начать пробный период или продлить подписку в разделе «Управление приложениями».",
+  "errors.tryAgain": "Повторить"
 }

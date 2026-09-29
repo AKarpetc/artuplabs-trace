@@ -8,5 +8,10 @@
   "errors.too-large": "El archivo supera los 2 MB.",
   "errors.bad-request": "La solicitud no era válida.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Informes de Jira en Excel, Word y PDF",
+  "loading": "Cargando…",
+  "unlicensed.title": "ArtUp Reports necesita una licencia activa",
+  "unlicensed.body": "Pide a tu administrador de Jira que inicie una prueba o renueve la suscripción en Gestionar aplicaciones.",
+  "errors.tryAgain": "Volver a intentarlo"
 }

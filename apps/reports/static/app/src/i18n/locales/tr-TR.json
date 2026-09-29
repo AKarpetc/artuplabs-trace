@@ -8,5 +8,10 @@
   "errors.too-large": "Dosya 2 MB'tan büyük.",
   "errors.bad-request": "İstek geçerli değildi.",
   "time.seconds": "{seconds} sn",
-  "time.minutesSeconds": "{minutes} dk {seconds} sn"
+  "time.minutesSeconds": "{minutes} dk {seconds} sn",
+  "app.tagline": "Jira’dan Excel, Word ve PDF raporları",
+  "loading": "Yükleniyor…",
+  "unlicensed.title": "ArtUp Reports etkin bir lisans gerektirir",
+  "unlicensed.body": "Jira yöneticinizden Uygulamaları Yönet bölümünde deneme sürümü başlatmasını veya aboneliği yenilemesini isteyin.",
+  "errors.tryAgain": "Yeniden dene"
 }

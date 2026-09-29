@@ -8,5 +8,10 @@
   "errors.too-large": "Fișierul este mai mare de 2 MB.",
   "errors.bad-request": "Solicitarea nu a fost validă.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Rapoarte Excel, Word și PDF din Jira",
+  "loading": "Se încarcă…",
+  "unlicensed.title": "ArtUp Reports are nevoie de o licență activă",
+  "unlicensed.body": "Cereți administratorului Jira să înceapă o perioadă de probă sau să reînnoiască abonamentul în Gestionare aplicații.",
+  "errors.tryAgain": "Încearcă din nou"
 }

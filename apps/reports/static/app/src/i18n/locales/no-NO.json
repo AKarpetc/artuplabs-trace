@@ -8,5 +8,10 @@
   "errors.too-large": "Filen er større enn 2 MB.",
   "errors.bad-request": "Forespørselen var ikke gyldig.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Excel-, Word- og PDF-rapporter fra Jira",
+  "loading": "Laster…",
+  "unlicensed.title": "ArtUp Reports krever en aktiv lisens",
+  "unlicensed.body": "Be Jira-administratoren starte en prøveperiode eller fornye abonnementet under Administrer apper.",
+  "errors.tryAgain": "Prøv igjen"
 }

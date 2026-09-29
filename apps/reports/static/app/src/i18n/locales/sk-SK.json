@@ -8,5 +8,10 @@
   "errors.too-large": "Súbor je väčší ako 2 MB.",
   "errors.bad-request": "Požiadavka nebola platná.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Zostavy z Jiry v Exceli, Worde a PDF",
+  "loading": "Načítava sa…",
+  "unlicensed.title": "ArtUp Reports vyžaduje aktívnu licenciu",
+  "unlicensed.body": "Požiadajte administrátora Jira, aby spustil skúšobnú verziu alebo obnovil predplatné v časti Spravovať aplikácie.",
+  "errors.tryAgain": "Skúsiť znova"
 }

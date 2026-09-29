@@ -8,5 +8,10 @@
   "errors.too-large": "文件大于 2 MB。",
   "errors.bad-request": "请求无效。",
   "time.seconds": "{seconds} 秒",
-  "time.minutesSeconds": "{minutes} 分 {seconds} 秒"
+  "time.minutesSeconds": "{minutes} 分 {seconds} 秒",
+  "app.tagline": "从 Jira 生成 Excel、Word 和 PDF 报告",
+  "loading": "加载中…",
+  "unlicensed.title": "ArtUp Reports 需要有效的许可证",
+  "unlicensed.body": "请联系您的 Jira 管理员在“管理应用”中开始试用或续订。",
+  "errors.tryAgain": "重试"
 }

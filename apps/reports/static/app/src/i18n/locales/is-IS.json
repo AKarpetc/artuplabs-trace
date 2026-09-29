@@ -8,5 +8,10 @@
   "errors.too-large": "Skráin er stærri en 2 MB.",
   "errors.bad-request": "Beiðnin var ógild.",
   "time.seconds": "{seconds} sek.",
-  "time.minutesSeconds": "{minutes} mín. {seconds} sek."
+  "time.minutesSeconds": "{minutes} mín. {seconds} sek.",
+  "app.tagline": "Excel-, Word- og PDF-skýrslur úr Jira",
+  "loading": "Hleð…",
+  "unlicensed.title": "ArtUp Reports þarfnast virks leyfis",
+  "unlicensed.body": "Biddu Jira-stjórnandann þinn að hefja prufuáskrift eða endurnýja áskriftina undir Stjórna forritum.",
+  "errors.tryAgain": "Reyna aftur"
 }

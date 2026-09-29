@@ -8,5 +8,10 @@
   "errors.too-large": "Fail on suurem kui 2 MB.",
   "errors.bad-request": "Päring ei kehtinud.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Jira aruanded Excelis, Wordis ja PDF-is",
+  "loading": "Laadimine…",
+  "unlicensed.title": "ArtUp Reports vajab aktiivset litsentsi",
+  "unlicensed.body": "Palu oma Jira administraatoril alustada prooviperioodi või uuendada tellimust jaotises Rakenduste haldamine.",
+  "errors.tryAgain": "Proovi uuesti"
 }

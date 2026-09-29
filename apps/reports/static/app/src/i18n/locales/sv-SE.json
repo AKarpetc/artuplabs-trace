@@ -8,5 +8,10 @@
   "errors.too-large": "Filen är större än 2 MB.",
   "errors.bad-request": "Begäran var inte giltig.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Jira-rapporter i Excel, Word och PDF",
+  "loading": "Läser in…",
+  "unlicensed.title": "ArtUp Reports kräver en aktiv licens",
+  "unlicensed.body": "Be din Jira-administratör att starta en provperiod eller förnya prenumerationen under Hantera appar.",
+  "errors.tryAgain": "Försök igen"
 }

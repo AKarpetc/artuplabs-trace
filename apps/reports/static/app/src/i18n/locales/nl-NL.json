@@ -8,5 +8,10 @@
   "errors.too-large": "Het bestand is groter dan 2 MB.",
   "errors.bad-request": "Het verzoek was ongeldig.",
   "time.seconds": "{seconds} s",
-  "time.minutesSeconds": "{minutes} min {seconds} s"
+  "time.minutesSeconds": "{minutes} min {seconds} s",
+  "app.tagline": "Excel-, Word- en pdf-rapporten uit Jira",
+  "loading": "Laden…",
+  "unlicensed.title": "ArtUp Reports heeft een actieve licentie nodig",
+  "unlicensed.body": "Vraag je Jira-beheerder om een proefperiode te starten of het abonnement te verlengen bij Apps beheren.",
+  "errors.tryAgain": "Opnieuw proberen"
 }

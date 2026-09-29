@@ -8,5 +8,10 @@
   "errors.too-large": "A fájl nagyobb, mint 2 MB.",
   "errors.bad-request": "A kérés érvénytelen volt.",
   "time.seconds": "{seconds} mp",
-  "time.minutesSeconds": "{minutes} perc {seconds} mp"
+  "time.minutesSeconds": "{minutes} perc {seconds} mp",
+  "app.tagline": "Excel-, Word- és PDF-jelentések a Jirából",
+  "loading": "Betöltés…",
+  "unlicensed.title": "Az ArtUp Reports aktív licencet igényel",
+  "unlicensed.body": "Kérje meg a Jira rendszergazdáját, hogy indítson próbaidőszakot, vagy újítsa meg az előfizetést az Alkalmazások kezelése menüben.",
+  "errors.tryAgain": "Újrapróbálás"
 }
