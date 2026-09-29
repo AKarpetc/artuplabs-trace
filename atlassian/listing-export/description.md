@@ -41,6 +41,19 @@ ArtUp Export turns a Confluence page, a branch or a whole space into a zip of Ma
 can commit to git or publish with a static site generator. It is built for docs-as-code: the same
 space exported twice gives the same files, and the next export can contain only what changed.
 
+### Getting started
+
+1. A Confluence administrator installs ArtUp Export from the Atlassian Marketplace. Sites with up
+   to 10 users use it free; no configuration is needed.
+2. In a space, open **ArtUp Export** in the space sidebar (apps section), or use **•••** →
+   **Export to Markdown** on any page.
+3. Pick what to export (whole space, page and children, one page), a format (Generic Markdown,
+   Hugo, Docusaurus, MkDocs) and a mode (full export or update of a previous export).
+4. Click **Export**. The zip downloads when the export finishes; keep its `export-manifest.json`
+   for the next update export.
+
+Full guide: https://artuplabs.com/docs/export/
+
 ### What it does
 
 - **Full depth, Confluence order.** Every level of the page tree becomes folders — a page with

@@ -47,6 +47,18 @@ as "requirements" and which count as "verification" (tests, tasks, or
 whatever your team links back to a requirement), and it starts computing
 coverage from the issue links already in Jira.
 
+### Getting started
+
+1. Install ArtUp Trace from the Atlassian Marketplace. Sites with up to 10 users use it free.
+2. Open a project and choose **ArtUp Trace** in the project navigation.
+3. Open the **Settings** tab (project or Jira administrators).
+4. Choose the requirement issue types (for example Story or Requirement) and the verification
+   issue types (for example Test or Task). Optionally limit which link types count as coverage.
+5. Click **Save**. The first sync runs in the background; coverage, suspect links and baselines
+   fill in as it runs.
+
+Full guide: https://artuplabs.com/docs
+
 ### What it does
 
 - **Coverage.** See what percentage of your requirements have a linked
