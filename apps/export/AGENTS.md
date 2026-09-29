@@ -46,7 +46,7 @@ After creating the app ALWAYS review the contents of the app directory before ed
 # UI Development
 
 The front-end is Custom UI, living in `static/app`: a React 18 app using Atlaskit components and design tokens (`token('...')`, `xcss`) for styling. Never hard-code colours (no hex/rgb/named colours) so both light and dark Confluence themes work.
-Vite builds each module to `static/app/dist/<module>/index.html`, matching the `resources` paths declared in `manifest.yml`. Always run `npm run build:ui` (from the repo root) before every `forge deploy`.
+Vite builds each module to `static/app/dist/<module>/index.html`, matching the `resources` paths declared in `manifest.yml`. Always run `npm run build:ui` (from the app folder) before every `forge deploy`.
 Every user-visible string goes through `t('key')`; `static/app/src/i18n/locales/en-US.json` is the source of truth for keys, and all 26 locale files must stay in sync with it. A missing key falls back to the en-US text, never the raw key.
 No external egress and no remote fonts or CDNs — everything the UI needs must be bundled, so `forge eligibility` stays eligible for Runs on Atlassian.
 If your resolver no longer contains any definitions, you may delete it and remove it from the manifest.
