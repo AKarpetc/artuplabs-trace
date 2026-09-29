@@ -3,7 +3,7 @@ import Resolver from '@forge/resolver';
 import api, { route } from '@forge/api';
 import { kvs, WhereConditions } from '@forge/kvs';
 import { decideLicence } from './access.js';
-import { TEMPLATE_MAX_PARTS, TEMPLATE_PART_BYTES } from './templates/limits.js';
+import { TEMPLATE_MAX_BYTES, TEMPLATE_MAX_PARTS, TEMPLATE_PART_BYTES } from './templates/limits.js';
 import { createPermissions } from './templates/permissions.js';
 import { createTemplateStore } from './templates/store.js';
 import { SITE_SCOPE_ID, isProjectKey, isUuid, validateTemplate } from './templates/validate.js';
@@ -60,7 +60,9 @@ function defineTemplate(key, handle) {
       const permissions = createPermissions({ accountId, fetchMyPermissions });
       return await handle(payload ?? {}, { accountId, permissions });
     } catch (error) {
-      throw new Error(CODES.has(error?.message) ? error.message : 'internal');
+      if (CODES.has(error?.message)) throw new Error(error.message);
+      console.error(`${key} failed: ${error?.message}`);
+      throw new Error('internal');
     }
   });
 }
@@ -96,24 +98,30 @@ defineTemplate('saveTemplate', async ({ template }, { accountId, permissions }) 
   const stored = await existing(clean.id);
   if (!(await permissions.canManage(stored.scope, stored.scopeId))) fail('forbidden');
   if (stored.scope !== clean.scope || stored.scopeId !== scopeId || stored.kind !== clean.kind) fail('bad-request');
-  const { authorId, parts, size } = stored;
-  return publicMeta(await store.save({ ...clean, scopeId, authorId, parts, size, updatedAt }));
+  const { authorId, gen, parts, size } = stored;
+  return publicMeta(await store.save({ ...clean, scopeId, authorId, gen, parts, size, updatedAt }));
 });
 
-defineTemplate('uploadTemplatePart', async ({ id, index, total, data }, { permissions }) => {
+/** uploadTemplatePart({ id, uploadId, index, total, data }): parts wait under the upload's generation; the last one switches the template to it. */
+defineTemplate('uploadTemplatePart', async ({ id, uploadId, index, total, data }, { permissions }) => {
+  if (!isUuid(uploadId)) fail('bad-request');
   if (!Number.isInteger(total) || !isIndex(total - 1, TEMPLATE_MAX_PARTS) || !isIndex(index, total)) fail('bad-request');
   if (typeof data !== 'string' || data === '' || !BASE64.test(data)) fail('bad-request');
   const size = decodedSize(data);
   if (size > TEMPLATE_PART_BYTES) fail('too-large');
   const last = index === total - 1;
   if (!last && size !== TEMPLATE_PART_BYTES) fail('bad-request');
+  const fileSize = (total - 1) * TEMPLATE_PART_BYTES + size;
+  if (last && fileSize > TEMPLATE_MAX_BYTES) fail('too-large');
   const stored = await existing(id);
   if (!(await permissions.canManage(stored.scope, stored.scopeId))) fail('forbidden');
-  if (stored.kind !== 'docx') fail('bad-request');
-  await store.putPart(id, index, data);
+  if (stored.kind !== 'docx' || stored.gen === uploadId) fail('bad-request');
+  await store.putPart(id, uploadId, index, data);
   if (last) {
-    await store.save({ ...stored, parts: total, size: (total - 1) * TEMPLATE_PART_BYTES + size, updatedAt: new Date().toISOString() });
-    await store.removePartsFrom(id, total);
+    const present = new Set(await store.partIndexes(id, uploadId));
+    if (!Array.from({ length: total }, (_, i) => i).every((i) => present.has(i))) fail('bad-request');
+    await store.save({ ...stored, gen: uploadId, parts: total, size: fileSize, updatedAt: new Date().toISOString() });
+    if (stored.gen) await store.removeGeneration(id, stored.gen);
   }
   return { stored: index };
 });
@@ -122,8 +130,8 @@ defineTemplate('getTemplatePart', async ({ id, index }, { permissions }) => {
   if (!isIndex(index, TEMPLATE_MAX_PARTS)) fail('bad-request');
   const stored = await existing(id);
   if (!(await permissions.canView(stored))) fail('forbidden');
-  if (index >= (stored.parts ?? 0)) fail('not-found');
-  const data = await store.getPart(id, index);
+  if (!stored.gen || index >= (stored.parts ?? 0)) fail('not-found');
+  const data = await store.getPart(id, stored.gen, index);
   if (typeof data !== 'string') fail('not-found');
   return { data };
 });

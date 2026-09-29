@@ -55,10 +55,12 @@ vi.mock('@forge/api', () => {
 });
 
 const { resolverHandler } = await import('../src/index.js');
-const { TEMPLATE_MAX_PARTS, TEMPLATE_PART_BYTES } = await import('../src/templates/limits.js');
+const { TEMPLATE_MAX_BYTES, TEMPLATE_MAX_PARTS, TEMPLATE_PART_BYTES } = await import('../src/templates/limits.js');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const MISSING = '99999999-9999-4999-8999-999999999999';
+const U1 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const U2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
 function call(name, payload, accountId, context = { environmentType: 'DEVELOPMENT' }) {
   h.user = accountId;
@@ -223,80 +225,137 @@ describe('uploadTemplatePart', () => {
 
   it('stores the parts and sets parts and size on the last one', async () => {
     const { id } = await docxTemplate();
-    const first = await call('uploadTemplatePart', { id, index: 0, total: 2, data: b64(TEMPLATE_PART_BYTES) }, PADMIN);
-    const last = await call('uploadTemplatePart', { id, index: 1, total: 2, data: b64(10) }, PADMIN);
+    const first = await call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 2, data: b64(TEMPLATE_PART_BYTES) }, PADMIN);
+    const last = await call('uploadTemplatePart', { uploadId: U1, id, index: 1, total: 2, data: b64(10) }, PADMIN);
     const [meta] = (await call('listTemplates', { projectKeys: ['RPT'] }, PADMIN)).project;
     expect([first, last, meta.parts, meta.size]).toEqual([{ stored: 0 }, { stored: 1 }, 2, TEMPLATE_PART_BYTES + 10]);
   });
 
-  it('accepts parts out of order', async () => {
+  async function upload(id, uploadId, sizes) {
+    for (let i = 0; i < sizes.length; i += 1) {
+      await call('uploadTemplatePart', { uploadId, id, index: i, total: sizes.length, data: b64(sizes[i]) }, PADMIN);
+    }
+  }
+
+  const binKeys = () => [...h.kvs.data.keys()].filter((k) => k.startsWith('tplbin:')).sort();
+
+  it('accepts the last part first once the other parts arrive and the last one is sent again', async () => {
     const { id } = await docxTemplate();
-    await call('uploadTemplatePart', { id, index: 1, total: 2, data: b64(3) }, PADMIN);
-    await call('uploadTemplatePart', { id, index: 0, total: 2, data: b64(TEMPLATE_PART_BYTES) }, PADMIN);
+    const early = call('uploadTemplatePart', { uploadId: U1, id, index: 1, total: 2, data: b64(3) }, PADMIN);
+    await expect(early).rejects.toThrow(new Error('bad-request'));
+    await call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 2, data: b64(TEMPLATE_PART_BYTES) }, PADMIN);
+    await call('uploadTemplatePart', { uploadId: U1, id, index: 1, total: 2, data: b64(3) }, PADMIN);
     expect(await call('getTemplatePart', { id, index: 1 }, PADMIN)).toEqual({ data: b64(3) });
   });
 
-  it('deletes stale parts above the new total', async () => {
+  it('rejects finalising while an earlier part of the upload is missing', async () => {
     const { id } = await docxTemplate();
-    for (let i = 0; i < 3; i += 1) await call('uploadTemplatePart', { id, index: i, total: 3, data: b64(i < 2 ? TEMPLATE_PART_BYTES : 5) }, PADMIN);
-    await call('uploadTemplatePart', { id, index: 0, total: 1, data: b64(4) }, PADMIN);
-    expect([...h.kvs.data.keys()].filter((k) => k.startsWith('tplbin:'))).toEqual([`tplbin:${id}:0`]);
+    await call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 3, data: b64(TEMPLATE_PART_BYTES) }, PADMIN);
+    const last = call('uploadTemplatePart', { uploadId: U1, id, index: 2, total: 3, data: b64(3) }, PADMIN);
+    await expect(last).rejects.toThrow(new Error('bad-request'));
+  });
+
+  it('keeps serving the old file while a re-upload is in progress', async () => {
+    const { id } = await docxTemplate();
+    await upload(id, U1, [TEMPLATE_PART_BYTES, 5]);
+    await call('uploadTemplatePart', { uploadId: U2, id, index: 0, total: 3, data: Buffer.alloc(TEMPLATE_PART_BYTES, 9).toString('base64') }, PADMIN);
+    const parts = [await call('getTemplatePart', { id, index: 0 }, BROWSER), await call('getTemplatePart', { id, index: 1 }, BROWSER)];
+    expect(parts).toEqual([{ data: b64(TEMPLATE_PART_BYTES) }, { data: b64(5) }]);
+  });
+
+  it('switches to the new upload and deletes the previous generation', async () => {
+    const { id } = await docxTemplate();
+    await upload(id, U1, [TEMPLATE_PART_BYTES, TEMPLATE_PART_BYTES, 5]);
+    await upload(id, U2, [4]);
+    const [meta] = (await call('listTemplates', { projectKeys: ['RPT'] }, PADMIN)).project;
+    expect([binKeys(), meta.parts, meta.size, await call('getTemplatePart', { id, index: 0 }, BROWSER)])
+      .toEqual([[`tplbin:${id}:${U2}:0`], 1, 4, { data: b64(4) }]);
+  });
+
+  it('rejects a re-upload that reuses the current upload id', async () => {
+    const { id } = await docxTemplate();
+    await upload(id, U1, [4]);
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 1, data: b64(6) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
+  });
+
+  it('rejects an upload id that is not a UUID', async () => {
+    const { id } = await docxTemplate();
+    await expect(call('uploadTemplatePart', { uploadId: 'gen:1', id, index: 0, total: 1, data: b64(4) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
+  });
+
+  it('rejects a file over 2 MiB in total with too-large', async () => {
+    const { id } = await docxTemplate();
+    const full = b64(TEMPLATE_PART_BYTES);
+    for (let i = 0; i < TEMPLATE_MAX_PARTS - 1; i += 1) {
+      await call('uploadTemplatePart', { uploadId: U1, id, index: i, total: TEMPLATE_MAX_PARTS, data: full }, PADMIN);
+    }
+    const lastSize = TEMPLATE_MAX_BYTES - (TEMPLATE_MAX_PARTS - 1) * TEMPLATE_PART_BYTES + 1;
+    const last = call('uploadTemplatePart', { uploadId: U1, id, index: TEMPLATE_MAX_PARTS - 1, total: TEMPLATE_MAX_PARTS, data: b64(lastSize) }, PADMIN);
+    await expect(last).rejects.toThrow(new Error('too-large'));
+  });
+
+  it('accepts a file of exactly 2 MiB', async () => {
+    const { id } = await docxTemplate();
+    const sizes = [...Array(TEMPLATE_MAX_PARTS - 1).fill(TEMPLATE_PART_BYTES), TEMPLATE_MAX_BYTES - (TEMPLATE_MAX_PARTS - 1) * TEMPLATE_PART_BYTES];
+    await upload(id, U1, sizes);
+    const [meta] = (await call('listTemplates', { projectKeys: ['RPT'] }, PADMIN)).project;
+    expect([meta.parts, meta.size]).toEqual([TEMPLATE_MAX_PARTS, TEMPLATE_MAX_BYTES]);
   });
 
   it('rejects a part over 150 KB decoded with too-large', async () => {
     const { id } = await docxTemplate();
-    await expect(call('uploadTemplatePart', { id, index: 0, total: 1, data: b64(TEMPLATE_PART_BYTES + 1) }, PADMIN)).rejects.toThrow(new Error('too-large'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 1, data: b64(TEMPLATE_PART_BYTES + 1) }, PADMIN)).rejects.toThrow(new Error('too-large'));
   });
 
   it('rejects index equal to total', async () => {
     const { id } = await docxTemplate();
-    await expect(call('uploadTemplatePart', { id, index: 2, total: 2, data: b64(4) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 2, total: 2, data: b64(4) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
   });
 
   it('rejects a total above the part maximum', async () => {
     const { id } = await docxTemplate();
-    await expect(call('uploadTemplatePart', { id, index: 0, total: TEMPLATE_MAX_PARTS + 1, data: b64(TEMPLATE_PART_BYTES) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: TEMPLATE_MAX_PARTS + 1, data: b64(TEMPLATE_PART_BYTES) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
   });
 
   it('rejects a template whose kind is not docx', async () => {
     const { id } = await call('saveTemplate', { template: columns() }, OWNER);
-    await expect(call('uploadTemplatePart', { id, index: 0, total: 1, data: b64(4) }, OWNER)).rejects.toThrow(new Error('bad-request'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 1, data: b64(4) }, OWNER)).rejects.toThrow(new Error('bad-request'));
   });
 
   it('rejects data that is not base64', async () => {
     const { id } = await docxTemplate();
-    await expect(call('uploadTemplatePart', { id, index: 0, total: 1, data: 'not base64!' }, PADMIN)).rejects.toThrow(new Error('bad-request'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 1, data: 'not base64!' }, PADMIN)).rejects.toThrow(new Error('bad-request'));
   });
 
   it('rejects a non-last part that is not a full part', async () => {
     const { id } = await docxTemplate();
-    await expect(call('uploadTemplatePart', { id, index: 0, total: 2, data: b64(10) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 2, data: b64(10) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
   });
 
   it('rejects a non-integer index', async () => {
     const { id } = await docxTemplate();
-    await expect(call('uploadTemplatePart', { id, index: 0.5, total: 1, data: b64(4) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0.5, total: 1, data: b64(4) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
   });
 
   it('rejects a total sent as a string', async () => {
     const { id } = await docxTemplate();
-    await expect(call('uploadTemplatePart', { id, index: 0, total: '2', data: b64(TEMPLATE_PART_BYTES) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: '2', data: b64(TEMPLATE_PART_BYTES) }, PADMIN)).rejects.toThrow(new Error('bad-request'));
   });
 
   it('forbids a user who cannot manage the template', async () => {
     const { id } = await docxTemplate();
-    await expect(call('uploadTemplatePart', { id, index: 0, total: 1, data: b64(4) }, BROWSER)).rejects.toThrow(new Error('forbidden'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 1, data: b64(4) }, BROWSER)).rejects.toThrow(new Error('forbidden'));
   });
 
   it('rejects an unknown template with not-found', async () => {
-    await expect(call('uploadTemplatePart', { id: MISSING, index: 0, total: 1, data: b64(4) }, PADMIN)).rejects.toThrow(new Error('not-found'));
+    await expect(call('uploadTemplatePart', { uploadId: U1, id: MISSING, index: 0, total: 1, data: b64(4) }, PADMIN)).rejects.toThrow(new Error('not-found'));
   });
 });
 
 describe('getTemplatePart', () => {
   async function uploaded() {
     const { id } = await call('saveTemplate', { template: docx() }, PADMIN);
-    await call('uploadTemplatePart', { id, index: 0, total: 1, data: b64(6) }, PADMIN);
+    await call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 1, data: b64(6) }, PADMIN);
     return id;
   }
 
@@ -312,7 +371,7 @@ describe('getTemplatePart', () => {
 
   it('forbids another user to read a personal template part', async () => {
     const { id } = await call('saveTemplate', { template: docx({ scope: 'user', scopeId: undefined }) }, OWNER);
-    await call('uploadTemplatePart', { id, index: 0, total: 1, data: b64(6) }, OWNER);
+    await call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 1, data: b64(6) }, OWNER);
     await expect(call('getTemplatePart', { id, index: 0 }, OTHER)).rejects.toThrow(new Error('forbidden'));
   });
 
@@ -347,8 +406,18 @@ describe('licence and errors', () => {
 
   it('hides internal error details behind a generic code', async () => {
     const spy = vi.spyOn(h.kvs, 'get').mockRejectedValue(new Error('storage exploded at shard 7'));
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     await expect(call('deleteTemplate', { id: MISSING }, OWNER)).rejects.toThrow(new Error('internal'));
+    expect(log.mock.calls).toEqual([['deleteTemplate failed: storage exploded at shard 7']]);
     spy.mockRestore();
+    log.mockRestore();
+  });
+
+  it('does not log expected error codes', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(call('deleteTemplate', { id: MISSING }, OWNER)).rejects.toThrow(new Error('not-found'));
+    expect(log.mock.calls).toEqual([]);
+    log.mockRestore();
   });
 
   it('rejects a payload that is not an object with bad-request', async () => {

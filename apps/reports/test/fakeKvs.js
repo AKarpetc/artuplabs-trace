@@ -1,7 +1,7 @@
 /** In-memory KVS with get/set/delete and a key-prefix query that returns at most `pageSize` results per page. */
 export function createFakeKvs({ pageSize = 2 } = {}) {
   const data = new Map();
-  const calls = { queries: 0 };
+  const calls = { queries: 0, ops: [] };
   const kvs = {
     data,
     calls,
@@ -9,9 +9,11 @@ export function createFakeKvs({ pageSize = 2 } = {}) {
       return data.has(key) ? structuredClone(data.get(key)) : undefined;
     },
     async set(key, value) {
+      calls.ops.push(`set ${key}`);
       data.set(key, structuredClone(value));
     },
     async delete(key) {
+      calls.ops.push(`delete ${key}`);
       data.delete(key);
     },
     query() {

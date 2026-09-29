@@ -17,6 +17,7 @@ const MAX_PROJECT_KEY = 255;
 export const SITE_SCOPE_ID = 'site';
 
 const isString = (v, max) => typeof v === 'string' && v.length <= max;
+const oneOf = (list, v) => typeof v === 'string' && list.includes(v);
 
 /** True for a Jira project key such as RPT or ABC_1. */
 export function isProjectKey(value) {
@@ -39,11 +40,11 @@ function placeholdersFit(value) {
 
 const CHECKS = {
   id: isUuid,
-  rowMode: (v) => ROW_MODES.includes(v),
+  rowMode: (v) => oneOf(ROW_MODES, v),
   groupBy: (v) => v === null || (isString(v, MAX_REF) && v.length > 0),
   summary: (v) => typeof v === 'boolean',
-  layout: (v) => LAYOUTS.includes(v),
-  paper: (v) => PAPERS.includes(v),
+  layout: (v) => oneOf(LAYOUTS, v),
+  paper: (v) => oneOf(PAPERS, v),
   fileNamePattern: (v) => isString(v, MAX_PATTERN),
   columns: (v) => Array.isArray(v) && v.length <= MAX_COLUMNS && v.every((c) => isString(c, MAX_REF) && c.length > 0),
   placeholders: placeholdersFit,
@@ -59,7 +60,8 @@ function scopeIdOf(input) {
 export function validateTemplate(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return 'bad-request';
   const { scope, name, format, kind } = input;
-  if (!SCOPES.includes(scope) || !FORMATS.includes(format) || !KIND_FORMATS[kind]?.includes(format)) return 'bad-request';
+  if (!oneOf(SCOPES, scope) || !oneOf(FORMATS, format)) return 'bad-request';
+  if (typeof kind !== 'string' || !Object.hasOwn(KIND_FORMATS, kind) || !KIND_FORMATS[kind].includes(format)) return 'bad-request';
   if (!isString(name, MAX_NAME) || name.trim() === '') return 'bad-request';
   const scopeId = scopeIdOf(input);
   if (scopeId === undefined) return 'bad-request';
