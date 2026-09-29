@@ -6,8 +6,8 @@
 
 | | Состояние |
 |---|---|
-| **ArtUp Trace** (Jira) | листинг подан 2026-09-28, ждём одобрения (тикет ECOHELP-168810, ответ письмом на hello@artuplabs.com) и тикета Partner Verification |
-| **ArtUp Export** (Confluence) | приёмка 16 пунктов пройдена 2026-09-29; production v2.1.0, development v2.8.0 (исправлен белый экран после экспорта, EXPORT-19), оба подходят под Runs on Atlassian; проверен на 1 000 страниц; сайт https://artuplabs.com/export/ опубликован; **листинг не подан** — ждёт ваших шагов ниже |
+| **ArtUp Trace** (Jira) | подан 2026-09-28 → автоотказ «Not enough details on listing»; профиль вендора заполнен, **Resubmit 2026-09-29 — SUBMITTED**. Ждём ответа (ECOHELP-168810, письмо на hello@artuplabs.com) и тикета Partner Verification |
+| **ArtUp Export** (Confluence) | приёмка 16 пунктов пройдена 2026-09-29; production v2.1.0, development v2.8.0 (исправлен белый экран после экспорта, EXPORT-19), оба подходят под Runs on Atlassian; проверен на 1 000 страниц; сайт https://artuplabs.com/export/ опубликован; **листинг подан 2026-09-29 — SUBMITTED** (app id 1478660823; первая подача тоже дала автоотказ, после заполнения профиля вендора — Resubmit) |
 | **Репозиторий** | всё по Atlassian в одном репозитории: эта папка = `AKarpetc/artuplabs-trace` (ветка `monorepo`, PR #8 не слит). Внутри: `apps/trace`, `apps/export`, `atlassian/` (документы), `site/`, `STATE.md` |
 | **Приложение №3** | ArtUp Risk закрыт на фазе 0; следующий кандидат — ArtUp Release (кросс-проектные релизы), бриф не написан |
 
@@ -29,7 +29,8 @@
 - [x] Прочитать разделы про Export: https://artuplabs.com/privacy (§5), /security (§1.1, §2), /terms.
 
 ### 4. Подать листинг ArtUp Export (⏱ 30–40 мин)
-- [ ] 10 шагов с готовыми текстами и скриншотами — [atlassian/23_export_owner_steps.md](atlassian/23_export_owner_steps.md), шаг 3.
+- [x] Подан 2026-09-29 (агент в браузере + владелец: Payment, Resubmit). Заодно заполнен профиль вендора: логотип, About, Support Channels, Hours of Operation, Payment.
+- [ ] Если снова придёт «Automatic Rejection» — сказать мне: составлю вопрос в ecosystem-поддержку (портал 34, «Questions about Marketplace»).
 
 ### 5. ArtUp Trace — ждать и отвечать
 - [ ] Следить за письмами на hello@artuplabs.com: ответ по ревью (ECOHELP-168810), тикет Partner Verification.

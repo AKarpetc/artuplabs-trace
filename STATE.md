@@ -231,6 +231,7 @@ development на artuplabs-dev. Решения и отложенное —
 5. Листинг: описание, скриншоты, highlights, ссылки на документацию и поддержку, вкладка Privacy & Security (данные описаны в README «Data stored»), цены — **выбран вариант B (~$130/мес за 200 пользователей), 2026-09-28**; черновики карточки в [atlassian/listing/](atlassian/listing/). — вы + агент черновики.
 6. ~~Сайт~~ — опубликован 2026-09-27: https://artuplabs.com (Cloudflare Pages, проект `artuplabs`, выкладка `npx wrangler pages deploy <папка без README> --project-name artuplabs --branch main`): главная, /privacy, /terms, /security, /support; адрес и ИИН на сайте — решение пользователя. Исходники — [site/](site/). Решение 2026-09-28: **без юриста** (подключить после первых платящих клиентов / до первого крупного клиента из ЕС; вопросы: право и суд, потолок ответственности, DPA/GDPR, закон РК о ПДн); пометка Draft снята. 2026-09-28: EULA — **Bonterms Standard End User Agreement** (выбрано в листинге), /terms переписан как ссылка на Bonterms + Provider-Specific Terms (старый самописный EULA сохранён в scratchpad не нужен); добавлена /docs. Осталось: ссылки на листинг и документацию, проверить приём почты на hello@.
 7. **Подано на одобрение 2026-09-28**: карточка «ArtUp Trace – Requirements Traceability» (app key com.artuplabs.trace, v2.1.0, EULA Bonterms, docs https://artuplabs.com/docs). Статус: pending approval; цены заданы 2026-09-28 (ступенчато: до 10 — бесплатно, $0.70/польз. до 100, $0.59 до 250 … ≈$129/мес за 200; см. atlassian/listing/pricing.md); вкладка Privacy & Security заполнена 2026-09-28 (данные только в Atlassian; логи Forge — Yes, вне Atlassian — No; data residency — «stored exclusively within Atlassian…»; GDPR processor = Yes, controller = No; CCPA n/a; DPA = No — при запросе клиента из ЕС подключить стандартный Bonterms DPA); ждать тикет Partner Verification (14 дней). Тикет ревью: **ECOHELP-168810** (системный, владельцу в портале не виден — ответы придут письмом на hello@), письмо 2026-09-28: ответ обычно через 5–10 рабочих дней. Ожидание решения 1–3 недели. Ежедневная облачная проверка публикации (10:00 Алматы, routine trig_01QYfrro5iKiypYqTxd1TR8n, https://claude.ai/code/routines/trig_01QYfrro5iKiypYqTxd1TR8n) — после появления в Marketplace отключить.
+8. **2026-09-29: автоотказ «Automatic Rejection – Not enough details on listing»** (у Trace, потом и у Export сразу после подачи). Листинги были полные — причина, по-видимому, в пустом профиле вендора. Заполнено 2026-09-29: логотип вендора (`atlassian/listing/logo/artuplabs-vendor-logo-512.png`), About (Jira и Confluence), Support Channels (hello@, /support, телефон; экстренно security@), Hours of Operation (пн–пт 09–18 Asia/Almaty, ответ 48 ч, SLA = /support), Payment (контакт ИП, ForteBank USD IBAN, SWIFT IRTYKZKA, посредник BNY Mellon IRVTUS3N, Tax ID = ИИН). **Resubmit обоих 2026-09-29 → SUBMITTED.** Если автоотказ повторится — вопрос в ecosystem-поддержку (портал 34, «Questions about Marketplace»).
 Не блокирует: проверка переводов носителями (ja, ko, zh, is, et, fi, cs, sk, hu, ro, tr, pt-PT); заведение тикетов v1.1 из rulings (гонка в saveSettings, индекс `trace_link.other_issue_id`, лимит `deleteRequirementsNotSeen`, связи req↔req между проектами, настраиваемые поля отпечатка R26). Cloud Fortified — пропустить.
 
 ### Бэклог следующей версии (после одобрения)
@@ -255,8 +256,16 @@ development на artuplabs-dev. Решения и отложенное —
 Код: монорепозиторий `AKarpetc/artuplabs-trace` → `apps/export` (Trace — `apps/trace`), PR #8 с переносом открыт 2026-09-29, CI зелёный, ждёт слияния владельцем; команды forge — из папки приложения.
 Решения без владельца: [atlassian/plans/2026-09-28-artup-export-v1-rulings.md](atlassian/plans/2026-09-28-artup-export-v1-rulings.md).
 
-**Что сделать владельцу — пошагово: [atlassian/23_export_owner_steps.md](atlassian/23_export_owner_steps.md)**
-(браузерная приёмка → имя и цена → подача листинга → слить PR #8).
+**Листинг подан 2026-09-29, статус SUBMITTED** (Marketplace app id 1478660823, `com.artuplabs.export`, v2.1.0):
+название «ArtUp Export – Markdown for Git & Docs Sites»; категории Content and communication + Software development;
+ключевые слова Import/Export, Documentation, Document Management, Knowledge Base; 3 highlights (скриншоты 1, 6, 2) +
+3 доп. изображения (3, 4, 5); EULA Bonterms; цены вариант B (до 10 — бесплатно, $0.90 до 100, $0.75 до 250 … $165/мес
+за 200; ступени 45k–100k = Trace × 1.28, 100 001–250 000 = $0.11 — у Trace/Jira таких ступеней нет);
+Privacy & Security — данные не хранятся, egress нет, логов с данными нет, data residency «не хранит»,
+GDPR processor = Yes / controller = No, CCPA n/a, DPA = No. Developer console → Distribution: Sharing.
+Первая подача дала автоотказ «Not enough details» — см. Trace п.8 (заполнен профиль вендора, Resubmit).
+
+Пошаговый список владельца: [atlassian/23_export_owner_steps.md](atlassian/23_export_owner_steps.md) (шаги 1–3 сделаны).
 
 Отложено на v1.1: папки в корне пространства (не под страницей) не находятся; осиротевшие файлы навигации при
 переезде папки; последовательное чтение меток; >200 меток на странице.
