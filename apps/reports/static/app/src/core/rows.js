@@ -50,6 +50,7 @@ export function createRowBuilder({ template, catalog, siteUrl, labels }) {
     if (!group || group.missing) return '';
     return issueCell(issue, group).text || labels.none;
   };
+  const itemCell = (item, id) => (item && id.startsWith(`${template.rowMode}.`) ? ITEM_CELLS[id](item) : EMPTY);
   const items = (issue) => {
     if (template.rowMode === 'worklog') return issue.fields?.worklog?.worklogs ?? [];
     if (template.rowMode === 'comment') return issue.fields?.comment?.comments ?? [];
@@ -57,12 +58,13 @@ export function createRowBuilder({ template, catalog, siteUrl, labels }) {
   };
   return {
     columns,
-    missing: resolved.filter((c) => c.missing).map((c) => c.ref),
+    grouped: Boolean(group) && !group.missing,
+    missing: [...resolved, ...(group?.missing ? [group] : [])].filter((c) => c.missing).map((c) => c.ref).filter((ref, i, all) => all.indexOf(ref) === i),
     rowsFor(issue) {
       const groupName = groupOf(issue);
       return items(issue).map((item) => ({
         group: groupName,
-        cells: kept.map((c) => (Object.hasOwn(ITEM_CELLS, c.id) ? (item ? ITEM_CELLS[c.id](item) : EMPTY) : issueCell(issue, c))),
+        cells: kept.map((c) => (Object.hasOwn(ITEM_CELLS, c.id) ? itemCell(item, c.id) : issueCell(issue, c))),
       }));
     },
   };
@@ -97,14 +99,26 @@ function sliceUnits(text, max) {
   return /[\uD800-\uDBFF]$/.test(cut) ? cut.slice(0, -1) : cut;
 }
 
+function tidy(text) {
+  let out = text;
+  let previous;
+  do {
+    previous = out;
+    out = out.trim().replace(/^'+|'+$/g, '');
+  } while (out !== previous);
+  return out;
+}
+
+const fit = (text, max) => tidy(sliceUnits(text, max));
+
 /** A valid, unique Excel sheet name: no []:*?/\, no edge apostrophes, at most 31 characters, not History. */
 export function sheetName(raw, taken) {
-  const base = sliceUnits(String(raw ?? '').replace(/[[\]:*?/\\]/g, '-').replace(/^'+|'+$/g, '').trim(), 31) || 'Sheet';
+  const base = fit(tidy(String(raw ?? '').replace(/[[\]:*?/\\]/g, '-')), 31) || 'Sheet';
   let name = base;
   let n = 2;
   while (taken.has(name.toLowerCase()) || name.toLowerCase() === 'history') {
     const suffix = ` (${n})`;
-    name = `${sliceUnits(base, 31 - suffix.length)}${suffix}`;
+    name = `${fit(base, 31 - suffix.length) || 'Sheet'}${suffix}`;
     n += 1;
   }
   taken.add(name.toLowerCase());
@@ -115,7 +129,7 @@ export function sheetName(raw, taken) {
 export function assembleSheets({ columns, rows, grouped, summary, labels }) {
   const taken = new Set();
   const summarySheet = summary ? sheetName(labels['sheet.summary'], taken) : null;
-  if (!grouped) {
+  if (!grouped || rows.length === 0) {
     return { summarySheet, sheets: [{ name: sheetName(labels['sheet.issues'], taken), columns, rows: rows.map((r) => r.cells) }] };
   }
   const groups = new Map();

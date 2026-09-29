@@ -91,6 +91,51 @@ describe('sheetName', () => {
   });
 });
 
+describe('row builder edge cases', () => {
+  const site = 'https://s.atlassian.net';
+  it('reports an unresolved group field as missing and does not group', () => {
+    const b = createRowBuilder({ template: { columns: ['key'], rowMode: 'issue', groupBy: 'customfield_99999' }, catalog, siteUrl: site, labels });
+    expect([b.missing, b.grouped, b.rowsFor(issue('RPT-1', {}))[0].group]).toEqual([['customfield_99999'], false, '']);
+  });
+  it('marks the builder grouped when the group field resolves', () => {
+    const b = createRowBuilder({ template: { columns: ['key'], rowMode: 'issue', groupBy: 'status' }, catalog, siteUrl: site, labels });
+    expect(b.grouped).toBe(true);
+  });
+  it('gives empty cells for item columns of the other row mode', () => {
+    const b = createRowBuilder({ template: { columns: ['comment.author', 'worklog.author'], rowMode: 'worklog', groupBy: null }, catalog, siteUrl: site, labels });
+    const rows = b.rowsFor(issue('RPT-1', { worklog: { worklogs: [{ author: { displayName: 'Ann' } }] } }));
+    expect(rows[0].cells).toEqual([{ kind: 'empty', value: null, text: '' }, { kind: 'text', value: 'Ann', text: 'Ann' }]);
+  });
+  it('gives empty cells for item columns in issue mode', () => {
+    const b = createRowBuilder({ template: { columns: ['worklog.hours'], rowMode: 'issue', groupBy: null }, catalog, siteUrl: site, labels });
+    expect(b.rowsFor(issue('RPT-1', {}))[0].cells).toEqual([{ kind: 'empty', value: null, text: '' }]);
+  });
+});
+
+describe('sheetName edge cases', () => {
+  it('strips apostrophes left at the edges after trimming', () => {
+    expect(sheetName(" 'Done' ", new Set())).toBe('Done');
+  });
+  it('strips an apostrophe exposed by the length cut', () => {
+    expect(sheetName(`${'x'.repeat(30)}'y`, new Set())).toBe('x'.repeat(30));
+  });
+  it('replaces every forbidden character', () => {
+    expect(sheetName('a]b:c*d?e\\f[g/h', new Set())).toBe('a-b-c-d-e-f-g-h');
+  });
+  it('keeps 31 characters and cuts 32 to 31', () => {
+    expect([sheetName('y'.repeat(31), new Set()), sheetName('z'.repeat(32), new Set())]).toEqual(['y'.repeat(31), 'z'.repeat(31)]);
+  });
+  it('does not leave half a surrogate pair at the cut', () => {
+    expect(sheetName(`${'x'.repeat(30)}\u{1F600}`, new Set())).toBe('x'.repeat(30));
+  });
+  it('keeps a suffixed name free of edge apostrophes', () => {
+    const taken = new Set();
+    const raw = `${'x'.repeat(26)}'ab`;
+    sheetName(raw, taken);
+    expect(sheetName(raw, taken)).toBe(`${'x'.repeat(26)} (2)`);
+  });
+});
+
 describe('assembleSheets', () => {
   const columns = [{ id: 'key', header: 'Key' }];
   const cell = (t) => ({ kind: 'text', value: t, text: t });
@@ -106,5 +151,13 @@ describe('assembleSheets', () => {
   it('never gives a group the summary sheet name', () => {
     const out = assembleSheets({ columns, rows: [{ group: 'Summary', cells: [cell('a')] }], grouped: true, summary: true, labels });
     expect(out.sheets[0].name).toBe('Summary (2)');
+  });
+  it('emits one empty data sheet when grouped with no rows', () => {
+    const out = assembleSheets({ columns, rows: [], grouped: true, summary: false, labels });
+    expect(out).toEqual({ summarySheet: null, sheets: [{ name: 'Issues', columns, rows: [] }] });
+  });
+  it('emits one empty data sheet when ungrouped with no rows', () => {
+    const out = assembleSheets({ columns, rows: [], grouped: false, summary: false, labels });
+    expect(out.sheets).toEqual([{ name: 'Issues', columns, rows: [] }]);
   });
 });
