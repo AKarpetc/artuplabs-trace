@@ -7,6 +7,8 @@ This repository holds everything for the ArtUp Labs Atlassian Marketplace busine
 | ArtUp Trace | [`apps/trace`](apps/trace) | Jira | [`apps/trace/README.md`](apps/trace/README.md) |
 | ArtUp Export | [`apps/export`](apps/export) | Confluence | [`apps/export/README.md`](apps/export/README.md) |
 
+**Start here:** [`NEXT_STEPS.md`](NEXT_STEPS.md) — owner actions and what comes next (Russian).
+
 ## Layout
 
 ```

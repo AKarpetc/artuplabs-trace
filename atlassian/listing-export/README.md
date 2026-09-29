@@ -31,9 +31,9 @@ Each frame is a 920×450 composition rendered at device scale 2 (so 1840×900): 
 the app at 65% of its 1280 px layout (87% for the 960 px page dialog) in a browser-style window.
 Data comes from the preview harness's showcase fixture (`?fixture=showcase`: space DOCS
 "Engineering Handbook", English titles plus one Cyrillic and one French branch), not from a real
-customer. The fixture lives in `~/Projects/My/artuplabs-export/static/app/preview/fixtures.js`.
+customer. The fixture lives in `apps/export/static/app/preview/fixtures.js`.
 Shots 1–5 show the app from its top or from a card boundary; shot 6 is scrolled past the header to
-the options and the front-matter preview. To regenerate: start the harness (`cd ~/Projects/My/artuplabs-export/static/app && npx vite
+the options and the front-matter preview. To regenerate: start the harness (`cd apps/export/static/app && npx vite
 --mode preview --port 5391`), then `node screenshots/compose.mjs <out-dir> [name-prefix]`.
 
 If the portal asks for 920×450 or for 580×330 highlight crops, downscale or crop these frames — do
@@ -41,7 +41,7 @@ not reshoot.
 
 ## Sources
 
-- Product facts: `~/Projects/My/artuplabs-export/README.md`, `manifest.yml`,
+- Product facts: `apps/export/README.md`, `manifest.yml`,
   `static/app/src/i18n/locales/en-US.json`, `static/app/src/core/*`, `src/resolvers.js`.
 - Positioning and price: [`../20_app2_markdown_export.md`](../20_app2_markdown_export.md) §2, §11
   (phase 0 and acceptance numbers), [`../12_markdown_export_niche.md`](../12_markdown_export_niche.md).

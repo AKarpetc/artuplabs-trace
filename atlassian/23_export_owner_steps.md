@@ -48,7 +48,7 @@
 
 1. [ ] Откройте кабинет вендора: https://marketplace.atlassian.com/manage/vendors/260356594/ → создание нового приложения (листинга). Тип — **Forge app**, продукт — **Confluence Cloud**. Выберите приложение **ArtUp Export** (app id `ari:cloud:ecosystem::app/f4dc7e93-1ead-4561-a4f0-c4d15dabc40d`). Если форма спросит ключ приложения, укажите `com.artuplabs.export`.
 2. [ ] **Название, слоган, краткое и полное описание, ключевые слова** — из [description.md](listing-export/description.md). Категории выберите на форме, варианты — в том же файле.
-3. [ ] **Иконка** — `~/Projects/My/artuplabs-export/resources/icon-144.png`.
+3. [ ] **Иконка** — `apps/export/resources/icon-144.png`.
 4. [ ] **Highlights (3 штуки) и подписи к скриншотам** — из [highlights.md](listing-export/highlights.md).
 5. [ ] **Скриншоты** — 6 файлов из `listing-export/screenshots/draft/`, в порядке номеров 1–6, размер 1840×900. Если форма попросит другой размер, уменьшите или обрежьте эти же файлы.
 6. [ ] **Ссылки:**
