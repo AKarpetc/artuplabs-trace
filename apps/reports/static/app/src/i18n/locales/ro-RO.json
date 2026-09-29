@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Contextul modulului (doar pentru dezvoltare)",
+  "errors.generic": "Ceva nu a funcționat: {message}",
+  "errors.unlicensed": "ArtUp Reports necesită o licență activă pe acest site.",
+  "errors.forbidden": "Nu aveți permisiunea de a face acest lucru.",
+  "errors.not-found": "Acest șablon nu mai există.",
+  "errors.too-large": "Fișierul este mai mare de 2 MB.",
+  "errors.bad-request": "Solicitarea nu a fost validă.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Contexto do módulo (apenas para desenvolvimento)",
+  "errors.generic": "Algo correu mal: {message}",
+  "errors.unlicensed": "O ArtUp Reports precisa de uma licença ativa neste site.",
+  "errors.forbidden": "Não tem permissão para fazer isto.",
+  "errors.not-found": "Este modelo já não existe.",
+  "errors.too-large": "O ficheiro é maior do que 2 MB.",
+  "errors.bad-request": "O pedido não era válido.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

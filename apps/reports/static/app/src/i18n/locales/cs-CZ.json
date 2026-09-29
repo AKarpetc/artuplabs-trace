@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Kontext modulu (pouze pro vývoj)",
+  "errors.generic": "Něco se pokazilo: {message}",
+  "errors.unlicensed": "ArtUp Reports vyžaduje na tomto webu aktivní licenci.",
+  "errors.forbidden": "K této akci nemáte oprávnění.",
+  "errors.not-found": "Tato šablona již neexistuje.",
+  "errors.too-large": "Soubor je větší než 2 MB.",
+  "errors.bad-request": "Požadavek nebyl platný.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

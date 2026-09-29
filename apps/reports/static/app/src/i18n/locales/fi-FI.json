@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Moduulin konteksti (vain kehitykseen)",
+  "errors.generic": "Jokin meni pieleen: {message}",
+  "errors.unlicensed": "ArtUp Reports tarvitsee tälle sivustolle aktiivisen lisenssin.",
+  "errors.forbidden": "Sinulla ei ole oikeutta tähän toimintoon.",
+  "errors.not-found": "Tätä mallia ei ole enää olemassa.",
+  "errors.too-large": "Tiedosto on suurempi kuin 2 Mt.",
+  "errors.bad-request": "Pyyntö ei ollut kelvollinen.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Контекст модуля (только для разработки)",
+  "errors.generic": "Что-то пошло не так: {message}",
+  "errors.unlicensed": "Для ArtUp Reports на этом сайте нужна активная лицензия.",
+  "errors.forbidden": "У вас нет прав на это действие.",
+  "errors.not-found": "Этого шаблона больше не существует.",
+  "errors.too-large": "Файл больше 2 МБ.",
+  "errors.bad-request": "Некорректный запрос.",
+  "time.seconds": "{seconds} с",
+  "time.minutesSeconds": "{minutes} мин {seconds} с"
+}

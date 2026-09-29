@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "模組內容（僅限開發環境）",
+  "errors.generic": "發生錯誤：{message}",
+  "errors.unlicensed": "ArtUp Reports 需要此網站擁有有效的授權。",
+  "errors.forbidden": "您沒有執行此操作的權限。",
+  "errors.not-found": "此範本已不存在。",
+  "errors.too-large": "檔案大於 2 MB。",
+  "errors.bad-request": "要求無效。",
+  "time.seconds": "{seconds} 秒",
+  "time.minutesSeconds": "{minutes} 分 {seconds} 秒"
+}

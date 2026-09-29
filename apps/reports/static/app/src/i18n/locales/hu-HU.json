@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Modul kontextusa (csak fejlesztéshez)",
+  "errors.generic": "Valami hiba történt: {message}",
+  "errors.unlicensed": "Az ArtUp Reports aktív licencet igényel ezen a webhelyen.",
+  "errors.forbidden": "Ehhez nincs jogosultsága.",
+  "errors.not-found": "Ez a sablon már nem létezik.",
+  "errors.too-large": "A fájl nagyobb, mint 2 MB.",
+  "errors.bad-request": "A kérés érvénytelen volt.",
+  "time.seconds": "{seconds} mp",
+  "time.minutesSeconds": "{minutes} perc {seconds} mp"
+}

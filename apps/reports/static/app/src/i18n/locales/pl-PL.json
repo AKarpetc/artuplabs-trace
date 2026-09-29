@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Kontekst modułu (tylko do celów programistycznych)",
+  "errors.generic": "Coś poszło nie tak: {message}",
+  "errors.unlicensed": "ArtUp Reports wymaga aktywnej licencji w tej witrynie.",
+  "errors.forbidden": "Nie masz uprawnień do wykonania tej czynności.",
+  "errors.not-found": "Ten szablon już nie istnieje.",
+  "errors.too-large": "Plik jest większy niż 2 MB.",
+  "errors.bad-request": "Żądanie było nieprawidłowe.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

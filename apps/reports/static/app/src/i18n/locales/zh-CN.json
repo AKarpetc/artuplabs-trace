@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "模块上下文（仅开发环境）",
+  "errors.generic": "出错了：{message}",
+  "errors.unlicensed": "ArtUp Reports 需要此站点拥有有效的许可证。",
+  "errors.forbidden": "您没有执行此操作的权限。",
+  "errors.not-found": "此模板已不存在。",
+  "errors.too-large": "文件大于 2 MB。",
+  "errors.bad-request": "请求无效。",
+  "time.seconds": "{seconds} 秒",
+  "time.minutesSeconds": "{minutes} 分 {seconds} 秒"
+}

@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Kontext modulu (iba na vývoj)",
+  "errors.generic": "Niečo sa pokazilo: {message}",
+  "errors.unlicensed": "ArtUp Reports vyžaduje na tejto lokalite aktívnu licenciu.",
+  "errors.forbidden": "Na túto akciu nemáte oprávnenie.",
+  "errors.not-found": "Táto šablóna už neexistuje.",
+  "errors.too-large": "Súbor je väčší ako 2 MB.",
+  "errors.bad-request": "Požiadavka nebola platná.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

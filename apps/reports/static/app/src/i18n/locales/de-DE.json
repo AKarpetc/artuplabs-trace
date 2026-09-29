@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Modulkontext (nur Entwicklung)",
+  "errors.generic": "Etwas ist schiefgelaufen: {message}",
+  "errors.unlicensed": "ArtUp Reports benötigt eine aktive Lizenz für diese Site.",
+  "errors.forbidden": "Dafür fehlt Ihnen die Berechtigung.",
+  "errors.not-found": "Diese Vorlage existiert nicht mehr.",
+  "errors.too-large": "Die Datei ist größer als 2 MB.",
+  "errors.bad-request": "Die Anfrage war ungültig.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} Min. {seconds} s"
+}

@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "モジュールのコンテキスト（開発時のみ）",
+  "errors.generic": "問題が発生しました：{message}",
+  "errors.unlicensed": "ArtUp Reports を使用するには、このサイトで有効なライセンスが必要です。",
+  "errors.forbidden": "この操作を行う権限がありません。",
+  "errors.not-found": "このテンプレートは存在しなくなりました。",
+  "errors.too-large": "ファイルが 2 MB を超えています。",
+  "errors.bad-request": "リクエストが無効です。",
+  "time.seconds": "{seconds} 秒",
+  "time.minutesSeconds": "{minutes} 分 {seconds} 秒"
+}

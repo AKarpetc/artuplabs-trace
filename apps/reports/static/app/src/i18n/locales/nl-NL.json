@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Modulecontext (alleen voor ontwikkeling)",
+  "errors.generic": "Er is iets misgegaan: {message}",
+  "errors.unlicensed": "ArtUp Reports heeft een actieve licentie nodig op deze site.",
+  "errors.forbidden": "Je hebt hiervoor geen toestemming.",
+  "errors.not-found": "Deze sjabloon bestaat niet meer.",
+  "errors.too-large": "Het bestand is groter dan 2 MB.",
+  "errors.bad-request": "Het verzoek was ongeldig.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Modül bağlamı (yalnızca geliştirme)",
+  "errors.generic": "Bir sorun oluştu: {message}",
+  "errors.unlicensed": "ArtUp Reports için bu sitede etkin bir lisans gerekir.",
+  "errors.forbidden": "Bunu yapmaya yetkiniz yok.",
+  "errors.not-found": "Bu şablon artık yok.",
+  "errors.too-large": "Dosya 2 MB'tan büyük.",
+  "errors.bad-request": "İstek geçerli değildi.",
+  "time.seconds": "{seconds} sn",
+  "time.minutesSeconds": "{minutes} dk {seconds} sn"
+}

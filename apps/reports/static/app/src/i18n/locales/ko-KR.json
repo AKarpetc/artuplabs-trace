@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "모듈 컨텍스트(개발 전용)",
+  "errors.generic": "문제가 발생했습니다: {message}",
+  "errors.unlicensed": "ArtUp Reports를 사용하려면 이 사이트에 유효한 라이선스가 필요합니다.",
+  "errors.forbidden": "이 작업을 수행할 권한이 없습니다.",
+  "errors.not-found": "이 템플릿은 더 이상 존재하지 않습니다.",
+  "errors.too-large": "파일이 2 MB보다 큽니다.",
+  "errors.bad-request": "요청이 올바르지 않습니다.",
+  "time.seconds": "{seconds}초",
+  "time.minutesSeconds": "{minutes}분 {seconds}초"
+}

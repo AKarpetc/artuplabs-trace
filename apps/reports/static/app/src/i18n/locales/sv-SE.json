@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Modulkontext (endast för utveckling)",
+  "errors.generic": "Något gick fel: {message}",
+  "errors.unlicensed": "ArtUp Reports kräver en aktiv licens på den här webbplatsen.",
+  "errors.forbidden": "Du har inte behörighet att göra det.",
+  "errors.not-found": "Den här mallen finns inte längre.",
+  "errors.too-large": "Filen är större än 2 MB.",
+  "errors.bad-request": "Begäran var inte giltig.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

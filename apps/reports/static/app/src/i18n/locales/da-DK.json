@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Modulkontekst (kun til udvikling)",
+  "errors.generic": "Noget gik galt: {message}",
+  "errors.unlicensed": "ArtUp Reports kræver en aktiv licens på dette websted.",
+  "errors.forbidden": "Du har ikke tilladelse til at gøre det.",
+  "errors.not-found": "Denne skabelon findes ikke længere.",
+  "errors.too-large": "Filen er større end 2 MB.",
+  "errors.bad-request": "Anmodningen var ikke gyldig.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

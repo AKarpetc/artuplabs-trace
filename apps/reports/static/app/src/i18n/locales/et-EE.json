@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Mooduli kontekst (ainult arenduseks)",
+  "errors.generic": "Midagi läks valesti: {message}",
+  "errors.unlicensed": "ArtUp Reports vajab sellel saidil kehtivat litsentsi.",
+  "errors.forbidden": "Teil pole selleks luba.",
+  "errors.not-found": "Seda malli enam ei ole.",
+  "errors.too-large": "Fail on suurem kui 2 MB.",
+  "errors.bad-request": "Päring ei kehtinud.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

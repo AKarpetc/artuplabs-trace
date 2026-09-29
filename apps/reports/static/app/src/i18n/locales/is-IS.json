@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Samhengi einingar (aðeins fyrir þróun)",
+  "errors.generic": "Eitthvað fór úrskeiðis: {message}",
+  "errors.unlicensed": "ArtUp Reports þarf virkt leyfi á þessu svæði.",
+  "errors.forbidden": "Þú hefur ekki heimild til þess.",
+  "errors.not-found": "Þetta sniðmát er ekki lengur til.",
+  "errors.too-large": "Skráin er stærri en 2 MB.",
+  "errors.bad-request": "Beiðnin var ógild.",
+  "time.seconds": "{seconds} sek.",
+  "time.minutesSeconds": "{minutes} mín. {seconds} sek."
+}

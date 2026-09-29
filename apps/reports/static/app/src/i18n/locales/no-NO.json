@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Modulkontekst (kun for utvikling)",
+  "errors.generic": "Noe gikk galt: {message}",
+  "errors.unlicensed": "ArtUp Reports krever en aktiv lisens på dette nettstedet.",
+  "errors.forbidden": "Du har ikke tillatelse til å gjøre dette.",
+  "errors.not-found": "Denne malen finnes ikke lenger.",
+  "errors.too-large": "Filen er større enn 2 MB.",
+  "errors.bad-request": "Forespørselen var ikke gyldig.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}

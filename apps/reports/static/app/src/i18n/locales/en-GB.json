@@ -1,0 +1,12 @@
+{
+  "app.title": "ArtUp Reports",
+  "dev.context": "Module context (development only)",
+  "errors.generic": "Something went wrong: {message}",
+  "errors.unlicensed": "ArtUp Reports needs an active licence on this site.",
+  "errors.forbidden": "You don't have permission to do that.",
+  "errors.not-found": "This template no longer exists.",
+  "errors.too-large": "The file is larger than 2 MB.",
+  "errors.bad-request": "The request was not valid.",
+  "time.seconds": "{seconds} s",
+  "time.minutesSeconds": "{minutes} min {seconds} s"
+}
