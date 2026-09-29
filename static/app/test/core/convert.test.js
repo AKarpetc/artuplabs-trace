@@ -140,7 +140,7 @@ describe('warning kinds', () => {
   });
 });
 
-describe('fix round 1 (R18/R19)', () => {
+describe('links, tasks, tables and legacy macros', () => {
   it.each([
     ['ri:url with a link body', '<p><ac:link><ri:url ri:value="https://e.com/p"/><ac:plain-text-link-body><![CDATA[ext]]></ac:plain-text-link-body></ac:link></p>', '[ext](https://e.com/p)\n'],
     ['ri:url without a link body falls back to the URL as text', '<p><ac:link><ri:url ri:value="https://e.com/p"/></ac:link></p>', '[https://e.com/p](https://e.com/p)\n'],
@@ -150,7 +150,7 @@ describe('fix round 1 (R18/R19)', () => {
     ['ri:content-entity', '<p><ac:link><ri:content-entity ri:content-id="123"/></ac:link></p>', '[123](https://x.atlassian.net/wiki/pages/viewpage.action?pageId=123)\n'],
   ])('1. acLink: %s', (name, input, expected) => expect(md(input)).toBe(expected));
 
-  it('1. acLink never renders nothing for an unrecognised target, and warns', () => {
+  it('acLink never renders nothing for an unrecognised target, and warns', () => {
     const result = storageToMarkdown('<p><ac:link></ac:link></p>', ctx());
     expect(result.markdown).toBe('<!-- confluence:ac:link -->\n');
     expect(result.warnings).toEqual([{ kind: 'unknown-macro', detail: 'ac:link' }]);
@@ -177,12 +177,12 @@ describe('fix round 1 (R18/R19)', () => {
     ['a panel macro inside <p> splits the surrounding text into separate paragraphs', '<p>before <ac:structured-macro ac:name="info"><ac:rich-text-body><p>in</p></ac:rich-text-body></ac:structured-macro> after</p>', 'before\n\n> [!NOTE]\n> in\n\nafter\n'],
   ])('4. block macro inside <p>: %s', (name, input, expected) => expect(md(input)).toBe(expected));
 
-  it('5. a nested task list renders as an indented sub-list, without leaking status text', () => {
+  it('a nested task list renders as an indented sub-list, without leaking status text', () => {
     const input = '<ac:task-list><ac:task><ac:task-status>incomplete</ac:task-status><ac:task-body>parent<ac:task-list><ac:task><ac:task-status>complete</ac:task-status><ac:task-body>child</ac:task-body></ac:task></ac:task-list></ac:task-body></ac:task></ac:task-list>';
     expect(md(input)).toBe('- [ ] parent\n\n  - [x] child\n');
   });
 
-  it('6. a table-cell link with a "|" in its target and text stays a valid table row', () => {
+  it('a table-cell link with a "|" in its target and text stays a valid table row', () => {
     expect(md('<table><tbody><tr><td><a href="https://e.com/x|y">l|k</a></td></tr></tbody></table>')).toBe('| [l\\|k](https://e.com/x%7Cy) |\n| --- |\n');
   });
 
@@ -192,13 +192,13 @@ describe('fix round 1 (R18/R19)', () => {
     ['an unknown wrapper preserves a nested list instead of losing it', '<custom><p>a</p><ul><li>b</li></ul></custom>', 'a\n\n- b\n'],
   ])('7. unknown wrapper elements: %s', (name, input, expected) => expect(md(input)).toBe(expected));
 
-  it('8. warns on a missing attachment reached via ac:link, not just ac:image', () => {
+  it('warns on a missing attachment reached via ac:link, not just ac:image', () => {
     const result = storageToMarkdown('<p><ac:link><ri:attachment ri:filename="missing.png"/></ac:link></p>', ctx());
     expect(result.markdown).toBe('missing.png\n');
     expect(result.warnings).toEqual([{ kind: 'missing-attachment', detail: 'missing.png' }]);
   });
 
-  it('9. escapes "&" before what looks like an HTML/XML entity, so it is not re-decoded downstream', () => {
+  it('escapes "&" before what looks like an HTML/XML entity, so it is not re-decoded downstream', () => {
     expect(md('<p>&amp;copy; &amp;#169;</p>')).toBe('\\&copy; \\&#169;\n');
   });
 
@@ -215,25 +215,25 @@ describe('fix round 1 (R18/R19)', () => {
     ['paragraph breaks inside a simple table cell still join with <br>', '<table><tbody><tr><td><p>x</p><p>y</p></td></tr></tbody></table>', '| x<br>y |\n| --- |\n'],
   ])('minor: %s', (name, input, expected) => expect(md(input)).toBe(expected));
 
-  it('minor: fence() normalises CRLF/CR line endings to LF', () => {
+  it('fence() normalises CRLF/CR line endings to LF', () => {
     const macro = (name, params, body) => `<ac:structured-macro ac:name="${name}">${Object.entries(params).map(([k, v]) => `<ac:parameter ac:name="${k}">${v}</ac:parameter>`).join('')}${body}</ac:structured-macro>`;
     const input = macro('code', { language: 'js' }, '<ac:plain-text-body><![CDATA[line1\r\nline2\r]]></ac:plain-text-body>');
     expect(md(input)).toBe('```js\nline1\nline2\n```\n');
   });
 
-  it('minor: a macro name is sanitised inside the HTML placeholder comment', () => {
+  it('a macro name is sanitised inside the HTML placeholder comment', () => {
     const result = storageToMarkdown('<ac:structured-macro ac:name="ev-il--&gt;&lt;script&gt;"></ac:structured-macro>', ctx());
     expect(result.markdown).toBe('<!-- confluence:ev-il--script -->\n');
     expect(result.warnings).toEqual([{ kind: 'unknown-macro', detail: 'ev-il--><script>' }]);
   });
 
-  it('minor: legacy <ac:macro> is treated like <ac:structured-macro>', () => {
+  it('legacy <ac:macro> is treated like <ac:structured-macro>', () => {
     const result = storageToMarkdown('<ac:macro ac:name="drawio"><ac:parameter ac:name="diagramName">x</ac:parameter></ac:macro>', ctx());
     expect(result.markdown).toBe('<!-- confluence:drawio -->\n');
     expect(result.warnings).toEqual([{ kind: 'unknown-macro', detail: 'drawio' }]);
   });
 
-  it('every warning produced in this round has a kind in WARNING_KINDS', () => {
+  it('every warning produced by these cases has a kind in WARNING_KINDS', () => {
     const inputs = [
       '<p><ac:link></ac:link></p>',
       '<p><ac:link><ri:attachment ri:filename="missing.png"/></ac:link></p>',
@@ -246,15 +246,15 @@ describe('fix round 1 (R18/R19)', () => {
   });
 });
 
-describe('fix round 2', () => {
-  it('1. deeply nested <span> converts in well under 200ms and keeps the text', () => {
+describe('deep nesting and table cells', () => {
+  it('deeply nested <span> converts in well under 200ms and keeps the text', () => {
     const input = `<p>${'<span>'.repeat(200)}x${'</span>'.repeat(200)}</p>`;
     const start = performance.now();
     expect(md(input)).toBe('x\n');
     expect(performance.now() - start).toBeLessThan(200);
   });
 
-  it('1. deeply nested <strong> converts in well under 200ms and keeps the text', () => {
+  it('deeply nested <strong> converts in well under 200ms and keeps the text', () => {
     const input = `<p>${'<strong>'.repeat(200)}x${'</strong>'.repeat(200)}</p>`;
     const start = performance.now();
     const result = md(input);
@@ -270,7 +270,7 @@ describe('fix round 2', () => {
     ['a mark holding only a hard break renders nothing, not stray marks', '<p><strong><br/></strong></p>', '\n'],
   ])('2. edge hard breaks: %s', (name, input, expected) => expect(md(input)).toBe(expected));
 
-  it('3. paragraphs inside a wrapper element in a simple table cell still join with <br>, not a double space', () => {
+  it('paragraphs inside a wrapper element in a simple table cell still join with <br>, not a double space', () => {
     expect(md('<table><tbody><tr><td><span><p>x</p><p>y</p></span></td></tr></tbody></table>')).toBe('| x<br>y |\n| --- |\n');
     expect(md('<table><tbody><tr><td><div><p>x</p><p>y</p></div></td></tr></tbody></table>')).toBe('| x<br>y |\n| --- |\n');
   });
@@ -395,5 +395,44 @@ describe('flavors', () => {
     for (const flavor of ['gfm', 'mdx', 'mkdocs']) {
       for (const key of Object.keys(inputs)) expect(convert(flavor)(key)).toBe(convert(flavor)(key));
     }
+  });
+});
+
+describe('file embed macros', () => {
+  const embed = (name, file, owner = '') => `<ac:structured-macro ac:name="${name}"><ac:parameter ac:name="name"><ri:attachment ri:filename="${file}">${owner}</ri:attachment></ac:parameter><ac:parameter ac:name="height">250</ac:parameter></ac:structured-macro>`;
+
+  it.each(['view-file', 'viewpdf', 'viewdoc', 'viewxls', 'viewppt', 'multimedia'])('%s links to the attachment and marks it used', (name) => {
+    const result = storageToMarkdown(embed(name, 'Q3 report.pdf'), ctx());
+    expect(result.markdown).toBe('[Q3 report.pdf](page.assets/Q3%20report.pdf)\n');
+    expect(result.attachments).toEqual(['Q3 report.pdf']);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('works inside a paragraph and for an attachment of another page', () => {
+    const seen = [];
+    const out = md(`<p>See ${embed('view-file', 'a.pdf', '<ri:page ri:content-title="Target"/>')}</p>`, { resolveAttachment: (name, owner) => { seen.push([name, owner]); return `../target.assets/${name}`; } });
+    expect(out).toBe('See [a.pdf](../target.assets/a.pdf)\n');
+    expect(seen).toEqual([['a.pdf', { title: 'Target', spaceKey: '' }]]);
+  });
+
+  it('warns about a missing attachment and keeps its name as text', () => {
+    const result = storageToMarkdown(embed('viewpdf', 'missing.png'), ctx());
+    expect(result.markdown).toBe('missing.png\n');
+    expect(result.warnings).toEqual([{ kind: 'missing-attachment', detail: 'missing.png' }]);
+  });
+
+  it('renders the same flavor-safe link as an ac:link to the attachment', () => {
+    const name = 'clip {v1} <b>*.mp4';
+    const viaLink = `<p><ac:link><ri:attachment ri:filename="${name.replace('<', '&lt;').replace('>', '&gt;')}"/></ac:link></p>`;
+    for (const flavor of ['gfm', 'mdx', 'mkdocs']) {
+      expect(md(embed('multimedia', name.replace('<', '&lt;').replace('>', '&gt;')), { flavor }), flavor).toBe(md(viaLink, { flavor }));
+    }
+    expect(md(embed('multimedia', 'clip {v1}.mp4'), { flavor: 'mdx' })).toMatch(/^\[clip \\\{v1\\\}\.mp4\]/);
+  });
+
+  it('keeps an embed macro without an attachment as an unknown macro placeholder', () => {
+    const result = storageToMarkdown('<ac:structured-macro ac:name="view-file"/>', ctx());
+    expect(result.markdown).toBe('<!-- confluence:view-file -->\n');
+    expect(result.warnings).toEqual([{ kind: 'unknown-macro', detail: 'view-file' }]);
   });
 });

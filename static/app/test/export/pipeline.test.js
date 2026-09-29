@@ -302,7 +302,7 @@ describe('scanTree', () => {
   });
 });
 
-describe('runExport fix round 1', () => {
+describe('runExport relinking, cancellation and vanished pages', () => {
   const eng = { id: '5', key: 'ENG', name: 'Eng' };
   const CHILDREN = '<p>Hub</p><ac:structured-macro ac:name="children"/>';
   const OWNED = '<p><ac:image><ri:attachment ri:filename="d.png"><ri:page ri:content-title="API"/></ri:attachment></ac:image></p>';
@@ -567,5 +567,16 @@ describe('runExport sources and labels', () => {
     await run(fake, { previousManifest });
     expect(fake.calls.getLabelsOf).toBe(1);
     expect(fake.calls.getLabels).toBe(labelsBefore);
+  });
+});
+
+describe('runExport file embeds', () => {
+  it('keeps an attachment shown by a view-file macro in referenced mode', async () => {
+    const list = pages();
+    list[1].body = '<ac:structured-macro ac:name="viewpdf"><ac:parameter ac:name="name"><ri:attachment ri:filename="d.png"/></ac:parameter></ac:structured-macro>';
+    const fake = createFakeConfluence({ space: { id: '5', key: 'ENG', name: 'Eng' }, pages: list, users: {} });
+    const out = await files(await run(fake, { options: { ...DEFAULT_OPTIONS, attachments: 'referenced' } }));
+    expect(out['home/api.md']).toContain('[d.png](api.assets/d.png)');
+    expect(out['home/api.assets/d.png']).toEqual([...PNG]);
   });
 });

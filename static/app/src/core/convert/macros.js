@@ -1,4 +1,4 @@
-import { attr, childTag, param, textOf } from './parse.js';
+import { attr, childTag, elements, param, textOf } from './parse.js';
 import { codeSpan, escapeHtml, escapeText, fence, placeholder, quote } from './escape.js';
 import { renderBlocks } from './blocks.js';
 import { link } from './inline.js';
@@ -10,7 +10,8 @@ const DYNAMIC = new Set([
   'toc', 'toc-zone', 'pagetree', 'pagetreesearch', 'recently-updated', 'contentbylabel', 'livesearch', 'blog-posts',
   'attachments', 'include', 'excerpt-include', 'detailssummary', 'tasks-report-macro', 'content-report-table', 'profile',
 ]);
-const INLINE = new Set(['status', 'jira', 'anchor']);
+const FILE_EMBEDS = new Set(['view-file', 'viewpdf', 'viewdoc', 'viewxls', 'viewppt', 'multimedia']);
+const INLINE = new Set(['status', 'jira', 'anchor', ...FILE_EMBEDS]);
 
 /** True for the current and legacy structured-macro element names. */
 export function isMacroTag(name) {
@@ -26,9 +27,31 @@ function sanitizeMacroName(name) {
   return name.replace(/[^\w.-]/g, '');
 }
 
-/** Renders an inline macro (status, single Jira issue, anchor). */
+function embeddedAttachment(node) {
+  const parameter = elements(node).find((c) => c.name === 'ac:parameter' && attr(c, 'ac:name') === 'name');
+  return childTag(parameter, 'ri:attachment');
+}
+
+/** File embed (view-file, viewpdf, multimedia …) as a link to the attachment; missing → its name as text and a warning. */
+function renderFileEmbed(node, ctx) {
+  const attachment = embeddedAttachment(node);
+  if (!attachment) {
+    ctx.warn('unknown-macro', attr(node, 'ac:name'));
+    return placeholder(sanitizeMacroName(attr(node, 'ac:name')), ctx.flavor);
+  }
+  const name = attr(attachment, 'ri:filename');
+  const href = ctx.attachment(name, childTag(attachment, 'ri:page'));
+  if (!href) {
+    ctx.warn('missing-attachment', name);
+    return escapeText(name, ctx.flavor);
+  }
+  return link(escapeText(name, ctx.flavor), href);
+}
+
+/** Renders an inline macro (status, single Jira issue, anchor, file embed). */
 export function renderInlineMacro(node, ctx) {
   const name = attr(node, 'ac:name');
+  if (FILE_EMBEDS.has(name)) return renderFileEmbed(node, ctx);
   if (name === 'status') return codeSpan((param(node, 'title') || param(node, 'colour')).toUpperCase(), ctx.inTable);
   if (name === 'jira') {
     const key = param(node, 'key');
