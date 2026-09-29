@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "Excel, Word 또는 PDF로 내보내기",
+  "module.boardAction.title": "보드 이슈 내보내기",
+  "module.backlogAction.title": "백로그 이슈 내보내기",
+  "module.sprintAction.title": "스프린트 이슈 내보내기",
+  "module.issueAction.title": "Word 또는 PDF로 내보내기"
+}

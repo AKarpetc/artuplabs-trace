@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "Ekspordi Excelisse, Wordi või PDF-i",
+  "module.boardAction.title": "Ekspordi tahvli ülesanded",
+  "module.backlogAction.title": "Ekspordi tööde nimekirja ülesanded",
+  "module.sprintAction.title": "Ekspordi sprindi ülesanded",
+  "module.issueAction.title": "Ekspordi Wordi või PDF-i"
+}

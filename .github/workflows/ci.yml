@@ -19,6 +19,7 @@ jobs:
             apps/trace/static/app/package-lock.json
             apps/export/package-lock.json
             apps/export/static/app/package-lock.json
+            apps/reports/package-lock.json
 
       - name: "Trace: install"
         working-directory: apps/trace
@@ -65,3 +66,16 @@ jobs:
         run: |
           npm audit --omit=dev --audit-level=high
           npm audit --omit=dev --audit-level=high --prefix static/app
+
+      - name: "Reports: install"
+        working-directory: apps/reports
+        run: npm ci
+      - name: "Reports: lint"
+        working-directory: apps/reports
+        run: npm run lint
+      - name: "Reports: test"
+        working-directory: apps/reports
+        run: npm test
+      - name: "Reports: audit"
+        working-directory: apps/reports
+        run: npm audit --omit=dev --audit-level=high

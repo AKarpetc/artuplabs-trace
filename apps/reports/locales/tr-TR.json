@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "Excel, Word veya PDF olarak dışa aktar",
+  "module.boardAction.title": "Pano işlerini dışa aktar",
+  "module.backlogAction.title": "Backlog işlerini dışa aktar",
+  "module.sprintAction.title": "Sprint işlerini dışa aktar",
+  "module.issueAction.title": "Word veya PDF olarak dışa aktar"
+}
