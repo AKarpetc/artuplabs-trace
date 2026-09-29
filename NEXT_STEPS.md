@@ -7,7 +7,7 @@
 | | Состояние |
 |---|---|
 | **ArtUp Trace** (Jira) | листинг подан 2026-09-28, ждём одобрения (тикет ECOHELP-168810, ответ письмом на hello@artuplabs.com) и тикета Partner Verification |
-| **ArtUp Export** (Confluence) | готов: production v2.0.0, development v2.7.0, оба подходят под Runs on Atlassian; проверен на 1 000 страниц; сайт https://artuplabs.com/export/ опубликован; **листинг не подан** — ждёт ваших шагов ниже |
+| **ArtUp Export** (Confluence) | приёмка 16 пунктов пройдена 2026-09-29; production v2.1.0, development v2.8.0 (исправлен белый экран после экспорта, EXPORT-19), оба подходят под Runs on Atlassian; проверен на 1 000 страниц; сайт https://artuplabs.com/export/ опубликован; **листинг не подан** — ждёт ваших шагов ниже |
 | **Репозиторий** | всё по Atlassian в одном репозитории: эта папка = `AKarpetc/artuplabs-trace` (ветка `monorepo`, PR #8 не слит). Внутри: `apps/trace`, `apps/export`, `atlassian/` (документы), `site/`, `STATE.md` |
 | **Приложение №3** | ArtUp Risk закрыт на фазе 0; следующий кандидат — ArtUp Release (кросс-проектные релизы), бриф не написан |
 
@@ -16,12 +16,12 @@
 ## Что сделать вам (по порядку)
 
 ### 1. Слить PR с монорепозиторием (⏱ 2 мин)
-- [ ] https://github.com/AKarpetc/artuplabs-trace/pull/8 → **Merge**. CI `test` зелёный.
+- [x] https://github.com/AKarpetc/artuplabs-trace/pull/8 → **Merge**. CI `test` зелёный.
 - [ ] После слияния в этой папке: `git checkout main && git pull`.
 
 ### 2. Проверить ArtUp Export в браузере (⏱ 40–60 мин) — до подачи листинга
-- [ ] Пройдите 16 пунктов из [atlassian/plans/2026-09-28-artup-export-acceptance.md](atlassian/plans/2026-09-28-artup-export-acceptance.md) на https://artuplabs-dev.atlassian.net, пространство **EXPT**. Главное: в zip есть картинки (`*.assets`), zip скачивается, а если не скачался сам — срабатывает «Скачать ещё раз».
-- [ ] Если что-то не так, напишите в новой сессии номер пункта и что увидели.
+- [x] Пройдите 16 пунктов из [atlassian/plans/2026-09-28-artup-export-acceptance.md](atlassian/plans/2026-09-28-artup-export-acceptance.md) на https://artuplabs-dev.atlassian.net, пространство **EXPT**. Главное: в zip есть картинки (`*.assets`), zip скачивается, а если не скачался сам — срабатывает «Скачать ещё раз».
+- [x] Если что-то не так, напишите в новой сессии номер пункта и что увидели.
 
 ### 3. Решить название и цену ArtUp Export (⏱ 10 мин)
 - [ ] Название: «ArtUp Export – Markdown for Git & Docs Sites» или вариант из [atlassian/listing-export/description.md](atlassian/listing-export/description.md).

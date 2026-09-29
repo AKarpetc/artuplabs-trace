@@ -247,7 +247,7 @@ development на artuplabs-dev. Решения и отложенное —
 промпт сессии: [atlassian/plans/NEXT_SESSION_PROMPT_APP2.md](atlassian/plans/NEXT_SESSION_PROMPT_APP2.md).
 План: [atlassian/plans/2026-09-28-artup-export-v1.md](atlassian/plans/2026-09-28-artup-export-v1.md).
 
-Статус 2026-09-29: **выложено в production (v2.0.0) и development (v2.7.0), оба eligible для Runs on Atlassian;
+Статус 2026-09-29 (вечер): **ручная приёмка пройдена, production v2.1.0 и development v2.8.0** (EXPORT-19: белый экран после экспорта, Rolldown CJS interop). Ранее: **выложено в production (v2.0.0) и development (v2.7.0), оба eligible для Runs on Atlassian;
 сайт опубликован** (https://artuplabs.com/export/, /docs/export/, разделы Export в privacy/security/terms).
 Фаза 0 пройдена (G1–G4). Приёмка (§11 брифа): 1 001 страница + 200 вложений за ≈4–4,5 мин, 0 ответов 429;
 повтор — побайтно тот же zip; инкремент (правки, переименование, перенос, удаление, метки) после применения =
