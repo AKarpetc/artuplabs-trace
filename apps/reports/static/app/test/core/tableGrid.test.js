@@ -14,6 +14,29 @@ describe('tableGrid', () => {
       ['C', 'D', '^!'],
     ]);
   });
+  it('clips a colspan that would run into a slot covered from above', () => {
+    const grid = tableGrid({ rows: [
+      { cells: [c('X'), c('Y', 1, 2)] },
+      { cells: [c('Z', 2)] },
+    ] });
+    expect(grid.map((row) => row.map((s) => (s.origin ? `${s.cell.blocks[0].runs[0].text}${s.colspan}x${s.rowspan}` : `${s.fromAbove ? '^' : '<'}${s.leading ? '!' : ''}`)))).toEqual([
+      ['X1x1', 'Y1x2'],
+      ['Z1x1', '^!'],
+    ]);
+  });
+  it('gives every covered slot exactly one origin whose spans reach it', () => {
+    const grid = tableGrid({ rows: [
+      { cells: [c('A', 1, 3), c('B', 2, 1), c('C', 1, 2)] },
+      { cells: [c('D', 3, 2)] },
+      { cells: [c('E', 4)] },
+    ] });
+    const owners = grid.map((row) => row.map(() => 0));
+    grid.forEach((row, r) => row.forEach((s, col) => {
+      if (!s.origin) return;
+      for (let dr = 0; dr < s.rowspan; dr += 1) for (let dc = 0; dc < s.colspan; dc += 1) owners[r + dr][col + dc] += 1;
+    }));
+    expect(owners).toEqual(grid.map((row) => row.map(() => 1)));
+  });
   it('fills short rows with empty filler cells', () => {
     const grid = tableGrid({ rows: [{ cells: [c('A'), c('B')] }, { cells: [c('C')] }] });
     expect(grid[1][1]).toEqual({ origin: true, filler: true, colspan: 1, rowspan: 1, cell: { header: false, colspan: 1, rowspan: 1, blocks: [] } });

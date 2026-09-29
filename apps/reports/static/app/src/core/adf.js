@@ -2,7 +2,10 @@ import { EXCEL_CELL_LIMIT } from './limits.js';
 
 const FLAG = { strong: 'bold', em: 'italic', code: 'code', strike: 'strike', underline: 'underline' };
 
-const isoDate = (ms) => new Date(ms).toISOString().slice(0, 10);
+const isoDate = (ms) => {
+  const date = new Date(ms);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10);
+};
 
 function textOf(node) {
   if (!node) return '';
@@ -35,7 +38,10 @@ function inlineRun(node, ctx) {
       return { text: text.startsWith('@') ? text : `@${text || 'user'}` };
     }
     case 'emoji': return { text: attrs.text ?? attrs.shortName ?? '' };
-    case 'date': return { text: ctx.formatDate(Number(attrs.timestamp)) };
+    case 'date': {
+      const ms = Number(attrs.timestamp);
+      return { text: Number.isFinite(ms) ? ctx.formatDate(ms) : String(attrs.timestamp ?? '') };
+    }
     case 'status': return { text: `[${String(attrs.text ?? '').toUpperCase()}]`, bold: true };
     case 'inlineCard': return linkRun(attrs.url ?? attrs.data?.url ?? '');
     case 'mediaInline': return { text: attrs.alt ?? '' };
@@ -71,7 +77,7 @@ function mediaBlock(node, ctx) {
   const index = ctx.mediaIndex;
   ctx.mediaIndex += 1;
   const attachmentId = ctx.resolveMedia(attrs, index);
-  if (!attachmentId) ctx.warnings.push({ kind: 'image-unresolved', detail: attrs.alt ?? '' });
+  if (!attachmentId) ctx.warnings.push({ kind: 'image-unresolved', detail: attrs.alt || attrs.id || String(index) });
   return { type: 'image', attachmentId: attachmentId ?? null, alt: attrs.alt ?? '', width: attrs.width ?? null, height: attrs.height ?? null };
 }
 
@@ -162,7 +168,8 @@ export function blocksToText(blocks, depth = 0) {
 /** Cuts text to the Excel cell limit and appends how many characters were cut. */
 export function truncateCell(text, limit = EXCEL_CELL_LIMIT) {
   if (text.length <= limit) return text;
-  let cut = limit - 16;
-  if (/[\uD800-\uDBFF]/.test(text[cut - 1])) cut -= 1;
-  return `${text.slice(0, cut)} …[+${text.length - cut}]`;
+  const whole = (n) => (n > 0 && /[\uD800-\uDBFF]/.test(text[n - 1]) ? n - 1 : n);
+  const cut = whole(Math.max(0, limit - 16));
+  const out = `${text.slice(0, cut)} …[+${text.length - cut}]`;
+  return out.length <= limit ? out : text.slice(0, whole(limit));
 }

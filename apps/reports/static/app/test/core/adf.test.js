@@ -31,6 +31,13 @@ describe('adfToModel', () => {
       { text: '[IN PROGRESS]', bold: true }, { text: 'https://e.x/a', link: 'https://e.x/a' },
     ]);
   });
+  it('writes a date with a non-numeric timestamp as its raw text', () => {
+    expect(adfToModel(doc(p({ type: 'date', attrs: { timestamp: 'soon' } }))).blocks[0].runs).toEqual([{ text: 'soon' }]);
+  });
+  it('names an unresolved image without alt by its media id', () => {
+    const { warnings } = adfToModel(doc({ type: 'mediaSingle', content: [{ type: 'media', attrs: { id: 'uuid-1', type: 'file', collection: '' } }] }));
+    expect(warnings).toEqual([{ kind: 'image-unresolved', detail: 'uuid-1' }]);
+  });
   it('keeps heading levels and clamps them to 1..6', () => {
     const { blocks } = adfToModel(doc({ type: 'heading', attrs: { level: 2 }, content: [t('H')] }, { type: 'heading', attrs: { level: 9 }, content: [t('X')] }));
     expect(blocks).toEqual([{ type: 'heading', level: 2, runs: [{ text: 'H' }] }, { type: 'heading', level: 6, runs: [{ text: 'X' }] }]);
@@ -131,6 +138,9 @@ describe('truncateCell', () => {
     const out = truncateCell('x'.repeat(100), 40);
     expect(out).toBe(`${'x'.repeat(24)} …[+76]`);
     expect(out.length).toBeLessThanOrEqual(40);
+  });
+  it('stays within a limit smaller than the cut note', () => {
+    expect(truncateCell('x'.repeat(100), 5)).toBe('xxxxx');
   });
   it('never splits a surrogate pair', () => {
     const out = truncateCell('😀'.repeat(50), 40);

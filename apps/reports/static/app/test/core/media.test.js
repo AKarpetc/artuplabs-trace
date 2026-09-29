@@ -5,7 +5,7 @@ import fixture from '../fixtures/adf/media-rpt.json';
 
 describe('createMediaResolver', () => {
   const attachments = [{ id: '1', filename: 'a.png' }, { id: '2', filename: 'same.png' }, { id: '3', filename: 'same.png' }];
-  it('matches by file name first', () => {
+  it('matches by file name when the HTML has neither uuid nor order', () => {
     expect(createMediaResolver(attachments)({ alt: 'a.png' }, 0)).toBe('1');
   });
   it('hands out same-named attachments in order, then reuses the first', () => {
@@ -33,6 +33,12 @@ describe('createMediaResolver', () => {
     const html = '<a href="/rest/api/3/attachment/content/1"><img src="/rest/api/3/attachment/thumbnail/1"></a><img src="/rest/api/3/attachment/content/3">';
     const resolve = createMediaResolver(attachments, html);
     expect([resolve({}, 0), resolve({}, 1)]).toEqual(['1', '3']);
+  });
+  it('counts an anchor-only file card so a later plain image keeps its own id', () => {
+    const files = [...attachments, { id: '4', filename: 'spec.pdf' }];
+    const html = '<p><span class="nobr"><a href="/secure/attachment/4/spec.pdf" title="spec.pdf">spec.pdf<sup><img src="/images/icons/link_attachment_7.gif"></sup></a></span></p><p><span class="image-wrap"><img src="/rest/api/3/attachment/content/3"></span></p>';
+    const resolve = createMediaResolver(files, html);
+    expect([resolve({ id: 'f' }, 0), resolve({ id: 'i' }, 1)]).toEqual(['4', '3']);
   });
   it.each(fixture.cases.map((c, i) => [i, c]))('maps every media node of live case %i', (_, c) => {
     const resolveMedia = createMediaResolver(c.attachments, c.renderedHtml);

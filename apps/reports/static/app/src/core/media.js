@@ -1,15 +1,29 @@
-const IMG_TAG = /<img\b[^>]*>/gi;
+const TAG = /<(\/?)(a|img)\b[^>]*>/gi;
 const ATTACHMENT_URL = /\/(?:rest\/api\/[23]\/attachment\/(?:content|thumbnail)|secure\/(?:attachment|thumbnail))\/(\d+)/;
 const MEDIA_SERVICES_ID = /\bdata-media-services-id\s*=\s*["']([^"']+)["']/i;
 
-/** Rendered images in document order: each `<img>` that points to an attachment, with its own media-services id if it carries one. */
+/** Rendered media in document order: an attachment `<a>` (file card or thumbnail link) or a bare attachment `<img>`; an `<img>` of the same attachment inside that `<a>` only adds its media-services id. */
 function renderedImages(html) {
-  return [...String(html ?? '').matchAll(IMG_TAG)].flatMap(([tag]) => {
+  const found = [];
+  let anchor = null;
+  for (const [tag, closing, name] of String(html ?? '').matchAll(TAG)) {
+    const isAnchor = name.toLowerCase() === 'a';
+    if (closing) {
+      if (isAnchor) anchor = null;
+      continue;
+    }
     const url = tag.match(ATTACHMENT_URL);
-    if (!url) return [];
-    const uuid = tag.match(MEDIA_SERVICES_ID);
-    return [{ id: url[1], uuid: uuid ? uuid[1] : null }];
-  });
+    const uuid = tag.match(MEDIA_SERVICES_ID)?.[1] ?? null;
+    if (isAnchor) {
+      anchor = url ? { id: url[1], uuid } : null;
+      if (anchor) found.push(anchor);
+    } else if (url && anchor?.id === url[1]) {
+      anchor.uuid = anchor.uuid ?? uuid;
+    } else if (url) {
+      found.push({ id: url[1], uuid });
+    }
+  }
+  return found;
 }
 
 /** Maps ADF media nodes to the issue's attachment ids: by media-services id, then rendered image order, then file name. */
