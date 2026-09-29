@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — ArtUp Trace</title>
+  <meta name="description" content="How to set up and use ArtUp Trace for Jira Cloud: coverage, suspect links, baselines, CSV export and permissions.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">A</span>ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="export/">ArtUp Export</a></li>
+          <li><a href="docs.html" aria-current="page">Docs</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="doc">
+    <h1>ArtUp Trace documentation</h1>
+    <p class="meta">ArtUp Trace for Jira Cloud · Last updated: 2026-09-28</p>
+
+    <div class="notice">
+      <p><strong>In short:</strong> tell ArtUp Trace which issue types are requirements and which verify them. It then shows which requirements have no verification, flags links that went stale after a requirement changed, and lets you compare snapshots of your requirements over time. It only reads Jira and never changes your issues.</p>
+    </div>
+
+    <nav class="toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">Contents</h2>
+      <ol>
+        <li><a href="#setup">Set up in one minute</a></li>
+        <li><a href="#coverage">Coverage</a></li>
+        <li><a href="#suspect">Suspect links</a></li>
+        <li><a href="#baselines">Baselines and compare</a></li>
+        <li><a href="#export">CSV export</a></li>
+        <li><a href="#panel">Issue panel</a></li>
+        <li><a href="#permissions">Who can do what</a></li>
+        <li><a href="#sync">How data stays up to date</a></li>
+        <li><a href="#languages">Languages and theme</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="setup">1. Set up in one minute</h2>
+    <ol>
+      <li>Install ArtUp Trace from the Atlassian Marketplace.</li>
+      <li>Open a project and choose <strong>ArtUp Trace</strong> in the project navigation.</li>
+      <li>Open the <strong>Settings</strong> tab (project administrators and Jira administrators).</li>
+      <li>Choose the <strong>requirement issue types</strong> (for example Story or Requirement) and the <strong>verification issue types</strong> (for example Test or Task).</li>
+      <li>Optionally limit which <strong>link types</strong> count as coverage. Empty means any link type counts.</li>
+      <li>Click <strong>Save</strong>. The first sync runs in the background; on large projects it can take up to an hour. Results appear as it runs.</li>
+    </ol>
+    <p>No new issue types, custom fields or workflow changes are needed. ArtUp Trace uses the issue links you already have.</p>
+
+    <h2 id="coverage">2. Coverage</h2>
+    <p>A requirement is <strong>covered</strong> when it is linked to at least one issue of a verification type through a counted link type. The <strong>Coverage</strong> tab shows the coverage percentage, summary cards and the list of requirements <strong>without verification</strong>. Search by key or summary, sort the columns, and click a key to open the issue.</p>
+
+    <h2 id="suspect">3. Suspect links</h2>
+    <p>When a requirement's <strong>summary or description</strong> changes after its link was confirmed, the link becomes <strong>suspect</strong>: the verification may no longer match the requirement. Changes to status, assignee or other fields do not make a link suspect.</p>
+    <p>On the <strong>Suspect links</strong> tab, review each link and click <strong>Confirm</strong>, or select several and click <strong>Confirm selected</strong>. Confirming anchors the link to the requirement's current content. Only rows visible after your search are confirmed.</p>
+
+    <h2 id="baselines">4. Baselines and compare</h2>
+    <p>A <strong>baseline</strong> is a named snapshot of all requirements in the project: their content, links and status at that moment. Create one on the <strong>Baselines</strong> tab (for example before a release or an audit) and click <strong>Refresh</strong> until its status is <strong>Complete</strong>.</p>
+    <p>To compare, choose a <strong>Before</strong> and an <strong>After</strong> baseline and click <strong>Compare</strong>. Each difference is one of:</p>
+    <ul>
+      <li><strong>Added</strong> / <strong>Removed</strong> — the requirement exists in only one baseline;</li>
+      <li><strong>Changed</strong> — its summary or description changed;</li>
+      <li><strong>Links changed</strong> — links were added, removed or retargeted;</li>
+      <li><strong>Status changed</strong> — only the status is different.</li>
+    </ul>
+
+    <h2 id="export">5. CSV export</h2>
+    <p><strong>Export CSV</strong> is available for requirements without verification, suspect links and baseline comparisons. The file downloads directly to your computer (UTF-8, opens correctly in Excel and Google Sheets). Very large exports are capped; the app tells you when only part of the rows was saved.</p>
+
+    <h2 id="panel">6. Issue panel</h2>
+    <p>On a requirement, the <strong>ArtUp Trace</strong> panel shows whether it is covered and lists its trace links with their status. Suspect links can be confirmed right there. On issues that are not requirements, the panel says so.</p>
+
+    <h2 id="permissions">7. Who can do what</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Action</th><th>Required Jira permission</th></tr></thead>
+        <tbody>
+          <tr><td>View coverage, suspect links, baselines, issue panel; export CSV</td><td>Browse projects</td></tr>
+          <tr><td>Confirm links, create baselines</td><td>Edit issues</td></tr>
+          <tr><td>Change settings</td><td>Administer projects, or Jira administrator</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>ArtUp Trace checks your Jira permissions for the project on every action.</p>
+
+    <h2 id="sync">8. How data stays up to date</h2>
+    <p>ArtUp Trace listens to issue and link changes and updates within a few minutes. An hourly background check catches anything missed. Changing which issue or link types count starts a full re-sync automatically.</p>
+
+    <h2 id="languages">9. Languages and theme</h2>
+    <p>The app follows each user's Jira language (all 26 languages Jira supports) and the light or dark Jira theme.</p>
+
+    <h2 id="faq">10. FAQ</h2>
+    <p><strong>Does ArtUp Trace change my issues?</strong> No. It only reads Jira. Confirmations and baselines are stored by the app itself on Atlassian's infrastructure.</p>
+    <p><strong>Where is my data stored? Is personal data stored?</strong> Only on Atlassian (Forge), with no external servers. No names, emails or account ids are stored. See <a href="privacy.html">Privacy</a> and <a href="security.html">Security</a>.</p>
+    <p><strong>The numbers look outdated.</strong> Wait a few minutes after a change, then reload the page. If the issue persists, <a href="support.html">contact support</a>.</p>
+    <p><strong>I cannot open Settings.</strong> You need the Administer projects permission for that project, or to be a Jira administrator.</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="export/">ArtUp Export</a></li>
+          <li><a href="docs.html">Docs</a></li>
+          <li><a href="support.html">Support</a></li>
+          <li><a href="security.html">Security</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

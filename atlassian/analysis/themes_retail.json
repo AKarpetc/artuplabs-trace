@@ -1,0 +1,17 @@
+{
+  "розница и магазины":      ["retail", "store", "storefront", "pos", "point-of-sale", "merchandising"],
+  "склад и остатки":         ["inventory", "stock", "warehouse", "sku", "fulfillment", "supply chain"],
+  "заказы и оплата":         ["order management", "orders", "checkout", "invoice", "billing", "payment"],
+  "e-commerce":              ["ecommerce", "e-commerce", "shopify", "magento", "woocommerce", "catalog"],
+  "соответствие требованиям":["compliance", "regulatory", "audit trail", "gxp", "21 cfr", "sox", "hipaa"],
+  "качество и CAPA":         ["quality management", "capa", "nonconformance", "iso 9001", "qms", "deviation"],
+  "регламенты и SOP":        ["sop", "standard operating", "work instruction", "policy management", "procedure"],
+  "прослеживаемость":        ["traceability", "chain of custody", "lot tracking", "serialization", "provenance"],
+  "валидация и верификация": ["validation", "verification", "qualification", "computer system validation"],
+  "ERP и интеграции":        ["erp", "sap", "netsuite", "dynamics", "oracle ebs", "salesforce"],
+  "полевые операции":        ["field service", "dispatch", "technician", "work order", "maintenance request"],
+  "поставщики и закупки":    ["procurement", "vendor management", "supplier", "purchase order", "sourcing"],
+  "смены и персонал":        ["shift", "roster", "workforce", "staffing", "timesheet", "attendance"],
+  "инциденты и безопасность":["incident management", "safety", "ehs", "near miss", "risk register"],
+  "обучение и аттестация":   ["training", "certification", "competency", "onboarding checklist", "lms"]
+}

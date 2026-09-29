@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — ArtUp Export</title>
+  <meta name="description" content="How to use ArtUp Export for Confluence Cloud: export a space or a branch to Markdown, update an existing git repository, front-matter, Hugo, Docusaurus and MkDocs presets, limits, warnings and data handling.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../../export/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="../../index.html"><span class="brand-mark" aria-hidden="true">A</span>ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../../index.html">Home</a></li>
+          <li><a href="../../export/" aria-current="page">ArtUp Export</a></li>
+          <li><a href="../../docs.html">Docs</a></li>
+          <li><a href="../../support.html">Support</a></li>
+          <li><a href="../../security.html">Security</a></li>
+          <li><a href="../../privacy.html">Privacy</a></li>
+          <li><a href="../../terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="doc-wide">
+    <nav class="toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">Contents</h2>
+      <ol>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#space">Export a space</a></li>
+        <li><a href="#branch">Export a page or a branch</a></li>
+        <li><a href="#options">Options</a></li>
+        <li><a href="#zip">What is in the zip</a></li>
+        <li><a href="#update">Update an existing repository</a></li>
+        <li><a href="#front-matter">Front-matter reference</a></li>
+        <li><a href="#presets">Presets and site settings</a></li>
+        <li><a href="#conversion">How content is converted</a></li>
+        <li><a href="#warnings">Warnings reference</a></li>
+        <li><a href="#limits">Limits</a></li>
+        <li><a href="#data">Data handling</a></li>
+        <li><a href="#support">Languages and support</a></li>
+      </ol>
+    </nav>
+
+    <main id="main" class="doc">
+      <h1>ArtUp Export documentation</h1>
+      <p class="meta">ArtUp Export for Confluence Cloud · Last updated: 2026-09-29</p>
+
+      <div class="notice">
+        <p><strong>In short:</strong> open <strong>ArtUp Export</strong> in a space, pick what to export and a format, and download a zip with one Markdown file per page, the page tree as folders and the attachments next to their pages. Keep the zip's <code>export-manifest.json</code>: next time, an update export contains only what changed.</p>
+      </div>
+
+      <h2 id="install">1. Install</h2>
+      <ol>
+        <li>A Confluence administrator installs <strong>ArtUp Export</strong> from the Atlassian Marketplace (<em>Apps</em> → <em>Explore more apps</em>).</li>
+        <li>Sites with up to 10 users use it free; larger sites start a trial or a subscription in <em>Manage apps</em>.</li>
+        <li>No configuration is needed. Every user who can read a space can export what they can see in it.</li>
+      </ol>
+
+      <h2 id="space">2. Export a space</h2>
+      <ol>
+        <li>In a space, open <strong>ArtUp Export</strong> in the space sidebar (apps section).</li>
+        <li><strong>What to export:</strong> <em>Whole space</em>, <em>Page and children</em> or <em>One page</em>. For the last two, type a page title to pick the page.</li>
+        <li><strong>Format:</strong> Generic Markdown, Hugo, Docusaurus or MkDocs — see <a href="#presets">Presets</a>.</li>
+        <li><strong>Mode:</strong> <em>Full export</em>, or <em>Update previous export</em> — see <a href="#update">Update</a>.</li>
+        <li>Check the <strong>Output preview</strong> on the right: the files the export will write and the front-matter of the first page.</li>
+        <li>Click <strong>Export N pages</strong>. Progress goes through four stages: scan, pages, attachments, pack. <strong>Keep the tab open</strong> until the download starts — the export runs in your browser.</li>
+      </ol>
+      <p>When it finishes, the zip downloads and the result screen shows the number of pages and attachments, the size, the time and the <a href="#warnings">warnings</a>. <em>Download again</em> saves the same zip once more.</p>
+      <figure>
+        <div class="frame">
+          <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <picture>
+            <source srcset="../../export/studio-dark.webp" media="(prefers-color-scheme: dark)">
+            <img src="../../export/studio-light.webp" width="1600" height="1000" loading="lazy" alt="The export form: what to export, format, options and mode, with the output preview.">
+          </picture>
+        </div>
+        <figcaption>The export form in a space, with the output preview on the right.</figcaption>
+      </figure>
+
+      <h2 id="branch">3. Export a page or a branch from the page menu</h2>
+      <ol>
+        <li>On any page, open <strong>•••</strong> (More actions) → <strong>Export to Markdown</strong>.</li>
+        <li>Choose <em>This page</em> or <em>This page and its subpages</em> (the dialog shows how many), and a format.</li>
+        <li><em>More options</em> opens page order, file names, attachments and the mode, including <em>Update previous export</em>. Click <strong>Export</strong> and keep the dialog open until the download starts.</li>
+      </ol>
+
+      <h2 id="options">4. Options</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Option</th><th>Choices</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td>Page order</td><td>Stored in front-matter (default) · Numeric prefixes in file names</td><td>Front-matter writes the order key of the preset (<code>weight</code> or <code>sidebar_position</code>) in steps of 10. Prefixes put it in the name, for example <code>010-getting-started.md</code>.</td></tr>
+            <tr><td>File names</td><td>ASCII, transliterated (default) · Unicode, original letters</td><td>ASCII names work in URLs, on Windows and in older tools. Accents are dropped, Cyrillic and Greek are transliterated; titles with no Latin equivalent, such as Chinese or Japanese, become <code>page-&lt;id&gt;</code>.</td></tr>
+            <tr><td>Attachments</td><td>All attachments (default) · Only those used on pages · No attachments</td><td>Which attachments are written next to their pages.</td></tr>
+            <tr><td>Skip files larger than</td><td>MB, default 50</td><td>Larger attachments are skipped and listed as <span class="kind">attachment-too-large</span>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="zip">5. What is in the zip</h2>
+<pre class="code"><code>export-manifest.json             <span class="tok-c"># ids, versions, paths, options, warnings — no page content</span>
+product-documentation/
+  index.md                        <span class="tok-c"># a page with children: folder + index file</span>
+  index.assets/diagram.png        <span class="tok-c"># that page's attachments</span>
+  getting-started.md              <span class="tok-c"># a page without children: one file</span>
+  getting-started.assets/screen.png
+export-deleted.txt                <span class="tok-c"># update exports only: paths to remove</span></code></pre>
+      <ul>
+        <li>Folders follow the page tree to its full depth; siblings keep the Confluence order.</li>
+        <li>File names are slugs of the titles. When two siblings would get the same name (also when they differ only by case or accents), the page id is appended. A page keeps its file name on later exports.</li>
+        <li>Links between exported pages and links to attachments are relative paths. Links to pages outside the export point to Confluence.</li>
+        <li>Files carry no export time: exporting again without changes in Confluence gives byte-identical files.</li>
+      </ul>
+
+      <h2 id="update">6. Update an existing repository</h2>
+      <ol>
+        <li>Run a full export once and commit the unzipped tree, for example into <code>docs/</code>.</li>
+        <li>Later, open ArtUp Export in the same space (or the page dialog), choose <strong>Update previous export</strong> and drop in the previous zip or just its <code>export-manifest.json</code>.</li>
+        <li>The new zip holds only new and changed pages, their attachments, the new manifest and <code>export-deleted.txt</code> with the paths of renamed, moved and deleted pages.</li>
+        <li>Put the zip next to the <code>docs</code> folder and apply it:</li>
+      </ol>
+<pre class="code wrap"><code>unzip -o &lt;zip&gt; -d docs &amp;&amp; cd docs &amp;&amp; if [ -f export-deleted.txt ]; then while IFS= read -r f; do rm -f -- "$f"; done &lt; export-deleted.txt; rm -f export-deleted.txt; fi</code></pre>
+      <p>The result screen shows the same command with your zip's name and a <em>Copy</em> button. Then review with <code>git status</code> and commit.</p>
+      <figure>
+        <div class="frame">
+          <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <picture>
+            <source srcset="../../export/update-dark.webp" media="(prefers-color-scheme: dark)">
+            <img src="../../export/update-light.webp" width="1400" height="806" loading="lazy" alt="Result of an update export with changed, unchanged and deleted counts and the apply command.">
+          </picture>
+        </div>
+        <figcaption>An update export: changed, unchanged and deleted pages, and the command to apply it.</figcaption>
+      </figure>
+      <p><strong>When an update becomes a full export.</strong> If the previous manifest comes from another site, space or root page, or its format options differ (preset, page order, file names), the app says so and makes a full export instead. With changed options, files that are no longer produced are listed in <code>export-deleted.txt</code>.</p>
+      <p>A page that was in the previous export but is not found now — deleted, or no longer visible to you — is listed for deletion, and the result screen tells you how many.</p>
+
+      <h2 id="front-matter">7. Front-matter reference</h2>
+      <p>Every page starts with YAML front-matter. Strings are double-quoted and escaped.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Key</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>title</code></td><td>Page title as in Confluence.</td></tr>
+            <tr><td><code>confluence_id</code></td><td>Page id (string).</td></tr>
+            <tr><td><code>space</code></td><td>Space key.</td></tr>
+            <tr><td><code>parent_id</code></td><td>Parent page id; left out for a page at the top of the space.</td></tr>
+            <tr><td><code>version</code></td><td>Confluence version number of the page.</td></tr>
+            <tr><td><code>author</code></td><td>Display name of the last editor, read at export time; left out when the user cannot be resolved.</td></tr>
+            <tr><td><code>updated</code></td><td>Time of the last edit, ISO 8601 in UTC.</td></tr>
+            <tr><td><code>weight</code> / <code>sidebar_position</code></td><td>Position among siblings (10, 20, 30…): <code>weight</code> for Generic Markdown and Hugo, <code>sidebar_position</code> for Docusaurus, none for MkDocs (order is in <code>.pages</code>).</td></tr>
+            <tr><td><code>labels</code></td><td>Page labels, sorted; <code>[]</code> when there are none.</td></tr>
+            <tr><td><code>confluence_url</code></td><td>URL of the page in Confluence.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="presets">8. Presets and site settings</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Preset</th><th>Index file</th><th>Order</th><th>Extra files</th><th>Panels (info, tip, note, warning)</th></tr></thead>
+          <tbody>
+            <tr><td>Generic Markdown</td><td><code>index.md</code></td><td><code>weight</code></td><td>—</td><td>GitHub alerts: <code>&gt; [!NOTE]</code>, <code>[!TIP]</code>, <code>[!WARNING]</code>, <code>[!CAUTION]</code></td></tr>
+            <tr><td>Hugo</td><td><code>_index.md</code></td><td><code>weight</code></td><td>—</td><td>GitHub alerts</td></tr>
+            <tr><td>Docusaurus</td><td><code>index.md</code></td><td><code>sidebar_position</code></td><td><code>_category_.json</code> per folder (label, position)</td><td><code>:::note[Title]</code> … <code>:::</code> (note, tip, warning, danger)</td></tr>
+            <tr><td>MkDocs</td><td><code>index.md</code></td><td>in <code>.pages</code></td><td><code>.pages</code> per folder</td><td><code>!!! note "Title"</code> with an indented body (note, tip, warning, danger)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A plain <em>panel</em> macro is a blockquote in every preset. Code blocks and inline code are never escaped.</p>
+
+      <h3>Hugo</h3>
+      <p>Hugo shows the GitHub alerts as styled blocks with a blockquote render hook (<code>layouts/_markup/render-blockquote.html</code> that checks <code>.Type "alert"</code>; many themes ship one). Merged-cell tables and expand sections are HTML, and links between <code>.md</code> files need Hugo's link render hook:</p>
+<pre class="code"><code><span class="tok-c"># hugo.toml</span>
+[markup.goldmark.renderer]
+  unsafe = true
+[markup.goldmark.renderHooks.link]
+  enableDefault = true</code></pre>
+
+      <h3>Docusaurus</h3>
+      <p>The export builds with the default <code>markdown.format: 'mdx'</code>: braces in text are escaped, void tags are self-closed (<code>&lt;br /&gt;</code>), merged-cell tables use <code>colSpan</code>/<code>rowSpan</code>, and lines MDX would read as <code>import</code>/<code>export</code> or as a <code>:::</code> fence are escaped. Placeholders are MDX comments: <code>{/* confluence:NAME */}</code>.</p>
+
+      <h3>MkDocs</h3>
+      <p>The output is written for Python-Markdown: nested lists are indented by 4 spaces, braces in text are escaped, and expand sections and merged-cell tables carry <code>markdown="1"</code> so <code>md_in_html</code> renders their content. Install the plugin and extensions and enable them:</p>
+<pre class="code"><code>pip install mkdocs mkdocs-awesome-pages-plugin pymdown-extensions
+
+<span class="tok-c"># mkdocs.yml</span>
+plugins:
+  - awesome-pages              <span class="tok-c"># reads the .pages files</span>
+markdown_extensions:
+  - admonition
+  - pymdownx.tasklist
+  - tables
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences       <span class="tok-c"># code blocks inside panels and list items</span>
+  - pymdownx.tilde             <span class="tok-c"># ~~strikethrough~~</span>
+  - pymdownx.escapeall:        <span class="tok-c"># every \-escape, and \ + newline as a line break</span>
+      hardbreak: true</code></pre>
+      <p>If a page shows literal markers such as <code>!!!</code> or <code>\</code>, an extension from this list is missing.</p>
+
+      <h2 id="conversion">9. How content is converted</h2>
+      <ul>
+        <li><strong>Converted:</strong> headings, paragraphs and formatting, lists and task lists, links, mentions, images, code and noformat blocks with their language, simple tables, info/tip/note/warning panels, panels, expand (as <code>&lt;details&gt;</code>), status (as inline code), single Jira issues (as a link), anchors, children display, layouts and sections (their content is kept).</li>
+        <li><strong>Kept as HTML:</strong> tables with merged cells or block content inside cells.</li>
+        <li><strong>Placeholder:</strong> macros whose output Confluence computes when the page is viewed, and macros ArtUp Export does not know. The placeholder is an HTML comment such as <code>&lt;!-- confluence:toc --&gt;</code> (an MDX comment in Docusaurus); the body of an unknown macro is kept after it.</li>
+      </ul>
+
+      <h2 id="warnings">10. Warnings reference</h2>
+      <p>Anything that could not be converted exactly is listed on the result screen with its page, and saved in <code>warnings</code> of <code>export-manifest.json</code>. Filter the list by kind. Warnings never stop an export.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Kind (label)</th><th>What happened</th><th>What you get / what to do</th></tr></thead>
+          <tbody>
+            <tr><td><span class="kind">unknown-macro</span><br>Unknown macro</td><td>A macro ArtUp Export has no conversion for, usually from another app. Detail: the macro name.</td><td>A placeholder comment, followed by the macro's body if it has one. Replace it by hand if the content matters.</td></tr>
+            <tr><td><span class="kind">dynamic-macro</span><br>Dynamic macro</td><td>A macro whose content Confluence builds when the page is viewed: table of contents, page tree, content by label, recently updated, include and excerpt include, attachments list, Jira query, and similar.</td><td>A placeholder comment. Most static site generators have their own equivalent (a generated table of contents, a section list).</td></tr>
+            <tr><td><span class="kind">complex-table</span><br>Complex table</td><td>A table with merged cells, or with lists, code or other blocks inside cells, which Markdown tables cannot express.</td><td>The table is written as HTML. It renders in GitHub, Docusaurus and MkDocs (<code>md_in_html</code>); Hugo needs <code>unsafe = true</code>.</td></tr>
+            <tr><td><span class="kind">missing-attachment</span><br>Missing attachment</td><td>The page shows an image or links a file that is not attached to the page (or was not exported). Detail: the file name.</td><td>The image or link is replaced by its alt text or file name. Attach the file in Confluence, or check the attachments option.</td></tr>
+            <tr><td><span class="kind">adf-extension</span><br>Editor extension</td><td>Content added by an editor extension of the new Confluence editor that has no storage-format equivalent. Detail: the extension type.</td><td>A placeholder comment.</td></tr>
+            <tr><td><span class="kind">unresolved-user</span><br>Unknown user</td><td>A mention of a user whose name could not be read — a deactivated or deleted account, or one hidden by privacy settings. Detail: the account id.</td><td>The mention is written as <code>@unknown-user</code>.</td></tr>
+            <tr><td><span class="kind">attachment-too-large</span><br>Attachment too large</td><td>The attachment is larger than <em>Skip files larger than</em>. Detail: the file name.</td><td>The file is not in the zip. Raise the limit and export again if you need it.</td></tr>
+            <tr><td><span class="kind">convert-failed</span><br>Page not converted</td><td>The page body could not be converted at all. Detail: the error message.</td><td>The page file contains only the front-matter and a <code>confluence:convert-failed</code> placeholder. Please send us the message — see <a href="#support">Support</a>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure>
+        <div class="frame">
+          <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <picture>
+            <source srcset="../../export/warnings-dark.webp" media="(prefers-color-scheme: dark)">
+            <img src="../../export/warnings-light.webp" width="1400" height="523" loading="lazy" alt="Warnings table on the result screen.">
+          </picture>
+        </div>
+        <figcaption>Warnings on the result screen, with a filter by kind.</figcaption>
+      </figure>
+
+      <h2 id="limits">11. Limits</h2>
+      <ul>
+        <li><strong>Keep the tab open.</strong> The export runs in your browser; closing the tab or the dialog cancels it. <em>Cancel</em> stops it and keeps your choices.</li>
+        <li><strong>Size and time.</strong> In our test, a space of 1,001 pages (tree depth 6) with 200 attachments exported in about 4 minutes into a 201 MB zip; an update after a few edits took about 2 minutes. Your time depends on the site, the network and attachment sizes. The whole zip is built in browser memory, so very large attachment sets are better exported with <em>Only those used on pages</em> or a lower size limit.</li>
+        <li><strong>Previous export for updates:</strong> up to 512 MB. For a larger zip, drop the <code>export-manifest.json</code> from inside it.</li>
+        <li><strong>Pages you cannot see</strong> are not exported; in an update they are listed for deletion.</li>
+        <li><strong>File names</strong> are cut to 80 characters.</li>
+        <li><strong>One-way.</strong> ArtUp Export does not import Markdown into Confluence and does not push to a git server — you commit the files yourself or in CI.</li>
+        <li><strong>Confluence Cloud only</strong>; Data Center is not supported.</li>
+      </ul>
+
+      <h2 id="data">12. Data handling</h2>
+      <ul>
+        <li>Content is read with the permissions of the user who runs the export, through Confluence's API in that user's browser.</li>
+        <li>Conversion and zip packing happen in the browser. Page content is not sent to the app's backend and is not stored by the app. The app has no external egress and carries the <strong>Runs on Atlassian</strong> designation.</li>
+        <li>No content or personal data is stored on any server. Author names are read at export time and written only into your zip.</li>
+        <li>The app's backend function only reports the licence status; its logs contain no page content.</li>
+        <li>Scopes are read-only: pages, spaces, attachments, labels, hierarchy, users, search, and app storage (declared for future versions; v1 stores nothing).</li>
+      </ul>
+      <p>See also <a href="../../security.html">Security</a> and the <a href="../../privacy.html">Privacy Policy</a>.</p>
+
+      <h2 id="support">13. Languages and support</h2>
+      <p>The app follows each user's Confluence language (26 languages) and the light or dark theme.</p>
+      <p>Questions, bug reports and feature requests: <a href="mailto:hello@artuplabs.com?subject=ArtUp%20Export">hello@artuplabs.com</a>. Please include your site URL, what you exported (space key, page), the preset and, for a warning or error, its text from the result screen. Do not send page content beyond what is needed. Response times are on the <a href="../../support.html">Support</a> page.</p>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="../../export/">ArtUp Export</a></li>
+          <li><a href="./">Export docs</a></li>
+          <li><a href="../../docs.html">Trace docs</a></li>
+          <li><a href="../../support.html">Support</a></li>
+          <li><a href="../../security.html">Security</a></li>
+          <li><a href="../../privacy.html">Privacy</a></li>
+          <li><a href="../../terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

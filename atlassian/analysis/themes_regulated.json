@@ -1,0 +1,18 @@
+{
+  "медизделия FDA/ISO 13485": ["medical device", "iso 13485", "fda", "mdr", "510(k)", "ivdr", "medtech"],
+  "фарма и GxP":              ["gxp", "gmp", "glp", "pharma", "21 cfr part 11", "clinical trial"],
+  "финансы SOX/PCI":          ["sox", "pci dss", "sarbanes", "financial controls"],
+  "инфобез ISO 27001/SOC2":   ["iso 27001", "soc 2", "soc2", "isms", "nist", "cyber essentials"],
+  "QMS и CAPA":               ["quality management", "capa", "nonconformance", "iso 9001", "qms", "deviation", "corrective action"],
+  "контролируемые документы": ["controlled document", "document control", "sop", "standard operating", "work instruction", "revision control"],
+  "управление изменениями":   ["change control", "change management", "change advisory", "cab"],
+  "валидация систем":         ["computer system validation", "csv", "iq oq pq", "qualification protocol"],
+  "готовность к аудиту":      ["audit ready", "audit-ready", "audit trail", "evidence collection", "audit log"],
+  "прослеживаемость треб.":   ["traceability matrix", "requirements traceability", "requirements management"],
+  "записи об обучении":       ["training record", "competency", "certification tracking", "read and understood"],
+  "реестр рисков":            ["risk register", "risk assessment", "fmea", "hazard analysis"],
+  "каннабис и акциз":         ["cannabis", "dispensary", "metrc", "seed-to-sale", "alcohol", "excise", "tobacco"],
+  "пищевая безопасность":     ["haccp", "food safety", "allergen", "fsma"],
+  "торговые точки":           ["point of sale", "point-of-sale", "cash register", "retail store", "brick and mortar", "franchise"],
+  "товарные остатки":         ["stock level", "inventory management", "warehouse management", "stock take", "replenishment"]
+}
