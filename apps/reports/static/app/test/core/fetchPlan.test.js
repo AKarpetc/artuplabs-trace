@@ -41,10 +41,13 @@ describe('planFetch', () => {
   it('reads the group-by field', () => {
     expect(planFetch({ format: 'xlsx', kind: 'columns', columns: ['key'], rowMode: 'issue', groupBy: 'labels', summary: true }, catalog).fields).toContain('labels');
   });
-  it('reads everything a built-in layout shows, with images and rendered fields', () => {
-    const plan = planFetch(builtinById('docx-sprint'), catalog);
-    expect(plan).toMatchObject({ comments: true, images: true, rendered: true, worklogs: false });
+  it('reads comments, images and rendered fields for the single-issue layout', () => {
+    const plan = planFetch(builtinById('docx-single'), catalog);
+    expect(plan).toMatchObject({ comments: true, images: true, rendered: true });
     expect(plan.fields).toEqual(expect.arrayContaining(['description', 'attachment', 'comment', 'subtasks', 'issuelinks', 'customfield_10016', 'customfield_10020']));
+  });
+  it('skips comments, images and rendered fields for the other layouts', () => {
+    expect(planFetch(builtinById('pdf-sprint'), catalog)).toMatchObject({ comments: false, images: false, rendered: false });
   });
   it('derives fields and reads from the tags of a custom Word template', () => {
     const tags = [{ name: 'issues', kind: 'loop', children: [

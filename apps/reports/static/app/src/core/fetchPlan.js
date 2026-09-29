@@ -28,9 +28,10 @@ function planColumns(template, catalog) {
   };
 }
 
-function planLayout(catalog) {
+function planLayout(template, catalog) {
   const special = ['@storyPoints', '@sprint'].map((ref) => resolveColumn(catalog, ref)).filter((c) => !c.missing).map((c) => c.id);
-  return { fields: unique([...BASE, ...LAYOUT_FIELDS, ...special]), comments: true, worklogs: false, images: true, rendered: true, missing: [] };
+  const single = template.layout === 'single';
+  return { fields: unique([...BASE, ...LAYOUT_FIELDS, ...special]), comments: single, worklogs: false, images: single, rendered: single, missing: [] };
 }
 
 function planTags(tags, catalog) {
@@ -64,6 +65,6 @@ function planTags(tags, catalog) {
 /** What to read from Jira for a template: fields, extra comment/worklog reads, images, rendered HTML. */
 export function planFetch(template, catalog) {
   if (template.kind === 'columns') return planColumns(template, catalog);
-  if (template.kind === 'layout') return planLayout(catalog);
+  if (template.kind === 'layout') return planLayout(template, catalog);
   return planTags(template.placeholders ?? [], catalog);
 }
