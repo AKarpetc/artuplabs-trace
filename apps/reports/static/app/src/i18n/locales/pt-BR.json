@@ -185,11 +185,11 @@
     "one": "{count} item em {time}",
     "other": "{count} itens em {time}"
   },
-  "result.started": "O download começou. Se não começou, use \"Baixar novamente\".",
+  "result.started": "O download começou. Se não começou, use “Baixar novamente”.",
   "result.downloadAgain": "Baixar novamente",
   "result.newExport": "Nova exportação",
   "result.issues": "Itens",
-  "result.time": "Tempo",
+  "result.time": "Duração",
   "result.skipped": "Ignorados",
   "result.imagesMissing": "Imagens ausentes",
   "result.partialNote": {

@@ -144,7 +144,7 @@
   "preview.needsJql": "Skriv en JQL-forespørgsel, eller vælg et filter for at se de første sager.",
   "preview.editJql": "Rediger forespørgslen",
   "fileName.label": "Filnavn",
-  "fileName.tokens": "Du kan bruge disse koder:",
+  "fileName.tokens": "Du kan bruge disse pladsholdere:",
   "fileName.example": "Eksempel: {name}",
   "export.button": "Eksportér til {format}",
   "run.title": "Eksporterer",
@@ -183,7 +183,7 @@
   "result.downloadAgain": "Download igen",
   "result.newExport": "Ny eksport",
   "result.issues": "Sager",
-  "result.time": "Tid",
+  "result.time": "Varighed",
   "result.skipped": "Sprunget over",
   "result.imagesMissing": "Manglende billeder",
   "result.partialNote": {

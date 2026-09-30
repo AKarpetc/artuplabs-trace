@@ -76,7 +76,7 @@
   "format.xlsx.title": "Excel",
   "format.xlsx.description": "Vybrané sloupce, řádek na požadavek, záznam práce nebo komentář, listy podle skupin a přehled.",
   "format.docx.title": "Word",
-  "format.docx.description": "Hotová rozvržení nebo vlastní šablona .docx se zástupnými poli.",
+  "format.docx.description": "Hotová rozvržení nebo vlastní šablona .docx se zástupnými symboly.",
   "format.pdf.title": "PDF",
   "format.pdf.description": "Stránky připravené k tisku s obrázky, v libovolném jazyce.",
   "format.paper": "Velikost papíru",
@@ -148,7 +148,7 @@
   "preview.needsJql": "Zadejte dotaz JQL nebo vyberte filtr, abyste viděli první požadavky.",
   "preview.editJql": "Upravit dotaz",
   "fileName.label": "Název souboru",
-  "fileName.tokens": "Můžete použít tyto kódy:",
+  "fileName.tokens": "Můžete použít tyto zástupné symboly:",
   "fileName.example": "Příklad: {name}",
   "export.button": "Exportovat do {format}",
   "run.title": "Probíhá export",
@@ -205,10 +205,10 @@
     "other": "Soubor obsahuje {done} z {count} požadavků."
   },
   "result.retries": {
-    "few": "{count} požadavky na Jira byly zopakovány po chybách nebo omezení četnosti.",
-    "many": "{count} požadavku na Jira bylo zopakováno po chybách nebo omezení četnosti.",
-    "one": "{count} požadavek na Jira byl zopakován po chybě nebo omezení četnosti.",
-    "other": "{count} požadavků na Jira bylo zopakováno po chybách nebo omezení četnosti."
+    "few": "{count} požadavky na Jiru byly zopakovány po chybách nebo omezení četnosti.",
+    "many": "{count} požadavku na Jiru bylo zopakováno po chybách nebo omezení četnosti.",
+    "one": "{count} požadavek na Jiru byl zopakován po chybě nebo omezení četnosti.",
+    "other": "{count} požadavků na Jiru bylo zopakováno po chybách nebo omezení četnosti."
   },
   "warnings.title": {
     "few": "{count} upozornění",

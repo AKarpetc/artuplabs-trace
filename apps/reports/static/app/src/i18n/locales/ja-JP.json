@@ -20,7 +20,7 @@
   "file.layout.reporter": "報告者",
   "file.layout.created": "作成日",
   "file.layout.updated": "更新日",
-  "file.layout.due": "期日",
+  "file.layout.due": "期限",
   "file.layout.labels": "ラベル",
   "file.layout.components": "コンポーネント",
   "file.layout.fixVersions": "修正バージョン",
@@ -109,7 +109,7 @@
   "template.custom.columns": {
     "other": "{count} 列"
   },
-  "template.custom.docx": "Word テンプレート",
+  "template.custom.docx": "自分の Word テンプレート",
   "template.loadError": "保存済みテンプレートを読み込めませんでした。",
   "template.thumbnail": "レイアウトの画像: {name}",
   "columns.title": "列",
@@ -142,7 +142,7 @@
   "preview.needsJql": "JQL クエリを入力するかフィルターを選ぶと、最初の課題が表示されます。",
   "preview.editJql": "クエリを編集",
   "fileName.label": "ファイル名",
-  "fileName.tokens": "次のコードを使えます:",
+  "fileName.tokens": "次のプレースホルダーを使用できます:",
   "fileName.example": "例: {name}",
   "export.button": "{format} にエクスポート",
   "run.title": "エクスポート中",
@@ -177,7 +177,7 @@
   "result.downloadAgain": "もう一度ダウンロード",
   "result.newExport": "新しいエクスポート",
   "result.issues": "課題",
-  "result.time": "時間",
+  "result.time": "所要時間",
   "result.skipped": "スキップ",
   "result.imagesMissing": "欠落した画像",
   "result.partialNote": {
