@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Bord {id}",
   "source.entry.jql": "Issues uit de huidige zoekopdracht",
+  "source.entry.selected": "Geselecteerde issues",
+  "source.entry.filter": "Filter: {name}",
   "format.title": "Bestandstype",
   "format.description": "Kies het soort bestand.",
   "format.xlsx.title": "Excel",

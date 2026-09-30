@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Pano {id}",
   "source.entry.jql": "Geçerli aramadaki iş öğeleri",
+  "source.entry.selected": "Seçili iş öğeleri",
+  "source.entry.filter": "Filtre: {name}",
   "format.title": "Biçim",
   "format.description": "Dosya türünü seçin.",
   "format.xlsx.title": "Excel",

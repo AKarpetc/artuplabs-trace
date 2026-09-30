@@ -71,6 +71,8 @@
   "source.entry.sprint": "スプリント {id}",
   "source.entry.board": "ボード {id}",
   "source.entry.jql": "現在の検索結果の課題",
+  "source.entry.selected": "選択した課題",
+  "source.entry.filter": "フィルター: {name}",
   "format.title": "形式",
   "format.description": "ファイルの種類を選んでください。",
   "format.xlsx.title": "Excel",

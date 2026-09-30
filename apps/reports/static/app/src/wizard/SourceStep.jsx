@@ -31,8 +31,10 @@ const codeStyles = xcss({
   whiteSpace: 'pre-wrap',
 });
 
-/** What an entry exports, in words (issue key, sprint, board or the current search). */
+/** What an entry exports, in words (issue key, sprint, board, selected issues, a saved filter or the current search). */
 export function entryText(t, entry) {
+  if (entry.selected) return t('source.entry.selected');
+  if (entry.kind === 'jql' && entry.label) return t('source.entry.filter', { name: entry.label });
   if (entry.kind === 'issue') return t('source.entry.issue', { key: entry.key });
   if (entry.kind === 'sprint') return t('source.entry.sprint', { id: String(entry.sprintId) });
   if (entry.kind === 'board') return t('source.entry.board', { id: String(entry.boardId) });

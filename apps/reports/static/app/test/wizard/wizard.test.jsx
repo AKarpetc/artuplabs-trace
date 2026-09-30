@@ -67,7 +67,7 @@ describe('source step', () => {
     fireEvent.change(input, { target: { value: 'open' } });
     fireEvent.click(await screen.findByText('Open RPT issues', {}, WAIT));
     expect(screen.getByTestId('wizard-jql')).toHaveValue('project = RPT AND statusCategory != Done');
-    expect(screen.getByTestId('wizard-file-example').textContent).toMatch(/^Example: \d{4}-\d{2}-\d{2}-Open-RPT-issues\.xlsx$/);
+    expect(screen.getByTestId('wizard-file-example').textContent).toMatch(/^Example: RPT-\d{4}-\d{2}-\d{2}-Open-RPT-issues\.xlsx$/);
   });
 
   it('shows Jira\'s JQL error verbatim under the field', async () => {

@@ -1,8 +1,9 @@
+import { useEffect } from 'react';
 import { router, view } from '@forge/bridge';
 import Button from '@atlaskit/button/new';
 import EmptyState from '@atlaskit/empty-state';
 import { Box, xcss } from '@atlaskit/primitives';
-import { entryFromContext } from '../core/entry.js';
+import { contextShape, entryFromContext } from '../core/entry.js';
 import { useT } from '../i18n/index.js';
 import { EmptyIllustration } from '../illustrations/EmptyIllustration.jsx';
 import { Wizard } from '../wizard/Wizard.jsx';
@@ -29,10 +30,16 @@ function UnknownContext({ localId }) {
   );
 }
 
-/** Action modal: licence gate, then the wizard for the entry the module context describes, in a compact layout. */
+/**
+ * Action modal: licence gate, then the wizard for the entry the module context describes, in a compact layout.
+ * In development it logs the field names of the context (never values) under "[artup-reports ctx]", so a browser run shows what Jira passes.
+ */
 export function ActionApp({ context }) {
   const t = useT();
   const entry = entryFromContext(context.extension);
+  useEffect(() => {
+    if (context.environmentType === 'DEVELOPMENT') console.info('[artup-reports ctx]', contextShape(context.extension));
+  }, [context]);
   const close = <Button onClick={closeModal} testId="close-modal">{t('action.close')}</Button>;
   return (
     <Box xcss={shellStyles}>

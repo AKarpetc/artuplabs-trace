@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprintul {id}",
   "source.entry.board": "Panoul {id}",
   "source.entry.jql": "Tichete din căutarea curentă",
+  "source.entry.selected": "Tichete selectate",
+  "source.entry.filter": "Filtru: {name}",
   "format.title": "Format",
   "format.description": "Alegeți tipul de fișier.",
   "format.xlsx.title": "Excel",

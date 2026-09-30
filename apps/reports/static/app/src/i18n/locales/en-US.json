@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Board {id}",
   "source.entry.jql": "Issues from the current search",
+  "source.entry.selected": "Selected issues",
+  "source.entry.filter": "Filter: {name}",
   "format.title": "Format",
   "format.description": "Choose the kind of file.",
   "format.xlsx.title": "Excel",

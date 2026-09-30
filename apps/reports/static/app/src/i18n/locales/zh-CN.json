@@ -71,6 +71,8 @@
   "source.entry.sprint": "冲刺 {id}",
   "source.entry.board": "看板 {id}",
   "source.entry.jql": "当前搜索中的问题",
+  "source.entry.selected": "所选事务",
+  "source.entry.filter": "筛选器：{name}",
   "format.title": "格式",
   "format.description": "选择文件类型。",
   "format.xlsx.title": "Excel",

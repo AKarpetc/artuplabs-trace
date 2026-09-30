@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprintti {id}",
   "source.entry.board": "Taulu {id}",
   "source.entry.jql": "Nykyisen haun tiketit",
+  "source.entry.selected": "Valitut tehtävät",
+  "source.entry.filter": "Suodatin: {name}",
   "format.title": "Muoto",
   "format.description": "Valitse tiedostotyyppi.",
   "format.xlsx.title": "Excel",

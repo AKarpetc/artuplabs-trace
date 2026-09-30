@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Tahvel {id}",
   "source.entry.jql": "Praeguse otsingu probleemid",
+  "source.entry.selected": "Valitud teemad",
+  "source.entry.filter": "Filter: {name}",
   "format.title": "Vorming",
   "format.description": "Valige faili tüüp.",
   "format.xlsx.title": "Excel",

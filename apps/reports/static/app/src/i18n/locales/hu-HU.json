@@ -71,6 +71,8 @@
   "source.entry.sprint": "{id}. sprint",
   "source.entry.board": "{id}. tábla",
   "source.entry.jql": "Az aktuális keresés jegyei",
+  "source.entry.selected": "Kijelölt feladatok",
+  "source.entry.filter": "Szűrő: {name}",
   "format.title": "Formátum",
   "format.description": "Válassza ki a fájltípust.",
   "format.xlsx.title": "Excel",

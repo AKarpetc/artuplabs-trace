@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Tablica {id}",
   "source.entry.jql": "Zgłoszenia z bieżącego wyszukiwania",
+  "source.entry.selected": "Wybrane zgłoszenia",
+  "source.entry.filter": "Filtr: {name}",
   "format.title": "Format",
   "format.description": "Wybierz rodzaj pliku.",
   "format.xlsx.title": "Excel",

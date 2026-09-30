@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Board {id}",
   "source.entry.jql": "Vorgänge aus der aktuellen Suche",
+  "source.entry.selected": "Ausgewählte Vorgänge",
+  "source.entry.filter": "Filter: {name}",
   "format.title": "Format",
   "format.description": "Wählen Sie die Dateiart.",
   "format.xlsx.title": "Excel",

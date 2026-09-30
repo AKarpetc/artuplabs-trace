@@ -1,5 +1,5 @@
 /**
- * @typedef {{ kind: 'jql', jql: string, label?: string } | { kind: 'board', boardId: number, projectKey?: string } | { kind: 'sprint', sprintId: number, boardId?: number, projectKey?: string } | { kind: 'issue', key: string, projectKey?: string } | { kind: 'none' }} Entry
+ * @typedef {{ kind: 'jql', jql: string, label?: string, filterId?: number, selected?: true } | { kind: 'board', boardId: number, projectKey?: string } | { kind: 'sprint', sprintId: number, boardId?: number, projectKey?: string } | { kind: 'issue', key: string, projectKey?: string } | { kind: 'none' }} Entry
  */
 
 const KEY = /^[A-Z][A-Z0-9_]*-\d+$/i;
@@ -12,15 +12,23 @@ const idOf = (value) => {
 
 const PROJECT_KEY = /^[A-Z][A-Z0-9_]+$/;
 
+/** Fields that may carry the navigator's selected issues: Forge documents `issueKeys`; the others are read because the new navigator ("All work") was seen ignoring a selection. */
+const SELECTION_FIELDS = ['issueKeys', 'selectedIssueKeys', 'issues', 'selectedIssues', 'issueIds', 'selectedIssueIds'];
+
+const selection = (extension) => SELECTION_FIELDS.flatMap((name) => (Array.isArray(extension[name]) ? extension[name] : []));
+
+const unique = (values) => [...new Set(values)];
+
 function navigatorEntry(extension) {
-  const raw = extension.issueKeys ?? (Array.isArray(extension.issues) ? extension.issues.map((i) => i?.key) : []);
-  const list = Array.isArray(raw) ? raw : [];
-  const keys = [...new Set(list.filter((k) => typeof k === 'string' && KEY.test(k)).map((k) => k.toUpperCase()))];
-  if (keys.length) return { kind: 'jql', jql: `key in (${keys.join(', ')})` };
-  if (typeof extension.jql === 'string' && extension.jql.trim()) {
-    return { kind: 'jql', jql: extension.jql.trim() };
-  }
-  return { kind: 'none' };
+  const items = selection(extension);
+  const keys = unique(items.map((i) => (typeof i === 'string' ? i : i?.key)).filter((k) => typeof k === 'string' && KEY.test(k)).map((k) => k.toUpperCase()));
+  if (keys.length) return { kind: 'jql', jql: `key in (${keys.join(', ')})`, selected: true };
+  const ids = unique(items.map((i) => idOf(i !== null && typeof i === 'object' ? i.id : i)).filter(Boolean));
+  if (ids.length) return { kind: 'jql', jql: `id in (${ids.join(', ')})`, selected: true };
+  const filterId = idOf(extension.filterId);
+  const withFilter = (entry) => (filterId ? { ...entry, filterId } : entry);
+  if (typeof extension.jql === 'string' && extension.jql.trim()) return withFilter({ kind: 'jql', jql: extension.jql.trim() });
+  return filterId ? withFilter({ kind: 'jql', jql: `filter = ${filterId}` }) : { kind: 'none' };
 }
 
 const withProject = (entry, extension) => {
@@ -69,5 +77,36 @@ export function entryLabel(entry) {
   if (entry.kind === 'issue') return entry.key;
   if (entry.kind === 'sprint') return `sprint-${entry.sprintId}`;
   if (entry.kind === 'board') return `board-${entry.boardId}`;
-  return entry.label ?? '';
+  return entry.label ?? (entry.filterId ? `filter-${entry.filterId}` : '');
+}
+
+const onlyOne = (values) => (unique(values).length === 1 ? values[0] : '');
+
+/** Project of an entry for file-name examples: its own key, an issue key's prefix, else the single `project = KEY` of a JQL without OR; '' when unsure. */
+export function entryProject(entry) {
+  if (entry.projectKey) return entry.projectKey;
+  if (entry.kind === 'issue') return entry.key.split('-')[0];
+  if (entry.kind !== 'jql') return '';
+  if (entry.selected) return onlyOne([...entry.jql.matchAll(/([A-Z][A-Z0-9_]*)-\d+/g)].map((m) => m[1]));
+  if (/\bor\b/i.test(entry.jql)) return '';
+  const clauses = [...entry.jql.matchAll(/\bproject\s*(=|!=|in\b|not\s+in\b)\s*("[^"]*"|[^\s()]+)/gi)];
+  if (clauses.length !== 1 || clauses[0][1] !== '=') return '';
+  const key = clauses[0][2].replace(/^"|"$/g, '');
+  return PROJECT_KEY.test(key) ? key : '';
+}
+
+const shapeOf = (value) => {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) {
+    const names = unique(value.flatMap((v) => (v !== null && typeof v === 'object' && !Array.isArray(v) ? Object.keys(v) : [])));
+    return `array(${value.length})${names.length ? `[${names.join(',')}]` : ''}`;
+  }
+  if (typeof value === 'object') return `object{${Object.keys(value).join(',')}}`;
+  return typeof value;
+};
+
+/** Field names and types of a module's context.extension, never its values: a diagnostic for contexts Forge documents loosely. */
+export function contextShape(extension) {
+  if (extension === null || typeof extension !== 'object') return '(no extension)';
+  return Object.entries(extension).map(([name, value]) => `${name}:${shapeOf(value)}`).join(' ');
 }

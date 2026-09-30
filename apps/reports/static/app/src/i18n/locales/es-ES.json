@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Tablero {id}",
   "source.entry.jql": "Incidencias de la búsqueda actual",
+  "source.entry.selected": "Incidencias seleccionadas",
+  "source.entry.filter": "Filtro: {name}",
   "format.title": "Formato",
   "format.description": "Elige el tipo de archivo.",
   "format.xlsx.title": "Excel",

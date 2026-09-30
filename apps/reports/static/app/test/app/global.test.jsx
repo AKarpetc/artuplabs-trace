@@ -51,6 +51,12 @@ describe('global page', () => {
     expect(screen.getByTestId('wizard-jql')).toHaveValue('project = RPT');
   });
 
+  it('puts the project of the typed JQL into the file-name example', async () => {
+    renderApp();
+    fireEvent.change(await screen.findByTestId('wizard-jql', {}, WAIT), { target: { value: 'project = RPT' } });
+    expect(screen.getByTestId('wizard-file-example').textContent).toMatch(/^Example: RPT-\d{4}-\d{2}-\d{2}\.xlsx$/);
+  });
+
   it('remembers the selected tab in localStorage', async () => {
     renderApp();
     fireEvent.click(await screen.findByTestId('tab-templates', {}, WAIT));

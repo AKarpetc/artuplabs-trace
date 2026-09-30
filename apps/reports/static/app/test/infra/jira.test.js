@@ -167,6 +167,12 @@ describe('jira client', () => {
     expect(jira.calls.map((c) => c.path)).toEqual(['/rest/agile/1.0/board/7/configuration', '/rest/api/3/filter/1001']);
   });
 
+  it('filterName reads the saved filter and returns its name', async () => {
+    const { jira, api } = client({ 'GET /rest/api/3/filter/10034': () => ok({ id: '10034', name: 'Filter for RPT board', jql: 'project = RPT' }) });
+    expect(await api.filterName('10034')).toBe('Filter for RPT board');
+    expect(jira.calls.map((c) => c.path)).toEqual(['/rest/api/3/filter/10034']);
+  });
+
   it('sprintName reads the sprint and returns its name', async () => {
     const { jira, api } = client({ 'GET /rest/agile/1.0/sprint/5': () => ok({ name: 'Sprint 5' }) });
     expect(await api.sprintName('5')).toBe('Sprint 5');

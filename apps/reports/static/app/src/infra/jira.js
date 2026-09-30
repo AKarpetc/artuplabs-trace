@@ -107,6 +107,9 @@ export function createJiraClient({ request, sleep, signal, onRetry = () => {}, c
       const filter = await getJson(`/rest/api/3/filter/${Number(config.filter?.id)}`);
       return { jql: filter.jql, name: config.name ?? '' };
     },
+    async filterName(filterId) {
+      return (await getJson(`/rest/api/3/filter/${Number(filterId)}`)).name ?? '';
+    },
     async sprintName(sprintId) {
       return (await getJson(`/rest/agile/1.0/sprint/${Number(sprintId)}`)).name ?? '';
     },

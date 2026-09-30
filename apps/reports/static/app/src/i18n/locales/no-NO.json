@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Tavle {id}",
   "source.entry.jql": "Saker fra gjeldende søk",
+  "source.entry.selected": "Valgte saker",
+  "source.entry.filter": "Filter: {name}",
   "format.title": "Format",
   "format.description": "Velg filtype.",
   "format.xlsx.title": "Excel",

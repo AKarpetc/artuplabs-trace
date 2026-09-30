@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Tavla {id}",
   "source.entry.jql": "Ärenden från den aktuella sökningen",
+  "source.entry.selected": "Valda ärenden",
+  "source.entry.filter": "Filter: {name}",
   "format.title": "Format",
   "format.description": "Välj filtyp.",
   "format.xlsx.title": "Excel",

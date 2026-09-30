@@ -71,6 +71,8 @@
   "source.entry.sprint": "衝刺 {id}",
   "source.entry.board": "看板 {id}",
   "source.entry.jql": "目前搜尋中的議題",
+  "source.entry.selected": "所選問題",
+  "source.entry.filter": "篩選器：{name}",
   "format.title": "格式",
   "format.description": "選擇檔案類型。",
   "format.xlsx.title": "Excel",

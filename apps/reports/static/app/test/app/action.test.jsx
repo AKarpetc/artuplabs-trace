@@ -41,7 +41,8 @@ afterEach(() => {
 describe('action entry labels', () => {
   it.each([
     ['navigator with a query', { type: 'jira:issueNavigatorAction', jql: 'project = RPT' }, 'Issues from the current search'],
-    ['navigator with selected issues', { type: 'jira:issueNavigatorAction', issueKeys: ['RPT-1', 'RPT-2'] }, 'Issues from the current search'],
+    ['navigator with selected issues', { type: 'jira:issueNavigatorAction', issueKeys: ['RPT-1', 'RPT-2'] }, 'Selected issues'],
+    ['navigator with a saved filter', { type: 'jira:issueNavigatorAction', jql: 'project = RPT ORDER BY key ASC', filterId: '10100' }, 'Filter: All RPT issues'],
     ['board', { type: 'jira:boardAction', board: { id: '3', type: 'scrum' }, project }, 'Board 3'],
     ['backlog', { type: 'jira:backlogAction', board: { id: '4', type: 'kanban' }, project }, 'Board 4'],
     ['sprint', { type: 'jira:sprintAction', sprint: { id: '5', state: 'active' }, board: { id: '3', type: 'scrum' }, project }, 'Sprint 5'],
@@ -55,6 +56,33 @@ describe('action entry labels', () => {
     window.history.replaceState(null, '', '/?state=unlicensed');
     renderApp({ type: 'jira:issueAction', issue: { key: 'RPT-7' }, project }, 'PRODUCTION');
     expect(await screen.findByText('ArtUp Reports needs an active license', {}, WAIT)).toBeInTheDocument();
+  });
+});
+
+describe('navigator action', () => {
+  it('names the file after the saved filter and its project', async () => {
+    renderApp({ type: 'jira:issueNavigatorAction', jql: 'project = RPT ORDER BY key ASC', filterId: '10100' });
+    await screen.findByText('Filter: All RPT issues', {}, WAIT);
+    expect(screen.getByTestId('wizard-file-example').textContent).toMatch(/^Example: RPT-\d{4}-\d{2}-\d{2}-All-RPT-issues\.xlsx$/);
+  });
+
+  it('shows the selected keys instead of the search', async () => {
+    renderApp({ type: 'jira:issueNavigatorAction', jql: 'project = RPT', issueKeys: ['RPT-1', 'RPT-2', 'RPT-3'] });
+    expect(await screen.findByText('key in (RPT-1, RPT-2, RPT-3)', {}, WAIT)).toBeInTheDocument();
+    expect(screen.queryByText('project = RPT')).not.toBeInTheDocument();
+  });
+
+  it('logs the field names of the context in development only', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    renderApp({ type: 'jira:issueNavigatorAction', jql: 'project = RPT', issueKeys: [] });
+    await screen.findByText('Issues from the current search', {}, WAIT);
+    expect(info).toHaveBeenCalledWith('[artup-reports ctx]', 'type:string jql:string issueKeys:array(0)');
+    info.mockClear();
+    cleanup();
+    renderApp({ type: 'jira:issueNavigatorAction', jql: 'project = RPT' }, 'PRODUCTION');
+    await screen.findByTestId('wizard', {}, WAIT);
+    expect(info).not.toHaveBeenCalled();
+    info.mockRestore();
   });
 });
 

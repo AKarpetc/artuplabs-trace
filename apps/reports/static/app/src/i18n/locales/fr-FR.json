@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprint {id}",
   "source.entry.board": "Tableau {id}",
   "source.entry.jql": "Tickets de la recherche en cours",
+  "source.entry.selected": "Tickets sélectionnés",
+  "source.entry.filter": "Filtre : {name}",
   "format.title": "Format",
   "format.description": "Choisissez le type de fichier.",
   "format.xlsx.title": "Excel",

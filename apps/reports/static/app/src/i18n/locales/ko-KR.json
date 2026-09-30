@@ -71,6 +71,8 @@
   "source.entry.sprint": "스프린트 {id}",
   "source.entry.board": "보드 {id}",
   "source.entry.jql": "현재 검색의 이슈",
+  "source.entry.selected": "선택한 이슈",
+  "source.entry.filter": "필터: {name}",
   "format.title": "형식",
   "format.description": "파일 종류를 선택하세요.",
   "format.xlsx.title": "Excel",

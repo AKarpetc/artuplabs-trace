@@ -71,6 +71,8 @@
   "source.entry.sprint": "Спринт {id}",
   "source.entry.board": "Доска {id}",
   "source.entry.jql": "Задачи из текущего поиска",
+  "source.entry.selected": "Выбранные задачи",
+  "source.entry.filter": "Фильтр: {name}",
   "format.title": "Формат",
   "format.description": "Выберите тип файла.",
   "format.xlsx.title": "Excel",

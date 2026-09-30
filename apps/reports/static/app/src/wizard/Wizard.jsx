@@ -4,7 +4,7 @@ import { Label } from '@atlaskit/form';
 import SectionMessage from '@atlaskit/section-message';
 import Textfield from '@atlaskit/textfield';
 import { Box, Flex, Stack, Text, xcss } from '@atlaskit/primitives';
-import { entryLabel } from '../core/entry.js';
+import { entryLabel, entryProject } from '../core/entry.js';
 import { renderFileName } from '../core/filename.js';
 import { DownloadIcon } from '../components/icons.js';
 import { StepSection } from '../components/StepSection.jsx';
@@ -22,6 +22,7 @@ import { EntrySummary, JQL_FIELD_ID, SourceStep } from './SourceStep.jsx';
 import { TemplatePicker } from './TemplatePicker.jsx';
 import { useCatalog } from './useCatalog.js';
 import { useExportRun } from './useExportRun.js';
+import { useNamedEntry } from './useNamedEntry.js';
 import { useTemplates } from './useTemplates.js';
 import { runEntry, runTemplate, useWizardForm } from './useWizardForm.js';
 
@@ -39,13 +40,13 @@ const extensionStyles = xcss({ paddingInlineEnd: 'space.100', color: 'color.text
 
 const focusJql = () => document.getElementById(JQL_FIELD_ID)?.focus();
 
-function ExportBar({ form, entry, exportEntry, clock, onStart }) {
+function ExportBar({ form, exportEntry, clock, onStart }) {
   const t = useT();
   const [now] = useState(() => new Date(clock()));
   const { format, fileNamePattern } = form.state;
   const example = renderFileName({
     pattern: fileNamePattern || undefined,
-    values: { project: entry.projectKey ?? '', filter: entryLabel(exportEntry), format, count: '' },
+    values: { project: entryProject(exportEntry), filter: entryLabel(exportEntry), format, count: '' },
     now,
     extension: format,
   });
@@ -123,7 +124,9 @@ export function Wizard({
   const labels = useMemo(() => labelsFor(t), [t]);
   const formats = useMemo(() => formatsFor(locale), [locale]);
   const siteUrl = context?.siteUrl ?? '';
-  const exportEntry = runEntry(form.state, entry);
+  const namedEntry = useNamedEntry(entry, client);
+  const exportEntry = runEntry(form.state, namedEntry);
+  const previewEntry = runEntry(form.state, entry);
   const template = runTemplate(form.state);
   const isExcel = form.state.format === 'xlsx';
 
@@ -153,7 +156,7 @@ export function Wizard({
       {run.cancelled ? <SectionMessage appearance="information" testId="run-cancelled"><Text>{t('run.cancelled')}</Text></SectionMessage> : null}
       {entry.kind === 'none'
         ? <SourceStep number={next()} form={form} client={client} jqlErrors={jqlErrors} />
-        : <EntrySummary entry={entry} />}
+        : <EntrySummary entry={namedEntry} />}
       <FormatStep number={next()} form={form} />
       <TemplatePicker number={next()} form={form} templates={templates} />
       {isExcel ? <ColumnsStep number={next()} form={form} catalog={catalog} labels={labels} /> : null}
@@ -161,14 +164,14 @@ export function Wizard({
         <ExcelPreview
           number={next()}
           createClient={createClient}
-          request={{ entry: exportEntry, template, catalog: catalog.catalog, siteUrl }}
+          request={{ entry: previewEntry, template, catalog: catalog.catalog, siteUrl }}
           blocked={previewBlock(entry, form, catalog)}
           labels={labels}
           formats={formats}
           onEditJql={entry.kind === 'none' ? focusJql : null}
         />
       ) : null}
-      <ExportBar form={form} entry={entry} exportEntry={exportEntry} clock={clock} onStart={start} />
+      <ExportBar form={form} exportEntry={exportEntry} clock={clock} onStart={start} />
     </Stack>
   );
 }

@@ -71,6 +71,8 @@
   "source.entry.sprint": "Šprint {id}",
   "source.entry.board": "Tabuľa {id}",
   "source.entry.jql": "Požiadavky z aktuálneho vyhľadávania",
+  "source.entry.selected": "Vybrané úlohy",
+  "source.entry.filter": "Filter: {name}",
   "format.title": "Formát",
   "format.description": "Vyberte typ súboru.",
   "format.xlsx.title": "Excel",

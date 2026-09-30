@@ -71,6 +71,8 @@
   "source.entry.sprint": "Sprettur {id}",
   "source.entry.board": "Tafla {id}",
   "source.entry.jql": "Mál úr núverandi leit",
+  "source.entry.selected": "Valin verk",
+  "source.entry.filter": "Sía: {name}",
   "format.title": "Snið",
   "format.description": "Veldu tegund skrár.",
   "format.xlsx.title": "Excel",
