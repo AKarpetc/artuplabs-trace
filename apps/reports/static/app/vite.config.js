@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
     base: './',
     plugins: [react()],
     legacy: { inconsistentCjsInterop: true },
-    assetsInclude: ['**/*.ttf', '**/*.otf'],
+    assetsInclude: ['**/*.ttf', '**/*.otf', '**/*.docx'],
     resolve: mode === 'preview'
       ? { alias: { '@forge/bridge': resolve(rootDir, 'preview/bridgeMock.js') } }
       : {},

@@ -1,6 +1,6 @@
 import { invoke } from '@forge/bridge';
 
-const KNOWN_CODES = ['unlicensed', 'bad-request', 'forbidden', 'not-found', 'too-large'];
+const KNOWN_CODES = ['unlicensed', 'bad-request', 'forbidden', 'not-found', 'too-large', 'internal'];
 
 /**
  * Matches a resolver error message against the known error codes with a

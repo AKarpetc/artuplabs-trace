@@ -15,6 +15,7 @@ import { EmptyIllustration } from '../src/illustrations/EmptyIllustration.jsx';
 import { LockIllustration } from '../src/illustrations/LockIllustration.jsx';
 import { ReportIllustration } from '../src/illustrations/ReportIllustration.jsx';
 import { SuccessIllustration } from '../src/illustrations/SuccessIllustration.jsx';
+import { TemplatesScreen } from './TemplatesScreen.jsx';
 import { WizardScreen } from './WizardScreen.jsx';
 
 /**
@@ -126,4 +127,4 @@ export function Gallery() {
 }
 
 /** Screen components by `?screen=` name; later screens are added here. */
-export const SCREEN_COMPONENTS = { gallery: Gallery, wizard: WizardScreen };
+export const SCREEN_COMPONENTS = { gallery: Gallery, wizard: WizardScreen, templates: TemplatesScreen };

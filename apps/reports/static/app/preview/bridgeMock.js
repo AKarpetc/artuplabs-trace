@@ -1,13 +1,14 @@
 import { setGlobalTheme } from '@atlaskit/tokens/set-global-theme';
 import { PREVIEW_ISSUES } from '../src/core/limits.js';
 import { previewParams } from './driver.js';
-import { ME, WIZARD_TEMPLATES, resolve, routeJira } from './fixtures.js';
+import { ME, TEMPLATES_SEED, WIZARD_TEMPLATES, resetTemplateStore, resolve, routeJira } from './fixtures.js';
 
 /**
  * Local stand-in for @forge/bridge used by `vite --mode preview`; reads the preview query parameters.
  * `state=unlicensed` answers getAccess with an unlicensed site, `state=error` rejects it and `state=loading` never answers it.
  * On `screen=wizard`: listTemplates answers WIZARD_TEMPLATES; `running` holds every export bulkfetch (more ids than the
  * preview reads), `incomplete` refuses the first one (403, not retried) and `failed` counts 5 000 issues so a Word export is refused.
+ * On `screen=templates`: the template resolvers work on an in-memory store, filled with TEMPLATES_SEED unless `state=empty`.
  */
 
 const wait = (ms) => new Promise((done) => {
@@ -54,14 +55,23 @@ export async function invoke(key, payload) {
     return { licensed: state !== 'unlicensed' };
   }
   if (key === 'listTemplates' && previewParams().screen === 'wizard') return WIZARD_TEMPLATES;
+  if (previewParams().screen === 'templates') seedTemplates(state);
   return resolve(key, payload);
 }
 
 let refusedBulkFetches = 0;
+let seededFor = null;
 
-/** Forgets how many bulkfetch calls the `incomplete` state has refused (tests start each run fresh). */
+function seedTemplates(state) {
+  if (seededFor === state) return;
+  seededFor = state;
+  resetTemplateStore(state === 'empty' ? undefined : TEMPLATES_SEED);
+}
+
+/** Forgets how many bulkfetch calls the `incomplete` state has refused and the stored templates (tests start each run fresh). */
 export function resetPreviewRuns() {
   refusedBulkFetches = 0;
+  seededFor = null;
 }
 
 /** Forge `requestJira`: routes the REST path to the fixture site with 30–80 ms latency; the wizard states may stall, refuse or inflate. */

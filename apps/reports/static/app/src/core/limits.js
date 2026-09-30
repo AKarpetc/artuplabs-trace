@@ -18,5 +18,9 @@ export const TEMPLATE_MAX_BYTES = 2 * 1024 * 1024;
 export const TEMPLATE_PART_BYTES = 150 * 1024;
 /** Parts needed for the largest template. */
 export const TEMPLATE_MAX_PARTS = Math.ceil(TEMPLATE_MAX_BYTES / TEMPLATE_PART_BYTES);
+/** Largest total size of a Word template once unpacked. */
+export const TEMPLATE_MAX_UNCOMPRESSED_BYTES = 20 * 1024 * 1024;
+/** Project keys the template resolvers take per call. */
+export const TEMPLATE_PROJECT_KEYS = 20;
 /** Issues shown in the Excel preview. */
 export const PREVIEW_ISSUES = 5;

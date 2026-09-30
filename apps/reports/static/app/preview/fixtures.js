@@ -7,6 +7,7 @@
 export const SCREENS = {
   gallery: ['default', 'unlicensed', 'error', 'loading'],
   wizard: ['form', 'form-excel', 'preview', 'running', 'incomplete', 'done', 'failed'],
+  templates: ['empty', 'list', 'excel-form', 'docx-errors', 'docx-ok', 'deleting'],
 };
 
 /** Every `{ screen, state }` pair the harness can show. */
@@ -17,6 +18,10 @@ export function screenStates() {
 export const SITE = 'https://preview.atlassian.net';
 export const PROJECT = { key: 'RPT', name: 'Reports' };
 export const ME = { accountId: 'u-ann', displayName: 'Ann Lee' };
+export const BORIS = { accountId: 'u-boris', displayName: 'Борис Петров' };
+
+/** Projects the fixture user administers, as `GET /project/search?action=edit` lists them. */
+export const PROJECTS = [PROJECT, { key: 'OPS', name: 'Operations' }, { key: 'HR', name: 'People' }];
 
 export const FIELDS = [
   { id: 'summary', name: 'Summary', schema: { type: 'string', system: 'summary' } },
@@ -142,7 +147,7 @@ function pick(issue, fields, expand) {
 /** Board of the fixture site: its configuration names the "All RPT issues" filter. */
 export const BOARD = { id: 3, name: 'RPT board', filterId: '10100' };
 
-/** Fake `requestJira`: search/jql (ids, token pages), issue/bulkfetch, field, myself, filter/search, filter by id, board configuration, approximate-count; 400 for BAD_JQL_FIELD; 404 otherwise. */
+/** Fake `requestJira`: search/jql (ids, token pages), issue/bulkfetch, field, myself, project search, user bulk, filter/search, filter by id, board configuration, approximate-count; 400 for BAD_JQL_FIELD; 404 otherwise. */
 export async function routeJira(path, init = {}) {
   const method = init.method ?? 'GET';
   const body = init.body ? JSON.parse(init.body) : {};
@@ -165,6 +170,11 @@ export async function routeJira(path, init = {}) {
   }
   if (method === 'GET' && route === '/rest/api/3/field') return json(FIELDS);
   if (method === 'GET' && route === '/rest/api/3/myself') return json(ME);
+  if (method === 'GET' && route === '/rest/api/3/project/search') return json({ values: PROJECTS, isLast: true, total: PROJECTS.length });
+  if (method === 'GET' && route === '/rest/api/3/user/bulk') {
+    const wanted = new Set(url.searchParams.getAll('accountId'));
+    return json({ values: [ME, BORIS].filter((user) => wanted.has(user.accountId)), isLast: true });
+  }
   if (method === 'GET' && route === '/rest/api/3/filter/search') {
     const query = (url.searchParams.get('filterName') ?? '').toLowerCase();
     const values = FILTERS.filter((filter) => filter.name.toLowerCase().includes(query));
@@ -181,11 +191,73 @@ export async function routeJira(path, init = {}) {
 
 const store = { user: [], project: [], site: [] };
 
-/** Fake resolvers behind `invoke`: getAccess, listTemplates, getScopes and getTemplatePart answer from memory; unknown keys throw. */
+/** Stored templates the templates screen lists: mine (Excel and Word), a project Excel set by a colleague and a site Excel set. */
+export const TEMPLATES_SEED = {
+  user: [
+    { id: '1c9e0a52-3b61-4d0f-8a17-5f2b7c8d9e01', scope: 'user', scopeId: ME.accountId, name: 'My sprint columns', format: 'xlsx', kind: 'columns', columns: ['key', 'summary', 'status', 'customfield_10016'], rowMode: 'issue', groupBy: null, summary: false, authorId: ME.accountId, updatedAt: '2026-09-21T10:15:00.000Z' },
+    { id: '1c9e0a52-3b61-4d0f-8a17-5f2b7c8d9e02', scope: 'user', scopeId: ME.accountId, name: 'Customer status report', format: 'docx', kind: 'docx', parts: 2, size: 184320, placeholders: ['issues', 'key', 'summary'], authorId: ME.accountId, updatedAt: '2026-09-25T14:40:00.000Z' },
+  ],
+  project: [
+    { id: '1c9e0a52-3b61-4d0f-8a17-5f2b7c8d9e03', scope: 'project', scopeId: 'RPT', name: 'RPT weekly review with a long name that has to wrap inside its table cell', format: 'xlsx', kind: 'columns', columns: ['key', 'summary', 'assignee', 'status'], rowMode: 'issue', groupBy: 'status', summary: true, authorId: BORIS.accountId, updatedAt: '2026-09-18T08:05:00.000Z' },
+  ],
+  site: [
+    { id: '1c9e0a52-3b61-4d0f-8a17-5f2b7c8d9e04', scope: 'site', scopeId: 'site', name: 'Company issue list', format: 'xlsx', kind: 'columns', columns: ['key', 'summary', 'priority'], rowMode: 'issue', groupBy: null, summary: false, authorId: BORIS.accountId, updatedAt: '2026-09-02T16:30:00.000Z' },
+  ],
+};
+
+/** Replaces the in-memory stored templates with copies of `seed`. */
+export function resetTemplateStore(seed = { user: [], project: [], site: [] }) {
+  const copy = JSON.parse(JSON.stringify(seed));
+  store.user = copy.user;
+  store.project = copy.project;
+  store.site = copy.site;
+}
+
+const bucketOf = (scope) => (scope === 'user' ? 'user' : scope === 'site' ? 'site' : 'project');
+
+function findTemplate(id) {
+  for (const list of Object.values(store)) {
+    const template = list.find((item) => item.id === id);
+    if (template) return { list, template };
+  }
+  throw new Error('not-found');
+}
+
+function saveTemplate(input) {
+  const scopeId = input.scope === 'user' ? ME.accountId : input.scope === 'site' ? 'site' : input.scopeId;
+  const updatedAt = new Date().toISOString();
+  if (input.id) {
+    const { list, template } = findTemplate(input.id);
+    const saved = { ...template, ...input, scopeId, updatedAt };
+    list[list.indexOf(template)] = saved;
+    return saved;
+  }
+  const saved = { ...input, scopeId, id: globalThis.crypto.randomUUID(), authorId: ME.accountId, parts: 0, size: 0, updatedAt };
+  store[bucketOf(input.scope)].push(saved);
+  return saved;
+}
+
+function uploadTemplatePart({ id, index, total, data }) {
+  const { template } = findTemplate(id);
+  if (index === total - 1) {
+    template.parts = total;
+    template.size = (total - 1) * 150 * 1024 + Math.floor(data.length * 3 / 4);
+  }
+  return { stored: index };
+}
+
+/** Fake resolvers behind `invoke`: getAccess, getScopes and getTemplatePart answer from memory, the template resolvers work on an in-memory store; unknown keys throw. */
 export function resolve(key, payload = {}) {
   if (key === 'getAccess') return { licensed: true };
-  if (key === 'listTemplates') return { user: store.user, project: store.project, site: store.site };
+  if (key === 'listTemplates') return JSON.parse(JSON.stringify(store));
   if (key === 'getScopes') return { site: true, projects: payload.projectKeys ?? [PROJECT.key] };
+  if (key === 'saveTemplate') return saveTemplate(payload.template);
+  if (key === 'uploadTemplatePart') return uploadTemplatePart(payload);
+  if (key === 'deleteTemplate') {
+    const { list, template } = findTemplate(payload.id);
+    list.splice(list.indexOf(template), 1);
+    return { deleted: true };
+  }
   if (key === 'getTemplatePart') {
     const data = TEMPLATE_PARTS[payload.id]?.[payload.index];
     if (!data) throw new Error('not-found');

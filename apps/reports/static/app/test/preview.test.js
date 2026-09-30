@@ -4,7 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { I18nProvider } from '../src/i18n/index.js';
 import { createJiraClient } from '../src/infra/jira.js';
 import { SCREEN_COMPONENTS } from '../preview/Gallery.jsx';
-import { FIELDS, ISSUES, SCREENS, resolve, routeJira, screenStates } from '../preview/fixtures.js';
+import { FIELDS, ISSUES, SCREENS, resetTemplateStore, resolve, routeJira, screenStates } from '../preview/fixtures.js';
 
 vi.mock('@forge/bridge', async () => import('../preview/bridgeMock.js'));
 
@@ -78,6 +78,7 @@ describe('preview fixture Jira', () => {
 
 describe('preview resolvers', () => {
   it('reports a licensed site and empty template lists', () => {
+    resetTemplateStore();
     expect(resolve('getAccess')).toEqual({ licensed: true });
     expect(resolve('listTemplates', { projectKeys: ['RPT'] })).toEqual({ user: [], project: [], site: [] });
     expect(resolve('getScopes', { projectKeys: ['RPT'] })).toEqual({ site: true, projects: ['RPT'] });
