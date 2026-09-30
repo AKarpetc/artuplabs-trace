@@ -39,6 +39,7 @@ const titleBarStyles = xcss({ height: '12px', backgroundColor: 'color.background
 const headBarStyles = xcss({ backgroundColor: 'color.background.accent.blue.subtler' });
 const imageStyle = {
   display: 'block',
+  boxSizing: 'border-box',
   width: '100%',
   borderRadius: token('radius.large'),
   border: `${token('border.width')} solid ${token('color.border')}`,
@@ -68,7 +69,7 @@ function Sketch({ kind }) {
   );
 }
 
-/** Screenshot of a built-in Word/PDF layout (thumbs/<id>.png); a drawn sketch of the layout when there is none. */
+/** Picture of a built-in Word/PDF layout (thumbs/<layout>.png, shared by both formats); a drawn sketch of the layout when it does not load. */
 export function TemplateThumbnail({ template }) {
   const t = useT();
   const [failed, setFailed] = useState(false);
@@ -77,7 +78,7 @@ export function TemplateThumbnail({ template }) {
   return (
     <Stack space="space.100" xcss={thumbFrameStyles} testId="template-thumbnail">
       {template.builtin && !failed
-        ? <img src={`thumbs/${template.id}.png`} alt={t('template.thumbnail', { name })} style={imageStyle} onError={() => setFailed(true)} />
+        ? <img src={`thumbs/${template.layout}.png`} alt={t('template.thumbnail', { name })} style={imageStyle} onError={() => setFailed(true)} />
         : <Sketch kind={kind} />}
       <Text size="small" color="color.text.subtle" align="center">{name}</Text>
     </Stack>

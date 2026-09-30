@@ -4,13 +4,30 @@ import { makeDocx, para } from '../test/fixtures/makeDocx.js';
 export function previewParams() {
   const search = new URLSearchParams(globalThis.location?.search ?? '');
   const width = Number(search.get('width'));
+  const screen = search.get('screen') || 'gallery';
+  const state = search.get('state') || 'default';
   return {
-    screen: search.get('screen') || 'gallery',
-    state: search.get('state') || 'default',
+    screen,
+    state,
+    mode: harnessMode(screen, state),
     locale: search.get('locale') || 'en-US',
     theme: search.get('theme') === 'dark' ? 'dark' : 'light',
     width: Number.isFinite(width) && width > 0 ? Math.round(width) : 0,
   };
+}
+
+const GLOBAL_MODES = {
+  'export-form': { screen: 'wizard', state: 'form' },
+  'export-excel': { screen: 'wizard', state: 'form-excel' },
+  'templates-list': { screen: 'templates', state: 'list' },
+  'templates-empty': { screen: 'templates', state: 'empty' },
+};
+
+/** Screen and state whose fixtures apply: the global page and the action modal reuse the wizard and templates fixtures. */
+export function harnessMode(screen, state) {
+  if (screen === 'global') return GLOBAL_MODES[state] ?? (state === 'docx-errors' ? { screen: 'templates', state } : { screen: 'wizard', state });
+  if (screen === 'action') return { screen: 'wizard', state };
+  return { screen, state };
 }
 
 /** Constrains `element` to the requested viewport width so narrow layouts can be checked in a wide window. */
@@ -76,5 +93,27 @@ export async function driveTemplates(state) {
   if (state !== 'excel-form') await chooseDocx(state);
 }
 
+function typeInto(element, value) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+  setter.call(element, value);
+  element.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+/** Drives the global page for `?state=`: the templates states open the Templates tab, the export states type a JQL first. */
+export async function driveGlobal(state) {
+  const mode = harnessMode('global', state);
+  if (mode.screen === 'templates') {
+    (await until(() => byTestId('tab-templates'))).click();
+    await driveTemplates(mode.state);
+    return;
+  }
+  if (state === 'unlicensed') return;
+  typeInto(await until(() => byTestId('wizard-jql')), 'project = RPT ORDER BY key ASC');
+  await driveWizard(mode.state);
+}
+
+/** Drives the action modal for `?state=`: the wizard states of a search entry. */
+export const driveAction = (state) => driveWizard(state);
+
 /** Drivers of the screens that need clicks after loading, by screen name. */
-export const SCREEN_DRIVERS = { wizard: driveWizard, templates: driveTemplates };
+export const SCREEN_DRIVERS = { wizard: driveWizard, templates: driveTemplates, global: driveGlobal, action: driveAction };

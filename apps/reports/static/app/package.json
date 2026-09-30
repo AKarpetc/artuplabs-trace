@@ -7,7 +7,8 @@
     "build": "vite build --mode global-page && vite build --mode action",
     "test": "vitest run",
     "screenshots": "node scripts/screenshots.mjs",
-    "pdf-probe": "node scripts/pdf-probe.mjs"
+    "pdf-probe": "node scripts/pdf-probe.mjs",
+    "thumbs": "node scripts/make-thumbs.mjs"
   },
   "dependencies": {
     "@atlaskit/badge": "22.0.0",

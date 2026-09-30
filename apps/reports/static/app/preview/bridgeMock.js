@@ -54,8 +54,9 @@ export async function invoke(key, payload) {
     if (state === 'error') throw new Error('preview: getAccess failed');
     return { licensed: state !== 'unlicensed' };
   }
-  if (key === 'listTemplates' && previewParams().screen === 'wizard') return WIZARD_TEMPLATES;
-  if (previewParams().screen === 'templates') seedTemplates(state);
+  const { mode } = previewParams();
+  if (key === 'listTemplates' && mode.screen === 'wizard') return WIZARD_TEMPLATES;
+  if (mode.screen === 'templates') seedTemplates(mode.state);
   return resolve(key, payload);
 }
 
@@ -77,7 +78,7 @@ export function resetPreviewRuns() {
 /** Forge `requestJira`: routes the REST path to the fixture site with 30–80 ms latency; the wizard states may stall, refuse or inflate. */
 export async function requestJira(path, init) {
   await latency();
-  const { screen, state } = previewParams();
+  const { mode: { screen, state } } = previewParams();
   const exportBatch = path.startsWith('/rest/api/3/issue/bulkfetch') && JSON.parse(init?.body ?? '{}').issueIdsOrKeys?.length > PREVIEW_ISSUES;
   if (screen === 'wizard' && exportBatch) {
     if (state === 'running') await forever();

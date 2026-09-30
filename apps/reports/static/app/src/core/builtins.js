@@ -1,4 +1,5 @@
-const LAYOUTS = ['single', 'list', 'sprint', 'release'];
+/** Layout names shared by the built-in Word and PDF templates. */
+export const LAYOUTS = ['single', 'list', 'sprint', 'release'];
 
 /** Built-in templates: four Excel column sets, four layouts for Word and the same four for PDF. */
 export const BUILTINS = [

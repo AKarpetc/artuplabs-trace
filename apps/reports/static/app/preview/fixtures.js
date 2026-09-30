@@ -8,6 +8,8 @@ export const SCREENS = {
   gallery: ['default', 'unlicensed', 'error', 'loading'],
   wizard: ['form', 'form-excel', 'preview', 'running', 'incomplete', 'done', 'failed'],
   templates: ['empty', 'list', 'excel-form', 'docx-errors', 'docx-ok', 'deleting'],
+  global: ['export-form', 'export-excel', 'preview', 'running', 'incomplete', 'done', 'failed', 'templates-list', 'templates-empty', 'docx-errors', 'unlicensed'],
+  action: ['form', 'running', 'done', 'none'],
 };
 
 /** Every `{ screen, state }` pair the harness can show. */
