@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "Exportă în Excel, Word sau PDF",
+  "module.boardAction.title": "Exportă problemele din tablă",
+  "module.backlogAction.title": "Exportă problemele din backlog",
+  "module.sprintAction.title": "Exportă problemele din sprint",
+  "module.issueAction.title": "Exportă în Word sau PDF"
+}

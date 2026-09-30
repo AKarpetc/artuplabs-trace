@@ -9,7 +9,7 @@
 | **ArtUp Trace** (Jira) | подан 2026-09-28 → автоотказ «Not enough details on listing»; профиль вендора заполнен, **Resubmit 2026-09-29 — SUBMITTED**. Ждём ответа (ECOHELP-168810, письмо на hello@artuplabs.com) и тикета Partner Verification |
 | **ArtUp Export** (Confluence) | приёмка 16 пунктов пройдена 2026-09-29; production v2.1.0, development v2.8.0 (исправлен белый экран после экспорта, EXPORT-19), оба подходят под Runs on Atlassian; проверен на 1 000 страниц; сайт https://artuplabs.com/export/ опубликован; **листинг подан 2026-09-29 — SUBMITTED** (app id 1478660823; первая подача тоже дала автоотказ, после заполнения профиля вендора — Resubmit) |
 | **Репозиторий** | всё по Atlassian в одном репозитории: эта папка = `AKarpetc/artuplabs-trace` (ветка `monorepo`, PR #8 не слит). Внутри: `apps/trace`, `apps/export`, `atlassian/` (документы), `site/`, `STATE.md` |
-| **Приложение №3** | ArtUp Risk закрыт на фазе 0; следующий кандидат — ArtUp Release (кросс-проектные релизы), бриф не написан |
+| **Приложение №3** | ArtUp Reports (экспорт Jira в Excel/Word/PDF): фаза 0 пройдена, спецификация и план одобрены 2026-09-29; ветка `reports-v1` — **готовы задачи 1–23 из 23** (код, замеры, черновики листинга, страница продукта в `site/reports/`); development v3.2.0 задеплоен, production **не** задеплоен, листинг **не** подан, сайт **не** задеплоен. Ждёт владельца: раздел 8 ниже. Продолжение — [atlassian/plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md](atlassian/plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md) |
 
 ---
 
@@ -17,7 +17,7 @@
 
 ### 1. Слить PR с монорепозиторием (⏱ 2 мин)
 - [x] https://github.com/AKarpetc/artuplabs-trace/pull/8 → **Merge**. CI `test` зелёный.
-- [ ] После слияния в этой папке: `git checkout main && git pull`.
+- [x] После слияния в этой папке: `git checkout main && git pull` (2026-09-29, после PR #10).
 
 ### 2. Проверить ArtUp Export в браузере (⏱ 40–60 мин) — до подачи листинга
 - [x] Пройдите 16 пунктов из [atlassian/plans/2026-09-28-artup-export-acceptance.md](atlassian/plans/2026-09-28-artup-export-acceptance.md) на https://artuplabs-dev.atlassian.net, пространство **EXPT**. Главное: в zip есть картинки (`*.assets`), zip скачивается, а если не скачался сам — срабатывает «Скачать ещё раз».
@@ -45,6 +45,27 @@
 ### 7. Когда будет возможность (не блокирует)
 - [ ] Показать переводы носителям: ja, ko, zh-CN, zh-TW, is, et, fi, cs, sk, hu, ro, tr, pt-PT (файлы `apps/*/static/app/src/i18n/locales/`).
 - [ ] До **2026-12-27** — перевыпустить токены Atlassian и Cloudflare (лежат в `.env`).
+
+### 8. ArtUp Reports — подан на одобрение 2026-09-30
+- [x] C1/C2 браузерная приёмка пройдена 2026-09-30 (кроме п.6 — нет второго аккаунта; сделать до одобрения): [atlassian/plans/2026-09-30-artup-reports-browser-test.md](atlassian/plans/2026-09-30-artup-reports-browser-test.md).
+- [x] Production: `forge deploy -e production` 2026-09-30 → версия 2.0.0, eligible для Runs on Atlassian; dev 3.5.0.
+- [x] Сайт: разделы Reports в privacy/security/terms, документация https://artuplabs.com/docs/reports/ (деплой 2026-09-30).
+- [x] Листинг Marketplace (app id 3870724810, `com.artuplabs.reports`) заполнен и подан: цены R32 ($319 за 200, до 10 бесплатно), Privacy & Security отправлены, R23 закрыт R31 (предел 2 000).
+- [ ] Пункт 6 (права на проектный шаблон) — завести второй аккаунт и проверить до одобрения.
+- [x] Первая подача сразу получила «Automatic Rejection – Not enough details on listing» (как у Trace и Export) → Resubmit 2026-09-30 → **SUBMITTED**. Наблюдение: автопроверка отклоняет первую подачу, повторная проходит.
+
+#### Архив: исходный список шагов
+Всё лежит в ветке `reports-v1` (локально, не запушена). Замеры и чек-лист C2: [atlassian/plans/2026-09-29-artup-reports-acceptance.md](atlassian/plans/2026-09-29-artup-reports-acceptance.md).
+- [ ] **C1 (⏱ 20 мин).** На https://artuplabs-dev.atlassian.net открыть шесть точек входа один раз: страница «ArtUp Reports» (меню приложений), поиск задач (Приложения → «Экспорт в Excel, Word или PDF»), доска, бэклог, меню спринта, одна задача. Проверить, что модальное окно шире 600 px и что ссылка «Open ArtUp Reports» ведёт на страницу приложения, а не на 404 (Ruling R22 — маршрут не проверен). Посмотреть контактный лист скриншотов: `apps/reports/static/app/screenshots/index.html` (локально; если нет — `npm run screenshots` в `apps/reports/static/app`).
+- [ ] **C2 (⏱ 1–1,5 ч).** Чек-лист из 9 пунктов в разделе B файла приёмки, включая **пункт 9** (память вкладки на 500–2 000 задач с картинками) и пункт 4 (скорость картинок в браузере). Результат — в колонку «Итог».
+- [ ] **Решение по R23.** Предел Word/PDF 2 000 задач: в Node на 2 000 задач с картинками пик 2,3 ГБ (Word) и 2,2 ГБ (PDF) при пороге тревоги 1,5 ГБ. Варианты: оставить 2 000, снизить до ≈ 1 000 для Word/PDF с картинками, уходить на миниатюры. Пока решения нет, в листинге и на сайте число задач для Word/PDF не указано (в `listing.md` стоит метка `[OWNER: …]`); после решения вписать число, которое подтверждено замером.
+- [ ] **Скриншот результата** (`listing-reports/screenshots/draft/3-result.png`) показывает «30 issues in 0 s»: фикстура предпросмотра берёт реальное время прогона. Перед подачей сделать кадр после реального экспорта на dev или оставить как есть (решение владельца). Заявление «без водяного знака» проверено только на файлах; поведение сайта без лицензии — после листинга (строка 7 приёмки), на странице сайта оно не заявлено.
+- [ ] **Переводы.** Показать носителям ko, is, et, hu (файлы `apps/reports/static/app/src/i18n/locales/`); остальные — по желанию (ja, zh-CN, zh-TW, fi, cs, sk, ro, tr, pt-PT — как у Export).
+- [ ] **Черновики листинга** [atlassian/listing-reports/](atlassian/listing-reports/): прочитать `listing.md`, `highlights.md`, `privacy-security.md`; заполнить метки `[OWNER: …]` — **цена** (в брифе только якорь $319 за 200 мест и «до 10 бесплатно», тарифов нет), категории, ответ «хранит ли приложение персональные данные» (хранится Atlassian account id автора шаблона — ответ «Да»), формулировка про удаление данных при деинсталляции.
+- [ ] **Юридические страницы сайта.** `site/privacy.html`, `security.html`, `terms.html` про Reports пока ничего не говорят: попросить меня добавить разделы (факты — в `privacy-security.md`) и прочитать их до деплоя сайта.
+- [ ] **Production deploy (по вашему слову).** `forge deploy -e production` потребует `--approve MAJOR_VERSION_RULE` (новые scope: `read:board-scope.admin:jira-software`, `read:project:jira`); после деплоя админы сайтов должны заново дать согласие на установку. Затем `forge eligibility -e production` — только после него заявлять Runs on Atlassian.
+- [ ] **Сайт.** Проверить `site/reports/index.html` локально, затем деплой сайта (как для Export). Страница продукта и карточка на главной уже в ветке; деплой — только вы.
+- [ ] **Подача листинга — только вы** (партнёрский портал): после production deploy, деплоя сайта и решения по R23. Скриншоты: `atlassian/listing-reports/screenshots/draft/*.png` (1840×900).
 
 ---
 

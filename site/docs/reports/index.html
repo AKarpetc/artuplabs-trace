@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — ArtUp Reports</title>
+  <meta name="description" content="How to use ArtUp Reports for Jira Cloud: export issues to Excel, Word and PDF from a search, board, sprint or issue, Excel columns, Word templates and placeholders, file names, limits and data handling.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../../reports/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="../../index.html"><span class="brand-mark" aria-hidden="true">A</span>ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../../index.html">Home</a></li>
+          <li><a href="../../export/">ArtUp Export</a></li>
+          <li><a href="../../reports/" aria-current="page">ArtUp Reports</a></li>
+          <li><a href="../../docs.html">Docs</a></li>
+          <li><a href="../../support.html">Support</a></li>
+          <li><a href="../../security.html">Security</a></li>
+          <li><a href="../../privacy.html">Privacy</a></li>
+          <li><a href="../../terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="doc-wide">
+    <nav class="toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">Contents</h2>
+      <ol>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#entry">Where to start an export</a></li>
+        <li><a href="#export">Export step by step</a></li>
+        <li><a href="#formats">Formats</a></li>
+        <li><a href="#templates">Templates</a></li>
+        <li><a href="#word">Word templates and placeholders</a></li>
+        <li><a href="#file-name">File names</a></li>
+        <li><a href="#result">Result, warnings and partial files</a></li>
+        <li><a href="#limits">Limits and known limitations</a></li>
+        <li><a href="#data">Data handling</a></li>
+        <li><a href="#support">Languages and support</a></li>
+      </ol>
+    </nav>
+
+    <main id="main" class="doc">
+      <h1>ArtUp Reports documentation</h1>
+      <p class="meta">ArtUp Reports for Jira Cloud · Last updated: 2026-09-30</p>
+
+      <div class="notice">
+        <p><strong>In short:</strong> open <strong>Export to Excel, Word or PDF</strong> from the issue search, a board, a sprint or an issue, choose the issues, a format and a template, and click <strong>Export</strong>. The file is built in your browser and downloaded to your computer. Save the columns or Word layouts you reuse as templates.</p>
+      </div>
+
+      <h2 id="install">1. Install</h2>
+      <ol>
+        <li>A Jira administrator installs <strong>ArtUp Reports</strong> from the Atlassian Marketplace (<em>Apps</em> → <em>Explore more apps</em>).</li>
+        <li>Sites with up to 10 users use it free; larger sites start a trial or a subscription in <em>Manage apps</em>.</li>
+        <li>No configuration is needed. Every user can export the issues they can see in Jira.</li>
+      </ol>
+
+      <h2 id="entry">2. Where to start an export</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Where</th><th>Menu item</th><th>What is exported</th></tr></thead>
+          <tbody>
+            <tr><td>Issue search</td><td><em>Apps</em> → <strong>Export to Excel, Word or PDF</strong></td><td>The current search (its JQL or saved filter). See the <a href="#limits">known limitation</a> about ticked issues.</td></tr>
+            <tr><td>Board</td><td><strong>Export board issues</strong></td><td>The issues of the board, through the filter behind it.</td></tr>
+            <tr><td>Backlog</td><td><strong>Export backlog issues</strong></td><td>The issues of the backlog.</td></tr>
+            <tr><td>Sprint</td><td><strong>Export sprint issues</strong></td><td>The issues of the sprint.</td></tr>
+            <tr><td>An issue</td><td>••• → <strong>Export to Word or PDF</strong></td><td>That one issue.</td></tr>
+            <tr><td>Apps menu</td><td><strong>ArtUp Reports</strong></td><td>Any saved filter or JQL you choose. This page also holds the <strong>Templates</strong> tab.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="export">3. Export step by step</h2>
+      <ol>
+        <li><strong>Issues:</strong> the source from where you opened the export is filled in. On the ArtUp Reports page, choose a <em>Saved filter</em> or type a <em>JQL query</em>. If Jira cannot run the JQL, its error is shown under the field.</li>
+        <li><strong>Format:</strong> Excel, Word or PDF; for PDF also the paper size, A4 or Letter.</li>
+        <li><strong>Template:</strong> a built-in layout or one of your templates (<em>My templates</em>, <em>Project templates</em>, <em>Site templates</em>).</li>
+        <li>For Excel, adjust the <strong>Columns</strong> and check the <strong>Preview</strong> of the first issues.</li>
+        <li>Check the <strong>File name</strong> — see <a href="#file-name">File names</a>.</li>
+        <li>Click <strong>Export to …</strong>. Progress goes through reading issues, images and building the file. <strong>Keep the tab open</strong> until the file is ready — the export runs in your browser. <em>Cancel</em> stops it and nothing is downloaded.</li>
+      </ol>
+      <figure>
+        <div class="frame">
+          <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <picture>
+            <source srcset="../../reports/wizard-dark.webp" media="(prefers-color-scheme: dark)">
+            <img src="../../reports/wizard-light.webp" width="1280" height="800" loading="lazy" alt="The export form: issues by filter or JQL, format, and a built-in layout or your own template.">
+          </picture>
+        </div>
+        <figcaption>The export form: issues, format and template.</figcaption>
+      </figure>
+
+      <h2 id="formats">4. Formats</h2>
+      <h3>Excel (.xlsx)</h3>
+      <ul>
+        <li>Built-in column sets: <em>Issue list</em>, <em>Work logs</em>, <em>Comments</em>, <em>Sprint summary</em>. Add any Jira field as a column with <em>Add a column</em>, remove columns and drag them to reorder (or focus a column and press Alt + ↑ / Alt + ↓).</li>
+        <li><strong>One row per</strong> issue, work log or comment; <strong>Split into sheets by</strong> a field; an optional <strong>Summary sheet</strong> with counts by status, assignee and priority, the JQL, the export time and who exported it.</li>
+        <li>Dates are dates, numbers are numbers, issue keys are links. The header row is frozen and has filters.</li>
+        <li>A column for a field that does not exist on your site is marked <em>Not on this site</em>.</li>
+      </ul>
+      <h3>Word (.docx)</h3>
+      <ul>
+        <li>Built-in layouts: <em>Single issue</em> (every field, the description, comments and images, one issue per page), <em>Issue list</em>, <em>Sprint report</em>, <em>Release notes</em>.</li>
+        <li>Or your own Word template — see <a href="#word">Word templates</a>.</li>
+        <li>Images from descriptions and attachments are placed in the document; headings, lists, tables and code in descriptions are kept.</li>
+      </ul>
+      <h3>PDF</h3>
+      <ul>
+        <li>The same four layouts as Word, on A4 or Letter. Fonts for Latin, Cyrillic and CJK text are bundled with the app.</li>
+        <li>Emoji are left out of the PDF and listed as a warning.</li>
+      </ul>
+
+      <h2 id="templates">5. Templates</h2>
+      <p>Open <strong>ArtUp Reports</strong> in the Apps menu → <strong>Templates</strong> → <strong>Create template</strong>.</p>
+      <ul>
+        <li><strong>Excel columns</strong> saves the columns, row mode, grouping and summary sheet of an Excel export.</li>
+        <li><strong>Word template</strong> stores a .docx file you made in Word (up to 2 MB).</li>
+      </ul>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Who can use it</th><th>Visible to</th><th>Who can create, edit and delete it</th></tr></thead>
+          <tbody>
+            <tr><td>Only me (Personal)</td><td>You</td><td>You</td></tr>
+            <tr><td>Everyone in a project</td><td>People who can browse the project</td><td>Project administrators</td></tr>
+            <tr><td>Everyone on this site</td><td>Everyone who uses the app</td><td>Jira administrators</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Deleting a template deletes it for everyone who can use it; this cannot be undone.</p>
+      <figure>
+        <div class="frame">
+          <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <picture>
+            <source srcset="../../reports/templates-dark.webp" media="(prefers-color-scheme: dark)">
+            <img src="../../reports/templates-light.webp" width="1280" height="700" loading="lazy" alt="The Templates tab: personal, project and site templates with their format, scope, update time and author.">
+          </picture>
+        </div>
+        <figcaption>The Templates tab.</figcaption>
+      </figure>
+
+      <h2 id="word">6. Word templates and placeholders</h2>
+      <p>Write your document in Word and put placeholders in double braces where Jira data should go. <em>Download example template</em> in the upload form gives you a working starting point, and <em>Available tags</em> lists every placeholder.</p>
+<pre class="code"><code>Report: {{title}}   Exported {{exportedAt}} by {{exportedBy}}
+JQL: {{jql}} ({{count}} issues)
+
+{{#issues}}
+{{key}} — {{summary}}   [{{status}}, {{assignee}}]
+{{@description}}
+Story points: {{field "Story Points"}}
+{{#comments}}{{author}}, {{created}}: {{body}}
+{{/comments}}
+{{/issues}}</code></pre>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Kind</th><th>Placeholders</th></tr></thead>
+          <tbody>
+            <tr><td>About the export</td><td><code>jql</code>, <code>exportedBy</code>, <code>exportedAt</code>, <code>count</code>, <code>title</code>, <code>siteUrl</code>, <code>partial</code>, <code>partialBanner</code></td></tr>
+            <tr><td>Inside <code>{{#issues}}</code> … <code>{{/issues}}</code></td><td><code>key</code>, <code>url</code>, <code>summary</code>, <code>status</code>, <code>assignee</code>, <code>reporter</code>, <code>priority</code>, <code>type</code>, <code>due</code>, <code>created</code>, <code>updated</code>, <code>resolved</code>, <code>resolution</code>, <code>labels</code>, <code>components</code>, <code>fixVersions</code>, <code>project</code>, <code>parent</code>, <code>description</code>, <code>environment</code>, <code>timeSpent</code>, <code>estimate</code></td></tr>
+            <tr><td>Inside <code>{{#comments}}</code></td><td><code>author</code>, <code>created</code>, <code>body</code></td></tr>
+            <tr><td>Inside <code>{{#worklogs}}</code></td><td><code>author</code>, <code>started</code>, <code>timeSpent</code>, <code>hours</code>, <code>comment</code></td></tr>
+            <tr><td>Inside <code>{{#subtasks}}</code></td><td><code>key</code>, <code>summary</code>, <code>status</code>, <code>type</code>, <code>url</code></td></tr>
+            <tr><td>Inside <code>{{#links}}</code></td><td><code>type</code>, <code>direction</code>, <code>key</code>, <code>summary</code>, <code>status</code>, <code>url</code></td></tr>
+            <tr><td>Custom field</td><td><code>{{field "Field name"}}</code>, with the field name as it appears in Jira</td></tr>
+            <tr><td>Formatted text</td><td><code>{{@description}}</code>, <code>{{@environment}}</code>, and <code>{{@body}}</code> / <code>{{@comment}}</code> in comment and work log loops — write it alone in its paragraph to keep headings, lists, tables and images</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Placeholders are checked when you upload the file.</strong> A mistyped name, a custom field that does not exist on your site or a syntax problem is listed with a suggestion — for example <em>Unknown tag {{summry}}. Did you mean {{summary}}?</em> — and the template cannot be saved until it is fixed. When the file is valid, the form says how many tags it found.</p>
+
+      <h2 id="file-name">7. File names</h2>
+      <p>The file name follows a pattern; the default is <code>{project}-{date}-{filter}</code>. You can use these tokens:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Token</th><th>Replaced by</th></tr></thead>
+          <tbody>
+            <tr><td><code>{project}</code></td><td>The project of the first exported issue.</td></tr>
+            <tr><td><code>{date}</code></td><td>Today's date as YYYY-MM-DD.</td></tr>
+            <tr><td><code>{filter}</code></td><td>The source: the saved filter's name, the issue key, <code>board-&lt;id&gt;</code> or <code>sprint-&lt;id&gt;</code>; empty for a typed JQL query.</td></tr>
+            <tr><td><code>{format}</code></td><td>The format of the file.</td></tr>
+            <tr><td><code>{count}</code></td><td>The number of exported issues.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Characters that are not allowed in file names, and spaces, become <code>-</code>. Names are cut to 120 characters. A partial file gets <code>-PARTIAL</code> before the extension.</p>
+
+      <h2 id="result">8. Result, warnings and partial files</h2>
+      <p>When the file is ready it downloads, and the result screen shows the number of issues, the time, skipped issues, missing images and every warning. <em>Download again</em> saves the same file once more.</p>
+      <ul>
+        <li><strong>Warnings</strong> never stop an export. They include content shown as text, images that could not be found or downloaded, external images left out, columns not on this site, incomplete comments or work logs, issues left out and emoji left out of a PDF.</li>
+        <li><strong>Some issues could not be read:</strong> <em>Retry missing</em> reads only the missing issues. <em>Download partial file</em> saves what was read; the file gets <code>-PARTIAL</code> in its name and states inside how many issues it holds.</li>
+        <li>Requests that Jira answered with an error or a rate limit are repeated automatically; the result screen says how many.</li>
+      </ul>
+      <figure>
+        <div class="frame">
+          <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <picture>
+            <source srcset="../../reports/result-dark.webp" media="(prefers-color-scheme: dark)">
+            <img src="../../reports/result-light.webp" width="1280" height="700" loading="lazy" alt="The result screen after an export: the file name, the number of issues, time, skipped issues, missing images and a list of warnings.">
+          </picture>
+        </div>
+        <figcaption>The result screen with the list of warnings.</figcaption>
+      </figure>
+
+      <h2 id="limits">9. Limits and known limitations</h2>
+      <ul>
+        <li><strong>Word and PDF: up to 2,000 issues per file.</strong> For a larger query the app asks you to narrow the JQL and offers <strong>Switch to Excel</strong>.</li>
+        <li><strong>Excel: no fixed issue limit.</strong> In our test, 10,003 issues exported in 11.8 seconds, and the file was read back with 10,003 rows. Time depends on your site, network and attachment sizes.</li>
+        <li><strong>Ticked issues in the new issue search.</strong> In Jira's new issue search (<em>All work</em>), Jira does not pass the issues you ticked to apps, so the export takes the <strong>whole search</strong>. The source card shows <em>Issues from the current search</em> with its JQL — that is what will be exported. To export a subset, narrow the JQL, for example <code>key in (ABC-1, ABC-2)</code>.</li>
+        <li><strong>Word templates:</strong> up to 2 MB, and no more than 20 MB once unpacked.</li>
+        <li><strong>Keep the tab open.</strong> The file is built in your browser; closing the tab cancels the export.</li>
+        <li><strong>Issues you cannot see</strong> in Jira are not exported.</li>
+        <li><strong>One-way.</strong> ArtUp Reports does not import spreadsheets into Jira and does not schedule or email exports.</li>
+        <li><strong>Jira Cloud only</strong>; Data Center is not supported.</li>
+      </ul>
+
+      <h2 id="data">10. Data handling</h2>
+      <ul>
+        <li>Issues are read with the permissions of the user who runs the export, through Jira's API in that user's browser.</li>
+        <li>The file is built in the browser and downloaded to the user's device. Issue content is not sent to the app's backend and is not stored or logged. The app has no external egress and runs on Atlassian (Forge).</li>
+        <li>The app stores only templates in Forge storage: names, settings, Excel column sets, uploaded .docx files and the Atlassian account id of each template's author.</li>
+        <li>Scopes are read-only, plus app storage for templates. The app never writes to Jira.</li>
+      </ul>
+      <p>See also <a href="../../security.html#reports-architecture">Security</a> and the <a href="../../privacy.html#reports">Privacy Policy</a>.</p>
+
+      <h2 id="support">11. Languages and support</h2>
+      <p>The app follows each user's Jira language (26 languages) and the light or dark theme.</p>
+      <p>Questions, bug reports and feature requests: <a href="mailto:hello@artuplabs.com?subject=ArtUp%20Reports">hello@artuplabs.com</a>. Please include your site URL, where you started the export, the format and template, and for a warning or error its text from the result screen. Do not send issue content beyond what is needed. Response times are on the <a href="../../support.html">Support</a> page.</p>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="../../export/">ArtUp Export</a></li>
+          <li><a href="../../reports/">ArtUp Reports</a></li>
+          <li><a href="../export/">Export docs</a></li>
+          <li><a href="./">Reports docs</a></li>
+          <li><a href="../../docs.html">Trace docs</a></li>
+          <li><a href="../../support.html">Support</a></li>
+          <li><a href="../../security.html">Security</a></li>
+          <li><a href="../../privacy.html">Privacy</a></li>
+          <li><a href="../../terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Security — ArtUp Labs</title>
-  <meta name="description" content="Security architecture, access scopes, vulnerability reporting and incident response for ArtUp Trace for Jira Cloud and ArtUp Export for Confluence Cloud.">
+  <meta name="description" content="Security architecture, access scopes, vulnerability reporting and incident response for ArtUp Trace for Jira Cloud, ArtUp Export for Confluence Cloud and ArtUp Reports for Jira Cloud.">
   <meta name="color-scheme" content="light dark">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -18,6 +18,7 @@
         <ul>
           <li><a href="index.html">Home</a></li>
           <li><a href="export/">ArtUp Export</a></li>
+          <li><a href="reports/">ArtUp Reports</a></li>
           <li><a href="docs.html">Docs</a></li>
           <li><a href="support.html">Support</a></li>
           <li><a href="security.html" aria-current="page">Security</a></li>
@@ -30,10 +31,10 @@
 
   <main id="main" class="doc">
     <h1>Security</h1>
-    <p class="meta">ArtUp Trace for Jira Cloud · ArtUp Export for Confluence Cloud · Last updated: 2026-09-29</p>
+    <p class="meta">ArtUp Trace for Jira Cloud · ArtUp Export for Confluence Cloud · ArtUp Reports for Jira Cloud · Last updated: 2026-09-30</p>
 
     <div class="notice">
-      <p><strong>In short:</strong> ArtUp Trace is an Atlassian Forge app with the "Runs on Atlassian" designation. There are no ArtUp Labs servers in the path, no outbound network calls, and no third-party trackers. The App reads Jira as the current user, checks Jira permissions on every action, and never writes to your issues. ArtUp Export reads Confluence as the current user, converts pages in the user's browser, stores nothing and never writes to Confluence.</p>
+      <p><strong>In short:</strong> ArtUp Trace is an Atlassian Forge app with the "Runs on Atlassian" designation. There are no ArtUp Labs servers in the path, no outbound network calls, and no third-party trackers. The App reads Jira as the current user, checks Jira permissions on every action, and never writes to your issues. ArtUp Export reads Confluence as the current user, converts pages in the user's browser, stores nothing and never writes to Confluence. ArtUp Reports reads Jira as the current user, builds Excel, Word and PDF files in the user's browser, stores only export templates and never writes to Jira.</p>
     </div>
 
     <nav class="toc" aria-labelledby="toc-title">
@@ -66,6 +67,14 @@
       <li>The app has <strong>no outbound network calls (no egress)</strong>. Confluence content is not sent to the app's backend, to ArtUp Labs or anywhere outside Atlassian and the user's browser.</li>
       <li>The app <strong>stores no data</strong>: no Forge storage is used, although the <code>storage:app</code> scope is declared for future versions.</li>
       <li>Its only backend function returns whether the licence is active. It receives no page content, so its Forge logs contain no Confluence content.</li>
+    </ul>
+    <h3 id="reports-architecture">1.2 ArtUp Reports</h3>
+    <p>ArtUp Reports is also built entirely on Atlassian Forge, with no external servers, no Connect modules and only bundled resources (fonts for Latin, Cyrillic and CJK text, libraries and images).</p>
+    <ul>
+      <li>Issues, attachments and user names are read <strong>in the user's browser</strong>, through Atlassian's API and with that user's Jira permissions. The Excel, Word or PDF file is built in the browser and downloaded to the user's device.</li>
+      <li>The app has <strong>no outbound network calls (no egress)</strong>. Issue content is not sent to the app's backend, to ArtUp Labs or anywhere outside Atlassian and the user's browser.</li>
+      <li>The app stores <strong>only export templates</strong> in Forge storage: names, settings, Excel column sets, uploaded .docx template files and the Atlassian account id of each template's author. No issue content is stored or logged.</li>
+      <li>Its backend functions manage templates and check the current user's Jira permissions. On failure, Forge logs contain only the function name and the error message.</li>
     </ul>
 
     <h2 id="scopes">2. Access scopes and permissions</h2>
@@ -104,6 +113,24 @@
         </tbody>
       </table>
     </div>
+    <p>ArtUp Reports requests only read scopes and <code>storage:app</code>. It reads Jira <strong>as the current user</strong>, so issues the user cannot see in Jira are not exported, and it <strong>never writes to Jira</strong>. Before a user creates, changes or deletes a project or site template, the backend checks that user's Jira permissions (project administration for a project template, Jira administration for a site template); a personal template is visible only to its author.</p>
+    <div class="table-wrap">
+      <table>
+        <caption>ArtUp Reports — requested Atlassian scopes</caption>
+        <thead>
+          <tr><th scope="col">Scope</th><th scope="col">Used for</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>read:jira-work</code></td><td>Read issues (search, fields, comments, work logs, links), saved filters, attachments and their thumbnails.</td></tr>
+          <tr><td><code>read:jira-user</code></td><td>Read display names of authors, assignees and template authors.</td></tr>
+          <tr><td><code>read:board-scope:jira-software</code></td><td>Read the issues of a board or backlog.</td></tr>
+          <tr><td><code>read:sprint:jira-software</code></td><td>Read the issues and details of a sprint.</td></tr>
+          <tr><td><code>read:board-scope.admin:jira-software</code></td><td>Read board configuration, to find the filter behind a board.</td></tr>
+          <tr><td><code>read:project:jira</code></td><td>Read the project list for the templates tab and project templates.</td></tr>
+          <tr><td><code>storage:app</code></td><td>Store export templates in Forge storage.</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <h2 id="app-security">3. Application security controls</h2>
     <ul>
@@ -111,6 +138,7 @@
       <li><strong>Input validation.</strong> All input from the front end, from Jira webhooks, and from imported data (for example CSV or configuration values) is validated before it is stored or used to build a query, to guard against malformed or malicious input.</li>
       <li><strong>No egress, no trackers.</strong> Because the App cannot make outbound network calls, there is no path for it to exfiltrate data even if a dependency were compromised.</li>
       <li><strong>ArtUp Export: untrusted files are checked.</strong> A previous export dropped in for an update is read in the browser, and paths from its manifest that could point outside the export folder are refused.</li>
+      <li><strong>ArtUp Reports: uploaded templates are checked.</strong> A Word template must be a valid .docx file of at most 2 MB that unpacks to no more than 20 MB, and its placeholders are checked before it can be saved.</li>
       <li><strong>Least-privilege storage.</strong> Only the fields needed for traceability are stored; see the <a href="privacy.html#what">Privacy Policy</a> for the exact list. Full issue description text is never stored, only a change-detection hash.</li>
     </ul>
 
@@ -130,7 +158,7 @@
     </ul>
 
     <h2 id="reporting">6. Reporting a vulnerability</h2>
-    <p>If you believe you have found a security vulnerability in ArtUp Trace, ArtUp Export or on this website, please email <a href="mailto:security@artuplabs.com">security@artuplabs.com</a> with:</p>
+    <p>If you believe you have found a security vulnerability in ArtUp Trace, ArtUp Export, ArtUp Reports or on this website, please email <a href="mailto:security@artuplabs.com">security@artuplabs.com</a> with:</p>
     <ul>
       <li>a description of the issue and its potential impact;</li>
       <li>steps to reproduce it, including any request or response details that help us confirm it;</li>
@@ -194,6 +222,7 @@
       <nav aria-label="Footer">
         <ul>
           <li><a href="export/">ArtUp Export</a></li>
+          <li><a href="reports/">ArtUp Reports</a></li>
           <li><a href="docs.html">Docs</a></li>
           <li><a href="support.html">Support</a></li>
           <li><a href="security.html">Security</a></li>

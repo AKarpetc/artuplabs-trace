@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "Exportálás Excelbe, Wordbe vagy PDF-be",
+  "module.boardAction.title": "Tábla feladatainak exportálása",
+  "module.backlogAction.title": "Backlog feladatainak exportálása",
+  "module.sprintAction.title": "Sprint feladatainak exportálása",
+  "module.issueAction.title": "Exportálás Wordbe vagy PDF-be"
+}

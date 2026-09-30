@@ -1,0 +1,184 @@
+{
+  "cases": [
+    {
+      "adf": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Before "
+              }
+            ]
+          },
+          {
+            "type": "mediaSingle",
+            "attrs": {
+              "layout": "center"
+            },
+            "content": [
+              {
+                "type": "media",
+                "attrs": {
+                  "type": "file",
+                  "id": "77885e92-e384-4929-9955-028d700928d8",
+                  "collection": "",
+                  "height": 183,
+                  "width": 200
+                }
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": " after"
+              }
+            ]
+          }
+        ]
+      },
+      "attachments": [
+        {
+          "id": "10500",
+          "filename": "diagram-1.png",
+          "mimeType": "image/png"
+        }
+      ],
+      "renderedHtml": "<p>Before <span class=\"image-wrap\" style=\"\"><a id=\"10500_thumb\" href=\"/rest/api/3/attachment/content/10500\" title=\"diagram-1.png\" file-preview-type=\"image\" file-preview-id=\"10500\" file-preview-title=\"diagram-1.png\"><jira-attachment-thumbnail url=\"https://artuplabs-dev.atlassian.net/rest/api/3/attachment/thumbnail/10500?default=false\" jira-url=\"https://artuplabs-dev.atlassian.net/rest/api/3/attachment/thumbnail/10500\" filename=\"diagram-1.png\"><img src=\"https://artuplabs-dev.atlassian.net/rest/api/3/attachment/thumbnail/10500\" data-attachment-name=\"diagram-1.png\" data-attachment-type=\"thumbnail\" data-media-services-id=\"77885e92-e384-4929-9955-028d700928d8\" data-media-services-type=\"file\" style=\"border: 0px solid black\" /></jira-attachment-thumbnail></a></span> after</p>",
+      "expected": [
+        "10500"
+      ]
+    },
+    {
+      "adf": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Before "
+              }
+            ]
+          },
+          {
+            "type": "mediaSingle",
+            "attrs": {
+              "layout": "center"
+            },
+            "content": [
+              {
+                "type": "media",
+                "attrs": {
+                  "type": "file",
+                  "id": "85c5ffdf-f73e-45d3-bcd1-30f9fece521e",
+                  "collection": "",
+                  "height": 183,
+                  "width": 200
+                }
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": " after"
+              }
+            ]
+          }
+        ]
+      },
+      "attachments": [
+        {
+          "id": "10501",
+          "filename": "diagram-2.png",
+          "mimeType": "image/png"
+        }
+      ],
+      "renderedHtml": "<p>Before <span class=\"image-wrap\" style=\"\"><a id=\"10501_thumb\" href=\"/rest/api/3/attachment/content/10501\" title=\"diagram-2.png\" file-preview-type=\"image\" file-preview-id=\"10501\" file-preview-title=\"diagram-2.png\"><jira-attachment-thumbnail url=\"https://artuplabs-dev.atlassian.net/rest/api/3/attachment/thumbnail/10501?default=false\" jira-url=\"https://artuplabs-dev.atlassian.net/rest/api/3/attachment/thumbnail/10501\" filename=\"diagram-2.png\"><img src=\"https://artuplabs-dev.atlassian.net/rest/api/3/attachment/thumbnail/10501\" data-attachment-name=\"diagram-2.png\" data-attachment-type=\"thumbnail\" data-media-services-id=\"85c5ffdf-f73e-45d3-bcd1-30f9fece521e\" data-media-services-type=\"file\" style=\"border: 0px solid black\" /></jira-attachment-thumbnail></a></span> after</p>",
+      "expected": [
+        "10501"
+      ]
+    },
+    {
+      "adf": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "mediaSingle",
+            "attrs": {
+              "layout": "center"
+            },
+            "content": [
+              {
+                "type": "media",
+                "attrs": {
+                  "type": "file",
+                  "id": "1d4c8e73-dd62-442f-b029-ad07e79b7ba4",
+                  "collection": "",
+                  "height": 183,
+                  "width": 200
+                }
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": " and "
+              }
+            ]
+          },
+          {
+            "type": "mediaSingle",
+            "attrs": {
+              "layout": "center"
+            },
+            "content": [
+              {
+                "type": "media",
+                "attrs": {
+                  "type": "file",
+                  "id": "1d4c8e73-dd62-442f-b029-ad07e79b7ba4",
+                  "collection": "",
+                  "height": 183,
+                  "width": 200
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "attachments": [
+        {
+          "id": "10503",
+          "filename": "same.png",
+          "mimeType": "image/png"
+        },
+        {
+          "id": "10502",
+          "filename": "same.png",
+          "mimeType": "image/png"
+        }
+      ],
+      "renderedHtml": "<p><span class=\"image-wrap\" style=\"\"><img src=\"https://artuplabs-dev.atlassian.net/rest/api/3/attachment/content/10502\" style=\"border: 0px solid black\" /></span> and <span class=\"image-wrap\" style=\"\"><img src=\"https://artuplabs-dev.atlassian.net/rest/api/3/attachment/content/10502\" style=\"border: 0px solid black\" /></span></p>",
+      "expected": [
+        "10502",
+        "10502"
+      ]
+    }
+  ]
+}

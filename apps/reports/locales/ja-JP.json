@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "Excel、Word、PDF にエクスポート",
+  "module.boardAction.title": "ボードの課題をエクスポート",
+  "module.backlogAction.title": "バックログの課題をエクスポート",
+  "module.sprintAction.title": "スプリントの課題をエクスポート",
+  "module.issueAction.title": "Word または PDF にエクスポート"
+}

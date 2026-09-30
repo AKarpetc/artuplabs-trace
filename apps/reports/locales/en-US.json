@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "Export to Excel, Word or PDF",
+  "module.boardAction.title": "Export board issues",
+  "module.backlogAction.title": "Export backlog issues",
+  "module.sprintAction.title": "Export sprint issues",
+  "module.issueAction.title": "Export to Word or PDF"
+}

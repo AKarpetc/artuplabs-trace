@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "导出为 Excel、Word 或 PDF",
+  "module.boardAction.title": "导出看板问题",
+  "module.backlogAction.title": "导出待办事项问题",
+  "module.sprintAction.title": "导出冲刺问题",
+  "module.issueAction.title": "导出为 Word 或 PDF"
+}

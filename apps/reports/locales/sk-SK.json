@@ -1,0 +1,8 @@
+{
+  "module.globalPage.title": "ArtUp Reports",
+  "module.issueNavigatorAction.title": "Export do Excelu, Wordu alebo PDF",
+  "module.boardAction.title": "Export úloh z tabule",
+  "module.backlogAction.title": "Export úloh z backlogu",
+  "module.sprintAction.title": "Export úloh zo šprintu",
+  "module.issueAction.title": "Export do Wordu alebo PDF"
+}

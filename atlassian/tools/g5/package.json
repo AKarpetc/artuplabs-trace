@@ -1,0 +1,18 @@
+{
+  "name": "g5",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "docx": "^9.8.1",
+    "exceljs": "^4.4.0",
+    "pdfmake": "^0.3.11",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}
