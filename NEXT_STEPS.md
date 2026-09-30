@@ -9,7 +9,7 @@
 | **ArtUp Trace** (Jira) | подан 2026-09-28 → автоотказ «Not enough details on listing»; профиль вендора заполнен, **Resubmit 2026-09-29 — SUBMITTED**. Ждём ответа (ECOHELP-168810, письмо на hello@artuplabs.com) и тикета Partner Verification |
 | **ArtUp Export** (Confluence) | приёмка 16 пунктов пройдена 2026-09-29; production v2.1.0, development v2.8.0 (исправлен белый экран после экспорта, EXPORT-19), оба подходят под Runs on Atlassian; проверен на 1 000 страниц; сайт https://artuplabs.com/export/ опубликован; **листинг подан 2026-09-29 — SUBMITTED** (app id 1478660823; первая подача тоже дала автоотказ, после заполнения профиля вендора — Resubmit) |
 | **Репозиторий** | всё по Atlassian в одном репозитории: эта папка = `AKarpetc/artuplabs-trace` (ветка `monorepo`, PR #8 не слит). Внутри: `apps/trace`, `apps/export`, `atlassian/` (документы), `site/`, `STATE.md` |
-| **Приложение №3** | ArtUp Risk закрыт на фазе 0. 2026-09-29 отобран топ-5 по всему каталогу ([analysis/2026-09-29_atlassian_top5.md](../../analysis/2026-09-29_atlassian_top5.md)): №1 экспорт Jira в Excel/Word/PDF, №2 Гант, №3 JQL, №4 релизы, №5 Markdown в Confluence; очередь записана в `decisions/`; №3 ArtUp Reports — бриф [atlassian/22_app3_jira_reports.md](atlassian/22_app3_jira_reports.md), **фаза 0 пройдена** 2026-09-29, следующее — план на одобрение владельцу |
+| **Приложение №3** | ArtUp Reports (экспорт Jira в Excel/Word/PDF): фаза 0 пройдена, спецификация и план одобрены 2026-09-29; ветка `reports-v1` — **готовы задачи 1–17 из 23** (ядро, рендеры, конвейер, хранилище шаблонов, визуальная основа), задача 18 прервана (WIP в git stash). Продолжение — [atlassian/plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md](atlassian/plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md) |
 
 ---
 

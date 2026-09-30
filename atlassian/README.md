@@ -13,7 +13,7 @@
 | 2 | **ArtUp Export** | экспорт Confluence в Markdown для git | [20_app2_markdown_export.md](20_app2_markdown_export.md) | [plans/NEXT_SESSION_PROMPT_APP2.md](plans/NEXT_SESSION_PROMPT_APP2.md) | **production v2.0.0, сайт опубликован 2026-09-29**; владельцу — [23_export_owner_steps.md](23_export_owner_steps.md) |
 | 3 | **ArtUp Risk** | реестр рисков на задачах Jira | [21_app3_risk_register.md](21_app3_risk_register.md) | [plans/NEXT_SESSION_PROMPT_APP3.md](plans/NEXT_SESSION_PROMPT_APP3.md) | **закрыт 2026-09-29**: R-G1 — 3 упоминания спроса при пороге 5 (§11 брифа); кандидат №3 — запасной ArtUp Release, бриф `22_…` не написан |
 
-| 3 | **ArtUp Reports** | экспорт задач Jira в Excel/Word/PDF по шаблонам | [22_app3_jira_reports.md](22_app3_jira_reports.md) | [plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md](plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md) | **фаза 0 пройдена 2026-09-29** (X-G1–X-G5; X-G5 — при конкурентности вложений ≥ 12); дальше спецификация и план |
+| 3 | **ArtUp Reports** | экспорт задач Jira в Excel/Word/PDF по шаблонам | [22_app3_jira_reports.md](22_app3_jira_reports.md) | [plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md](plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md) | **в разработке**: план [plans/2026-09-29-artup-reports-v1.md](plans/2026-09-29-artup-reports-v1.md), задачи 1–17 из 23 готовы (ветка `reports-v1`, 2026-09-30) |
 | 4–7 | очередь | Markdown в Confluence → расширения JQL → кросс-проектные релизы → Гант | пишутся по очереди | — | выбор: `/Users/artyomkarpets/IncomeApps/analysis/2026-09-29_atlassian_top5.md` |
 
 Новое приложение = бриф `NN_appN_*.md` + промпт `plans/NEXT_SESSION_PROMPT_APPN.md` + строка здесь.
