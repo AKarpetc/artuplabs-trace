@@ -46,7 +46,15 @@
 - [ ] Показать переводы носителям: ja, ko, zh-CN, zh-TW, is, et, fi, cs, sk, hu, ro, tr, pt-PT (файлы `apps/*/static/app/src/i18n/locales/`).
 - [ ] До **2026-12-27** — перевыпустить токены Atlassian и Cloudflare (лежат в `.env`).
 
-### 8. ArtUp Reports — что сделать вам (по порядку)
+### 8. ArtUp Reports — подан на одобрение 2026-09-30
+- [x] C1/C2 браузерная приёмка пройдена 2026-09-30 (кроме п.6 — нет второго аккаунта; сделать до одобрения): [atlassian/plans/2026-09-30-artup-reports-browser-test.md](atlassian/plans/2026-09-30-artup-reports-browser-test.md).
+- [x] Production: `forge deploy -e production` 2026-09-30 → версия 2.0.0, eligible для Runs on Atlassian; dev 3.5.0.
+- [x] Сайт: разделы Reports в privacy/security/terms, документация https://artuplabs.com/docs/reports/ (деплой 2026-09-30).
+- [x] Листинг Marketplace (app id 3870724810, `com.artuplabs.reports`) заполнен и подан: цены R32 ($319 за 200, до 10 бесплатно), Privacy & Security отправлены, R23 закрыт R31 (предел 2 000).
+- [ ] Пункт 6 (права на проектный шаблон) — завести второй аккаунт и проверить до одобрения.
+- [ ] Если придёт автоотказ «Not enough details» — вопрос в ecosystem-поддержку.
+
+#### Архив: исходный список шагов
 Всё лежит в ветке `reports-v1` (локально, не запушена). Замеры и чек-лист C2: [atlassian/plans/2026-09-29-artup-reports-acceptance.md](atlassian/plans/2026-09-29-artup-reports-acceptance.md).
 - [ ] **C1 (⏱ 20 мин).** На https://artuplabs-dev.atlassian.net открыть шесть точек входа один раз: страница «ArtUp Reports» (меню приложений), поиск задач (Приложения → «Экспорт в Excel, Word или PDF»), доска, бэклог, меню спринта, одна задача. Проверить, что модальное окно шире 600 px и что ссылка «Open ArtUp Reports» ведёт на страницу приложения, а не на 404 (Ruling R22 — маршрут не проверен). Посмотреть контактный лист скриншотов: `apps/reports/static/app/screenshots/index.html` (локально; если нет — `npm run screenshots` в `apps/reports/static/app`).
 - [ ] **C2 (⏱ 1–1,5 ч).** Чек-лист из 9 пунктов в разделе B файла приёмки, включая **пункт 9** (память вкладки на 500–2 000 задач с картинками) и пункт 4 (скорость картинок в браузере). Результат — в колонку «Итог».
