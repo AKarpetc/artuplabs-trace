@@ -16,6 +16,8 @@ const PX_TO_PT = 0.75;
 const LIST_INDENT = 15;
 const QUOTE_INDENT = 16;
 const CELL_PADDING = 8;
+const BORDER = 1;
+const MIN_COLUMN = 6;
 const CHUNK = 0x8000;
 const HEX = /^[0-9a-fA-F]{6}$/;
 const HEADING_SIZES = [18, 15, 13, 12, 11, 10];
@@ -79,7 +81,9 @@ function paragraph(runs, ctx) {
   return { text: text.length ? text : '', margin: PARA_MARGIN() };
 }
 
-const boxed = (cellNode, margin = BOX_MARGIN()) => ({ table: { widths: ['*'], body: [[cellNode]] }, layout: 'noBorders', margin });
+const boxed = (cellNode, avail) => ({ table: { widths: [Math.max(MIN_COLUMN, avail - CELL_PADDING)], body: [[cellNode]] }, layout: 'noBorders', margin: BOX_MARGIN() });
+
+const columnWidth = (avail, count) => Math.max(MIN_COLUMN, (avail - (count + 1) * BORDER - count * CELL_PADDING) / count);
 
 function stackOrBlank(nodes) {
   return nodes.length ? { stack: nodes } : { text: '' };
@@ -96,7 +100,8 @@ function tableBlock(table, ctx) {
   if (!table.rows?.length) return [];
   const grid = tableGrid(table);
   const width = grid[0].length;
-  const inner = (colspan) => ({ ...ctx, indent: 0, box: Math.max(ctx.content / 4, (ctx.box - ctx.indent) * colspan / width - CELL_PADDING) });
+  const column = columnWidth(ctx.box - ctx.indent, width);
+  const inner = (colspan) => ({ ...ctx, indent: 0, box: colspan * column + (colspan - 1) * (CELL_PADDING + BORDER) });
   const body = grid.map((slots) => slots.map((slot) => {
     if (!slot.origin) return {};
     return {
@@ -106,17 +111,18 @@ function tableBlock(table, ctx) {
       ...(slot.cell.header ? { fillColor: hash(PALETTE.headerFill) } : {}),
     };
   }));
-  return [{ table: { headerRows: table.header ? 1 : 0, widths: Array(width).fill('*'), body }, margin: BOX_MARGIN() }];
+  return [{ table: { headerRows: table.header ? 1 : 0, widths: Array(width).fill(column), body }, margin: BOX_MARGIN() }];
 }
 
 function codeBlock(code, ctx) {
-  return [boxed({ text: plainRuns(String(code.text ?? ''), ctx), fontSize: 8, preserveLeadingSpaces: true, fillColor: hash(PALETTE.codeFill) })];
+  return [boxed({ text: plainRuns(String(code.text ?? ''), ctx), fontSize: 8, preserveLeadingSpaces: true, fillColor: hash(PALETTE.codeFill) }, ctx.box - ctx.indent)];
 }
 
 function panelBlock(panel, ctx) {
   const fill = PALETTE.panel[panel.kind] ?? PALETTE.panel.info;
-  const nodes = blocksOf(panel.blocks ?? [], { ...ctx, indent: 0, box: ctx.box - ctx.indent - CELL_PADDING });
-  return [boxed({ ...stackOrBlank(nodes), fillColor: hash(fill) })];
+  const avail = ctx.box - ctx.indent;
+  const nodes = blocksOf(panel.blocks ?? [], { ...ctx, indent: 0, box: avail - CELL_PADDING });
+  return [boxed({ ...stackOrBlank(nodes), fillColor: hash(fill) }, avail)];
 }
 
 function imageBlock(image, ctx) {

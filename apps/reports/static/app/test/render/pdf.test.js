@@ -15,6 +15,7 @@ const spec = (blocks, extra = {}) => ({ paper: 'A4', title: 'My report', metaLin
 const build = (blocks, { images = new Map(), ...extra } = {}) => buildPdfDefinition({ spec: spec(blocks, extra), images, labels, meta });
 const content = (blocks, options) => build(blocks, options).definition.content;
 const A4_CONTENT = 595.28 - 114;
+const COLUMN = (count) => (A4_CONTENT - (count + 1) - 8 * count) / count;
 
 const textOf = (node) => {
   if (typeof node === 'string') return node;
@@ -183,13 +184,25 @@ describe('buildPdfDefinition blocks', () => {
   it('pads ragged tables so every body row has the same length and widths match', () => {
     const table = { type: 'table', header: false, rows: [{ cells: [cell([para('a')]), cell([para('b')]), cell([para('c')])] }, { cells: [cell([para('d')])] }] };
     const [node] = content([table]);
-    expect([node.table.body.map((row) => row.length), node.table.widths]).toEqual([[3, 3], ['*', '*', '*']]);
+    expect([node.table.body.map((row) => row.length), node.table.widths]).toEqual([[3, 3], [COLUMN(3), COLUMN(3), COLUMN(3)]]);
+  });
+
+  it('gives every table column a fixed width so the table fits the page', () => {
+    const table = { type: 'table', header: false, rows: [{ cells: [cell([para('a')]), cell([para('b')])] }] };
+    const [node] = content([table]);
+    const total = node.table.widths.reduce((sum, w) => sum + w, 0) + 8 * node.table.widths.length + node.table.widths.length + 1;
+    expect(Math.abs(total - A4_CONTENT) < 0.001).toBe(true);
   });
 
   it('skips a table without rows', () => {
     expect(content([{ type: 'table', header: true, rows: [] }, para('after')])).toEqual([
       { text: [{ text: 'after', font: 'Sans' }], margin: [0, 2, 0, 2] },
     ]);
+  });
+
+  it('gives a code block one fixed column as wide as the content less its padding', () => {
+    const [node] = content([{ type: 'code', text: 'let a = 1;' }]);
+    expect(node.table.widths).toEqual([A4_CONTENT - 8]);
   });
 
   it('renders a code block as a shaded one-cell table in small type', () => {
@@ -246,7 +259,7 @@ describe('buildPdfDefinition images', () => {
     const images = new Map([['att-1', { bytes: pngBytes(1400, 700), type: 'png', width: 1400, height: 700 }]]);
     const table = { type: 'table', header: false, rows: [{ cells: [cell([image]), cell([para('b')])] }] };
     const [node] = content([table], { images });
-    expect(node.table.body[0][0].stack[0].width).toEqual(A4_CONTENT / 2 - 8);
+    expect(node.table.body[0][0].stack[0].width).toEqual(COLUMN(2));
   });
 
   it('writes the placeholder for a GIF, which a PDF cannot embed', () => {
@@ -357,5 +370,27 @@ describe('renderPdf', () => {
       emojiDropped,
       found: ['Report', '報告', '한국', 'отчёт'].filter((word) => text.includes(word)),
     }).toEqual({ head: '%PDF', emojiDropped: 1, found: ['Report', '報告', '한국', 'отчёт'] });
+  }, 60000);
+  it('keeps text with an unbreakable word inside the page margins in tables, code blocks and panels', async () => {
+    const word = 'Unbreakable'.repeat(30);
+    const { bytes } = await renderPdf({
+      spec: spec([
+        { type: 'table', header: true, rows: [{ cells: [cell([para('Key')], { header: true }), cell([para('Link')], { header: true })] }, { cells: [cell([para('RPT-1')]), cell([para(word)])] }] },
+        { type: 'code', text: `const ${word} = 1;` },
+        { type: 'panel', kind: 'info', blocks: [para(word)] },
+      ]),
+      images: new Map(),
+      labels,
+      meta,
+      engine: createNodePdfEngine(),
+      loadFonts,
+    });
+    const doc = await getDocument({ data: bytes.slice(), disableFontFace: true, useSystemFonts: false }).promise;
+    const edges = [];
+    for (let n = 1; n <= doc.numPages; n += 1) {
+      const items = (await (await doc.getPage(n)).getTextContent()).items.filter((item) => item.str.trim());
+      edges.push(...items.map((item) => item.transform[4] + item.width));
+    }
+    expect(Math.max(...edges) <= 595.28 - 57 + 0.5).toBe(true);
   }, 60000);
 });
