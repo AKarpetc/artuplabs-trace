@@ -54,11 +54,11 @@ function KindChooser({ onChoose, onCancel }) {
 
 /**
  * Templates tab: the templates the caller can see in a table per group, and the forms to create, edit and delete them.
- * `save` stores the example Word template; `createClient`, `callResolver`, `request` and `loadLibs` are injectable.
+ * `save` stores the example Word template; `createClient`, `callResolver`, `request`, `retryDelays` and `loadLibs` are injectable.
  */
-export function TemplatesTab({ createClient = createBridgeClient, save = saveBlob, callResolver, request, loadLibs }) {
+export function TemplatesTab({ createClient = createBridgeClient, save = saveBlob, callResolver, request, retryDelays, loadLibs }) {
   const t = useT();
-  const admin = useTemplateAdmin({ ...(callResolver ? { callResolver } : {}), ...(request ? { request } : {}) });
+  const admin = useTemplateAdmin({ ...(callResolver ? { callResolver } : {}), ...(request ? { request } : {}), ...(retryDelays ? { retryDelays } : {}) });
   const client = useMemo(() => createClient({}), [createClient]);
   const catalog = useCatalog(client);
   const labels = useMemo(() => labelsFor(t), [t]);

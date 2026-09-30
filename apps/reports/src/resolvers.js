@@ -22,6 +22,7 @@ async function fetchMyPermissions(keys, projectKey) {
   const response = projectKey
     ? await api.asUser().requestJira(route`/rest/api/3/mypermissions?permissions=${keys.join(',')}&projectKey=${projectKey}`)
     : await api.asUser().requestJira(route`/rest/api/3/mypermissions?permissions=${keys.join(',')}`);
+  if (response.status === 429 || response.status >= 500) throw new Error(`mypermissions ${response.status}`);
   if (!response.ok) return {};
   const body = await response.json();
   return Object.fromEntries(keys.map((k) => [k, body.permissions?.[k]?.havePermission === true]));

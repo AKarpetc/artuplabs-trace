@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { requestJira } from '@forge/bridge';
-import { call } from '../api.js';
-import { TEMPLATE_PROJECT_KEYS } from '../core/limits.js';
+import { call, withRetry } from '../api.js';
+import { RESOLVER_RETRY_DELAYS_MS, TEMPLATE_PROJECT_KEYS, TEMPLATE_READ_CONCURRENCY } from '../core/limits.js';
+import { createPool } from '../infra/pool.js';
 import { uploadParts } from './upload.js';
 
 const PROJECT_PAGE = 50;
@@ -43,13 +44,16 @@ export async function fetchAuthors(ids, request = requestJira) {
   return names;
 }
 
-async function loadAll(callResolver, request) {
+async function loadAll(callResolver, request, retryDelays) {
   const projects = await fetchProjects(request);
   const parts = chunk(projects.map((project) => project.key), TEMPLATE_PROJECT_KEYS);
   const batches = parts.length > 0 ? parts : [[]];
+  const read = withRetry(callResolver, { delays: retryDelays });
+  const limit = createPool(TEMPLATE_READ_CONCURRENCY);
+  const ask = (key) => (projectKeys) => limit(() => read(key, { projectKeys }));
   const [scopeAnswers, listAnswers] = await Promise.all([
-    Promise.all(batches.map((projectKeys) => callResolver('getScopes', { projectKeys }))),
-    Promise.all(batches.map((projectKeys) => callResolver('listTemplates', { projectKeys }))),
+    Promise.all(batches.map(ask('getScopes'))),
+    Promise.all(batches.map(ask('listTemplates'))),
   ]);
   const groups = {
     user: listAnswers[0].user ?? [],
@@ -71,21 +75,22 @@ export function canManage(template, scopes) {
 /**
  * Templates the caller can see, the scopes they may manage and the actions on them:
  * `{ status: 'loading' | 'ready' | 'error', groups, scopes, projects, authors, error, reload, save, upload, remove }`.
+ * The reads run at most three at a time and repeat an `internal` failure after each of `retryDelays`.
  */
-export function useTemplateAdmin({ callResolver = call, request = requestJira } = {}) {
+export function useTemplateAdmin({ callResolver = call, request = requestJira, retryDelays = RESOLVER_RETRY_DELAYS_MS } = {}) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ status: 'loading', groups: EMPTY, scopes: { site: false, projects: [] }, projects: [], authors: {}, error: null });
   useEffect(() => {
     let live = true;
     setState((current) => ({ ...current, status: 'loading', error: null }));
-    loadAll(callResolver, request).then(
+    loadAll(callResolver, request, retryDelays).then(
       (loaded) => live && setState({ status: 'ready', ...loaded, error: null }),
       (error) => live && setState((current) => ({ ...current, status: 'error', error })),
     );
     return () => {
       live = false;
     };
-  }, [callResolver, request, attempt]);
+  }, [callResolver, request, retryDelays, attempt]);
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
   const actions = useMemo(() => ({
     save: (template) => callResolver('saveTemplate', { template }),

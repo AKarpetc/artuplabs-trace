@@ -16,6 +16,7 @@ vi.mock('@forge/bridge', async () => {
 });
 
 const WAIT = { timeout: 5000 };
+const NO_WAIT = [0, 0, 0];
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 function renderTab({ locale = 'en-US', ...props } = {}) {
@@ -132,13 +133,56 @@ describe('templates list', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 
-  it('shows the translated text for an unexpected resolver error', async () => {
+  it('shows the translated text for an unexpected resolver error once the repeats are used up', async () => {
     vi.mocked(invoke).mockImplementation(async (key, payload) => {
       if (key === 'listTemplates') throw new Error('internal');
       return bridge.invoke(key, payload);
     });
-    renderTab();
+    renderTab({ retryDelays: NO_WAIT });
     expect(await screen.findByText('Something went wrong on our side. Try again in a moment.', {}, WAIT)).toBeInTheDocument();
+    expect(calls('listTemplates')).toHaveLength(NO_WAIT.length + 1);
+  });
+
+  it('repeats a throttled read and keeps the templates and their actions', async () => {
+    let failures = 2;
+    vi.mocked(invoke).mockImplementation(async (key, payload) => {
+      if ((key === 'getScopes' || key === 'listTemplates') && failures > 0) {
+        failures -= 1;
+        throw new Error('internal');
+      }
+      return bridge.invoke(key, payload);
+    });
+    renderTab({ retryDelays: NO_WAIT });
+    const project = await screen.findByTestId('templates-group-project', {}, WAIT);
+    const { id } = TEMPLATES_SEED.project[0];
+    expect([within(project).getByTestId(`template-edit-${id}`), within(project).getByTestId(`template-delete-${id}`)]).toHaveLength(2);
+  });
+
+  it('keeps at most three template reads in flight across many projects', async () => {
+    const many = Array.from({ length: 130 }, (_, i) => ({ key: `P${i}`, name: `Project ${i}` }));
+    const request = vi.fn(async (path) => {
+      if (path.startsWith('/rest/api/3/project/search')) {
+        const start = Number(new URL(path, 'https://x').searchParams.get('startAt') ?? 0);
+        const values = many.slice(start, start + 50);
+        return new Response(JSON.stringify({ values, isLast: start + 50 >= many.length }), { status: 200 });
+      }
+      return bridge.requestJira(path);
+    });
+    let inFlight = 0;
+    let peak = 0;
+    const callResolver = async (key, payload) => {
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      try {
+        await new Promise((resolve) => { setTimeout(resolve, 5); });
+        return await bridge.invoke(key, payload);
+      } finally {
+        inFlight -= 1;
+      }
+    };
+    renderTab({ request, callResolver });
+    await screen.findByTestId('templates-group-user', {}, WAIT);
+    expect(peak).toBe(3);
   });
 
   it('reads the list again after Try again', async () => {

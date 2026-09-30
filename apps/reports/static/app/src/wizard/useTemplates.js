@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { call } from '../api.js';
+import { call, withRetry } from '../api.js';
 import { withOrder } from '../core/entry.js';
+import { readTemplateBytes } from '../export/customTemplate.js';
 import { projectKeysOf } from './useWizardForm.js';
 
 /** Stored template groups in the order the picker lists them. */
@@ -8,30 +9,11 @@ export const TEMPLATE_GROUPS = ['user', 'project', 'site'];
 
 const EMPTY = { user: [], project: [], site: [] };
 
-/** Decodes a base64 string to bytes. */
-export function decodeBase64(data) {
-  const text = atob(data);
-  const bytes = new Uint8Array(text.length);
-  for (let i = 0; i < text.length; i += 1) bytes[i] = text.charCodeAt(i);
-  return bytes;
-}
+const read = withRetry(call);
 
-/** Reads a stored Word template part by part (0…parts−1, one after another) and joins the bytes; null when it has no parts. */
-export async function loadTemplateBytes(template, getPart = (id, index) => call('getTemplatePart', { id, index })) {
-  const count = template.parts ?? 0;
-  if (count < 1) return null;
-  const chunks = [];
-  for (let index = 0; index < count; index += 1) {
-    const { data } = await getPart(template.id, index);
-    chunks.push(decodeBase64(data));
-  }
-  const bytes = new Uint8Array(chunks.reduce((sum, chunk) => sum + chunk.length, 0));
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return bytes;
+/** Reads a stored Word template part by part through the getTemplatePart resolver, repeating a part that fails with `internal`; null when it has no parts. */
+export function loadTemplateBytes(template, getPart = (id, index) => read('getTemplatePart', { id, index })) {
+  return readTemplateBytes(template, getPart);
 }
 
 /** Stored templates of one format per group; names sorted with the locale collator. */
@@ -60,7 +42,7 @@ export async function lookupProjectKeys(client, entry) {
 }
 
 /** Stored templates visible for the entry's project: `{ status: 'loading' | 'ready' | 'error', groups, error, retry }`. */
-export function useTemplates(entry, { client, load = (payload) => call('listTemplates', payload) } = {}) {
+export function useTemplates(entry, { client, load = (payload) => read('listTemplates', payload) } = {}) {
   const entryKey = JSON.stringify(entry);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ status: 'loading', groups: EMPTY, error: null });

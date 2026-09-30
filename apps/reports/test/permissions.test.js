@@ -64,9 +64,18 @@ describe('createPermissions — project scope', () => {
 });
 
 describe('createPermissions — failures and caching', () => {
-  it('denies when the permission call throws', async () => {
-    const p = createPermissions({ accountId: ME, fetchMyPermissions: vi.fn().mockRejectedValue(new Error('boom')) });
-    expect([await p.canView({ scope: 'project', scopeId: 'RPT' }), await p.canManage('site', 'site')]).toEqual([false, false]);
+  it('throws when the permission call fails, instead of denying', async () => {
+    const p = createPermissions({ accountId: ME, fetchMyPermissions: vi.fn().mockRejectedValue(new Error('mypermissions 429')) });
+    await expect(p.canView({ scope: 'project', scopeId: 'RPT' })).rejects.toThrow('mypermissions 429');
+    await expect(p.canManage('site', 'site')).rejects.toThrow('mypermissions 429');
+  });
+
+  it('asks Jira again after a failed call', async () => {
+    const fetchMyPermissions = vi.fn().mockRejectedValueOnce(new Error('mypermissions 503')).mockResolvedValue({ BROWSE_PROJECTS: true });
+    const p = createPermissions({ accountId: ME, fetchMyPermissions });
+    await expect(p.canView({ scope: 'project', scopeId: 'RPT' })).rejects.toThrow();
+    expect(await p.canView({ scope: 'project', scopeId: 'RPT' })).toBe(true);
+    expect(fetchMyPermissions).toHaveBeenCalledTimes(2);
   });
 
   it('denies when the permission call returns nothing', async () => {

@@ -1,16 +1,16 @@
 const PROJECT_KEYS = ['BROWSE_PROJECTS', 'ADMINISTER_PROJECTS'];
 const SITE_KEYS = ['ADMINISTER'];
 
-/** Permission checker for one caller; Jira answers are cached per permission set and project, failures deny. */
+/** Permission checker for one caller; Jira answers are cached per permission set and project, a refusal denies, a failed read throws and is asked again next time. */
 export function createPermissions({ accountId, fetchMyPermissions }) {
   const cache = new Map();
 
   function held(keys, projectKey) {
     const cacheKey = `${keys.join(',')}|${projectKey ?? ''}`;
     if (!cache.has(cacheKey)) {
-      cache.set(cacheKey, Promise.resolve()
-        .then(() => fetchMyPermissions(keys, projectKey))
-        .then((result) => result ?? {}, () => ({})));
+      const answer = Promise.resolve().then(() => fetchMyPermissions(keys, projectKey)).then((result) => result ?? {});
+      answer.catch(() => cache.delete(cacheKey));
+      cache.set(cacheKey, answer);
     }
     return cache.get(cacheKey);
   }

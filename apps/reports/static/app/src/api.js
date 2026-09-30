@@ -1,4 +1,5 @@
 import { invoke } from '@forge/bridge';
+import { RESOLVER_RETRY_DELAYS_MS } from './core/limits.js';
 
 const KNOWN_CODES = ['unlicensed', 'bad-request', 'forbidden', 'not-found', 'too-large', 'internal'];
 
@@ -32,6 +33,29 @@ export async function call(key, payload) {
   }
 }
 
+const codeOf = (error) => (error instanceof AppError ? error.code : matchCode(String(error?.message ?? error)));
+
+const wait = (ms) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+
+/**
+ * Wraps a resolver caller for reads: an `internal` failure (Jira throttling or a transient error behind the resolver)
+ * is repeated after each of `delays`; other codes are final at once.
+ */
+export function withRetry(callResolver, { delays = RESOLVER_RETRY_DELAYS_MS, sleep = wait } = {}) {
+  return async (key, payload) => {
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        return await callResolver(key, payload);
+      } catch (error) {
+        if (codeOf(error) !== 'internal' || attempt >= delays.length) throw error;
+        await sleep(delays[attempt]);
+      }
+    }
+  };
+}
+
 /**
  * Turns a `call()` error (or any `Error`) into a user-facing message via
  * `t()`; known codes get their dedicated translation, others fall back to
@@ -39,7 +63,7 @@ export async function call(key, payload) {
  */
 export function errorMessage(t, error) {
   const message = String(error?.message ?? error);
-  const code = error instanceof AppError ? error.code : matchCode(message);
+  const code = codeOf(error);
   if (code === 'generic') {
     return t('errors.generic', { message });
   }

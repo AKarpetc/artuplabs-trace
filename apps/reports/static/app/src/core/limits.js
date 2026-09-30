@@ -22,5 +22,11 @@ export const TEMPLATE_MAX_PARTS = Math.ceil(TEMPLATE_MAX_BYTES / TEMPLATE_PART_B
 export const TEMPLATE_MAX_UNCOMPRESSED_BYTES = 20 * 1024 * 1024;
 /** Project keys the template resolvers take per call. */
 export const TEMPLATE_PROJECT_KEYS = 20;
+
+/** Template resolver reads in flight at once on the Templates tab. */
+export const TEMPLATE_READ_CONCURRENCY = 3;
+
+/** Waits before repeating a template resolver read that failed with `internal`. */
+export const RESOLVER_RETRY_DELAYS_MS = [1000, 2000, 4000];
 /** Issues shown in the Excel preview. */
 export const PREVIEW_ISSUES = 5;

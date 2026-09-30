@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const h = vi.hoisted(() => ({ defs: {}, user: undefined, kvs: undefined, requests: [] }));
+const h = vi.hoisted(() => ({ defs: {}, user: undefined, kvs: undefined, requests: [], status: 200 }));
 
 vi.mock('@forge/resolver', () => ({
   default: class {
@@ -45,6 +45,7 @@ vi.mock('@forge/api', () => {
       const url = new URL(path, 'https://jira.example');
       const keys = url.searchParams.get('permissions').split(',');
       const projectKey = url.searchParams.get('projectKey');
+      if (h.status !== 200) return { ok: false, status: h.status, json: async () => ({}) };
       if (projectKey && projectKey !== 'RPT') return { ok: false, status: 404, json: async () => ({}) };
       const held = GRANTS[h.user]?.[projectKey ?? 'global'] ?? [];
       const permissions = Object.fromEntries(keys.map((k) => [k, { key: k, havePermission: held.includes(k) }]));
@@ -74,6 +75,7 @@ const b64 = (bytes) => Buffer.alloc(bytes, 7).toString('base64');
 beforeEach(() => {
   h.kvs.data.clear();
   h.requests.length = 0;
+  h.status = 200;
 });
 
 describe('getAccess', () => {
@@ -192,6 +194,21 @@ describe('listTemplates and getScopes', () => {
     const browser = await call('listTemplates', { projectKeys: ['RPT'] }, BROWSER);
     const outsider = await call('listTemplates', { projectKeys: ['RPT'] }, OUTSIDER);
     expect([browser, outsider]).toEqual([{ user: [], project: [project], site: [site] }, { user: [], project: [], site: [site] }]);
+  });
+
+  it.each([429, 500, 503])('fails with internal, not an empty answer, when Jira answers mypermissions with %i', async (status) => {
+    await call('saveTemplate', { template: docx() }, PADMIN);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.status = status;
+    await expect(call('getScopes', { projectKeys: ['RPT'] }, PADMIN)).rejects.toThrow(new Error('internal'));
+    await expect(call('listTemplates', { projectKeys: ['RPT'] }, PADMIN)).rejects.toThrow(new Error('internal'));
+    expect(log.mock.calls.map(([line]) => line)).toEqual([`getScopes failed: mypermissions ${status}`, `listTemplates failed: mypermissions ${status}`]);
+    log.mockRestore();
+  });
+
+  it.each([401, 403])('treats a %i from mypermissions as no permission', async (status) => {
+    h.status = status;
+    expect(await call('getScopes', { projectKeys: ['RPT'] }, PADMIN)).toEqual({ site: false, projects: [] });
   });
 
   it('rejects more than 20 project keys', async () => {
@@ -373,6 +390,14 @@ describe('getTemplatePart', () => {
     const { id } = await call('saveTemplate', { template: docx({ scope: 'user', scopeId: undefined }) }, OWNER);
     await call('uploadTemplatePart', { uploadId: U1, id, index: 0, total: 1, data: b64(6) }, OWNER);
     await expect(call('getTemplatePart', { id, index: 0 }, OTHER)).rejects.toThrow(new Error('forbidden'));
+  });
+
+  it('fails with internal, not forbidden, when Jira throttles the permission read', async () => {
+    const id = await uploaded();
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.status = 429;
+    await expect(call('getTemplatePart', { id, index: 0 }, BROWSER)).rejects.toThrow(new Error('internal'));
+    log.mockRestore();
   });
 
   it('rejects an index beyond the stored parts with not-found', async () => {
