@@ -149,8 +149,8 @@ describe('truncateCell', () => {
 });
 
 describe('real RPT descriptions', () => {
-  it.each(['rpt-merged.json', 'rpt-cjk.json', 'rpt-lists.json'])('%s converts without fallback warnings', async (name) => {
-    const { default: adf } = await import(`../fixtures/adf/${name}`);
+  it.each(['rpt-merged', 'rpt-cjk', 'rpt-lists'])('%s converts without fallback warnings', async (name) => {
+    const { default: adf } = await import(`../fixtures/adf/${name}.json`);
     const { blocks, warnings } = adfToModel(adf);
     expect(blocks.length).toBeGreaterThan(0);
     expect(warnings).toEqual([]);

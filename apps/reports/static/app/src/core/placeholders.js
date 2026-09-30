@@ -26,7 +26,7 @@ export const RICH_TAGS = {
 };
 
 /** Tags describing the export itself. */
-export const DOC_TAGS = ['jql', 'exportedBy', 'exportedAt', 'count', 'title', 'siteUrl'];
+export const DOC_TAGS = ['jql', 'exportedBy', 'exportedAt', 'count', 'title', 'siteUrl', 'partial', 'partialBanner'];
 
 /** Loops allowed in each scope. */
 export const LOOPS = {

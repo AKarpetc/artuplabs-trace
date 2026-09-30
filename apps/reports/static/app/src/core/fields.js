@@ -14,11 +14,11 @@ function compareFields(a, b) {
   return customNumber(a.id) - customNumber(b.id) || a.id.localeCompare(b.id);
 }
 
-/** Indexes GET /rest/api/3/field by id and by lower-case name; on a name clash system fields, then lower ids win. */
+/** Indexes GET /rest/api/3/field by id and by lower-case name (the id when Jira gives none); on a name clash system fields, then lower ids win. */
 export function buildFieldCatalog(rawFields) {
   const list = rawFields.map((f) => ({
-    id: f.id,
-    name: f.name,
+    id: String(f.id),
+    name: String(f.name ?? f.id),
     custom: Boolean(f.custom),
     type: f.schema?.type ?? 'any',
     items: f.schema?.items ?? null,

@@ -132,7 +132,7 @@ describe('example template', () => {
     const names = tags.flatMap(function walk(tag) {
       return [tag.name, ...tag.children.flatMap(walk)];
     });
-    expect(names).toEqual(expect.arrayContaining(['jql', 'exportedAt', 'issues', 'description', 'comments']));
+    expect(names).toEqual(expect.arrayContaining(['jql', 'exportedAt', 'partial', 'partialBanner', 'issues', 'description', 'comments']));
   });
 
   it('renders a row and a details block for every issue', () => {

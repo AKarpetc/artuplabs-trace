@@ -1,53 +1,17 @@
 import { fitImage, isImageIntact, readImageInfo } from '../core/imageSize.js';
-import { FIELD_TAG } from '../core/placeholders.js';
 import { buildTemplateData } from '../core/templateData.js';
-import { blocksToOoxml, stripInvalidXml } from './ooxml.js';
+import { blocksToOoxml } from './ooxml.js';
+import { DELIMITERS, parseTag } from './templateTags.js';
 
-/** Placeholder delimiters of customer templates. */
-export const DELIMITERS = { start: '{{', end: '}}' };
+export { DELIMITERS, normalizeTag, parseTag } from './templateTags.js';
 
 const CONTENT_WIDTH_PX = 600;
 const EMU_PER_PX = 9525;
-const TYPOGRAPHIC_QUOTES = /[“”„‟″]/g;
 const EXTENSIONS = { png: 'png', jpg: 'jpeg', gif: 'gif' };
 const MIME = { png: 'image/png', jpeg: 'image/jpeg', gif: 'image/gif' };
 const IMAGE_RELATIONSHIP = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
 const EMPTY_RELS = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
 const WORD_PART = /^word\/(?!_rels\/)[^/]+\.xml$/;
-
-const own = (object, key) => (object !== null && typeof object === 'object' && Object.hasOwn(object, key) ? object[key] : undefined);
-
-function ownIgnoringCase(object, key) {
-  const exact = own(object, key);
-  if (exact !== undefined || object === null || typeof object !== 'object') return exact;
-  const match = Object.keys(object).find((k) => k.toLowerCase() === key.toLowerCase());
-  return match === undefined ? undefined : object[match];
-}
-
-/** Tag name as written, trimmed, with typographic double quotes made straight. */
-export function normalizeTag(tag) {
-  return String(tag ?? '').trim().replace(TYPOGRAPHIC_QUOTES, '"');
-}
-
-/** Docxtemplater parser: `.`, `field "Name"`, dotted paths; a tag rendered as raw XML reads its `__xml` twin. */
-export function parseTag(tag) {
-  const name = normalizeTag(tag);
-  const field = FIELD_TAG.exec(name);
-  const path = name === '.' || field ? [] : name.split('.');
-  const lookup = (scope, raw) => {
-    if (name === '.') return scope;
-    if (field) return raw ? undefined : ownIgnoringCase(own(scope, 'fields'), field[1]);
-    const last = path.length - 1;
-    return path.reduce((value, key, i) => own(value, i === last && raw ? `${key}__xml` : key), scope);
-  };
-  return {
-    get(scope, context) {
-      const raw = context?.meta?.part?.module === 'rawxml';
-      const value = lookup(scope, raw);
-      return typeof value === 'string' && !raw ? stripInvalidXml(value) : value;
-    },
-  };
-}
 
 function acceptImage(found) {
   if (!found?.bytes) return null;
@@ -65,7 +29,7 @@ function acceptImage(found) {
 
 function addRelationships(zip, part, numbers) {
   const relsPath = part.replace(/^word\//, 'word/_rels/') + '.rels';
-  let rels = zip.file(relsPath)?.asText() ?? EMPTY_RELS;
+  let rels = (zip.file(relsPath)?.asText() ?? EMPTY_RELS).replace(/<Relationships\b([^>]*?)\s*\/>/, '<Relationships$1></Relationships>');
   for (const [n, extension] of numbers) {
     if (rels.includes(`Id="rIdArtup${n}"`)) continue;
     const entry = `<Relationship Id="rIdArtup${n}" Type="${IMAGE_RELATIONSHIP}" Target="media/artup-${n}.${extension}"/>`;
@@ -152,7 +116,7 @@ export function renderDocxTemplate({ template, issues, meta, images, labels, Piz
       return xml;
     };
   };
-  const data = buildTemplateData({ issues, meta, toXml });
+  const data = buildTemplateData({ issues, meta, toXml, labels });
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true, linebreaks: true, delimiters: DELIMITERS, parser: parseTag, nullGetter: () => '', errorLogging: false,
   });

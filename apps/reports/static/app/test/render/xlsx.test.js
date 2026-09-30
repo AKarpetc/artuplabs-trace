@@ -145,9 +145,11 @@ describe('renderXlsx summary sheet', () => {
 });
 
 describe('renderXlsx workbook', () => {
-  it('sets creator, title and a description containing the JQL', async () => {
+  it('sets creator, title, time and a description with the JQL and the issue count', async () => {
     const wb = await render({ assembled: assembled([]) });
-    expect({ creator: wb.creator, title: wb.title, hasJql: wb.description.includes('project = RPT') }).toEqual({ creator: 'Ann', title: 'My report', hasJql: true });
+    expect({ creator: wb.creator, title: wb.title, created: wb.created.toISOString(), description: wb.description }).toEqual({
+      creator: 'Ann', title: 'My report', created: '2026-09-29T10:00:00.000Z', description: 'JQL: project = RPT\nCount: 2',
+    });
   });
 
   it('renders 10 000 rows by 15 columns in under 5 seconds', async () => {

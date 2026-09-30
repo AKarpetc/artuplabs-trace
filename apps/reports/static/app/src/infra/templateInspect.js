@@ -1,6 +1,6 @@
 import { TEMPLATE_MAX_BYTES } from '../core/limits.js';
 import { checkTemplateTags } from '../core/placeholders.js';
-import { DELIMITERS, normalizeTag, parseTag } from '../render/docxTemplate.js';
+import { DELIMITERS, normalizeTag, parseTag } from '../render/templateTags.js';
 
 const KINDS = { loop: 'loop', rawxml: 'raw' };
 

@@ -97,7 +97,7 @@ generated files back:
 
 - **Excel:** 10,003 issues in 11.8 seconds; the file has 10,003 data rows and 10,003 issue links.
 - **Word:** 500 issues with 500 images in 58–80 seconds (two runs); no image lost.
-- **PDF:** 500 issues with images in 57–72 seconds (four runs), 1,000 pages; Chinese and Japanese text on page 1.
+- **PDF:** 500 issues with images in 57–72 seconds (at least three runs), 1,000 pages; Chinese and Japanese text on page 1.
 - **Layouts:** 4 layouts × Word and PDF × A4 and Letter × Latin, Cyrillic and CJK — 203 pages
   checked for text running past the margins after the last fix: none.
 

@@ -23,6 +23,13 @@ const RAW = [
 const catalog = buildFieldCatalog(RAW);
 const f = (id) => catalog.byId.get(id);
 
+describe('buildFieldCatalog', () => {
+  it('names a field Jira returns without a name by its id', () => {
+    const nameless = buildFieldCatalog([{ id: 'customfield_10900', custom: true, schema: { type: 'string' } }, { id: 'summary', name: null }]);
+    expect([nameless.list.map((field) => field.name), resolveField(nameless, 'CUSTOMFIELD_10900')?.id]).toEqual([['customfield_10900', 'summary'], 'customfield_10900']);
+  });
+});
+
 describe('resolveField', () => {
   it('finds a field by id', () => {
     expect(resolveField(catalog, 'duedate')?.name).toBe('Due date');

@@ -68,7 +68,7 @@ export async function renderXlsx({ assembled, summary, meta, labels, ExcelJS, tz
   wb.creator = meta.exportedBy;
   wb.created = meta.now;
   wb.title = meta.title ?? '';
-  wb.description = `JQL: ${meta.jql}`;
+  wb.description = `JQL: ${meta.jql}\n${labels['summary.count']}: ${meta.count}`;
   const banner = meta.partial ? labels.partialBanner(meta.partial.done, meta.partial.total) : null;
   const withSummary = Boolean(assembled.summarySheet && summary);
   if (withSummary) {

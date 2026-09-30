@@ -1,6 +1,6 @@
 import { createContext, createElement, useContext, useEffect, useMemo } from 'react';
 
-/** Confluence locale codes ArtUp Export ships translations for. */
+/** Jira locale codes ArtUp Reports ships translations for. */
 export const SUPPORTED_LOCALES = [
   'zh-CN', 'zh-TW', 'cs-CZ', 'da-DK', 'nl-NL', 'en-US', 'en-GB', 'et-EE',
   'fi-FI', 'fr-FR', 'de-DE', 'hu-HU', 'is-IS', 'it-IT', 'ja-JP', 'ko-KR',
@@ -36,7 +36,7 @@ function buildLocaleDictionaries(modules) {
 export const localeDictionaries = buildLocaleDictionaries(localeModules);
 
 /**
- * Normalises a Confluence locale (e.g. `ru_RU`) to one of SUPPORTED_LOCALES:
+ * Normalises a Jira locale (e.g. `ru_RU`) to one of SUPPORTED_LOCALES:
  * exact match wins, then a preferred language match, else en-US.
  */
 export function resolveLocale(raw) {
@@ -83,7 +83,7 @@ export function createT(locale, dictionaries) {
 
 const I18nContext = createContext(null);
 
-/** Provides a translate function for the resolved Confluence locale to descendants and marks the document language. */
+/** Provides a translate function for the resolved Jira locale to descendants and marks the document language. */
 export function I18nProvider({ locale, children }) {
   const value = useMemo(() => {
     const resolved = resolveLocale(locale);

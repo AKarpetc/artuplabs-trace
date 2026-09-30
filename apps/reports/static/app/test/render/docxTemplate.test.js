@@ -8,14 +8,14 @@ import { pngBytes } from '../fixtures/images.js';
 import { SITE, catalog, formats, makeIssue } from '../fixtures/issues.js';
 import { makeDocx, para } from '../fixtures/makeDocx.js';
 
-const labels = { imageUnavailable: 'Image unavailable' };
+const labels = { imageUnavailable: 'Image unavailable', partialBanner: (done, total) => `Incomplete export: ${done} of ${total} issues` };
 const meta = { jql: 'project = RPT', exportedBy: 'Ann', exportedAt: '29 Sep 2026 10:00', count: 2, siteUrl: SITE };
 const prepare = (overrides) => prepareIssue(makeIssue(overrides), { catalog, siteUrl: SITE, formats, fieldNames: ['Story Points'] });
 const png = (w = 320, h = 200) => ({ bytes: pngBytes(w, h), type: 'png', width: w, height: h });
 const DIAGRAM = '10500';
 
-function render({ body, header, issues = [prepare()], images = new Map() }) {
-  const bytes = renderDocxTemplate({ template: makeDocx({ body, header }), issues, meta, images, labels, PizZip, Docxtemplater });
+function render({ body, header, issues = [prepare()], images = new Map(), template = makeDocx({ body, header }), extraMeta = {} }) {
+  const bytes = renderDocxTemplate({ template, issues, meta: { ...meta, ...extraMeta }, images, labels, PizZip, Docxtemplater });
   const zip = new PizZip(bytes);
   const part = (name) => zip.file(name)?.asText() ?? '';
   return { zip, part, doc: part('word/document.xml'), names: Object.keys(zip.files) };
@@ -130,6 +130,23 @@ describe('renderDocxTemplate', () => {
   it('leaves an unknown tag empty', () => {
     const { doc } = render({ body: para('[{{nothing}}]') });
     expect(texts(doc).join('')).toEqual('[]');
+  });
+
+  it('adds image relationships to a template whose relationships part is self-closing', () => {
+    const zip = new PizZip(makeDocx({ body: para('{{@description}}') }));
+    zip.file('word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>');
+    const { part } = render({ template: zip.generate({ type: 'uint8array' }), images: new Map([[DIAGRAM, png()]]) });
+    expect(part('word/_rels/document.xml.rels')).toBe('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+      + '<Relationship Id="rIdArtup1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/artup-1.png"/>'
+      + '</Relationships>');
+  });
+
+  it('prints the partial banner only in a partial file', () => {
+    const body = [para('{{#partial}}'), para('{{partialBanner}}'), para('{{/partial}}'), para('{{key}}')].join('');
+    const partial = render({ body, extraMeta: { partial: { done: 1, total: 3 } } });
+    const full = render({ body });
+    expect([texts(partial.doc), texts(full.doc)]).toEqual([['Incomplete export: 1 of 3 issues', 'RPT-1'], ['RPT-1']]);
   });
 
   it('produces a zip whose document has no placeholders left', () => {

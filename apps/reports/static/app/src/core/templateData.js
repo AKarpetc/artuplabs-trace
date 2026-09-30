@@ -20,13 +20,15 @@ function issueData(p, toXml) {
   };
 }
 
-/** Data for a customer Word template: document tags, the first issue at the root, and all issues under `issues`. */
-export function buildTemplateData({ issues, meta, toXml }) {
+/** Data for a customer Word template: document tags (`partial` and `partialBanner` for a partial file), the first issue at the root, and all issues under `issues`. */
+export function buildTemplateData({ issues, meta, toXml, labels }) {
   const list = issues.map((p) => issueData(p, toXml));
   return {
     ...(list[0] ?? {}),
     jql: meta.jql, exportedBy: meta.exportedBy, exportedAt: meta.exportedAt, count: meta.count,
     title: meta.title ?? '', siteUrl: meta.siteUrl,
+    partial: Boolean(meta.partial),
+    partialBanner: meta.partial ? labels.partialBanner(meta.partial.done, meta.partial.total) : '',
     issues: list,
   };
 }

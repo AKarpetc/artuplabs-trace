@@ -41,6 +41,9 @@ const document = new Document({
     headers: { default: header },
     children: [
       new Paragraph({ heading: HeadingLevel.TITLE, alignment: AlignmentType.LEFT, children: [new TextRun({ text: '{{title}}' })] }),
+      text('{{#partial}}'),
+      text('{{partialBanner}}', { bold: true }),
+      text('{{/partial}}'),
       text('{{count}} issues'),
       table,
       new Paragraph({ children: [] }),
