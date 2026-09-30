@@ -96,8 +96,8 @@ Measured with the app's own export pipeline against a test Jira site, including 
 generated files back:
 
 - **Excel:** 10,003 issues in 11.8 seconds; the file has 10,003 data rows and 10,003 issue links.
-- **Word:** 500 issues with 500 images in 58.1 seconds; no image lost.
-- **PDF:** 500 issues with images in 56.7 seconds, 1,000 pages; Chinese and Japanese text on page 1.
+- **Word:** 500 issues with 500 images in 58–80 seconds (two runs); no image lost.
+- **PDF:** 500 issues with images in 57–72 seconds (four runs), 1,000 pages; Chinese and Japanese text on page 1.
 - **Layouts:** 4 layouts × Word and PDF × A4 and Letter × Latin, Cyrillic and CJK — 203 pages
   checked for text running past the margins after the last fix: none.
 
@@ -126,8 +126,8 @@ NEXT_STEPS.md; deploy them before submitting.]`
 
 ## Pricing note
 
-Free for sites with up to 10 users, with no watermark and no limits in the generated files (the
-files carry no watermark — checked in the Word, PDF and Excel outputs; the behaviour for a site with
+Free for sites with up to 10 users. No watermark was found in the generated
+Word, PDF and Excel files (checked in the acceptance runs; the behaviour for a site with
 no licence can only be verified after the listing exists). Larger sites: per-user pricing through the
 Marketplace. Details in the Pricing section below.
 

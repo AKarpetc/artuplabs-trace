@@ -8,7 +8,7 @@ Each maps to a criterion of brief §4 (`../22_app3_jira_reports.md`).
 **Title:** 10,000 issues to Excel in seconds
 
 **Summary:** A test export of 10,003 issues took 11.8 seconds, with real dates and numbers, issue
-links, a frozen header and filters. No vendor server, no issue limit in Excel.
+links, a frozen header and filters. No vendor server in the path.
 
 **Source:** acceptance file, part A, row 1 (Node run with the app's pipeline, not a browser run).
 **Screenshot:** `screenshots/draft/2-excel-preview.png`
