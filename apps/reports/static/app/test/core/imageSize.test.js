@@ -51,7 +51,13 @@ describe('fitImage', () => {
 });
 
 describe('isImageIntact', () => {
-  const jpeg = (tail) => new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, ...tail]);
+  const segment = (marker, body) => [0xff, marker, (body.length + 2) >> 8, (body.length + 2) & 0xff, ...body];
+  const APP0 = segment(0xe0, [0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00]);
+  const SOF0 = segment(0xc0, [0x08, 0x00, 0x10, 0x00, 0x10, 0x01, 0x01, 0x11, 0x00]);
+  const SOS = segment(0xda, [0x01, 0x01, 0x00, 0x00, 0x3f, 0x00]);
+  const SCAN = [0x12, 0xff, 0x00, 0x34, 0xff, 0xd0, 0x56];
+  const EOI = [0xff, 0xd9];
+  const jpegFile = (...parts) => new Uint8Array(parts.flat());
 
   it('accepts a complete PNG', () => {
     expect(isImageIntact(pngBytes(32, 20), 'png')).toBe(true);
@@ -69,15 +75,27 @@ describe('isImageIntact', () => {
   });
 
   it('accepts a JPEG that ends with EOI', () => {
-    expect(isImageIntact(jpeg([0x01, 0x02, 0xff, 0xd9]), 'jpg')).toBe(true);
+    expect(isImageIntact(jpegFile([0xff, 0xd8], APP0, SOF0, SOS, SCAN, EOI), 'jpg')).toBe(true);
   });
 
-  it('accepts a JPEG with a little padding after EOI', () => {
-    expect(isImageIntact(jpeg([0x01, 0xff, 0xd9, 0x00, 0x00]), 'jpg')).toBe(true);
+  it('accepts a phone photo with a trailer after EOI (Samsung SEF, motion photo video)', () => {
+    const sef = [...new TextEncoder().encode('SEFHSEFT'), ...new Array(64).fill(0x5a)];
+    const video = [0x00, 0x00, 0x00, 0x18, ...new TextEncoder().encode('ftypmp42'), ...new Array(4096).fill(0xa7)];
+    expect(isImageIntact(jpegFile([0xff, 0xd8], APP0, SOF0, SOS, SCAN, EOI, sef, video), 'jpg')).toBe(true);
   });
 
-  it('rejects a JPEG without EOI', () => {
-    expect(isImageIntact(jpeg([0x01, 0x02, 0x03, 0x04]), 'jpg')).toBe(false);
+  it('rejects a JPEG cut off inside its scan data', () => {
+    expect(isImageIntact(jpegFile([0xff, 0xd8], APP0, SOF0, SOS, SCAN.slice(0, 4)), 'jpg')).toBe(false);
+  });
+
+  it('rejects a cut-off JPEG whose only EOI belongs to the EXIF thumbnail', () => {
+    const thumbnail = [0xff, 0xd8, 0x01, 0x02, 0xff, 0xd9];
+    const exif = segment(0xe1, [...new TextEncoder().encode('Exif'), 0x00, 0x00, ...thumbnail]);
+    expect(isImageIntact(jpegFile([0xff, 0xd8], exif, SOF0, SOS, SCAN), 'jpg')).toBe(false);
+  });
+
+  it('rejects a JPEG without a scan', () => {
+    expect(isImageIntact(jpegFile([0xff, 0xd8], APP0, SOF0, EOI), 'jpg')).toBe(false);
   });
 
   it('rejects a type a PDF cannot embed', () => {

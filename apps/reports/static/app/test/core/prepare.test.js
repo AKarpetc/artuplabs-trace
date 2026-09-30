@@ -39,6 +39,16 @@ describe('prepareIssue', () => {
     expect({ inlineImages: p.inlineImages, gallery: p.gallery }).toEqual({ inlineImages: ['10500', '10503'], gallery: ['10501'] });
   });
 
+  it('shows a non-image file card by its file name, keeping it out of the images to download', () => {
+    const card = { type: 'media', attrs: { type: 'file', id: 'uuid-pdf', collection: '' } };
+    const description = { type: 'doc', version: 1, content: [{ type: 'panel', attrs: { panelType: 'info' }, content: [{ type: 'mediaGroup', content: [card] }] }] };
+    const rendered = '<a href="/rest/api/3/attachment/content/10502" data-media-services-id="uuid-pdf">spec.pdf</a>';
+    const p = prepare(makeIssue({ fields: { description }, renderedFields: { description: rendered } }));
+    expect(p.description).toEqual([{ type: 'panel', kind: 'info', blocks: [para('spec.pdf')] }]);
+    expect(p.inlineImages).toEqual(['10503']);
+    expect(p.warnings).toEqual([]);
+  });
+
   it('carries comment author, formatted date and blocks resolved against that comment\'s rendered body', () => {
     expect(prepare(makeIssue()).comments).toEqual([
       { author: 'Ann', created: 'DT:2026-09-02T08:00:00.000Z', blocks: [para('Looks good'), image('10503')] },

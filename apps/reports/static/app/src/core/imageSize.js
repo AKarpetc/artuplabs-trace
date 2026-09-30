@@ -52,7 +52,6 @@ export function fitImage({ width, height }, maxWidth) {
 }
 
 const PNG_SIGNATURE = 8;
-const JPEG_TAIL = 16;
 const chunkType = (b, i) => String.fromCharCode(b[i + 4], b[i + 5], b[i + 6], b[i + 7]);
 
 function pngIntact(b) {
@@ -70,15 +69,36 @@ function pngIntact(b) {
   return false;
 }
 
+function scanStart(b) {
+  let i = 2;
+  while (i + 4 <= b.length) {
+    const marker = b[i + 1];
+    if (b[i] !== 0xff || marker === 0xff) {
+      i += 1;
+      continue;
+    }
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      i += 2;
+      continue;
+    }
+    const next = i + 2 + ((b[i + 2] << 8) | b[i + 3]);
+    if (marker === 0xda) return next;
+    i = next;
+  }
+  return -1;
+}
+
 function jpegIntact(b) {
   if (b.length < 4 || b[0] !== 0xff || b[1] !== 0xd8) return false;
-  for (let i = b.length - 2; i >= Math.max(2, b.length - JPEG_TAIL); i -= 1) {
+  const start = scanStart(b);
+  if (start < 0) return false;
+  for (let i = start; i + 1 < b.length; i += 1) {
     if (b[i] === 0xff && b[i + 1] === 0xd9) return true;
   }
   return false;
 }
 
-/** Cheap structural check that a PNG or JPEG is complete (PNG chunk walk to IEND, JPEG SOI and a trailing EOI); other types fail. */
+/** Cheap structural check that a PNG or JPEG is complete (PNG chunk walk to IEND, JPEG SOI and an EOI after the first scan, trailers allowed); other types fail. */
 export function isImageIntact(bytes, type) {
   const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   if (type === 'png') return b.length > PNG_SIGNATURE && b[0] === 0x89 && b[1] === 0x50 && pngIntact(b);
