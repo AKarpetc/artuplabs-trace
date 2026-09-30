@@ -85,3 +85,79 @@ Task 17: complete (commits 0d02405..14dcb49, review clean) — getScopes mock sh
 Task 17: CARRY to Task 18/19/20: StepSection takes `number` (not index) + optional description; AppHeader takes { subtitle, scopeName, actions } and always shows t('app.title') (no title prop); AccessGate/useAccess in src/app/.
 Task 17: minor (deferred): fixtures resolve('getAccess') dead branch; bulkfetch mock never returns issueErrors / fixed order
 Task 18: INTERRUPTED by owner 2026-09-29 — implementer started (not reviewed); partial work saved as `git stash` "REPORTS task 18 WIP (wizard, unreviewed, interrupted 2026-09-29)" (src/wizard/, test/wizard/, preview WizardScreen, +200 locale keys, @atlaskit/textarea 10.2.7). Resume Task 18 in a new session: dispatch a fresh opus implementer that may start from `git stash apply` of that stash, then normal review.
+Task 18: RESUMED 2026-09-30 — fresh opus implementer dispatched (BASE 746c5ca), may start from stash@{0}
+Task 18: implementer DONE_WITH_CONCERNS (commit 75c1cff, 699/699 UI tests, 56 preview screenshots) — review dispatched (opus)
+Task 18: Ruling: R19 (implementer) — board entry without project key resolves project from the first issue read (≤3 extra reads) — reading of "via the first read" in brief — cost if wrong: extra reads / wrong project templates listed on boards spanning projects
+Task 18: CARRY to Task 21: wizard TemplatePicker loads thumbnails as `preview/thumbs/<builtin id>.png` (brief T18); T21 must emit per-id files (or change the one path line) — plan T21 text says <layout>.png.
+Task 18: complete (commits 746c5ca..75c1cff, review clean)
+Task 18: minor (deferred): raw fontSize/lineHeight px in xcss (ExcelPreview, SourceStep, WarningsTable, ResultView, Wizard codeStyles) — use font tokens
+Task 18: minor (deferred): ColumnsEditor drag effect re-registers each render (onMove unstable)
+Task 18: minor (deferred): R19 lookup is 4 reads (board config, filter, searchIds, bulkFetch), not 3 — correct rulings text
+Task 18: minor (deferred): useExcelPreview throws ReportError('network') for non-done preview → shows "offline" for incomplete read
+Task 18: minor (deferred): progress-per-phase UI test covers read phase only
+Task 18: minor (deferred): TemplatePicker stored-groups error uses SectionMessage without illustration (use InlineState)
+Task 18: minor (deferred): extras beyond brief — beforeunload guard, RunningView stage tracker/timer
+Task 18: minor (deferred): en-GB identical to en-US (en-US already British spellings)
+Task 18: Ruling: commit trailer — remaining commits use `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>` per owner's session prompt/constraints.md; 75c1cff left as is (no history rewrite) — cost if wrong: one inconsistent trailer
+Task 19: implementer dispatched (sonnet, BASE 75c1cff)
+Task 19: implementer DONE_WITH_CONCERNS (commit 526c3ec, 753/753 UI tests, 48 shots); rulings R20 (editable projects only, paged, 20-key chunks) and R21 (author names via user/bulk) in rulings file — review dispatched (sonnet)
+Task 19: complete (commits 75c1cff..526c3ec, review clean) — ⚠️ example-template.docx resolved: committed file is inspected by a test (0 errors) and rendered; context prop carried to T20
+Task 19: minor (deferred): unpackedSize trusts zip directory sizes (crafted docx can bypass 20 MB cap; client-side only)
+Task 19: minor (deferred): library load/parse failure in DocxUploadForm shown as not-docx
+Task 19: minor (deferred): DocxUploadForm choose() race on quick successive files
+Task 19: minor (deferred): tab.test.jsx multi-assert tests / toMatchObject (3655, 3798, 3827, 3978, 3995)
+Task 19: minor (deferred): useTemplateAdmin takes user/site from first chunk answer — undocumented assumption
+Task 19: CARRY to Task 20: TemplatesTab takes no `context` prop (brief said context={…}); mount it in GlobalApp and pass what it needs if anything
+Task 20: implementer dispatched (sonnet, BASE 526c3ec) — includes dev deploy + forge install --upgrade (new scopes)
+Task 20: implementer DONE (commit 1c00a96; UI 773, root 159; dev deployed v3.0.0 with --approve MAJOR_VERSION_RULE; install --upgrade granted new scopes) — review dispatched (sonnet)
+Task 20: Ruling: R22 (implementer) — global page route /jira/apps/<appId>/<envId> from context.localId (not in live-checks.md) — verify at C1; cost if wrong: "Open ArtUp Reports" button degrades to Close
+Task 20: review approved; ⚠️ confirmed gap: modal ≥600 px not enforced (no viewportSize in manifest) → fix round 1 (resume implementer)
+Task 20: minor (deferred): board/backlog entries indistinguishable in action tests; navigator filterId not exercised; board fixture lacks sprints
+Task 20: minor (deferred): Close fallback (path null) has no component test; router.navigate inside modal — does modal close?
+Task 20: minor (deferred): no test that header renders on global page / non-en locale (lost with smoke.test.jsx)
+Task 20: minor (deferred): GlobalApp hand-rolled tabpanels lack aria-labelledby/id (use TabPanel)
+Task 20: minor (deferred): hidden Export wizard keeps loading while Templates tab active (deliberate)
+Task 20: fix round 1/5 (commit 6631c3b: viewportSize large on 5 action modules, dev v3.1.0) — scoped re-review dispatched
+Task 21: Ruling: thumbnails are 4 files `preview/thumbs/<layout>.png` (plan T21 "Word and PDF share"; the "8" in the Files line contradicts it), rendered with the PDF engine; T21 changes TemplatePicker to use template.layout instead of template.id — cost if wrong: Word thumbnail shows PDF rendering of same layout
+Task 20: fix round 1/5 (1 addressed, 0 open; commits 1c00a96..6631c3b)
+Task 20: complete (commits 526c3ec..6631c3b, review clean after round 1) — C1: verify rendered modal width and R22 route
+Task 21: implementer dispatched (sonnet, BASE 6631c3b)
+Task 21: implementer DONE_WITH_CONCERNS (78c6243, 4ae8006; UI 805, root 164; probe 0 over 1088 pages; 198 strings changed in 25 locales; poppler installed via brew) — review dispatched (sonnet)
+Task 21: complete (commits 6631c3b..4ae8006, review clean) — ⚠️ items: probe numbers/thumb visuals are implementer evidence (contact sheet for owner at C1); Forge serving thumbs → verified at T22 deploy/C1; native check ko/is/et/hu → owner
+Task 21: minor (deferred): probe scroll-ancestor skip hides unclipped overflow inside scroll tables/running tracker
+Task 21: minor (deferred): probe tolerates ellipsis truncation outside controls
+Task 21: minor (deferred): screenshots.mjs browser context has no locale → paper Letter in all locale shots
+Task 21: minor (deferred): thumbnails rendered with en-US content for every locale
+Task 21: minor (deferred): export-excel and preview matrix states identical
+Task 22: implementer dispatched (sonnet, BASE 4ae8006)
+Task 22: implementer DONE_WITH_CONCERNS (1ba475f renderer fix, 1d68f81 scripts+acceptance; xlsx10k 11.8s, docx500 58.1s, pdf500 56.7s, synth50k heap 1399MB; T15a 2000 imgs RSS docx 1557MB / pdf 1968MB >1.5GB; dev v3.2.0, bundles ~41MB each) — review dispatched (sonnet)
+Task 22: review approved with 2 Important (Word --multiply proxy deduped → understated; R23 closes owner alarm, no 2000-issue browser check in C2) → fix round 1 (resume implementer; also R24 187/151 mismatch, criterion 7/2 wording, final heap reading)
+Task 22: minor (deferred): PDF columnWidth MIN_COLUMN clamp makes >~32-column tables overflow page (old * widths shrank)
+Task 22: minor (deferred): pdf.test.js COLUMN helper duplicates production formula
+Task 22: minor (deferred): lists/sprint layouts equal-width columns (Summary narrow) — v1.1
+Task 22: minor (deferred): first CJK PDF downloads ~35 MB fonts — time it at C2 item 3
+Task 22: fix round 1/5 (3 addressed, 0 open; commits 1d68f81..8d43ff5) — Word 2000 RSS 2307 MB / PDF 2163 MB; R23 → owner decision (checklist item 9)
+Task 22: minor (deferred): acceptance.mjs uniquePng assumes PNG (non-PNG attachments would get corrupt tail)
+Task 22: minor (deferred): checklist item 9 optional 2000-issue repeat vague (no bulk clone)
+Task 22: complete (commits 4ae8006..8d43ff5, review clean after round 1)
+Task 23: implementer dispatched (sonnet, BASE 8d43ff5)
+Task 23: implementer DONE (1650677; listing drafts, 5 screenshots 1840x900, site/reports, NEXT_STEPS §8; OWNER placeholders: R23 count, price/tiers, categories, personal-data wording, uninstall retention) — review dispatched (sonnet)
+Task 23: review approved with 2 Important (unmeasured "no issue limit in Excel"; best-case Word/PDF timings as typical) → fix round 1 (resume implementer; also site "no watermark" hedge, "0 s" screenshot)
+Task 23: minor (deferred): 5-pdf-page.png soft; listing char counts not recounted; "thousands of issues" tagline; inline style= in site/reports; free ≤10 relies on unconfigured licensing
+Task 23: ⚠️ owner: Marketplace char limits, KVS data-residency wording, uninstall retention — in NEXT_STEPS/[OWNER]
+Task 23: fix round 1/5 (4 addressed, 0 open; commits 1650677..af40fde)
+Task 23: minor (deferred): "four runs" for PDF not directly backed (≥3 runs) — listing.md:100, site/reports/index.html:172
+Task 23: complete (commits 8d43ff5..af40fde, review clean after round 1)
+Final review: dispatched (opus) over 62ac49a..af40fde
+Final review: NOT READY — 1 Critical (custom docx placeholders flat vs tree → fetch plan empty), 4 Important (non-image attachments downloaded as images; JPEG EOI last-16-bytes rejects phone photos; templates tab fan-out + 429-as-deny; nameless field crashes catalog), 6 Minor → ONE fix wave dispatched (opus, BASE af40fde) incl. minors 1,2,4,6 + R19/“four runs” text
+Final review: Ruling: T19 zip-bomb guard ships as client-side courtesy (server never unzips; bypassable via invoke anyway; victims only other users' tabs; shared templates need project/site admin) — record in security answers — cost if wrong: a malicious admin template crashes colleagues' tabs until deleted
+Final review: owner decision: project templates invisible from navigator action / global page (no project key) — plan behaviour
+Final review: minor (deferred): no per-scope template cap; abandoned upload generations removed only on delete (KVS cost exposure)
+Final review: must-fix before listing submission (owner): recount listing field lengths vs Marketplace limits
+Final fix wave: done (cc643b1..6113651; backend 171, UI 823; dev v3.3.0; rulings R25–R29, R19 corrected) — scoped re-review dispatched (opus)
+Final fix wave: re-review — 10/10 addressed, no new Critical/Important (commits af40fde..6113651)
+Final review: minor (deferred): abort not wired into retry/template-part reads (background waste after cancel/unmount)
+Final review: minor (deferred): withTemplateTags ignores inspection errors → unparsable stored template fails at render instead of fast
+Final review: minor (deferred): R25 "costs milliseconds" measured only on ~10 KB example
+Final review: minor (deferred): design spec doc-tag table lacks {{partial}}/{{partialBanner}}; withFileCards empty paragraph without filename; 0-part template bytes null
+Final review: CLEAN after one fix wave
