@@ -25,17 +25,21 @@ function parse(argv) {
   return { command, options };
 }
 
+/** The docx-template run takes the users' path: the upload check, the stored metadata and parts, then the tags read from the stored file at run start. */
+async function storedTemplate(bytes) {
+  const [{ flattenTags }, { inspectUpload, splitParts }, { readTemplateBytes, withTemplateTags }] = await Promise.all([
+    load('src/core/placeholders.js'), load('src/templates/upload.js'), load('src/export/customTemplate.js'),
+  ]);
+  const inspected = await inspectUpload(bytes);
+  if (inspected.errors.length) throw new Error(`template errors: ${JSON.stringify(inspected.errors)}`);
+  const parts = splitParts(bytes);
+  const stored = { id: 'example', format: 'docx', kind: 'docx', placeholders: [...new Set(flattenTags(inspected.tags))], parts: parts.length };
+  const loaded = await readTemplateBytes(stored, async (_, index) => ({ data: parts[index] }));
+  return withTemplateTags(stored, loaded);
+}
+
 async function templateOf(command, options) {
-  if (command === 'docx-template') {
-    const bytes = new Uint8Array(readFileSync(options['template-file']));
-    const [{ default: PizZip }, { default: Docxtemplater }, { default: InspectModule }, { inspectTemplate }] = await Promise.all([
-      import(require.resolve('pizzip')), import(require.resolve('docxtemplater')), import(require.resolve('docxtemplater/js/inspect-module.js')),
-      load('src/infra/templateInspect.js'),
-    ]);
-    const inspected = inspectTemplate(bytes, { PizZip, Docxtemplater, InspectModule });
-    if (inspected.errors.length) throw new Error(`template errors: ${JSON.stringify(inspected.errors)}`);
-    return { id: 'example', format: 'docx', kind: 'docx', placeholders: inspected.tags, bytes };
-  }
+  if (command === 'docx-template') return storedTemplate(new Uint8Array(readFileSync(options['template-file'])));
   const { builtinById } = await load('src/core/builtins.js');
   const template = builtinById(options.template ?? { xlsx: 'xlsx-issues', docx: 'docx-single', pdf: 'pdf-single' }[command]);
   if (!template) throw new Error(`unknown template ${options.template}`);

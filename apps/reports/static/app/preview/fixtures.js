@@ -192,6 +192,7 @@ export async function routeJira(path, init = {}) {
 }
 
 const store = { user: [], project: [], site: [] };
+const uploadedParts = new Map();
 
 /** Stored templates the templates screen lists: mine (Excel and Word), a project Excel set by a colleague and a site Excel set. */
 export const TEMPLATES_SEED = {
@@ -207,12 +208,13 @@ export const TEMPLATES_SEED = {
   ],
 };
 
-/** Replaces the in-memory stored templates with copies of `seed`. */
+/** Replaces the in-memory stored templates with copies of `seed` and forgets uploaded parts. */
 export function resetTemplateStore(seed = { user: [], project: [], site: [] }) {
   const copy = JSON.parse(JSON.stringify(seed));
   store.user = copy.user;
   store.project = copy.project;
   store.site = copy.site;
+  uploadedParts.clear();
 }
 
 const bucketOf = (scope) => (scope === 'user' ? 'user' : scope === 'site' ? 'site' : 'project');
@@ -241,6 +243,7 @@ function saveTemplate(input) {
 
 function uploadTemplatePart({ id, index, total, data }) {
   const { template } = findTemplate(id);
+  uploadedParts.set(id, { ...uploadedParts.get(id), [index]: data });
   if (index === total - 1) {
     template.parts = total;
     template.size = (total - 1) * 150 * 1024 + Math.floor(data.length * 3 / 4);
@@ -248,7 +251,7 @@ function uploadTemplatePart({ id, index, total, data }) {
   return { stored: index };
 }
 
-/** Fake resolvers behind `invoke`: getAccess, getScopes and getTemplatePart answer from memory, the template resolvers work on an in-memory store; unknown keys throw. */
+/** Fake resolvers behind `invoke`: getAccess and getScopes answer from memory, the template resolvers work on an in-memory store (getTemplatePart returns uploaded parts, else the fixture ones); unknown keys throw. */
 export function resolve(key, payload = {}) {
   if (key === 'getAccess') return { licensed: true };
   if (key === 'listTemplates') return JSON.parse(JSON.stringify(store));
@@ -261,7 +264,7 @@ export function resolve(key, payload = {}) {
     return { deleted: true };
   }
   if (key === 'getTemplatePart') {
-    const data = TEMPLATE_PARTS[payload.id]?.[payload.index];
+    const data = uploadedParts.get(payload.id)?.[payload.index] ?? TEMPLATE_PARTS[payload.id]?.[payload.index];
     if (!data) throw new Error('not-found');
     return { data };
   }

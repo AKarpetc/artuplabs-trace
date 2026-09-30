@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { withTemplateTags } from '../export/customTemplate.js';
 import { createExportRun } from '../export/pipeline.js';
 import { ReportError } from '../export/errors.js';
 import { loadRenderers } from '../export/renderers.js';
@@ -12,6 +13,11 @@ const IDLE = { state: 'idle', progress: null, outcome: null, file: null, error: 
 
 const isAbort = (error) => error?.name === 'AbortError';
 
+async function runnableTemplate(template, getPart, loadLibs) {
+  if (template.kind !== 'docx') return template;
+  return withTemplateTags(template, await loadTemplateBytes(template, getPart), loadLibs ? { loadLibs } : {});
+}
+
 function asRunError(error) {
   return error instanceof JiraError ? new ReportError('network', { status: error.status }) : error;
 }
@@ -23,11 +29,11 @@ function preventUnload(event) {
 
 /**
  * Export run: `state` idle → running → incomplete | done | failed; `start(request)`, `cancel`, `retryMissing`, `downloadPartial`,
- * `download` (the kept Blob again) and `reset`. The file is saved as soon as it is built. Clients, saving, renderers,
- * the clock and template-part reads are injectable.
+ * `download` (the kept Blob again) and `reset`. The file is saved as soon as it is built; a Word template's tags are read
+ * from its stored file at start. Clients, saving, renderers, the clock, template-part reads and the template libraries are injectable.
  */
 export function useExportRun({
-  createClient = createBridgeClient, save = saveBlob, renderers: injected, clock = Date.now, getPart,
+  createClient = createBridgeClient, save = saveBlob, renderers: injected, clock = Date.now, getPart, loadLibs,
 } = {}) {
   const [run, setRun] = useState(IDLE);
   const session = useRef(null);
@@ -72,10 +78,10 @@ export function useExportRun({
     setRun({ ...IDLE, state: 'running', progress: { phase: 'prepare', done: 0, total: 0 }, request: { entry, template } });
     try {
       const base = createClient({ signal });
-      const [catalog, me, bytes] = await Promise.all([
+      const [catalog, me, runnable] = await Promise.all([
         loadCatalog(base),
         base.getMyself(),
-        template.kind === 'docx' ? loadTemplateBytes(template, getPart) : null,
+        runnableTemplate(template, getPart, loadLibs),
       ]);
       if (!live(current)) return;
       const now = new Date(clock());
@@ -83,7 +89,7 @@ export function useExportRun({
       current.exportRun = createExportRun({
         client: ({ onRetry }) => createClient({ signal, onRetry }),
         entry,
-        template: template.kind === 'docx' ? { ...template, bytes } : template,
+        template: runnable,
         catalog,
         meta: { siteUrl, exportedBy: me.displayName ?? '', now, exportedAt: formats.dateTime(now), paper: template.paper ?? 'A4', fileNamePattern: template.fileNamePattern },
         labels,
@@ -100,7 +106,7 @@ export function useExportRun({
       return;
     }
     await settle(current, () => current.exportRun.start());
-  }, [createClient, clock, getPart, settle, fail]);
+  }, [createClient, clock, getPart, loadLibs, settle, fail]);
 
   const retryMissing = useCallback(async () => {
     const current = session.current;
