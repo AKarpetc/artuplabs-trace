@@ -50,3 +50,10 @@ describe('manifest translations', () => {
     expect(listedLocales).toEqual(fileLocales);
   });
 });
+
+describe('action modals', () => {
+  it.each(['issueNavigatorAction', 'boardAction', 'backlogAction', 'sprintAction', 'issueAction'])('%s asks for the large viewport', (module) => {
+    const block = manifestText.split(new RegExp(`^  jira:${module}:\\n`, 'm'))[1].split(/^  \S/m)[0];
+    expect(block).toMatch(/^ {6}viewportSize: large$/m);
+  });
+});
