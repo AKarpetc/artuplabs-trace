@@ -146,6 +146,21 @@ describe('format and template steps', () => {
 });
 
 describe('Excel preview', () => {
+  it('shows Jira\'s JQL error instead of an empty result when Jira cannot parse the query', async () => {
+    renderWizard();
+    typeJql(`project = RPT AND ${BAD_JQL_FIELD} = 1`);
+    expect(await screen.findByTestId('jql-messages', {}, WAIT))
+      .toHaveTextContent(`Field '${BAD_JQL_FIELD}' does not exist or you do not have permission to view it.`);
+    expect(screen.queryByTestId('preview-empty')).toBeNull();
+    expect(screen.queryByTestId('preview-count')).toBeNull();
+  });
+
+  it('keeps the empty state for a valid query that matches nothing', async () => {
+    renderWizard();
+    typeJql('project = NONE');
+    expect(await screen.findByTestId('preview-empty', {}, WAIT)).toHaveTextContent('No issues match this query.');
+  });
+
   it('asks for JQL before it can preview on the global page', () => {
     renderWizard();
     expect(screen.getByTestId('preview-needs-jql')).toHaveTextContent('Enter a JQL query or choose a filter to see the first issues.');

@@ -28,6 +28,16 @@ function chunk(list, size) {
   return out;
 }
 
+/** Jira's parse errors when an empty result comes from a query it cannot parse; a failed check leaves the empty result as it is. */
+async function parseErrors(client, jql) {
+  try {
+    return await client.validateJql(jql);
+  } catch (error) {
+    if (isAbort(error)) throw error;
+    return [];
+  }
+}
+
 async function resolveJql({ client, entry, jql }) {
   if (jql?.trim()) return withOrder(jql.trim());
   const direct = jqlForEntry(entry);
@@ -90,6 +100,11 @@ export function createExportRun({
       }
       checkAbort();
       state.ids = await client.searchIds(state.jql, limit > 0 ? { limit } : {});
+      if (state.ids.length === 0) {
+        const messages = await parseErrors(client, state.jql);
+        checkAbort();
+        if (messages.length) throw new ReportError('jql', { messages });
+      }
       if (format !== 'xlsx' && state.ids.length > MAX_DOC_ISSUES) {
         throw new ReportError('too-many-for-document', { count: state.ids.length, max: MAX_DOC_ISSUES });
       }

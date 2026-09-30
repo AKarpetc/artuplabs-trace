@@ -47,6 +47,19 @@ describe('jira client', () => {
     expect(jira.calls.map((c) => c.body)).toEqual([{ jql: 'x' }]);
   });
 
+  it('validateJql posts the query to jql/parse with strict validation and returns its errors', async () => {
+    const { jira, api } = client({
+      'POST /rest/api/3/jql/parse?validation=strict': () => ok({ queries: [{ query: 'foo = bar', errors: ["Field 'foo' does not exist or you do not have permission to view it."] }] }),
+    });
+    expect(await api.validateJql('foo = bar')).toEqual(["Field 'foo' does not exist or you do not have permission to view it."]);
+    expect(jira.calls.map((c) => [c.method, c.path, c.body])).toEqual([['POST', '/rest/api/3/jql/parse?validation=strict', { queries: ['foo = bar'] }]]);
+  });
+
+  it('validateJql returns no errors for a query Jira parses', async () => {
+    const { api } = client({ 'POST /rest/api/3/jql/parse': () => ok({ queries: [{ query: 'project = RPT', structure: {} }] }) });
+    expect(await api.validateJql('project = RPT')).toEqual([]);
+  });
+
   it('throws JiraError with the status and Jira messages on a 400 and does not retry it', async () => {
     const { jira, sleep, api } = client({
       'GET /rest/api/3/field': () => ({ status: 400, body: { errorMessages: ['Bad jql'], errors: { jql: 'Field x does not exist' } } }),

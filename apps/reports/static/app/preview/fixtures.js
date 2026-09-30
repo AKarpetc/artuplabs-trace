@@ -108,6 +108,7 @@ export const FILTERS = [
 
 /** JQL containing this field name is rejected by the fixture site with Jira's error message. */
 export const BAD_JQL_FIELD = 'estimateColour';
+export const BAD_JQL_MESSAGE = `Field '${BAD_JQL_FIELD}' does not exist or you do not have permission to view it.`;
 
 /** Stored templates the wizard screen lists: personal Excel and Word, a project layout and a site Excel set with a column this site lacks. */
 export const WIZARD_TEMPLATES = {
@@ -131,6 +132,7 @@ const json = (body, status = 200) => new Response(JSON.stringify(body), { status
 
 /** Issues matching the `status = "X"` and `assignee = "Name"` clauses of a JQL string; any other JQL matches everything. */
 export function matchJql(jql = '') {
+  if (jql.includes(BAD_JQL_FIELD) || /\bproject\s*=\s*NONE\b/i.test(jql)) return [];
   const clause = (name) => new RegExp(`${name}\\s*=\\s*"?([^"]+?)"?(?:\\s+(?:AND|ORDER)\\b|$)`, 'i').exec(jql)?.[1];
   const status = clause('status');
   const assignee = clause('assignee');
@@ -149,14 +151,17 @@ function pick(issue, fields, expand) {
 /** Board of the fixture site: its configuration names the "All RPT issues" filter. */
 export const BOARD = { id: 3, name: 'RPT board', filterId: '10100' };
 
-/** Fake `requestJira`: search/jql (ids, token pages), issue/bulkfetch, field, myself, project search, user bulk, filter/search, filter by id, board configuration, approximate-count; 400 for BAD_JQL_FIELD; 404 otherwise. */
+/** Fake `requestJira`: search/jql (ids, token pages), issue/bulkfetch, field, myself, project search, user bulk, filter/search, filter by id, board configuration, approximate-count, jql/parse; like the live site, searches with BAD_JQL_FIELD match nothing and only jql/parse reports the error; 404 otherwise. */
 export async function routeJira(path, init = {}) {
   const method = init.method ?? 'GET';
   const body = init.body ? JSON.parse(init.body) : {};
   const url = new URL(path, SITE);
   const route = url.pathname;
-  if (method === 'POST' && body.jql?.includes(BAD_JQL_FIELD)) {
-    return json({ errorMessages: [`Field '${BAD_JQL_FIELD}' does not exist or you do not have permission to view it.`], errors: {} }, 400);
+  if (method === 'POST' && route === '/rest/api/3/jql/parse') {
+    const queries = (body.queries ?? []).map((query) => (query.includes(BAD_JQL_FIELD)
+      ? { query, errors: [BAD_JQL_MESSAGE] }
+      : { query, structure: {} }));
+    return json({ queries });
   }
   if (method === 'POST' && route === '/rest/api/3/search/jql') {
     const ids = matchJql(body.jql).map((issue) => issue.id);

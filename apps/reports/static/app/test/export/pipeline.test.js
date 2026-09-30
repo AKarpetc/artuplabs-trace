@@ -34,6 +34,7 @@ function fakeClient({ count = 3, fields = () => ({}), ...overrides } = {}) {
   return {
     searchIds: vi.fn(async () => all),
     approximateCount: vi.fn(async () => count),
+    validateJql: vi.fn(async () => []),
     boardJql: vi.fn(async () => ({ jql: 'project = RPT', name: 'Board' })),
     bulkFetch: vi.fn(async (batch) => ({ issues: batch.map((id) => issueOf(id, fields(id))), errors: [] })),
     listComments: vi.fn(async () => []),
@@ -152,6 +153,33 @@ describe('createExportRun: query', () => {
 
   it('rejects an empty result with no-issues', async () => {
     const { exportRun } = run({ client: fakeClient({ searchIds: vi.fn(async () => []) }) });
+    await expect(exportRun.start()).rejects.toEqual(new ReportError('no-issues'));
+  });
+
+  it('checks an empty result against jql/parse and keeps no-issues when the query is valid', async () => {
+    const client = fakeClient({ searchIds: vi.fn(async () => []) });
+    const { exportRun } = run({ client });
+    await expect(exportRun.start()).rejects.toEqual(new ReportError('no-issues'));
+    expect(client.validateJql).toHaveBeenCalledWith('project = RPT ORDER BY key ASC');
+  });
+
+  it('turns an empty result for a query Jira cannot parse into a jql error with its messages', async () => {
+    const messages = ["Field 'foo' does not exist or you do not have permission to view it."];
+    const client = fakeClient({ searchIds: vi.fn(async () => []), validateJql: vi.fn(async () => messages) });
+    const { exportRun } = run({ client });
+    await expect(exportRun.start()).rejects.toEqual(new ReportError('jql', { messages }));
+  });
+
+  it('turns a zero count for a document into a jql error when Jira cannot parse the query', async () => {
+    const messages = ["Field 'foo' does not exist or you do not have permission to view it."];
+    const client = fakeClient({ count: 0, validateJql: vi.fn(async () => messages) });
+    const { exportRun } = run({ client, template: SINGLE_PDF });
+    await expect(exportRun.start()).rejects.toEqual(new ReportError('jql', { messages }));
+  });
+
+  it('keeps no-issues when the jql/parse check itself fails', async () => {
+    const client = fakeClient({ searchIds: vi.fn(async () => []), validateJql: vi.fn(async () => { throw new JiraError(403, '/rest/api/3/jql/parse'); }) });
+    const { exportRun } = run({ client });
     await expect(exportRun.start()).rejects.toEqual(new ReportError('no-issues'));
   });
 

@@ -91,6 +91,11 @@ export function createJiraClient({ request, sleep, signal, onRetry = () => {}, c
     async approximateCount(jql) {
       return (await postJson('/rest/api/3/search/approximate-count', { jql })).count ?? 0;
     },
+    /** Jira's strict parse errors for `jql` (none when it parses): search endpoints answer 200 with no issues for an unknown field. */
+    async validateJql(jql) {
+      const page = await postJson('/rest/api/3/jql/parse?validation=strict', { queries: [jql] });
+      return (page.queries?.[0]?.errors ?? []).map(String);
+    },
     async bulkFetch(ids, { fields, expand = [] }) {
       const page = await postJson('/rest/api/3/issue/bulkfetch', { issueIdsOrKeys: ids, fields, expand, fieldsByKeys: false });
       return { issues: page.issues ?? [], errors: page.issueErrors ?? [] };
