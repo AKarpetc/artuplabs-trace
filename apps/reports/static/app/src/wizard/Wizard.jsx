@@ -111,7 +111,7 @@ function previewBlock(entry, form, catalog) {
  * (progress, cancel, incomplete, result, failure). Jira client, saving, renderers, clock and resolver calls are injectable.
  */
 export function Wizard({
-  entry, context, createClient = createBridgeClient, save = saveBlob, renderers, clock = Date.now, getPart, loadTemplates, language, compact = false,
+  entry, context, createClient = createBridgeClient, save = saveBlob, renderers, clock = Date.now, getPart, loadTemplates, language, compact = false, resultAction = null,
 }) {
   const t = useT();
   const locale = useLocale();
@@ -137,7 +137,7 @@ export function Wizard({
   const jqlFailure = run.state === 'failed' && run.error?.code === 'jql' && entry.kind === 'none';
   if (run.state === 'running') return <RunningView progress={run.progress} onCancel={run.cancel} clock={clock} compact={compact} />;
   if (run.state === 'incomplete') return <IncompleteView outcome={run.outcome} onRetry={run.retryMissing} onPartial={run.downloadPartial} onBack={run.reset} />;
-  if (run.state === 'done') return <ResultView file={run.file} siteUrl={siteUrl} onDownloadAgain={run.download} onNewExport={run.reset} compact={compact} />;
+  if (run.state === 'done') return <ResultView file={run.file} siteUrl={siteUrl} onDownloadAgain={run.download} onNewExport={run.reset} compact={compact} extraAction={resultAction} />;
   if (run.state === 'failed' && !jqlFailure) {
     return <FailureView error={run.error} onRetry={retry} onBack={run.reset} onSwitchToExcel={switchToExcel} />;
   }

@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Samhengi einingar (aðeins fyrir þróun)",
   "errors.generic": "Eitthvað fór úrskeiðis: {message}",
   "errors.unlicensed": "ArtUp Reports þarf virkt leyfi á þessu svæði.",
   "errors.forbidden": "Þú hefur ekki heimild til þess.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "Fyrir sérsniðinn reit skrifaðu {tag}.",
   "templates.deleteDialog.title": "Eyða þessu sniðmáti?",
   "templates.deleteDialog.body": "„{name}“ verður eytt fyrir alla sem geta notað það. Ekki er hægt að afturkalla þetta.",
-  "templates.deleteDialog.confirm": "Eyða"
+  "templates.deleteDialog.confirm": "Eyða",
+  "tabs.export": "Útflutningur",
+  "action.close": "Loka",
+  "action.openGlobal": "Opna ArtUp Reports",
+  "action.unknown": "Ekki er hægt að sjá héðan hvað á að flytja út, opnaðu því ArtUp Reports af almennu síðunni."
 }

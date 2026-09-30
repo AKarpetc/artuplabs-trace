@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Modulecontext (alleen voor ontwikkeling)",
   "errors.generic": "Er is iets misgegaan: {message}",
   "errors.unlicensed": "ArtUp Reports heeft een actieve licentie nodig op deze site.",
   "errors.forbidden": "Je hebt hiervoor geen toestemming.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "Voor een aangepast veld schrijf je {tag}.",
   "templates.deleteDialog.title": "Dit sjabloon verwijderen?",
   "templates.deleteDialog.body": "‘{name}’ wordt verwijderd voor iedereen die het kan gebruiken. Dit kan niet ongedaan worden gemaakt.",
-  "templates.deleteDialog.confirm": "Verwijderen"
+  "templates.deleteDialog.confirm": "Verwijderen",
+  "tabs.export": "Exporteren",
+  "action.close": "Sluiten",
+  "action.openGlobal": "ArtUp Reports openen",
+  "action.unknown": "Vanaf hier is niet te zien wat er geëxporteerd moet worden; open ArtUp Reports via de globale pagina."
 }

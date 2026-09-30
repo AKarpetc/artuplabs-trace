@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "모듈 컨텍스트(개발 전용)",
   "errors.generic": "문제가 발생했습니다: {message}",
   "errors.unlicensed": "ArtUp Reports를 사용하려면 이 사이트에 유효한 라이선스가 필요합니다.",
   "errors.forbidden": "이 작업을 수행할 권한이 없습니다.",
@@ -271,5 +270,9 @@
   "templates.tags.field": "사용자 지정 필드는 {tag}를 쓰세요.",
   "templates.deleteDialog.title": "이 템플릿을 삭제할까요?",
   "templates.deleteDialog.body": "“{name}” 템플릿이 사용할 수 있는 모든 사람에게서 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
-  "templates.deleteDialog.confirm": "삭제"
+  "templates.deleteDialog.confirm": "삭제",
+  "tabs.export": "내보내기",
+  "action.close": "닫기",
+  "action.openGlobal": "ArtUp Reports 열기",
+  "action.unknown": "여기서는 내보낼 대상을 알 수 없으니 전역 페이지에서 ArtUp Reports를 여세요."
 }

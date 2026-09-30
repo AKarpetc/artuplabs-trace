@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Module context (development only)",
   "errors.generic": "Something went wrong: {message}",
   "errors.unlicensed": "ArtUp Reports needs an active licence on this site.",
   "errors.forbidden": "You don't have permission to do that.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "For a custom field, write {tag}.",
   "templates.deleteDialog.title": "Delete this template?",
   "templates.deleteDialog.body": "“{name}” will be deleted for everyone who can use it. This cannot be undone.",
-  "templates.deleteDialog.confirm": "Delete"
+  "templates.deleteDialog.confirm": "Delete",
+  "tabs.export": "Export",
+  "action.close": "Close",
+  "action.openGlobal": "Open ArtUp Reports",
+  "action.unknown": "ArtUp Reports cannot tell what to export from here, so open it from the global page."
 }

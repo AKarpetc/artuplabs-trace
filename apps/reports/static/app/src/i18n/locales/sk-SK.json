@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Kontext modulu (iba na vývoj)",
   "errors.generic": "Niečo sa pokazilo: {message}",
   "errors.unlicensed": "ArtUp Reports vyžaduje na tejto lokalite aktívnu licenciu.",
   "errors.forbidden": "Na túto akciu nemáte oprávnenie.",
@@ -298,5 +297,9 @@
   "templates.tags.field": "Pre vlastné pole napíšte {tag}.",
   "templates.deleteDialog.title": "Odstrániť túto šablónu?",
   "templates.deleteDialog.body": "Šablóna „{name}“ bude odstránená pre všetkých, ktorí ju môžu používať. Akciu nemožno vrátiť späť.",
-  "templates.deleteDialog.confirm": "Odstrániť"
+  "templates.deleteDialog.confirm": "Odstrániť",
+  "tabs.export": "Export",
+  "action.close": "Zavrieť",
+  "action.openGlobal": "Otvoriť ArtUp Reports",
+  "action.unknown": "Odtiaľto nemožno zistiť, čo exportovať, preto otvorte ArtUp Reports z globálnej stránky."
 }

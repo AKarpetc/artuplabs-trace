@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Kontekst modułu (tylko do celów programistycznych)",
   "errors.generic": "Coś poszło nie tak: {message}",
   "errors.unlicensed": "ArtUp Reports wymaga aktywnej licencji w tej witrynie.",
   "errors.forbidden": "Nie masz uprawnień do wykonania tej czynności.",
@@ -298,5 +297,9 @@
   "templates.tags.field": "Dla pola niestandardowego wpisz {tag}.",
   "templates.deleteDialog.title": "Usunąć ten szablon?",
   "templates.deleteDialog.body": "Szablon „{name}” zostanie usunięty dla wszystkich, którzy mogą z niego korzystać. Nie można tego cofnąć.",
-  "templates.deleteDialog.confirm": "Usuń"
+  "templates.deleteDialog.confirm": "Usuń",
+  "tabs.export": "Eksport",
+  "action.close": "Zamknij",
+  "action.openGlobal": "Otwórz ArtUp Reports",
+  "action.unknown": "Stąd nie da się ustalić, co wyeksportować, więc otwórz ArtUp Reports ze strony globalnej."
 }

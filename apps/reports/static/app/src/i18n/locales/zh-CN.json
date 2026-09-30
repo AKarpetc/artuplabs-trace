@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "模块上下文（仅开发环境）",
   "errors.generic": "出错了：{message}",
   "errors.unlicensed": "ArtUp Reports 需要此站点拥有有效的许可证。",
   "errors.forbidden": "您没有执行此操作的权限。",
@@ -271,5 +270,9 @@
   "templates.tags.field": "对于自定义字段，请写 {tag}。",
   "templates.deleteDialog.title": "删除此模板？",
   "templates.deleteDialog.body": "“{name}”将对所有可使用它的人删除。此操作无法撤销。",
-  "templates.deleteDialog.confirm": "删除"
+  "templates.deleteDialog.confirm": "删除",
+  "tabs.export": "导出",
+  "action.close": "关闭",
+  "action.openGlobal": "打开 ArtUp Reports",
+  "action.unknown": "无法确定要从这里导出什么内容，请从全局页面打开 ArtUp Reports。"
 }

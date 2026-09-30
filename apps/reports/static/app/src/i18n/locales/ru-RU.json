@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Контекст модуля (только для разработки)",
   "errors.generic": "Что-то пошло не так: {message}",
   "errors.unlicensed": "Для ArtUp Reports на этом сайте нужна активная лицензия.",
   "errors.forbidden": "У вас нет прав на это действие.",
@@ -298,5 +297,9 @@
   "templates.tags.field": "Для пользовательского поля пишите {tag}.",
   "templates.deleteDialog.title": "Удалить этот шаблон?",
   "templates.deleteDialog.body": "Шаблон «{name}» будет удалён для всех, кто им пользуется. Это действие нельзя отменить.",
-  "templates.deleteDialog.confirm": "Удалить"
+  "templates.deleteDialog.confirm": "Удалить",
+  "tabs.export": "Экспорт",
+  "action.close": "Закрыть",
+  "action.openGlobal": "Открыть ArtUp Reports",
+  "action.unknown": "Отсюда не понять, что экспортировать, поэтому откройте ArtUp Reports на глобальной странице."
 }

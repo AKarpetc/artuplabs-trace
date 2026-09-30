@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "モジュールのコンテキスト（開発時のみ）",
   "errors.generic": "問題が発生しました：{message}",
   "errors.unlicensed": "ArtUp Reports を使用するには、このサイトで有効なライセンスが必要です。",
   "errors.forbidden": "この操作を行う権限がありません。",
@@ -271,5 +270,9 @@
   "templates.tags.field": "カスタムフィールドには {tag} と書きます。",
   "templates.deleteDialog.title": "このテンプレートを削除しますか？",
   "templates.deleteDialog.body": "「{name}」は、利用できるすべての人から削除されます。この操作は元に戻せません。",
-  "templates.deleteDialog.confirm": "削除"
+  "templates.deleteDialog.confirm": "削除",
+  "tabs.export": "エクスポート",
+  "action.close": "閉じる",
+  "action.openGlobal": "ArtUp Reports を開く",
+  "action.unknown": "ここからはエクスポート対象を判別できません。グローバルページから ArtUp Reports を開いてください。"
 }

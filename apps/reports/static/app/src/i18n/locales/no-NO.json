@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Modulkontekst (kun for utvikling)",
   "errors.generic": "Noe gikk galt: {message}",
   "errors.unlicensed": "ArtUp Reports krever en aktiv lisens på dette nettstedet.",
   "errors.forbidden": "Du har ikke tillatelse til å gjøre dette.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "For et egendefinert felt skriv {tag}.",
   "templates.deleteDialog.title": "Slette denne malen?",
   "templates.deleteDialog.body": "«{name}» slettes for alle som kan bruke den. Dette kan ikke angres.",
-  "templates.deleteDialog.confirm": "Slett"
+  "templates.deleteDialog.confirm": "Slett",
+  "tabs.export": "Eksport",
+  "action.close": "Lukk",
+  "action.openGlobal": "Åpne ArtUp Reports",
+  "action.unknown": "Det går ikke an å se hva som skal eksporteres herfra, så åpne ArtUp Reports fra den globale siden."
 }

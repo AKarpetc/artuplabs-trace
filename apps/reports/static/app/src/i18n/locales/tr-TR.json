@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Modül bağlamı (yalnızca geliştirme)",
   "errors.generic": "Bir sorun oluştu: {message}",
   "errors.unlicensed": "ArtUp Reports için bu sitede etkin bir lisans gerekir.",
   "errors.forbidden": "Bunu yapmaya yetkiniz yok.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "Özel bir alan için {tag} yazın.",
   "templates.deleteDialog.title": "Bu şablon silinsin mi?",
   "templates.deleteDialog.body": "“{name}” şablonunu kullanabilen herkes için silinecek. Bu işlem geri alınamaz.",
-  "templates.deleteDialog.confirm": "Sil"
+  "templates.deleteDialog.confirm": "Sil",
+  "tabs.export": "Dışa aktar",
+  "action.close": "Kapat",
+  "action.openGlobal": "ArtUp Reports'u aç",
+  "action.unknown": "Buradan neyin dışa aktarılacağı anlaşılamıyor; ArtUp Reports’u genel sayfadan açın."
 }

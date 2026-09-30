@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Moduulin konteksti (vain kehitykseen)",
   "errors.generic": "Jokin meni pieleen: {message}",
   "errors.unlicensed": "ArtUp Reports tarvitsee tälle sivustolle aktiivisen lisenssin.",
   "errors.forbidden": "Sinulla ei ole oikeutta tähän toimintoon.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "Mukautetulle kentälle kirjoita {tag}.",
   "templates.deleteDialog.title": "Poistetaanko tämä malli?",
   "templates.deleteDialog.body": "Malli ”{name}” poistetaan kaikilta, jotka voivat käyttää sitä. Toimintoa ei voi peruuttaa.",
-  "templates.deleteDialog.confirm": "Poista"
+  "templates.deleteDialog.confirm": "Poista",
+  "tabs.export": "Vienti",
+  "action.close": "Sulje",
+  "action.openGlobal": "Avaa ArtUp Reports",
+  "action.unknown": "Täältä ei voi päätellä, mitä viedään, joten avaa ArtUp Reports yleiseltä sivulta."
 }

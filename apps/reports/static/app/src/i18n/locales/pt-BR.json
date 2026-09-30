@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Contexto do módulo (somente desenvolvimento)",
   "errors.generic": "Algo deu errado: {message}",
   "errors.unlicensed": "O ArtUp Reports precisa de uma licença ativa neste site.",
   "errors.forbidden": "Você não tem permissão para fazer isso.",
@@ -289,5 +288,9 @@
   "templates.tags.field": "Para um campo personalizado, escreva {tag}.",
   "templates.deleteDialog.title": "Excluir este modelo?",
   "templates.deleteDialog.body": "“{name}” será excluído para todos que podem usá-lo. Não é possível desfazer.",
-  "templates.deleteDialog.confirm": "Excluir"
+  "templates.deleteDialog.confirm": "Excluir",
+  "tabs.export": "Exportar",
+  "action.close": "Fechar",
+  "action.openGlobal": "Abrir o ArtUp Reports",
+  "action.unknown": "Não é possível saber o que exportar a partir daqui; abra o ArtUp Reports pela página global."
 }

@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "模組內容（僅限開發環境）",
   "errors.generic": "發生錯誤：{message}",
   "errors.unlicensed": "ArtUp Reports 需要此網站擁有有效的授權。",
   "errors.forbidden": "您沒有執行此操作的權限。",
@@ -271,5 +270,9 @@
   "templates.tags.field": "對於自訂欄位，請寫 {tag}。",
   "templates.deleteDialog.title": "要刪除此範本嗎？",
   "templates.deleteDialog.body": "「{name}」將對所有可使用它的人刪除。此動作無法復原。",
-  "templates.deleteDialog.confirm": "刪除"
+  "templates.deleteDialog.confirm": "刪除",
+  "tabs.export": "匯出",
+  "action.close": "關閉",
+  "action.openGlobal": "開啟 ArtUp Reports",
+  "action.unknown": "無法判斷要從這裡匯出什麼內容，請從全域頁面開啟 ArtUp Reports。"
 }

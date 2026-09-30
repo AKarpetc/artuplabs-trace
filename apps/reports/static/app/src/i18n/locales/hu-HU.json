@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Modul kontextusa (csak fejlesztéshez)",
   "errors.generic": "Valami hiba történt: {message}",
   "errors.unlicensed": "Az ArtUp Reports aktív licencet igényel ezen a webhelyen.",
   "errors.forbidden": "Ehhez nincs jogosultsága.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "Egyéni mezőhöz írja: {tag}.",
   "templates.deleteDialog.title": "Törli ezt a sablont?",
   "templates.deleteDialog.body": "A(z) „{name}” sablon törlődik mindenkinél, aki használhatja. Ez nem vonható vissza.",
-  "templates.deleteDialog.confirm": "Törlés"
+  "templates.deleteDialog.confirm": "Törlés",
+  "tabs.export": "Exportálás",
+  "action.close": "Bezárás",
+  "action.openGlobal": "ArtUp Reports megnyitása",
+  "action.unknown": "Innen nem állapítható meg, mit kell exportálni, ezért nyissa meg az ArtUp Reports alkalmazást a globális oldalról."
 }

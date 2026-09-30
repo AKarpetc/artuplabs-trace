@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Contesto del modulo (solo sviluppo)",
   "errors.generic": "Qualcosa è andato storto: {message}",
   "errors.unlicensed": "ArtUp Reports richiede una licenza attiva su questo sito.",
   "errors.forbidden": "Non hai l'autorizzazione per farlo.",
@@ -289,5 +288,9 @@
   "templates.tags.field": "Per un campo personalizzato, scrivi {tag}.",
   "templates.deleteDialog.title": "Eliminare questo modello?",
   "templates.deleteDialog.body": "«{name}» verrà eliminato per tutti quelli che possono usarlo. L'operazione non può essere annullata.",
-  "templates.deleteDialog.confirm": "Elimina"
+  "templates.deleteDialog.confirm": "Elimina",
+  "tabs.export": "Esporta",
+  "action.close": "Chiudi",
+  "action.openGlobal": "Apri ArtUp Reports",
+  "action.unknown": "Da qui non è possibile capire cosa esportare, quindi apri ArtUp Reports dalla pagina globale."
 }

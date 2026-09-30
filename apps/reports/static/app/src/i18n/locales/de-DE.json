@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Modulkontext (nur Entwicklung)",
   "errors.generic": "Etwas ist schiefgelaufen: {message}",
   "errors.unlicensed": "ArtUp Reports benötigt eine aktive Lizenz für diese Site.",
   "errors.forbidden": "Dafür fehlt Ihnen die Berechtigung.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "Für ein benutzerdefiniertes Feld schreiben Sie {tag}.",
   "templates.deleteDialog.title": "Diese Vorlage löschen?",
   "templates.deleteDialog.body": "„{name}“ wird für alle gelöscht, die sie nutzen können. Das lässt sich nicht rückgängig machen.",
-  "templates.deleteDialog.confirm": "Löschen"
+  "templates.deleteDialog.confirm": "Löschen",
+  "tabs.export": "Export",
+  "action.close": "Schließen",
+  "action.openGlobal": "ArtUp Reports öffnen",
+  "action.unknown": "Von hier aus lässt sich nicht erkennen, was exportiert werden soll; öffnen Sie ArtUp Reports über die globale Seite."
 }

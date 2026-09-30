@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Mooduli kontekst (ainult arenduseks)",
   "errors.generic": "Midagi läks valesti: {message}",
   "errors.unlicensed": "ArtUp Reports vajab sellel saidil kehtivat litsentsi.",
   "errors.forbidden": "Teil pole selleks luba.",
@@ -280,5 +279,9 @@
   "templates.tags.field": "Kohandatud välja jaoks kirjutage {tag}.",
   "templates.deleteDialog.title": "Kas kustutada see mall?",
   "templates.deleteDialog.body": "Mall „{name}” kustutatakse kõigilt, kes seda kasutada saavad. Seda ei saa tagasi võtta.",
-  "templates.deleteDialog.confirm": "Kustuta"
+  "templates.deleteDialog.confirm": "Kustuta",
+  "tabs.export": "Eksport",
+  "action.close": "Sulge",
+  "action.openGlobal": "Ava ArtUp Reports",
+  "action.unknown": "Siit ei selgu, mida eksportida, seega ava ArtUp Reports globaalselt lehelt."
 }

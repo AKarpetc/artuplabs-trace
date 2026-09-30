@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Contextul modulului (doar pentru dezvoltare)",
   "errors.generic": "Ceva nu a funcționat: {message}",
   "errors.unlicensed": "ArtUp Reports necesită o licență activă pe acest site.",
   "errors.forbidden": "Nu aveți permisiunea de a face acest lucru.",
@@ -289,5 +288,9 @@
   "templates.tags.field": "Pentru un câmp personalizat, scrieți {tag}.",
   "templates.deleteDialog.title": "Ștergeți acest șablon?",
   "templates.deleteDialog.body": "Șablonul „{name}” va fi șters pentru toți cei care îl pot folosi. Acțiunea nu poate fi anulată.",
-  "templates.deleteDialog.confirm": "Ștergeți"
+  "templates.deleteDialog.confirm": "Ștergeți",
+  "tabs.export": "Export",
+  "action.close": "Închide",
+  "action.openGlobal": "Deschide ArtUp Reports",
+  "action.unknown": "De aici nu se poate stabili ce trebuie exportat, deci deschide ArtUp Reports din pagina globală."
 }

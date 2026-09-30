@@ -1,6 +1,5 @@
 {
   "app.title": "ArtUp Reports",
-  "dev.context": "Kontext modulu (pouze pro vývoj)",
   "errors.generic": "Něco se pokazilo: {message}",
   "errors.unlicensed": "ArtUp Reports vyžaduje na tomto webu aktivní licenci.",
   "errors.forbidden": "K této akci nemáte oprávnění.",
@@ -298,5 +297,9 @@
   "templates.tags.field": "Pro vlastní pole napište {tag}.",
   "templates.deleteDialog.title": "Smazat tuto šablonu?",
   "templates.deleteDialog.body": "Šablona „{name}“ bude smazána pro všechny, kdo ji mohou používat. Akci nelze vrátit zpět.",
-  "templates.deleteDialog.confirm": "Smazat"
+  "templates.deleteDialog.confirm": "Smazat",
+  "tabs.export": "Export",
+  "action.close": "Zavřít",
+  "action.openGlobal": "Otevřít ArtUp Reports",
+  "action.unknown": "Odsud nelze poznat, co exportovat, proto otevřete ArtUp Reports z globální stránky."
 }
