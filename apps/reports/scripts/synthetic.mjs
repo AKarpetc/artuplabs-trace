@@ -76,7 +76,10 @@ async function main() {
   const meta = { exportedBy: 'Synthetic', now: new Date(), jql: 'synthetic', count };
   const bytes = await renderXlsx({ assembled, summary: summary.result(), meta, labels, ExcelJS });
   const seconds = (clock() - started) / 1000;
+  const afterRender = process.memoryUsage();
   const peak = memory.stop();
+  peak.heapUsed = Math.max(peak.heapUsed, afterRender.heapUsed);
+  peak.rss = Math.max(peak.rss, afterRender.rss);
   const result = {
     issues: count, rows: rows.length, columns: builder.columns.length,
     rowBuildSeconds: Number(readSeconds.toFixed(1)), heapAfterRowsMB: mb(afterRows), totalSeconds: Number(seconds.toFixed(1)),

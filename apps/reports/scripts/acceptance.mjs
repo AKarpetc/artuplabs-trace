@@ -12,6 +12,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { createRequire } from 'node:module';
+import { crc32 } from 'node:zlib';
 import { clientFactory, clock, exportMeta, fileFormats, fileLabels, load, mb, nodeRenderers, sampleMemory, siteCatalog } from './lib/node-env.mjs';
 
 const require = createRequire(new URL('../static/app/package.json', import.meta.url));
@@ -88,6 +89,18 @@ async function checkPdf(bytes, jql) {
   return { pages: doc.numPages, evidenceJql: texts[0].includes('JQL') && texts[0].includes(jql.slice(0, 20)), page1Cjk: CJK.test(texts[0]), anyCjkInFirst: texts.findIndex((t) => CJK.test(t)) + 1, page1: texts[0].slice(0, 160) };
 }
 
+/** PNG bytes made unique by a text chunk before IEND that carries `tag`, so no writer can de-duplicate copies. */
+function uniquePng(bytes, tag) {
+  const data = Buffer.from(`artup\0${tag}`);
+  const type = Buffer.from('tEXt');
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(Buffer.concat([type, data])));
+  const body = bytes.subarray(0, bytes.length - 12);
+  return Buffer.concat([body, length, type, data, crc, bytes.subarray(bytes.length - 12)]);
+}
+
 const suffixOf = (id, copy) => `${id}${copy}`;
 
 /** Client that serves each real issue `times` times under new issue and attachment ids, capped at `cap` issues; image bytes are real, downloaded once and copied on every read. */
@@ -132,7 +145,7 @@ function multiplied(factory, times, cap, counter) {
       async attachmentBytes(id) {
         const real = realOf.get(`att:${id}`)?.id ?? id;
         if (!bytesCache.has(real)) bytesCache.set(real, Buffer.from(await inner.attachmentBytes(real)));
-        const copy = bytesCache.get(real);
+        const copy = uniquePng(bytesCache.get(real), id);
         counter.bytes += copy.length;
         counter.images += 1;
         return copy.buffer.slice(copy.byteOffset, copy.byteOffset + copy.length);
