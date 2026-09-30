@@ -6,6 +6,7 @@
 
 export const SCREENS = {
   gallery: ['default', 'unlicensed', 'error', 'loading'],
+  wizard: ['form', 'form-excel', 'preview', 'running', 'incomplete', 'done', 'failed'],
 };
 
 /** Every `{ screen, state }` pair the harness can show. */
@@ -29,6 +30,8 @@ export const FIELDS = [
   { id: 'duedate', name: 'Due date', schema: { type: 'date', system: 'duedate' } },
   { id: 'labels', name: 'Labels', schema: { type: 'array', items: 'string', system: 'labels' } },
   { id: 'components', name: 'Components', schema: { type: 'array', items: 'component', system: 'components' } },
+  { id: 'fixVersions', name: 'Fix versions', schema: { type: 'array', items: 'version', system: 'fixVersions' } },
+  { id: 'timespent', name: 'Time Spent', schema: { type: 'number', system: 'timespent' } },
   { id: 'project', name: 'Project', schema: { type: 'project', system: 'project' } },
   { id: 'description', name: 'Description', schema: { type: 'string', system: 'description' } },
   { id: 'customfield_10016', name: 'Story Points', custom: true, schema: { type: 'number', custom: 'com.atlassian.jira.plugin.system.customfieldtypes:float' } },
@@ -96,6 +99,27 @@ export const FILTERS = [
   { id: '10102', name: 'Готово за месяц', jql: 'project = RPT AND status = Done' },
 ];
 
+/** JQL containing this field name is rejected by the fixture site with Jira's error message. */
+export const BAD_JQL_FIELD = 'estimateColour';
+
+/** Stored templates the wizard screen lists: personal Excel and Word, a project layout and a site Excel set with a column this site lacks. */
+export const WIZARD_TEMPLATES = {
+  user: [
+    { id: '0b8f3c1e-7a2d-4c55-9e10-6d1f2a3b4c01', scope: 'user', scopeId: ME.accountId, name: 'My sprint columns', format: 'xlsx', kind: 'columns', columns: ['key', 'summary', 'status', 'customfield_10016', 'customfield_10030'], rowMode: 'issue', groupBy: null, summary: false },
+    { id: '0b8f3c1e-7a2d-4c55-9e10-6d1f2a3b4c02', scope: 'user', scopeId: ME.accountId, name: 'Customer status report', format: 'docx', kind: 'docx', parts: 2, placeholders: [] },
+  ],
+  project: [
+    { id: '0b8f3c1e-7a2d-4c55-9e10-6d1f2a3b4c03', scope: 'project', scopeId: 'RPT', name: 'RPT release notes', format: 'docx', kind: 'layout', layout: 'release' },
+    { id: '0b8f3c1e-7a2d-4c55-9e10-6d1f2a3b4c04', scope: 'project', scopeId: 'RPT', name: 'RPT sprint handout', format: 'pdf', kind: 'layout', layout: 'sprint', paper: 'A4' },
+  ],
+  site: [
+    { id: '0b8f3c1e-7a2d-4c55-9e10-6d1f2a3b4c05', scope: 'site', scopeId: 'site', name: 'Company-wide issue list with a very long name that has to wrap inside its card', format: 'xlsx', kind: 'columns', columns: ['key', 'summary', 'assignee', 'customfield_77777'], rowMode: 'issue', groupBy: 'status', summary: true },
+  ],
+};
+
+/** Base64 parts of the stored Word template, by template id. */
+export const TEMPLATE_PARTS = { '0b8f3c1e-7a2d-4c55-9e10-6d1f2a3b4c02': ['AQID', 'BAU='] };
+
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
 /** Issues matching the `status = "X"` and `assignee = "Name"` clauses of a JQL string; any other JQL matches everything. */
@@ -115,12 +139,18 @@ function pick(issue, fields, expand) {
   return out;
 }
 
-/** Fake `requestJira`: search/jql (ids, token pages), issue/bulkfetch, field, myself, filter/search, approximate-count; 404 otherwise. */
+/** Board of the fixture site: its configuration names the "All RPT issues" filter. */
+export const BOARD = { id: 3, name: 'RPT board', filterId: '10100' };
+
+/** Fake `requestJira`: search/jql (ids, token pages), issue/bulkfetch, field, myself, filter/search, filter by id, board configuration, approximate-count; 400 for BAD_JQL_FIELD; 404 otherwise. */
 export async function routeJira(path, init = {}) {
   const method = init.method ?? 'GET';
   const body = init.body ? JSON.parse(init.body) : {};
   const url = new URL(path, SITE);
   const route = url.pathname;
+  if (method === 'POST' && body.jql?.includes(BAD_JQL_FIELD)) {
+    return json({ errorMessages: [`Field '${BAD_JQL_FIELD}' does not exist or you do not have permission to view it.`], errors: {} }, 400);
+  }
   if (method === 'POST' && route === '/rest/api/3/search/jql') {
     const ids = matchJql(body.jql).map((issue) => issue.id);
     const start = Number(body.nextPageToken ?? 0);
@@ -140,6 +170,9 @@ export async function routeJira(path, init = {}) {
     const values = FILTERS.filter((filter) => filter.name.toLowerCase().includes(query));
     return json({ values, total: values.length });
   }
+  if (method === 'GET' && route === `/rest/agile/1.0/board/${BOARD.id}/configuration`) return json({ name: BOARD.name, filter: { id: BOARD.filterId } });
+  const filter = method === 'GET' && FILTERS.find((f) => route === `/rest/api/3/filter/${f.id}`);
+  if (filter) return json(filter);
   if (method === 'GET' && /\/rest\/api\/3\/issue\/[^/]+\/(comment|worklog)$/.test(route)) {
     return json({ total: 0, comments: [], worklogs: [] });
   }
@@ -148,10 +181,15 @@ export async function routeJira(path, init = {}) {
 
 const store = { user: [], project: [], site: [] };
 
-/** Fake resolvers behind `invoke`: getAccess, listTemplates and getScopes answer from memory; unknown keys throw. */
+/** Fake resolvers behind `invoke`: getAccess, listTemplates, getScopes and getTemplatePart answer from memory; unknown keys throw. */
 export function resolve(key, payload = {}) {
   if (key === 'getAccess') return { licensed: true };
   if (key === 'listTemplates') return { user: store.user, project: store.project, site: store.site };
   if (key === 'getScopes') return { site: true, projects: payload.projectKeys ?? [PROJECT.key] };
+  if (key === 'getTemplatePart') {
+    const data = TEMPLATE_PARTS[payload.id]?.[payload.index];
+    if (!data) throw new Error('not-found');
+    return { data };
+  }
   throw new Error(`preview: no resolver for ${key}`);
 }

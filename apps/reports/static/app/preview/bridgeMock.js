@@ -1,10 +1,13 @@
 import { setGlobalTheme } from '@atlaskit/tokens/set-global-theme';
+import { PREVIEW_ISSUES } from '../src/core/limits.js';
 import { previewParams } from './driver.js';
-import { ME, resolve, routeJira } from './fixtures.js';
+import { ME, WIZARD_TEMPLATES, resolve, routeJira } from './fixtures.js';
 
 /**
  * Local stand-in for @forge/bridge used by `vite --mode preview`; reads the preview query parameters.
  * `state=unlicensed` answers getAccess with an unlicensed site, `state=error` rejects it and `state=loading` never answers it.
+ * On `screen=wizard`: listTemplates answers WIZARD_TEMPLATES; `running` holds every export bulkfetch (more ids than the
+ * preview reads), `incomplete` refuses the first one (403, not retried) and `failed` counts 5 000 issues so a Word export is refused.
  */
 
 const wait = (ms) => new Promise((done) => {
@@ -50,12 +53,32 @@ export async function invoke(key, payload) {
     if (state === 'error') throw new Error('preview: getAccess failed');
     return { licensed: state !== 'unlicensed' };
   }
+  if (key === 'listTemplates' && previewParams().screen === 'wizard') return WIZARD_TEMPLATES;
   return resolve(key, payload);
 }
 
-/** Forge `requestJira`: routes the REST path to the fixture site with 30–80 ms latency. */
+let refusedBulkFetches = 0;
+
+/** Forgets how many bulkfetch calls the `incomplete` state has refused (tests start each run fresh). */
+export function resetPreviewRuns() {
+  refusedBulkFetches = 0;
+}
+
+/** Forge `requestJira`: routes the REST path to the fixture site with 30–80 ms latency; the wizard states may stall, refuse or inflate. */
 export async function requestJira(path, init) {
   await latency();
+  const { screen, state } = previewParams();
+  const exportBatch = path.startsWith('/rest/api/3/issue/bulkfetch') && JSON.parse(init?.body ?? '{}').issueIdsOrKeys?.length > PREVIEW_ISSUES;
+  if (screen === 'wizard' && exportBatch) {
+    if (state === 'running') await forever();
+    if (state === 'incomplete' && refusedBulkFetches === 0) {
+      refusedBulkFetches += 1;
+      return new Response(JSON.stringify({ errorMessages: ['preview: forbidden'] }), { status: 403, headers: { 'content-type': 'application/json' } });
+    }
+  }
+  if (screen === 'wizard' && state === 'failed' && path.startsWith('/rest/api/3/search/approximate-count')) {
+    return new Response(JSON.stringify({ count: 5000 }), { status: 200, headers: { 'content-type': 'application/json' } });
+  }
   return routeJira(path, init);
 }
 
