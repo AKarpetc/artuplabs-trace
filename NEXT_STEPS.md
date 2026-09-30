@@ -52,7 +52,7 @@
 - [x] Сайт: разделы Reports в privacy/security/terms, документация https://artuplabs.com/docs/reports/ (деплой 2026-09-30).
 - [x] Листинг Marketplace (app id 3870724810, `com.artuplabs.reports`) заполнен и подан: цены R32 ($319 за 200, до 10 бесплатно), Privacy & Security отправлены, R23 закрыт R31 (предел 2 000).
 - [ ] Пункт 6 (права на проектный шаблон) — завести второй аккаунт и проверить до одобрения.
-- [ ] Если придёт автоотказ «Not enough details» — вопрос в ecosystem-поддержку.
+- [x] Первая подача сразу получила «Automatic Rejection – Not enough details on listing» (как у Trace и Export) → Resubmit 2026-09-30 → **SUBMITTED**. Наблюдение: автопроверка отклоняет первую подачу, повторная проходит.
 
 #### Архив: исходный список шагов
 Всё лежит в ветке `reports-v1` (локально, не запушена). Замеры и чек-лист C2: [atlassian/plans/2026-09-29-artup-reports-acceptance.md](atlassian/plans/2026-09-29-artup-reports-acceptance.md).
