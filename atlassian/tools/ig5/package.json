@@ -1,0 +1,9 @@
+{
+  "name": "artup-import-ig5-scratch",
+  "private": true,
+  "type": "module",
+  "description": "Scratch npm deps for the ArtUp Import I-G5 measurement (not a product package)",
+  "dependencies": {
+    "markdown-it": "^14.3.2"
+  }
+}

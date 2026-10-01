@@ -144,8 +144,14 @@ Atlaskit и токены, `Ruling:` в журнал, не пушить и не �
 
 | # | Результат | Дата | Вердикт |
 |---|---|---|---|
-| I-G1 | | | |
-| I-G2 | | | |
-| I-G3 | | | |
-| I-G4 | | | |
-| I-G5 | | | |
+| I-G1 | Родного импорта .md нет: «Import external documents» — только Word, Google Docs, OneDrive, за Markdown отсылает в Marketplace ([support.atlassian.com](https://support.atlassian.com/confluence-cloud/docs/import-content-into-confluence-cloud/)); родные массовые импортёры есть для HTML и Notion (Beta, 2024-12), Markdown — нет. CONFCLOUD-68272 — Reviewing, 532 голоса, последнее слово PM — 2024-05; соседние 68137 (240), 65756 (408), 38904 (24), 81572 (0), 84415 (4) — Gathering Interest / Under Consideration. Снимок `analysis/data/atlassian/imp_g1_jira_2026-10-01.json`. | 2026-10-01 | не закрывать; риск — Atlassian строит импортёры по форматам |
+| I-G2 | 42 листинга темы (из 657 найденных): 25 049 уст., топ-3 — 61%, медиана $76,67/200, RoA — 11,9% уст. RoA ≥ 200 уст.: Narva Editor 3.13★, Yamuno 4.06★, Importer+ 1.56★ — ни один не ≥ 4.5★. Новички 2026 в ту же нишу: Aptify Markdown Importer (RoA, папки, картинки) — 46 уст.; Repo Docs (Maio, 2026-09, из GitHub, без RoA) — 1; GitHub Markdown Sync — 2. Снимки `imp_detail_*`, `imp_listings_*`, `imp_search_2026-10-01.json`. | 2026-10-01 | не закрывать |
+| I-G3 | Отзывов 2025–2026 — 35, ≤ 3★ — 12, с текстом — 8; исправимых на Forge — **5** (порог 3): OAuth к GitHub (Just Add+, 2026-08), нет тёмной темы (Render Markdown, 2026-01), не ищется поиском (2025-04), подпапки с картинками (Appfire, 2025-04), «не понять, как пользоваться» (Importer+, 2025-01). Лидеры живы: версии 2026-08…09, кроме Render Markdown (2021). Снимок `imp_reviews_2026-10-01.json`. | 2026-10-01 | цену $125 не снижать |
+| I-G4 | 847 обсуждений Community с 2025-01-01 по 50 запросам (.md, папки, репозиторий, MkDocs, Docusaurus, Obsidian, GitHub/GitLab/ADO wiki). Засчитан строго **1**: [3222499](https://community.atlassian.com/forums/discussion/3222499) (2026-04, ночной импорт .md через REST); пограничных 2 — миграция ADO wiki ([3134577](https://community.atlassian.com/forums/discussion/3134577), [3260846](https://community.atlassian.com/forums/discussion/3260846)); вставка Markdown в редактор (7) и HTML/Word (4) не засчитаны по правилу. «25 вопросов» из разбора 09-29 — счёт по совпадению слов. Снимок `imp_community_2026-10-01.json`. | 2026-10-01 | **закрыть** (1, с пограничными 3 при пороге 5) |
+| I-G5 | Остановлен после закрытия I-G4. Успел: выгрузка EXPT (1 001 стр.) конвертером Export, свой конвертер Markdown → storage (`tools/ig5/`), пробный импорт 39 страниц с 6 МБ картинок в пространство IGSMK — 26,9 с при конкурентности 6, ошибок 0; круговой тест на них — 9 из 10 сопоставленных страниц идентичны. Полный прогон IMPT прерван на середине. Снимки `atlassian/data/ig5/smoke-*.json`. | 2026-10-01 | не завершён |
+
+**Итог фазы 0 — закрыто по I-G4** (решение 2026-10-01): спрос покупателя на импорт
+файлов в Community — 1–3 вопроса за 21 месяц при пороге 5. Рынок есть (25 тыс. установок),
+но это показ Markdown в макросах; импорт папок — маленькая часть, в которую в 2026 уже
+вошли три новичка без тяги (1–46 уст.). На dev-сайте остались тестовые пространства
+IGSMK и IMPT — удалить по слову владельца.
