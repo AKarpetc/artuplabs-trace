@@ -1,6 +1,6 @@
 # Что дальше — ArtUp Labs (Atlassian)
 
-Составлено 2026-09-29. Отмечайте галочки прямо здесь. В следующей сессии начинать с этого файла.
+Составлено 2026-09-29, обновлено 2026-10-01. Отмечайте галочки прямо здесь. В следующей сессии начинать с этого файла.
 
 ## Где мы сейчас
 
@@ -9,7 +9,8 @@
 | **ArtUp Trace** (Jira) | подан 2026-09-28 → автоотказ «Not enough details on listing»; профиль вендора заполнен, **Resubmit 2026-09-29 — SUBMITTED**. Ждём ответа (ECOHELP-168810, письмо на hello@artuplabs.com) и тикета Partner Verification |
 | **ArtUp Export** (Confluence) | приёмка 16 пунктов пройдена 2026-09-29; production v2.1.0, development v2.8.0 (исправлен белый экран после экспорта, EXPORT-19), оба подходят под Runs on Atlassian; проверен на 1 000 страниц; сайт https://artuplabs.com/export/ опубликован; **листинг подан 2026-09-29 — SUBMITTED** (app id 1478660823; первая подача тоже дала автоотказ, после заполнения профиля вендора — Resubmit) |
 | **Репозиторий** | всё по Atlassian в одном репозитории: эта папка = `AKarpetc/artuplabs-trace` (ветка `monorepo`, PR #8 не слит). Внутри: `apps/trace`, `apps/export`, `atlassian/` (документы), `site/`, `STATE.md` |
-| **Приложение №3** | ArtUp Reports (экспорт Jira в Excel/Word/PDF): фаза 0 пройдена, спецификация и план одобрены 2026-09-29; ветка `reports-v1` — **готовы задачи 1–23 из 23** (код, замеры, черновики листинга, страница продукта в `site/reports/`); development v3.2.0 задеплоен, production **не** задеплоен, листинг **не** подан, сайт **не** задеплоен. Ждёт владельца: раздел 8 ниже. Продолжение — [atlassian/plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md](atlassian/plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md) |
+| **ArtUp Reports** (Jira, №3) | production 2.0.0; **листинг подан 2026-09-30 — SUBMITTED** (app id 3870724810; первая подача — автоотказ, Resubmit). Открыт пункт 6 приёмки (второй аккаунт) — раздел 8 ниже |
+| **Приложение №4** | **ArtUp Import** — импорт папок Markdown в Confluence: бриф [atlassian/24_app4_markdown_import.md](atlassian/24_app4_markdown_import.md), **фаза 0 идёт с 2026-10-01** (ворота I-G1…I-G5), ветка `import-v1` |
 
 ---
 
@@ -74,7 +75,7 @@
 | Когда | Что | Где лежит |
 |---|---|---|
 | Сразу, если приёмка Export нашла проблемы | исправить, перевыложить development и production | [atlassian/23_export_owner_steps.md](atlassian/23_export_owner_steps.md) |
-| Следующая сессия (не ждёт ничего) | **приложение №3 ArtUp Release**: бриф `atlassian/22_app3_release.md` по образцу [20](atlassian/20_app2_markdown_export.md)/[21](atlassian/21_app3_risk_register.md), фаза 0 (ворота спроса до кода), при прохождении — план и код в `apps/release` | [atlassian/README.md](atlassian/README.md) |
+| Сейчас (2026-10-01) | **приложение №4 ArtUp Import**: фаза 0 → §11 брифа; при прохождении — спецификация, план (владельцу на одобрение), код в `apps/import`. Очередь дальше: №5 расширения JQL → №6 ArtUp Release → №7 Гант | [atlassian/24_app4_markdown_import.md](atlassian/24_app4_markdown_import.md) |
 | После одобрения Trace | проверка лицензии в production; бэклог v1.1: убрать scope `read:jira-user`, если не нужен (мажорная версия), новый логотип, нагрузочный прогон на 300 требований | `STATE.md` → «Бэклог следующей версии» |
 | После одобрения Export | бэклог v1.1: папки в корне пространства (CQL `type=folder`) + предупреждение, если найдено меньше страниц, чем в поиске; удаление осиротевших `_category_.json`/`.pages`; параллельное чтение меток; `:emoji:` для неизвестных смайлов | [atlassian/plans/2026-09-28-artup-export-v1-rulings.md](atlassian/plans/2026-09-28-artup-export-v1-rulings.md) (строки «parked») |
 | Через 60 дней после листинга каждого приложения | замер: < 30 установок — снимаем и записываем отрицательный результат; ≥ 30 и ≥ 5 платящих — развиваем | бриф §10 |
