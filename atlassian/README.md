@@ -14,7 +14,8 @@
 | 3 | **ArtUp Risk** | реестр рисков на задачах Jira | [21_app3_risk_register.md](21_app3_risk_register.md) | [plans/NEXT_SESSION_PROMPT_APP3.md](plans/NEXT_SESSION_PROMPT_APP3.md) | **закрыт 2026-09-29**: R-G1 — 3 упоминания спроса при пороге 5 (§11 брифа); место №3 занял ArtUp Reports (выбор по `analysis/2026-09-29_atlassian_top5.md`) |
 | 3 | **ArtUp Reports** | экспорт задач Jira в Excel/Word/PDF по шаблонам | [22_app3_jira_reports.md](22_app3_jira_reports.md) | [plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md](plans/NEXT_SESSION_PROMPT_APP3_REPORTS.md) | **подан на одобрение 2026-09-30** (production 2.0.0, app id 3870724810; после автоотказа — Resubmit, SUBMITTED); код — ветка `reports-v1` |
 | 4 | **ArtUp Import** | импорт папок Markdown в родные страницы Confluence (обратная половина Export) | [24_app4_markdown_import.md](24_app4_markdown_import.md) | — | **закрыт на фазе 0 2026-10-01**: I-G4 — 1 вопрос спроса (3 с пограничными) при пороге 5 (§11 брифа) |
-| 5–7 | очередь (следующий — №5) | расширения JQL → кросс-проектные релизы (ArtUp Release) → Гант | пишутся по очереди | — | выбор: `/Users/artyomkarpets/IncomeApps/analysis/2026-09-29_atlassian_top5.md` |
+| 5 | **ArtUp Query** | расширения JQL со свежим результатом | [25_app5_jql.md](25_app5_jql.md) | — | **фаза 0 с 2026-10-01**: ворота J-G1…J-G5, ветка `jql-v1` |
+| 6–7 | очередь | кросс-проектные релизы (ArtUp Release) → Гант | пишутся по очереди | — | выбор: `/Users/artyomkarpets/IncomeApps/analysis/2026-09-29_atlassian_top5.md` |
 
 Новое приложение = бриф `NN_appN_*.md` + промпт `plans/NEXT_SESSION_PROMPT_APPN.md` + строка здесь.
 

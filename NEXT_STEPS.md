@@ -10,7 +10,7 @@
 | **ArtUp Export** (Confluence) | приёмка 16 пунктов пройдена 2026-09-29; production v2.1.0, development v2.8.0 (исправлен белый экран после экспорта, EXPORT-19), оба подходят под Runs on Atlassian; проверен на 1 000 страниц; сайт https://artuplabs.com/export/ опубликован; **листинг подан 2026-09-29 — SUBMITTED** (app id 1478660823; первая подача тоже дала автоотказ, после заполнения профиля вендора — Resubmit) |
 | **Репозиторий** | всё по Atlassian в одном репозитории: эта папка = `AKarpetc/artuplabs-trace` (ветка `monorepo`, PR #8 не слит). Внутри: `apps/trace`, `apps/export`, `atlassian/` (документы), `site/`, `STATE.md` |
 | **ArtUp Reports** (Jira, №3) | production 2.0.0; **листинг подан 2026-09-30 — SUBMITTED** (app id 3870724810; первая подача — автоотказ, Resubmit). Открыт пункт 6 приёмки (второй аккаунт) — раздел 8 ниже |
-| **Приложение №4** | **ArtUp Import** — импорт папок Markdown в Confluence: бриф [atlassian/24_app4_markdown_import.md](atlassian/24_app4_markdown_import.md), **закрыт на фазе 0 2026-10-01** по I-G4 (спрос: 1–3 вопроса при пороге 5). Следующий — №5 расширения JQL. На dev остались тестовые пространства IGSMK, IMPT |
+| **Приложение №4** | **ArtUp Import** — импорт папок Markdown в Confluence: бриф [atlassian/24_app4_markdown_import.md](atlassian/24_app4_markdown_import.md), **закрыт на фазе 0 2026-10-01** по I-G4 (спрос: 1–3 вопроса при пороге 5). Тестовые пространства IGSMK, IMPT удалены. **№5 ArtUp Query (расширения JQL)** — бриф [atlassian/25_app5_jql.md](atlassian/25_app5_jql.md), фаза 0 с 2026-10-01, ветка `jql-v1` |
 
 ---
 
@@ -75,7 +75,7 @@
 | Когда | Что | Где лежит |
 |---|---|---|
 | Сразу, если приёмка Export нашла проблемы | исправить, перевыложить development и production | [atlassian/23_export_owner_steps.md](atlassian/23_export_owner_steps.md) |
-| Следующая сессия | **приложение №5 — расширения JQL**: бриф `atlassian/25_app5_jql.md` по образцу [24](atlassian/24_app4_markdown_import.md), фаза 0 с прототипа свежести (Forge JQL-функции / precomputation). №4 ArtUp Import закрыт 2026-10-01 по I-G4. Дальше: №6 ArtUp Release → №7 Гант | `analysis/2026-09-29_atlassian_top5.md` §4 №3 |
+| Сейчас (2026-10-01) | **приложение №5 ArtUp Query**: фаза 0 → §11 брифа [25](atlassian/25_app5_jql.md); прототип свежести J-G5 — только после J-G1…J-G4. №4 ArtUp Import закрыт 2026-10-01 по I-G4. Дальше: №6 ArtUp Release → №7 Гант | `analysis/2026-09-29_atlassian_top5.md` §4 №3 |
 | После одобрения Trace | проверка лицензии в production; бэклог v1.1: убрать scope `read:jira-user`, если не нужен (мажорная версия), новый логотип, нагрузочный прогон на 300 требований | `STATE.md` → «Бэклог следующей версии» |
 | После одобрения Export | бэклог v1.1: папки в корне пространства (CQL `type=folder`) + предупреждение, если найдено меньше страниц, чем в поиске; удаление осиротевших `_category_.json`/`.pages`; параллельное чтение меток; `:emoji:` для неизвестных смайлов | [atlassian/plans/2026-09-28-artup-export-v1-rulings.md](atlassian/plans/2026-09-28-artup-export-v1-rulings.md) (строки «parked») |
 | Через 60 дней после листинга каждого приложения | замер: < 30 установок — снимаем и записываем отрицательный результат; ≥ 30 и ≥ 5 платящих — развиваем | бриф §10 |
