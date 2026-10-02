@@ -1,0 +1,63 @@
+modules:
+  jira:jqlFunction:
+    - key: subtasks-of
+      name: subtasksOf
+      arguments:
+        - name: query
+          required: true
+        - name: mode
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: subtasks-of-fn
+    - key: linked-issues-of
+      name: linkedIssuesOf
+      arguments:
+        - name: query
+          required: true
+        - name: mode
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: linked-issues-of-fn
+  trigger:
+    - key: refresh-trigger
+      function: refresh-fn
+      events:
+        - avi:jira:created:issue
+        - avi:jira:updated:issue
+        - avi:jira:deleted:issue
+        - avi:jira:created:issuelink
+        - avi:jira:deleted:issuelink
+  consumer:
+    - key: refresh-consumer
+      queue: jg5-refresh
+      function: worker-fn
+  function:
+    - key: worker-fn
+      handler: index.worker
+      timeoutSeconds: 300
+    - key: subtasks-of-fn
+      handler: index.subtasksOf
+    - key: linked-issues-of-fn
+      handler: index.linkedIssuesOf
+    - key: refresh-fn
+      handler: index.refresh
+permissions:
+  scopes:
+    - read:jira-work
+    - read:app-data:jira
+    - write:app-data:jira
+    - storage:app
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/8d6bbe70-5cfc-4f6b-b4ac-87a19886105d

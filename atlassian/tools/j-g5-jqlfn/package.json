@@ -1,0 +1,10 @@
+{
+  "name": "artuplabs-jg5-jqlfn",
+  "private": true,
+  "description": "J-G5 prototype: jira:jqlFunction subtasksOf/linkedIssuesOf with event-driven precomputation refresh (measurement only, not the product)",
+  "dependencies": {
+    "@forge/api": "8.2.0",
+    "@forge/events": "3.0.7",
+    "@forge/kvs": "2.0.7"
+  }
+}
