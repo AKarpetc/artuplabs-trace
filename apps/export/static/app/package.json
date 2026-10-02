@@ -33,7 +33,7 @@
     "@atlaskit/toggle": "17.3.4",
     "@atlaskit/tokens": "20.0.0",
     "@atlaskit/tooltip": "24.3.6",
-    "@forge/bridge": "7.0.0",
+    "@forge/bridge": "7.1.0",
     "fflate": "0.8.3",
     "htmlparser2": "12.0.0",
     "react": "18.3.1",
