@@ -19,6 +19,6 @@
     "@forge/events": "^3.0.6",
     "@forge/kvs": "^2.0.6",
     "@forge/resolver": "2.0.0",
-    "@forge/sql": "^4.0.6"
+    "@forge/sql": "^4.0.7"
   }
 }
