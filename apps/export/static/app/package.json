@@ -31,7 +31,7 @@
     "@atlaskit/tabs": "21.2.5",
     "@atlaskit/textfield": "10.2.6",
     "@atlaskit/toggle": "17.3.4",
-    "@atlaskit/tokens": "20.0.0",
+    "@atlaskit/tokens": "20.1.0",
     "@atlaskit/tooltip": "24.3.6",
     "@forge/bridge": "7.0.0",
     "fflate": "0.8.3",
