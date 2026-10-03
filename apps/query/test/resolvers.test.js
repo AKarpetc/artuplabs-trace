@@ -8,6 +8,9 @@ describe('getAccess', () => {
   it('is unlicensed in production without an active licence', async () => {
     expect(await run(defs, 'getAccess', { environmentType: 'PRODUCTION', license: { active: false } })).toEqual({ licensed: false, environmentType: 'PRODUCTION' });
   });
+  it('is unlicensed when the context names no environment and no licence', async () => {
+    expect(await run(defs, 'getAccess', {})).toEqual({ licensed: false, environmentType: '' });
+  });
   it('is licensed in development', async () => {
     expect(await run(defs, 'getAccess', { environmentType: 'DEVELOPMENT' })).toEqual({ licensed: true, environmentType: 'DEVELOPMENT' });
   });

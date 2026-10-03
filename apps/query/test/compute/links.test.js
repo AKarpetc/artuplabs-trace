@@ -23,7 +23,7 @@ describe('link compute', () => {
     expect((await make({ S: ['2'] }).linkedIssuesOf({ subquery: 'S', linkType: 'is blocked by' }, ctx)).ids).toEqual(['1']);
   });
   it('linkedIssuesOf names an unknown link type before searching', async () => {
-    expect(await make({}).linkedIssuesOf({ subquery: 'S', linkType: 'nope' }, ctx)).toEqual({ error: 'Link type "nope" not found' });
+    expect(await make({}).linkedIssuesOf({ subquery: 'S', linkType: 'nope' }, ctx)).toEqual({ error: 'Link type "nope" not found', log: 'Link type not found' });
   });
   it('linkedIssuesOfRecursive follows a cycle once and watches every reached issue', async () => {
     expect(await make({ S: ['1'] }).linkedIssuesOfRecursive({ subquery: 'S', linkType: 'blocks' }, ctx)).toEqual({ ids: ['1', '2', '3'], field: 'id', watch: ['1', '2', '3'] });
@@ -32,7 +32,7 @@ describe('link compute', () => {
     expect((await make({ S: ['1'] }).linkedIssuesOfRecursiveLimited({ subquery: 'S', depth: 1, linkType: 'blocks' }, ctx)).ids).toEqual(['2']);
   });
   it('linkedIssuesOfRecursive names an unknown link type before searching', async () => {
-    expect(await make({}).linkedIssuesOfRecursive({ subquery: 'S', linkType: 'nope' }, ctx)).toEqual({ error: 'Link type "nope" not found' });
+    expect(await make({}).linkedIssuesOfRecursive({ subquery: 'S', linkType: 'nope' }, ctx)).toEqual({ error: 'Link type "nope" not found', log: 'Link type not found' });
   });
   it('re-reads touched inner issues one by one for links bulkfetch may still miss', async () => {
     const jira = fakeJira({ issues: ISSUES, searches: { S: ['1', '2'] }, linkTypes: TYPES });
@@ -64,6 +64,6 @@ describe('link compute', () => {
     expect(await createLinkCompute({ jira }).hasLinks({ linkType: 'blocks' }, ctx)).toEqual({ ids: ['10'], field: 'id', watch: null });
   });
   it('hasLinks names an unknown link type', async () => {
-    expect(await make({}).hasLinkType({ linkType: 'nope' }, ctx)).toEqual({ error: 'Link type "nope" not found' });
+    expect(await make({}).hasLinkType({ linkType: 'nope' }, ctx)).toEqual({ error: 'Link type "nope" not found', log: 'Link type not found' });
   });
 });

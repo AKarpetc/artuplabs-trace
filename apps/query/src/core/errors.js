@@ -13,3 +13,19 @@ export const ERR = {
   subqueryRejected: () => 'Subquery rejected by Jira',
   withFunction: (functionName, message) => `${functionName}: ${message}`,
 };
+
+/** Value-free texts for the error log: the log never stores argument values (board, sprint, link type names, project keys). */
+export const LOG = {
+  severalLinkTypes: () => 'Several link types',
+  notFound: (what) => `${what} not found`,
+  ambiguous: (what) => `${what} is ambiguous`,
+  excluded: () => 'Project is excluded',
+  rejected: () => 'Function call rejected',
+};
+
+/** Errors that quote an argument value: the editor text with the value, the log text without it. */
+export const FAIL = {
+  notFound: (what, value) => ({ error: ERR.notFound(what, value), log: LOG.notFound(what) }),
+  ambiguous: (what, value, count) => ({ error: ERR.ambiguous(what, value, count), log: LOG.ambiguous(what) }),
+  excluded: (key) => ({ error: ERR.excluded(key), log: LOG.excluded() }),
+};

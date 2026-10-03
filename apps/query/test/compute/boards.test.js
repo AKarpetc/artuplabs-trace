@@ -18,11 +18,11 @@ describe('board compute', () => {
     expect(await empty.previousSprint({ board: 'B' })).toEqual({ native: 'id = -1' });
   });
   it('names a missing board', async () => {
-    expect(await createBoardCompute({ jira }).nextSprint({ board: 'Nope' })).toEqual({ error: 'Board "Nope" not found' });
+    expect(await createBoardCompute({ jira }).nextSprint({ board: 'Nope' })).toEqual({ error: 'Board "Nope" not found', log: 'Board not found' });
   });
   it('asks for the id when two boards share the name', async () => {
     const twins = createBoardCompute({ jira: fakeJira({ boards: [{ id: 4, name: 'Team' }, { id: 5, name: 'team' }] }) });
-    expect(await twins.nextSprint({ board: 'Team' })).toEqual({ error: 'Board "Team" matches 2 items; use its id' });
+    expect(await twins.nextSprint({ board: 'Team' })).toEqual({ error: 'Board "Team" matches 2 items; use its id', log: 'Board is ambiguous' });
   });
   it('reads a numeric argument as the board id before a board named so', async () => {
     const numeric = createBoardCompute({ jira: fakeJira({ boards: [{ id: 9, name: '4' }, { id: 4, name: 'Four' }] }) });

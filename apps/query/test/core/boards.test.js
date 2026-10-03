@@ -11,8 +11,8 @@ describe('matchBoard', () => {
     expect(matchBoard([{ id: 9, name: '2024' }], '2024')).toEqual({ item: { id: 9, name: '2024' } });
   });
   it('refuses an ambiguous name and names a missing board', () => {
-    expect(matchBoard(BOARDS, 'TEAM')).toEqual({ error: 'Board "TEAM" matches 2 items; use its id' });
-    expect(matchBoard(BOARDS, 'Nope')).toEqual({ error: 'Board "Nope" not found' });
+    expect(matchBoard(BOARDS, 'TEAM')).toEqual({ error: 'Board "TEAM" matches 2 items; use its id', log: 'Board is ambiguous' });
+    expect(matchBoard(BOARDS, 'Nope')).toEqual({ error: 'Board "Nope" not found', log: 'Board not found' });
   });
 });
 

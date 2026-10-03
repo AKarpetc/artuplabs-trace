@@ -1,12 +1,12 @@
 import { MAX_DEPTH } from './limits.js';
-import { ERR } from './errors.js';
+import { FAIL } from './errors.js';
 import { quote } from './jql-build.js';
 import { sortIds } from './ids.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 const anyOf = (typeId) => ({ filter: { typeId, direction: 'any' } });
 
-/** Link type argument (type name or direction description) → filter, null for every link, or `{ error }`. */
+/** Link type argument (type name or direction description) → filter, null for every link, or `{ error, log }`. */
 export function matchLinkType(types, arg) {
   if (arg === undefined) return { filter: null };
   const text = String(arg).trim();
@@ -19,9 +19,9 @@ export function matchLinkType(types, arg) {
   if (!ids.size) {
     const loose = types.filter((t) => norm(t.name) === want);
     if (loose.length === 1) return anyOf(String(loose[0].id));
-    return { error: loose.length ? ERR.ambiguous('Link type', text, loose.length) : ERR.notFound('Link type', text) };
+    return loose.length ? FAIL.ambiguous('Link type', text, loose.length) : FAIL.notFound('Link type', text);
   }
-  if (ids.size > 1) return { error: ERR.ambiguous('Link type', text, ids.size) };
+  if (ids.size > 1) return FAIL.ambiguous('Link type', text, ids.size);
   const [typeId] = ids;
   if (outward.length && inward.length) return anyOf(typeId);
   return { filter: { typeId, direction: outward.length ? 'outward' : 'inward' } };

@@ -1,20 +1,16 @@
 import { decideLicence } from '../access.js';
 import { groupKey, parseArgs } from '../core/args.js';
 import { FUNCTIONS } from '../core/catalog.js';
-import { ERR } from '../core/errors.js';
+import { ERR, LOG } from '../core/errors.js';
 import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, PAGE_CACHE_MS, VALUE_LIMIT } from '../core/limits.js';
 import { buildFragment, valuesOf } from '../core/tree.js';
 
 const TIMEOUT = Symbol('timeout');
-const UNKNOWN_ENVIRONMENT = 'PRODUCTION';
 
-/**
- * Licence input of a JQL function call: the environment from the app context (an unknown one counts as production),
- * the licence from the handler context, the app context or the payload context.
- */
+/** Licence input of a JQL function call: the environment from the app context first, the licence from the handler context first. */
 export function licenceInput(payload, context, app) {
   return {
-    environmentType: app?.environmentType ?? context?.environmentType ?? payload?.context?.environmentType ?? UNKNOWN_ENVIRONMENT,
+    environmentType: app?.environmentType ?? context?.environmentType ?? payload?.context?.environmentType,
     license: context?.license ?? app?.license ?? payload?.context?.license,
   };
 }
@@ -69,12 +65,12 @@ async function defer(deps, functionName, userArgs) {
 }
 
 async function evaluateClause(deps, functionName, payload, context) {
-  if (!decideLicence(licenceInput(payload, context, deps.appContext?.())).licensed) return { error: ERR.unlicensed() };
+  if (!decideLicence(licenceInput(payload, context, deps.appContext?.())).licensed) return { error: ERR.unlicensed(), log: ERR.unlicensed() };
   const parsed = parseArgs(functionName, payload?.clause?.arguments);
-  if (parsed.error) return parsed;
+  if (parsed.error) return { log: parsed.error, ...parsed };
   const { args, userArgs, page } = parsed;
   const gate = await deps.ready(functionName);
-  if (gate) return { error: gate };
+  if (gate) return { error: gate, log: gate };
   const cached = await fromCache(deps, functionName, userArgs, page);
   if (cached) return cached;
   const work = computeGroup(deps, functionName, args, userArgs).catch((failed) => ({ failed }));
@@ -87,11 +83,11 @@ async function evaluateClause(deps, functionName, payload, context) {
   return fragmentFor(functionName, userArgs, page, outcome, deps.levels);
 }
 
-/** One JQL function clause → stored JQL, or an error Jira shows in the editor (never stored, so the next search retries). */
+/** One JQL function clause → stored JQL, or an error Jira shows in the editor (never stored, so the next search retries); the log gets value-free text only. */
 export async function handleFunction(deps, functionName, payload, context) {
   const reply = await evaluateClause(deps, functionName, payload, context);
   if (!reply.error) return { jql: reply.jql };
-  if (reply.error !== ERR.computing()) await deps.state.recordError({ at: deps.now(), functionName, message: reply.log ?? reply.error });
+  if (reply.error !== ERR.computing()) await deps.state.recordError({ at: deps.now(), functionName, message: reply.log ?? LOG.rejected() });
   return { error: reply.error, storeErrorAsPrecomputation: false };
 }
 

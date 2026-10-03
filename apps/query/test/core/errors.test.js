@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ERR } from '../../src/core/errors.js';
+import { ERR, FAIL } from '../../src/core/errors.js';
 
 describe('error texts', () => {
   it('groups thousands in counts', () => {
@@ -20,5 +20,14 @@ describe('error texts', () => {
   });
   it('names a rejected subquery without quoting it', () => {
     expect(ERR.subqueryRejected()).toBe('Subquery rejected by Jira');
+  });
+  it('logs a missing or ambiguous value without the value', () => {
+    expect([FAIL.notFound('Board', 'Payroll board'), FAIL.ambiguous('Link type', 'secret', 2)]).toEqual([
+      { error: 'Board "Payroll board" not found', log: 'Board not found' },
+      { error: 'Link type "secret" matches 2 items; use its id', log: 'Link type is ambiguous' },
+    ]);
+  });
+  it('logs an excluded project without its key', () => {
+    expect(FAIL.excluded('HR')).toEqual({ error: 'Project HR is excluded from the ArtUp Query index', log: 'Project is excluded' });
   });
 });

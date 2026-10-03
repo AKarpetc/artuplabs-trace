@@ -24,7 +24,7 @@ export function createLinkCompute({ jira }) {
 
   async function recursive({ subquery, linkType }, depth, reconcile) {
     const f = await filterOf(linkType);
-    if (f.error) return { error: f.error };
+    if (f.error) return { error: f.error, log: f.log };
     const ids = await jira.searchIds(subquery, { reconcile });
     const reached = await closure(ids, depth, async (frontier) => {
       const map = await linksOf(frontier, reconcile);
@@ -35,7 +35,7 @@ export function createLinkCompute({ jira }) {
 
   async function hasLinks({ linkType }, { reconcile = [] } = {}) {
     const f = await filterOf(linkType);
-    if (f.error) return { error: f.error };
+    if (f.error) return { error: f.error, log: f.log };
     const query = linkQuery(f.types, f.filter);
     if (query.native) return { native: query.native };
     const own = f.types.find((t) => String(t.id) === f.filter.typeId);
@@ -47,7 +47,7 @@ export function createLinkCompute({ jira }) {
   return {
     async linkedIssuesOf({ subquery, linkType }, { reconcile }) {
       const f = await filterOf(linkType);
-      if (f.error) return { error: f.error };
+      if (f.error) return { error: f.error, log: f.log };
       const ids = await jira.searchIds(subquery, { reconcile });
       const map = await linksOf(ids, reconcile);
       return { ids: sortIds(ids.flatMap((id) => linkedIds(map.get(String(id)), f.filter))), field: 'id', watch: ids };

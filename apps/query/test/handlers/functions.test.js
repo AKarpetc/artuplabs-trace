@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { makeDeps, never } from './makeDeps.js';
 import { computeGroup, createFunctionHandlers, fragmentFor, handleFunction, licenceInput } from '../../src/handlers/functions.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
+import { createBoardCompute } from '../../src/compute/boards.js';
+import { fakeJira } from '../fakeJira.js';
 import { PAGE_CACHE_MS } from '../../src/core/limits.js';
 
 const ids = (n) => Array.from({ length: n }, (_, i) => String(i + 1));
@@ -34,6 +36,22 @@ describe('handleFunction', () => {
     const deps = makeDeps({ subtasksOf: async () => { throw bad; } });
     await handleFunction(deps, 'subtasksOf', payload('project = "Secret project"'), DEV);
     expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'subtasksOf', message: 'Subquery rejected by Jira' }]);
+  });
+  it('logs several link types without naming them', async () => {
+    const deps = makeDeps({});
+    const reply = await handleFunction(deps, 'linkedIssuesOf', payload('q', 'Secret one', 'Secret two'), DEV);
+    expect(reply.error).toContain('"Secret one"');
+    expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'linkedIssuesOf', message: 'Several link types' }]);
+  });
+  it('logs a missing board without its name', async () => {
+    const deps = makeDeps(createBoardCompute({ jira: fakeJira({ boards: [] }) }));
+    expect(await handleFunction(deps, 'nextSprint', payload('Payroll board'), DEV)).toEqual({ error: 'Board "Payroll board" not found', storeErrorAsPrecomputation: false });
+    expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'nextSprint', message: 'Board not found' }]);
+  });
+  it('logs a generic line for an error that carries no log text', async () => {
+    const deps = makeDeps({ parentsOf: async () => ({ error: 'Something about "Secret"' }) });
+    await handleFunction(deps, 'parentsOf', payload('q'), DEV);
+    expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'parentsOf', message: 'Function call rejected' }]);
   });
   it('serves a leaf page from the values the root cached', async () => {
     let calls = 0;

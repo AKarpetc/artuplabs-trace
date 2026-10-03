@@ -1,4 +1,4 @@
-import { ERR } from './errors.js';
+import { FAIL } from './errors.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
 const ms = (v) => (v ? Date.parse(v) : null);
@@ -11,8 +11,8 @@ function pick(list, arg, what) {
   }
   const named = list.filter((x) => norm(x.name) === norm(text));
   if (named.length === 1) return { item: named[0] };
-  if (named.length > 1) return { error: ERR.ambiguous(what, text, named.length) };
-  return { error: ERR.notFound(what, text) };
+  if (named.length > 1) return FAIL.ambiguous(what, text, named.length);
+  return FAIL.notFound(what, text);
 }
 
 /** Board by id (a numeric argument is tried as an id first) or by unique name. */

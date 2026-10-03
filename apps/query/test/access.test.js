@@ -9,6 +9,9 @@ describe('decideLicence', () => {
     expect(decideLicence({ environmentType: 'PRODUCTION', license: { active: true } })).toEqual({ licensed: true });
     expect(decideLicence({ environmentType: 'PRODUCTION', license: { isActive: true } })).toEqual({ licensed: true });
   });
+  it('treats a call with no environment as production', () => {
+    expect([decideLicence({}), decideLicence({ license: { active: true } })]).toEqual([{ licensed: false }, { licensed: true }]);
+  });
   it('denies production with a missing or inactive licence', () => {
     expect(decideLicence({ environmentType: 'PRODUCTION' })).toEqual({ licensed: false });
     expect(decideLicence({ environmentType: 'PRODUCTION', license: { active: false } })).toEqual({ licensed: false });

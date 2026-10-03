@@ -40,6 +40,7 @@ describe('parseArgs', () => {
   it('asks for one call per link type when several link types are given', () => {
     expect(parseArgs('linkedIssuesOf', ['', 'is blocked by', 'is cloned by'])).toEqual({
       error: 'linkedIssuesOf: takes one link type; call it once per link type and join the calls with OR, e.g. issue in linkedIssuesOf(…, "is blocked by") OR issue in linkedIssuesOf(…, "is cloned by")',
+      log: 'Several link types',
     });
     expect(parseArgs('linkedIssuesOfRecursive', ['key = A-1', 'blocks', 'clones', 'relates to']).error).toMatch(/^linkedIssuesOfRecursive: takes one link type;/);
   });

@@ -24,16 +24,16 @@ describe('matchLinkType', () => {
     expect(matchLinkType(TYPES, undefined)).toEqual({ filter: null });
   });
   it('names an unknown type', () => {
-    expect(matchLinkType(TYPES, 'duplicates')).toEqual({ error: 'Link type "duplicates" not found' });
+    expect(matchLinkType(TYPES, 'duplicates')).toEqual({ error: 'Link type "duplicates" not found', log: 'Link type not found' });
   });
   it('refuses a description shared by two types', () => {
-    expect(matchLinkType([...TYPES, { id: '9', name: 'Gates', outward: 'blocks', inward: 'is gated by' }], 'blocks')).toEqual({ error: 'Link type "blocks" matches 2 items; use its id' });
+    expect(matchLinkType([...TYPES, { id: '9', name: 'Gates', outward: 'blocks', inward: 'is gated by' }], 'blocks')).toEqual({ error: 'Link type "blocks" matches 2 items; use its id', log: 'Link type is ambiguous' });
   });
   it('reads a type name in any case as both directions when no description matches', () => {
     expect(matchLinkType(TYPES, 'CLONERS')).toEqual({ filter: { typeId: '3', direction: 'any' } });
   });
   it('refuses a name shared by two types in different case', () => {
-    expect(matchLinkType([{ id: '1', name: 'Gate', outward: 'a', inward: 'b' }, { id: '2', name: 'GATE', outward: 'c', inward: 'd' }], 'gate')).toEqual({ error: 'Link type "gate" matches 2 items; use its id' });
+    expect(matchLinkType([{ id: '1', name: 'Gate', outward: 'a', inward: 'b' }, { id: '2', name: 'GATE', outward: 'c', inward: 'd' }], 'gate')).toEqual({ error: 'Link type "gate" matches 2 items; use its id', log: 'Link type is ambiguous' });
   });
 });
 

@@ -1,5 +1,5 @@
 import { FUNCTION_BY_NAME, usage } from './catalog.js';
-import { ERR } from './errors.js';
+import { ERR, LOG } from './errors.js';
 
 const PAGE = /^__aq:([lm])([1-9]\d{0,2})$/;
 const WHOLE = /^\d{1,6}$/;
@@ -62,13 +62,13 @@ function severalLinkTypes(f, userArgs) {
   return `takes one link type; call it once per link type and join the calls with OR, e.g. ${call(userArgs[last])} OR ${call(userArgs[last + 1])}`;
 }
 
-/** Clause arguments → `{ args, userArgs, page }`, or `{ error }` with the message shown in the JQL editor. */
+/** Clause arguments → `{ args, userArgs, page }`, or `{ error }` (value-free) / `{ error, log }` (the error quotes argument values, the log does not). */
 export function parseArgs(functionName, raw) {
   const f = FUNCTION_BY_NAME.get(functionName);
   if (!f) return { error: `Unknown function ${functionName}` };
   const { userArgs, page } = splitPage(raw);
   const several = severalLinkTypes(f, userArgs);
-  if (several) return { error: ERR.withFunction(f.name, several) };
+  if (several) return { error: ERR.withFunction(f.name, several), log: LOG.severalLinkTypes() };
   const required = f.args.filter((a) => a.required).length;
   if (userArgs.length < required || userArgs.length > f.args.length) return { error: `Usage: ${usage(f)}` };
   const args = {};
