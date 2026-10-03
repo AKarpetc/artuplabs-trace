@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
 const { createJira, JiraError } = await import('../../src/infra/jira.js');
+const { FUNCTION_BUDGET_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -40,7 +41,8 @@ describe('reads', () => {
     const { request, calls } = scripted([reply(200, { issues: [{ id: '1' }], nextPageToken: 't' }), reply(200, { issues: [{ id: 2 }] })]);
     const touched = Array.from({ length: 60 }, (_, i) => String(i + 1));
     expect(await createJira(request).searchIds('project = A', { reconcile: touched })).toEqual(['1', '2']);
-    expect(calls[0].body).toEqual({ jql: 'project = A', fields: ['id'], maxResults: 5000, reconcileIssues: touched.slice(0, 50).map(Number) });
+    expect(calls[0].body).toEqual({ jql: 'project = A', fields: ['id'], maxResults: 5000, reconcileIssues: touched.slice(0, RECONCILE_MAX).map(Number) });
+    expect(RECONCILE_MAX).toBe(50);
     expect(calls[1].body.nextPageToken).toBe('t');
   });
   it('bulkfetches in batches of 100', async () => {
@@ -88,6 +90,20 @@ describe('backoff and roles', () => {
     const sleep = vi.fn(async () => {});
     await createJira(request, { sleep }).call('GET', '/x');
     expect(sleep.mock.calls).toEqual([[600], [1200]]);
+  });
+  it('caps a long Retry-After at the retry maximum', async () => {
+    const { request } = scripted([reply(429, {}, { 'retry-after': '120' }), reply(200, {})]);
+    const sleep = vi.fn(async () => {});
+    await createJira(request, { sleep }).call('GET', '/x');
+    expect(sleep.mock.calls).toEqual([[RETRY_MAX_MS]]);
+  });
+  it('keeps every retry sleep of one request inside the function budget', async () => {
+    const { request } = scripted(Array.from({ length: REQUEST_ATTEMPTS }, () => reply(503, {})));
+    const sleep = vi.fn(async () => {});
+    await createJira(request, { sleep }).call('GET', '/x').catch(() => null);
+    const slept = sleep.mock.calls.map(([ms]) => ms);
+    expect([slept.length, slept.every((ms) => ms <= RETRY_MAX_MS), slept.reduce((a, b) => a + b, 0) < FUNCTION_BUDGET_MS]).toEqual([REQUEST_ATTEMPTS - 1, true, true]);
+    expect((REQUEST_ATTEMPTS - 1) * RETRY_MAX_MS).toBeLessThan(FUNCTION_BUDGET_MS);
   });
   it('answers null for a role the project does not have', async () => {
     const { request } = scripted([reply(200, { Developers: 'https://x/rest/api/3/project/A/role/10' })]);

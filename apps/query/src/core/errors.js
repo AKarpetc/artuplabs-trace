@@ -10,5 +10,6 @@ export const ERR = {
   tooMany: (count, capacity) => `The result needs ${fmt(count)} issues; one function returns at most ${fmt(capacity)}. Narrow the subquery.`,
   excluded: (key) => `Project ${key} is excluded from the ArtUp Query index`,
   perUser: (word) => `${word} is not supported: results are shared by all users`,
+  subqueryRejected: () => 'Subquery rejected by Jira',
   withFunction: (functionName, message) => `${functionName}: ${message}`,
 };

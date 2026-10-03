@@ -15,9 +15,213 @@ modules:
         function: resolver
       title:
         i18n: module.adminPage.title
+  jira:jqlFunction:
+    - key: subtasks-of
+      name: subtasksOf
+      arguments:
+        - name: subquery
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-sub-of
+    - key: parents-of
+      name: parentsOf
+      arguments:
+        - name: subquery
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-par-of
+    - key: epics-of
+      name: epicsOf
+      arguments:
+        - name: subquery
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-epi-of
+    - key: issues-in-epics
+      name: issuesInEpics
+      arguments:
+        - name: subquery
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-iss-in-epi
+    - key: child-issues-of
+      name: childIssuesOf
+      arguments:
+        - name: subquery
+          required: true
+        - name: depth
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-chi-iss-of
+    - key: linked-issues-of
+      name: linkedIssuesOf
+      arguments:
+        - name: subquery
+          required: true
+        - name: linkType
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-lin-iss-of
+    - key: linked-issues-of-recursive
+      name: linkedIssuesOfRecursive
+      arguments:
+        - name: subquery
+          required: true
+        - name: linkType
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-lin-iss-of-rec
+    - key: linked-issues-of-recursive-limited
+      name: linkedIssuesOfRecursiveLimited
+      arguments:
+        - name: subquery
+          required: true
+        - name: depth
+          required: true
+        - name: linkType
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-lin-iss-of-rec-lim
+    - key: has-links
+      name: hasLinks
+      arguments:
+        - name: linkType
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-has-lin
+    - key: has-link-type
+      name: hasLinkType
+      arguments:
+        - name: linkType
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-has-lin-typ
+    - key: has-subtasks
+      name: hasSubtasks
+      arguments:
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-has-sub
+    - key: previous-sprint
+      name: previousSprint
+      arguments:
+        - name: board
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-pre-spr
+    - key: next-sprint
+      name: nextSprint
+      arguments:
+        - name: board
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-nex-spr
   function:
     - key: resolver
       handler: index.resolverHandler
+    - key: fn-sub-of
+      handler: index.subtasksOf
+    - key: fn-par-of
+      handler: index.parentsOf
+    - key: fn-epi-of
+      handler: index.epicsOf
+    - key: fn-iss-in-epi
+      handler: index.issuesInEpics
+    - key: fn-chi-iss-of
+      handler: index.childIssuesOf
+    - key: fn-lin-iss-of
+      handler: index.linkedIssuesOf
+    - key: fn-lin-iss-of-rec
+      handler: index.linkedIssuesOfRecursive
+    - key: fn-lin-iss-of-rec-lim
+      handler: index.linkedIssuesOfRecursiveLimited
+    - key: fn-has-lin
+      handler: index.hasLinks
+    - key: fn-has-lin-typ
+      handler: index.hasLinkType
+    - key: fn-has-sub
+      handler: index.hasSubtasks
+    - key: fn-pre-spr
+      handler: index.previousSprint
+    - key: fn-nex-spr
+      handler: index.nextSprint
 resources:
   - key: global-page
     path: static/app/dist/global-page

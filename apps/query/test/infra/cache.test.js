@@ -64,4 +64,13 @@ describe('value cache', () => {
     expect(await cache.values('g', meta, 0, meta.n)).toEqual(ids(6000));
     expect([...kvs.data.keys()].filter((k) => k.startsWith('v:g:') && k !== 'v:g:m')).toEqual(['v:g:csame_0', 'v:g:csame_1']);
   });
+  it('reads no list when a chunk of the range is gone, so the caller rereads or recomputes', async () => {
+    const kvs = createFakeKvs({ pageSize: 100 });
+    const cache = createValueCache({ kvs, hash: (s) => s, random: () => 'a' });
+    await cache.write('g', { values: ids(12000), watch: ids(6000), field: 'id', rootFilter: null, at: 1, source: 'refresh' });
+    const meta = await cache.meta('g');
+    kvs.data.delete('v:g:ca_1');
+    kvs.data.delete('v:g:wa_1');
+    expect([await cache.values('g', meta, 4000, 6000), await cache.values('g', meta, 0, 10), await cache.watch('g')]).toEqual([null, ids(10), null]);
+  });
 });

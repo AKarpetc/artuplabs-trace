@@ -18,4 +18,7 @@ describe('error texts', () => {
       'ArtUp Query license is not active', 'Computing, retry in a minute', 'Project HR is excluded from the ArtUp Query index',
     ]);
   });
+  it('names a rejected subquery without quoting it', () => {
+    expect(ERR.subqueryRejected()).toBe('Subquery rejected by Jira');
+  });
 });

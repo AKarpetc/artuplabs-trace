@@ -2,7 +2,7 @@ import { CACHE_CHUNK } from '../core/limits.js';
 
 const randomGen = () => Math.random().toString(36).slice(2);
 
-/** Value cache of a precomputation group: meta `v:<h>:m` names the live generation of chunks `v:<h>:c<gen>_<i>` and `v:<h>:w<gen>_<i>`, ≤ 5 000 ids per key. */
+/** Value cache of a precomputation group: meta `v:<h>:m` names the live generation of chunks `v:<h>:c<gen>_<i>` and `v:<h>:w<gen>_<i>`, ≤ 5 000 ids per key; a read that meets a missing chunk (the generation switched) answers null, never a partial list. */
 export function createValueCache({ kvs, hash, random = randomGen }) {
   const base = (key) => `v:${hash(key)}`;
   const chunkKey = (key, kind, gen, c) => `${base(key)}:${kind}${gen}_${c}`;
@@ -11,7 +11,11 @@ export function createValueCache({ kvs, hash, random = randomGen }) {
   async function readChunks(key, kind, gen, from, to) {
     const first = Math.floor(from / CACHE_CHUNK);
     const out = [];
-    for (let c = first; c * CACHE_CHUNK < to; c += 1) out.push(...((await kvs.get(chunkKey(key, kind, gen, c))) ?? []));
+    for (let c = first; c * CACHE_CHUNK < to; c += 1) {
+      const chunk = await kvs.get(chunkKey(key, kind, gen, c));
+      if (!chunk) return null;
+      out.push(...chunk);
+    }
     return out.slice(from - first * CACHE_CHUNK, to - first * CACHE_CHUNK);
   }
 
@@ -35,7 +39,8 @@ export function createValueCache({ kvs, hash, random = randomGen }) {
     async watch(key) {
       const m = await meta(key);
       if (!m || m.nw === null || m.nw === undefined) return null;
-      return new Set(await readChunks(key, 'w', m.gen, 0, m.nw));
+      const list = await readChunks(key, 'w', m.gen, 0, m.nw);
+      return list ? new Set(list) : null;
     },
     async write(key, { values, watch, field, rootFilter, at, source }) {
       const gen = random();

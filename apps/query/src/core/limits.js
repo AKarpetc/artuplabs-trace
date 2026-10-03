@@ -26,6 +26,12 @@ export const PRECOMPUTATION_BATCH = 50;
 export const REQUEST_ATTEMPTS = 6;
 /** First backoff step of a retried Jira request; it doubles per attempt. */
 export const RETRY_BASE_MS = 300;
+/** Longest single retry sleep: the retries of one request (attempts − 1 sleeps) stay inside the function budget. */
+export const RETRY_MAX_MS = 3000;
+/** Issue ids one search may pass as reconcileIssues (Jira's limit). */
+export const RECONCILE_MAX = 50;
+/** Reads of a cached group: the second one follows a generation switched during the first. */
+export const CACHE_READ_ATTEMPTS = 2;
 /** Page size of Jira lists read with startAt (boards, sprints, projects, group members). */
 export const LIST_PAGE = 50;
 export const PRECOMPUTATION_PAGE = 100;

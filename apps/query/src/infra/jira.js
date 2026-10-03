@@ -1,7 +1,7 @@
 import api, { assumeTrustedRoute } from '@forge/api';
 import {
-  BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, LIST_PAGE, MAX_TOUCHED, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
-  REQUEST_ATTEMPTS, RETRY_BASE_MS, USER_SEARCH_MAX,
+  BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, LIST_PAGE, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
+  RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
 import { pool } from './pool.js';
 
@@ -29,14 +29,14 @@ function messagesOf(raw) {
   }
 }
 
-/** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff. */
+/** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff, each sleep capped at RETRY_MAX_MS. */
 export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS } = {}) {
   async function call(method, path, body) {
     for (let attempt = 1; ; attempt += 1) {
       const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
       const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
       if ((res.status === 429 || res.status >= 500) && attempt < attempts) {
-        await sleep(Number(res.headers.get('retry-after')) * 1000 || RETRY_BASE_MS * 2 ** attempt);
+        await sleep(Math.min(Number(res.headers.get('retry-after')) * 1000 || RETRY_BASE_MS * 2 ** attempt, RETRY_MAX_MS));
         continue;
       }
       const raw = await res.text();
@@ -65,7 +65,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS 
         jql,
         fields: ['id'],
         maxResults: ID_PAGE,
-        ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, MAX_TOUCHED).map(Number) } : {}),
+        ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, RECONCILE_MAX).map(Number) } : {}),
         ...(nextPageToken ? { nextPageToken } : {}),
       });
       out.push(...(page.issues ?? []).map((x) => String(x.id)));
