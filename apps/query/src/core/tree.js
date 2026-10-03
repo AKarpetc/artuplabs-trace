@@ -21,7 +21,7 @@ const span = (first, last) => Array.from({ length: last - first + 1 }, (_, i) =>
 
 /**
  * Stored JQL of one precomputation: the root (page null), a middle node or a leaf. `field` is `id` or `parent`;
- * `rootFilter` is ANDed on the root only (a nested leaf with it returned nothing in the J-G5 measurement).
+ * `rootFilter` is ANDed on the root only; a leaf nested under the filter returns no issues.
  */
 export function buildFragment({ functionName, userArgs, page, values, field, rootFilter, levels = TREE_LEVELS }) {
   const list = (from, to) => {

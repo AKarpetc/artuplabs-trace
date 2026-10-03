@@ -18,6 +18,6 @@ describe('server source guards', () => {
     expect(code.filter((f) => f.includes('/src/core/') && /\bDate\.now\(|\bnew Date\(\s*\)/.test(text(f)))).toEqual([]);
   });
   it('never mentions tasks, the plan, the specification or rulings', () => {
-    expect(code.filter((f) => /\bTask \d|\bplan\b|\bspecification\b|\brulings?\b|\bQ-R\d/i.test(text(f)))).toEqual([]);
+    expect(code.filter((f) => /\bTask \d|\bplan\b|\bspecification\b|\brulings?\b|\bQ-R\d|\bJ-G\d/i.test(text(f)))).toEqual([]);
   });
 });
