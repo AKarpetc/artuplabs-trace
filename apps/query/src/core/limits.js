@@ -28,8 +28,12 @@ export const REQUEST_ATTEMPTS = 6;
 export const RETRY_BASE_MS = 300;
 /** Longest single retry sleep: the retries of one request (attempts − 1 sleeps) stay inside the function budget. */
 export const RETRY_MAX_MS = 3000;
-/** Longest retry sleep of a queue worker: no cap, Retry-After is waited in full. */
-export const WORKER_RETRY_MAX_MS = Number.POSITIVE_INFINITY;
+/** Longest retry sleep of a queue worker: a long Retry-After is mostly waited, yet one sleep stays well inside the refresh lease (LEASE_MS). */
+export const WORKER_RETRY_MAX_MS = 30 * 1000;
+/** Delay of the follow-up refresh after a pass that kept its journal rows (a failed group or a later pass wrote first). */
+export const REFRESH_RETRY_DELAY_S = 60;
+/** Age after which journal rows are dropped even though a group keeps failing; the hourly reconcile covers them. */
+export const FAILED_ROWS_KEEP_MS = 60 * 60 * 1000;
 /** Issue ids one search may pass as reconcileIssues (Jira's limit). */
 export const RECONCILE_MAX = 50;
 /** Reads of a cached group: the second one follows a generation switched during the first. */

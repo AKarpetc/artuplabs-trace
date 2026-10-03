@@ -21,6 +21,7 @@ export const LOG = {
   ambiguous: (what) => `${what} is ambiguous`,
   excluded: () => 'Project is excluded',
   rejected: () => 'Function call rejected',
+  refreshFailed: (status) => (status ? `Refresh failed: Jira answered ${status}` : 'Refresh failed'),
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

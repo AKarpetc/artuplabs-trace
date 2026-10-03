@@ -1,15 +1,18 @@
 import { groupKey, parseArgs, splitPage } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
+import { LOG } from '../core/errors.js';
 import { familyWants, groupPrecomputations, queryOverlap, summarizeJournal } from '../core/affected.js';
-import { ACTIVE_MS, JOURNAL_PAGE, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, VERIFY_DELAY_S, WORKER_BUDGET_MS } from '../core/limits.js';
+import {
+  ACTIVE_MS, FAILED_ROWS_KEEP_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_RETRY_DELAY_S, VERIFY_DELAY_S, WORKER_BUDGET_MS,
+} from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { computeGroup, fragmentFor } from './functions.js';
 
-/** Marks a refresh as pending and pushes it; a failed push clears the mark so the next event retries. */
-export async function pushRefresh(deps, ts) {
+/** Marks a refresh as pending and pushes it (after `delay` seconds when given); a failed push clears the mark so the next event retries. */
+export async function pushRefresh(deps, ts, delay) {
   await deps.state.pending.set(ts);
   try {
-    await deps.queue.push({ kind: 'refresh', ts });
+    await deps.queue.push({ kind: 'refresh', ts }, delay);
     return true;
   } catch (error) {
     await deps.state.pending.clear();
@@ -64,7 +67,7 @@ export async function rewrite(deps, group, reconcile) {
   return updates;
 }
 
-/** One pass over a journal page: recompute stale groups (precomputations Jira used, and background jobs), write changes, then drop the rows (kept if the write fails). */
+/** One pass over a journal page: recompute stale groups (precomputations Jira used, and background jobs), write changes, then drop the rows; rows stay when the write fails, when a later pass wrote first, or (until FAILED_ROWS_KEEP_MS) when a group failed. */
 export async function refreshOnce(deps) {
   const startedAt = deps.now();
   const rows = await deps.journal.read(JOURNAL_PAGE);
@@ -75,10 +78,18 @@ export async function refreshOnce(deps) {
   const reconcile = summary.touched.slice(0, RECONCILE_MAX);
   const updates = [];
   let recomputed = 0;
+  let failed = 0;
   await pool(all, REFRESH_CONCURRENCY, async (group) => {
-    if (!(await isStale(deps, group, summary))) return;
-    recomputed += 1;
-    updates.push(...(await rewrite(deps, group, reconcile)));
+    try {
+      if (!(await isStale(deps, group, summary))) return;
+      recomputed += 1;
+      updates.push(...(await rewrite(deps, group, reconcile)));
+    } catch (error) {
+      failed += 1;
+      const status = error?.name === 'JiraError' ? error.status : null;
+      console.error(`refresh of ${group.functionName} failed: ${error?.name} ${status ?? ''}`);
+      await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
+    }
   });
   let stale = false;
   if (updates.length) {
@@ -88,7 +99,7 @@ export async function refreshOnce(deps) {
       await deps.jira.writePrecomputations(updates);
     }
   }
-  await deps.journal.remove(rows.map((r) => r.key));
+  if (!stale) await deps.journal.remove((failed ? rows.filter((r) => r.key < expiredBefore(startedAt)) : rows).map((r) => r.key));
   return {
     touched: summary.touched.slice(0, MAX_TOUCHED),
     kinds: summary.kinds,
@@ -98,9 +109,12 @@ export async function refreshOnce(deps) {
     recomputed,
     changed: updates.length,
     stale,
+    failed,
     oldestEventMs: summary.firstAt === null ? null : startedAt - summary.firstAt,
   };
 }
+
+const expiredBefore = (now) => `t:${String(now - FAILED_ROWS_KEEP_MS).padStart(JOURNAL_TS_DIGITS, '0')}`;
 
 async function computeJob(deps, { functionName, userArgs }) {
   const parsed = parseArgs(functionName, userArgs);
@@ -126,11 +140,13 @@ export async function onRefresh(deps, event) {
       if (!pass) break;
       passes.push(pass);
       await deps.state.lease.set(deps.now());
+      if (pass.stale || pass.failed) break;
     }
   } finally {
     await deps.state.lease.clear();
   }
-  if ((await deps.journal.read(1)).length && !(await deps.state.pending.get())) await pushRefresh(deps, deps.now());
+  const kept = passes.some((p) => p.stale || p.failed);
+  if ((await deps.journal.read(1)).length && !(await deps.state.pending.get())) await pushRefresh(deps, deps.now(), kept ? REFRESH_RETRY_DELAY_S : undefined);
   const verify = [...new Set(passes.flatMap((p) => p.touched))].slice(0, MAX_TOUCHED);
   if (!body.verify && verify.length) {
     await deps.queue.push({ kind: 'refresh', ts: deps.now(), verify, kinds: [...new Set(passes.flatMap((p) => p.kinds))].sort() }, VERIFY_DELAY_S);

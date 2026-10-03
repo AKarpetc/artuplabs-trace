@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ids, makeDeps, RECENT } from './makeDeps.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
-import { WORKER_BUDGET_MS } from '../../src/core/limits.js';
+import { FAILED_ROWS_KEEP_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const jiraError = (status) => Object.assign(new Error(`Jira answered ${status}`), { name: 'JiraError', status });
 
@@ -66,12 +66,14 @@ describe('refreshOnce', () => {
     await deps.journal.append({ ids: ['5'], kinds: ['issue-updated'] }, 999500);
     expect((await refreshOnce(deps)).recomputed).toBe(1);
   });
-  it('fails the pass on an error that is not Jira\'s and keeps the journal', async () => {
+  it('counts a group whose live search breaks as failed and keeps the journal', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: RECENT }];
     const deps = makeDeps({ pcs, searches: { '(q) AND id in (5)': new TypeError('bug') } });
     await deps.cache.write('parentsOf["q"]', { values: ['1'], watch: [], field: 'id', rootFilter: null, at: 1, source: 'refresh' });
     await deps.journal.append({ ids: ['5'], kinds: ['issue-updated'] }, 999500);
-    await expect(refreshOnce(deps)).rejects.toThrow('bug');
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect((await refreshOnce(deps)).failed).toBe(1);
+    error.mockRestore();
     expect(await deps.journal.read(10)).toHaveLength(1);
   });
   it('leaves query groups alone when the events touched no issue', async () => {
@@ -149,6 +151,33 @@ describe('refreshOnce', () => {
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
     expect((await refreshOnce(deps)).stale).toBe(true);
     expect(deps.written).toEqual([]);
+    expect(await deps.journal.read(10)).toHaveLength(1);
+  });
+  it('a group failing with 403 does not block the others', async () => {
+    const pcs = [
+      { id: 'bad', functionName: 'previousSprint', arguments: ['Secret board'], value: 'sprint = 1', used: RECENT },
+      { id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT },
+    ];
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = makeDeps({ pcs, compute: { previousSprint: async () => { throw jiraError(403); }, hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created', 'sprint'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ failed: 1, changed: 1 });
+    error.mockRestore();
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
+    expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'previousSprint', message: 'Refresh failed: Jira answered 403' }]);
+    expect(await deps.journal.read(10)).toHaveLength(1);
+  });
+  it('drops rows older than the failure window even while a group keeps failing', async () => {
+    const pcs = [{ id: 'bad', functionName: 'previousSprint', arguments: ['B'], value: 'sprint = 1', used: RECENT }];
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = makeDeps({ pcs, compute: { previousSprint: async () => { throw new TypeError('bug'); } } });
+    deps.advance(FAILED_ROWS_KEEP_MS);
+    await deps.journal.append({ ids: [], kinds: ['sprint'] }, 999999);
+    await deps.journal.append({ ids: [], kinds: ['sprint'] }, deps.now() - 500);
+    await refreshOnce(deps);
+    error.mockRestore();
+    expect((await deps.journal.read(10)).map((r) => r.key)).toEqual([`t:${String(deps.now() - 500).padStart(15, '0')}:0002`]);
+    expect((await deps.state.errors())[0].message).toBe('Refresh failed');
   });
   it('keeps the cache of a deferred computation fresh before Jira stores its root', async () => {
     const compute = { linkedIssuesOf: vi.fn(async () => ({ ids: ['8'], field: 'id', watch: ['5'] })) };
@@ -255,9 +284,29 @@ describe('onRefresh', () => {
     expect(deps.pushed[0]).toEqual([{ kind: 'refresh', ts: 1000000 + WORKER_BUDGET_MS }, null]);
     expect(await deps.state.pending.get()).toBe(1000000 + WORKER_BUDGET_MS);
   });
+  it('stops after a stale pass and pushes a refresh for the rows it kept', async () => {
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await deps.state.lastWrittenStart.set(2000000);
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    expect((await onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } })).passes).toHaveLength(1);
+    expect(deps.pushed[0]).toEqual([{ kind: 'refresh', ts: 1000000 }, REFRESH_RETRY_DELAY_S]);
+  });
+  it('schedules a delayed follow-up refresh when a group failed', async () => {
+    const pcs = [{ id: 'bad', functionName: 'previousSprint', arguments: ['B'], value: 'sprint = 1', used: RECENT }];
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = makeDeps({ pcs, compute: { previousSprint: async () => { throw jiraError(403); } } });
+    await deps.journal.append({ ids: [], kinds: ['sprint'] }, 999500);
+    const result = await onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } });
+    error.mockRestore();
+    expect(result.passes).toHaveLength(1);
+    expect(deps.pushed).toEqual([[{ kind: 'refresh', ts: 1000000 }, REFRESH_RETRY_DELAY_S]]);
+    expect(await deps.state.pending.get()).toBe(1000000);
+  });
   it('releases the lease when a pass fails', async () => {
     const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];
-    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => { throw new Error('down'); } } });
+    const deps = makeDeps({ pcs });
+    deps.jira.precomputations = async () => { throw new Error('down'); };
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
     await expect(onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } })).rejects.toThrow('down');
     expect(await deps.state.lease.get()).toBeNull();

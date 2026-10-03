@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
 const { createJira, JiraError } = await import('../../src/infra/jira.js');
-const { FUNCTION_BUDGET_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS } = await import('../../src/core/limits.js');
+const { FUNCTION_BUDGET_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -97,11 +97,17 @@ describe('backoff and roles', () => {
     await createJira(request, { sleep }).call('GET', '/x');
     expect(sleep.mock.calls).toEqual([[RETRY_MAX_MS]]);
   });
-  it('waits the whole Retry-After in a queue worker', async () => {
-    const { request } = scripted([reply(429, {}, { 'retry-after': '120' }), reply(200, {})]);
+  it('waits a longer Retry-After in a queue worker than in a function call', async () => {
+    const { request } = scripted([reply(429, {}, { 'retry-after': '20' }), reply(200, {})]);
     const sleep = vi.fn(async () => {});
     await createJira(request, { sleep, retryMaxMs: WORKER_RETRY_MAX_MS }).call('GET', '/x');
-    expect(sleep.mock.calls).toEqual([[120000]]);
+    expect(sleep.mock.calls).toEqual([[20000]]);
+  });
+  it('keeps a queue worker retry sleep inside the refresh lease', async () => {
+    const { request } = scripted([reply(429, {}, { 'retry-after': '600' }), reply(200, {})]);
+    const sleep = vi.fn(async () => {});
+    await createJira(request, { sleep, retryMaxMs: WORKER_RETRY_MAX_MS }).call('GET', '/x');
+    expect(sleep.mock.calls[0][0]).toBeLessThan(LEASE_MS);
   });
   it('keeps every retry sleep of one request inside the function budget', async () => {
     const { request } = scripted(Array.from({ length: REQUEST_ATTEMPTS }, () => reply(503, {})));
