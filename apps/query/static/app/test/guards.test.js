@@ -28,4 +28,8 @@ describe('source guards', () => {
     const offenders = code.filter((f) => /^\s+\/\/(?!\s*eslint)/m.test(readFileSync(f, 'utf8')));
     expect(offenders).toEqual([]);
   });
+  it('leaves no <pre> context probe in any component', () => {
+    const offenders = code.filter((f) => f.endsWith('.jsx') && /<pre[\s>]/.test(readFileSync(f, 'utf8')));
+    expect(offenders).toEqual([]);
+  });
 });

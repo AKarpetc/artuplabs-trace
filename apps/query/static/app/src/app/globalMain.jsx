@@ -9,7 +9,7 @@ async function main() {
   const { context } = await bootstrap();
   createRoot(document.getElementById('root')).render(
     <I18nProvider locale={resolveLocale(context.locale)}>
-      <GlobalApp context={context} />
+      <GlobalApp />
     </I18nProvider>,
   );
 }

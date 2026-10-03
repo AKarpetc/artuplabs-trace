@@ -143,16 +143,7 @@ export function formatBytes(locale, bytes) {
   }).format(value);
 }
 
-/** Formats milliseconds as "1 min 5 s" through translated units. */
-export function formatDuration(t, ms) {
-  const seconds = Math.max(0, Math.round(ms / 1000));
-  const minutes = Math.floor(seconds / 60);
-  return minutes > 0
-    ? t('time.minutesSeconds', { minutes, seconds: seconds % 60 })
-    : t('time.seconds', { seconds });
-}
-
-/** Returns `{ t, locale, formatNumber, formatDate, formatDuration }` bound to the nearest I18nProvider. */
+/** Returns `{ t, locale, formatNumber, formatDate }` bound to the nearest I18nProvider. */
 export function useI18n() {
   const context = useContext(I18nContext);
   if (!context) {
@@ -164,6 +155,5 @@ export function useI18n() {
     locale,
     formatNumber: (n) => formatNumber(locale, n),
     formatDate: (iso) => formatDate(locale, iso),
-    formatDuration: (ms) => formatDuration(t, ms),
   };
 }
