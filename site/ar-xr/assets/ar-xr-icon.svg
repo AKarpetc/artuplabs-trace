@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="ArtUp AR XR">
+  <defs>
+    <linearGradient id="axi-g" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7c4dff"/>
+      <stop offset="1" stop-color="#0b5cd5"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#axi-g)"/>
+  <!-- AR viewfinder corners -->
+  <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
+    <path d="M10 20 V10 H20"/>
+    <path d="M44 10 H54 V20"/>
+    <path d="M54 44 V54 H44"/>
+    <path d="M20 54 H10 V44"/>
+  </g>
+  <!-- isometric cube (a product placed in space) -->
+  <path d="M32 17 L45 24.5 L32 32 L19 24.5 Z" fill="#fff"/>
+  <path d="M19 24.5 L32 32 V47 L19 39.5 Z" fill="#fff" fill-opacity="0.62"/>
+  <path d="M45 24.5 L32 32 V47 L45 39.5 Z" fill="#fff" fill-opacity="0.36"/>
+  <circle cx="47.5" cy="16.5" r="2.6" fill="#ffd166"/>
+</svg>
