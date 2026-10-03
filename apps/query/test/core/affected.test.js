@@ -1,0 +1,104 @@
+import { describe, expect, it } from 'vitest';
+import { familyWants, groupPrecomputations, isTimeRelative, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
+
+const row = (ts, ids, kinds) => ({ key: `t:${String(ts).padStart(15, '0')}:abc`, value: { ids, kinds } });
+const NOW = Date.parse('2026-10-10T12:00:00Z');
+const iso = (msAgo) => new Date(NOW - msAgo).toISOString();
+const HOUR = 3600000;
+
+describe('summarizeJournal', () => {
+  it('merges ids and kinds and keeps the oldest timestamp', () => {
+    expect(summarizeJournal([row(200, ['2', '1'], ['link']), row(100, ['1'], ['issue-updated'])])).toEqual({ touched: ['1', '2'], kinds: ['issue-updated', 'link'], all: false, firstAt: 100 });
+  });
+  it('recomputes everything when the page is full', () => {
+    const rows = Array.from({ length: 100 }, (_, i) => row(i + 1, [String(i)], ['issue-updated']));
+    expect(summarizeJournal(rows).all).toBe(true);
+  });
+  it('recomputes everything after an unknown event or a row without kinds', () => {
+    expect(summarizeJournal([row(1, ['1'], ['unknown'])]).all).toBe(true);
+    expect(summarizeJournal([{ key: 't:000000000000001:x', value: { ids: ['1'] } }]).all).toBe(true);
+  });
+  it('reads a row without ids as touching nothing', () => {
+    expect(summarizeJournal([{ key: 't:000000000000005:x', value: { kinds: ['sprint'] } }])).toEqual({ touched: [], kinds: ['sprint'], all: false, firstAt: 5 });
+  });
+  it('recomputes everything when more than 50 issues are touched', () => {
+    expect(summarizeJournal([row(1, Array.from({ length: 51 }, (_, i) => String(i)), ['issue-updated'])]).all).toBe(true);
+  });
+});
+
+describe('groupPrecomputations', () => {
+  const pcs = [
+    { id: 'a', functionName: 'subtasksOf', arguments: ['project = A'], used: iso(HOUR) },
+    { id: 'b', functionName: 'subtasksOf', arguments: ['project = A', '__aq:l2'], used: iso(HOUR) },
+    { id: 'c', functionName: 'subtasksOf', arguments: ['project = B'], used: iso(8 * 24 * HOUR) },
+    { id: 'd', functionName: 'gone', arguments: [] },
+    { id: 'e', functionName: 'hasLinks', arguments: [] },
+  ];
+  it('joins pages to their root, drops inactive and unknown functions', () => {
+    expect(groupPrecomputations(pcs, { now: NOW, activeMs: 7 * 24 * HOUR })).toEqual([
+      { key: 'subtasksOf["project = A"]', functionName: 'subtasksOf', family: 'query', userArgs: ['project = A'], items: [pcs[0], pcs[1]] },
+      { key: 'hasLinks[]', functionName: 'hasLinks', family: 'links', userArgs: [], items: [pcs[4]] },
+    ]);
+  });
+});
+
+describe('familyWants', () => {
+  it('maps change kinds to the families they make stale', () => {
+    expect(familyWants('subtasks', ['issue-created'])).toBe(true);
+    expect(familyWants('subtasks', ['link'])).toBe(false);
+    expect(familyWants('sprint', ['status'])).toBe(true);
+    expect(familyWants('board', ['sprint'])).toBe(true);
+    expect(familyWants('links', ['link'])).toBe(false);
+    expect(familyWants('comment', ['issue-deleted'])).toBe(true);
+    expect(familyWants('attachment', ['comment'])).toBe(false);
+  });
+  it('wants nothing for a family it does not know', () => {
+    expect(familyWants('gone', ['issue-created', 'sprint'])).toBe(false);
+  });
+});
+
+describe('queryOverlap', () => {
+  it('is stale when a touched issue is watched', () => {
+    expect(queryOverlap({ touched: ['5'], watch: new Set(['5']), liveHits: [] })).toBe(true);
+  });
+  it('is stale when a touched issue now matches the subquery', () => {
+    expect(queryOverlap({ touched: ['5'], watch: new Set(), liveHits: ['5'] })).toBe(true);
+  });
+  it('is stale when the watch list or the live check is unknown', () => {
+    expect(queryOverlap({ touched: ['5'], watch: null, liveHits: [] })).toBe(true);
+    expect(queryOverlap({ touched: ['5'], watch: new Set(), liveHits: null })).toBe(true);
+  });
+  it('is fresh when nothing touched is related', () => {
+    expect(queryOverlap({ touched: ['5'], watch: new Set(['6']), liveHits: [] })).toBe(false);
+  });
+});
+
+describe('reconcileTargets', () => {
+  const group = (functionName, userArgs, used, updated) => ({ key: functionName, functionName, family: 'query', userArgs, items: [{ id: 'x', used: iso(used), updated: iso(updated) }] });
+  it('picks groups used in the last day that were not rewritten for an hour or depend on the clock', () => {
+    const stale = group('a', ['project = A'], HOUR, 2 * HOUR);
+    const fresh = group('b', ['project = A'], HOUR, 10 * 60000);
+    const clock = group('c', ['after -7d'], HOUR, 10 * 60000);
+    const unused = group('d', ['project = A'], 2 * 24 * HOUR, 2 * HOUR);
+    expect(reconcileTargets([stale, fresh, clock, unused], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50 })).toEqual([stale, clock]);
+  });
+  it('keeps at most max groups, oldest first', () => {
+    const older = group('a', ['x'], HOUR, 5 * HOUR);
+    const newer = group('b', ['x'], HOUR, 2 * HOUR);
+    expect(reconcileTargets([newer, older], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 1 })).toEqual([older]);
+  });
+});
+
+describe('reconcileTargets without rewrite times', () => {
+  it('takes the creation time when a precomputation was never rewritten, and treats no time as oldest', () => {
+    const created = { key: 'a', functionName: 'a', family: 'query', userArgs: ['x'], items: [{ id: 'x', used: iso(HOUR), created: iso(30 * 60000) }] };
+    const blank = { key: 'b', functionName: 'b', family: 'query', userArgs: ['x'], items: [{ id: 'y', used: iso(HOUR) }] };
+    expect(reconcileTargets([created, blank], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50 })).toEqual([blank]);
+  });
+});
+
+describe('isTimeRelative', () => {
+  it.each([['after -7d', true], ['created > startOfWeek()', true], ['on 2026-01-01', false], ['project = A-7d', false]])('%s → %s', (arg, expected) => {
+    expect(isTimeRelative([arg])).toBe(expected);
+  });
+});
