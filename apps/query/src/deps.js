@@ -10,6 +10,7 @@ import { createValueCache } from './infra/cache.js';
 import { createJournal } from './infra/journal.js';
 import { createState } from './infra/state.js';
 import { createQueueClient } from './infra/queue.js';
+import { meterKvs } from './infra/meter.js';
 import { createHierarchyCompute } from './compute/hierarchy.js';
 import { createLinkCompute } from './compute/links.js';
 import { createBoardCompute } from './compute/boards.js';
@@ -25,15 +26,18 @@ function currentAppContext() {
   }
 }
 
-/** Production dependencies of every handler; `retryMaxMs` caps one Jira retry sleep (queue workers pass no cap). */
+/** Production dependencies of every handler; `retryMaxMs` caps one Jira retry sleep (queue workers pass no cap); all KVS access goes through the write meter. */
 export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
   const jira = appJira({ retryMaxMs });
-  const state = createState({ kvs, hash: sha1, beginsWith: WhereConditions.beginsWith });
+  const meter = meterKvs(kvs);
+  const state = createState({ kvs: meter.kvs, hash: sha1, beginsWith: WhereConditions.beginsWith });
   return {
     jira,
     state,
-    cache: createValueCache({ kvs, hash: sha1 }),
-    journal: createJournal({ kvs, beginsWith: WhereConditions.beginsWith }),
+    cache: createValueCache({ kvs: meter.kvs, hash: sha1 }),
+    journal: createJournal({ kvs: meter.kvs, beginsWith: WhereConditions.beginsWith }),
+    meter,
+    logWrites: process.env.QUERY_LOG_WRITES === '1',
     queue: createQueueClient(new Queue({ key: 'query-refresh' })),
     backfillQueue: createQueueClient(new Queue({ key: 'query-backfill' })),
     compute: { ...createHierarchyCompute({ jira }), ...createLinkCompute({ jira }), ...createBoardCompute({ jira }) },
