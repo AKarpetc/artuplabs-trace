@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Политика конфиденциальности приложения — ArtUp AR XR</title>
-  <meta name="description" content="Политика конфиденциальности iOS-приложения ArtUp AR XR и App Clip. Privacy Policy of the ArtUp AR XR iOS app and App Clip.">
+  <meta name="description" content="Политика конфиденциальности iOS-приложения ArtUp AR XR и App Clip.">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="assets/ar-xr-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -14,7 +14,13 @@
     (function () {
       var q = new URLSearchParams(location.search).get("lang");
       var saved = null;
-      try { saved = localStorage.getItem("artup-lang") || localStorage.getItem("privacy-lang"); } catch (e) {}
+      try {
+        saved = localStorage.getItem("artup-lang");
+        if (!saved && localStorage.getItem("privacy-lang")) {
+          saved = localStorage.getItem("privacy-lang");
+          localStorage.setItem("artup-lang", saved); // lang.js reads only the shared key
+        }
+      } catch (e) {}
       var nav = "en"; // English by default; Russian only after a switch or ?lang=ru
       var lang = [q, saved, nav].filter(function (v) { return v === "ru" || v === "en"; })[0];
       document.documentElement.lang = lang;
@@ -22,7 +28,7 @@
   </script>
 </head>
 <body class="ax-page">
-  <a class="ax-skip" href="#main">Skip to content</a>
+  <a class="ax-skip" href="#main" data-i18n="skip">Перейти к содержанию</a>
 
   <header class="ax-header">
     <div class="ax-container ax-header-row">
@@ -39,6 +45,10 @@
         </ul>
       </nav>
       <div class="ax-header-actions">
+        <div class="ax-segmented ax-lang" role="group" aria-label="Язык / Language" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang-set="ru" lang="ru" aria-pressed="true">RU</button>
+          <button type="button" data-lang-set="en" lang="en" aria-pressed="false">EN</button>
+        </div>
         <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/"><span data-lang="ru">Открыть демо</span><span data-lang="en">Open demo</span></a>
       </div>
     </div>
@@ -48,10 +58,6 @@
     <div class="ax-container">
       <div class="lx-doc-top">
         <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24">ArtUp AR XR · <span data-lang="ru">iOS и App Clip</span><span data-lang="en">iOS and App Clip</span></p>
-        <div class="ax-segmented" role="group" aria-label="Язык / Language">
-          <button type="button" data-set="ru" lang="ru" aria-pressed="true">RU</button>
-          <button type="button" data-set="en" lang="en" aria-pressed="false">EN</button>
-        </div>
       </div>
       <h1 data-lang="ru">Политика конфиденциальности приложения</h1>
       <h1 data-lang="en">App Privacy Policy</h1>
@@ -156,27 +162,29 @@
   </footer>
 
   <script>
+    window.ARTUP_I18N = {
+      ru: {},
+      en: {
+        "meta.title": "App Privacy Policy — ArtUp AR XR",
+        "meta.description": "Privacy Policy of the ArtUp AR XR iOS app and App Clip.",
+        "skip": "Skip to content",
+        "lang.label": "Language"
+      }
+    };
+  </script>
+  <script src="assets/lang.js"></script>
+  <script>
     (function () {
-      var titles = { ru: "Политика конфиденциальности приложения — ArtUp AR XR", en: "App Privacy Policy — ArtUp AR XR" };
-      function sync(lang) {
-        document.title = titles[lang];
-        document.querySelectorAll("[data-set]").forEach(function (b) {
-          b.setAttribute("aria-pressed", b.getAttribute("data-set") === lang ? "true" : "false");
-        });
-      }
-      function apply(lang) {
-        document.documentElement.lang = lang;
-        try { localStorage.setItem("privacy-lang", lang); localStorage.setItem("artup-lang", lang); } catch (e) {}
-        var url = new URL(location.href);
-        url.searchParams.set("lang", lang);
-        url.hash = "";
-        history.replaceState(null, "", url);
-        sync(lang);
+      // The RU/EN switch itself is assets/lang.js (data-lang-set); the page text uses data-lang blocks.
+      window.ArtupLang.onChange(function (lang) {
+        try { localStorage.setItem("privacy-lang", lang); } catch (e) {}
+        try {
+          var url = new URL(location.href);
+          url.searchParams.set("lang", lang);
+          url.hash = "";
+          history.replaceState(null, "", url);
+        } catch (e) {}
         window.scrollTo({ top: 0 });
-      }
-      sync(document.documentElement.lang);
-      document.querySelectorAll("[data-set]").forEach(function (b) {
-        b.addEventListener("click", function () { apply(b.getAttribute("data-set")); });
       });
 
       if (!("IntersectionObserver" in window)) return;
