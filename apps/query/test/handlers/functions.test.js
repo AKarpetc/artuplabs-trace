@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { makeDeps, never } from './makeDeps.js';
 import { computeGroup, createFunctionHandlers, fragmentFor, handleFunction, licenceInput } from '../../src/handlers/functions.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
@@ -76,6 +76,33 @@ describe('handleFunction', () => {
     expect(deps.pushed).toEqual([[{ kind: 'compute', functionName: 'subtasksOf', userArgs: ['project = A'] }, null]]);
     expect((await deps.state.jobs(1000000)).map((j) => j.key)).toEqual([SUBTASK_GROUP]);
     expect(await deps.state.errors()).toEqual([]);
+  });
+  it('queues the computation after 10 s, inside the 15 s Jira waits for an answer', async () => {
+    const slept = [];
+    const deps = fnDeps({ subtasksOf: never }, { sleep: async (ms) => { slept.push(ms); } });
+    await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV);
+    expect(slept).toEqual([10000]);
+  });
+  it('still answers Computing when the queue refuses the job', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = fnDeps({ subtasksOf: never }, { sleep: async () => {}, queue: { push: async () => { throw new Error('400 Bad Request'); } } });
+    expect(await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV)).toEqual({ error: 'Computing, retry in a minute', storeErrorAsPrecomputation: false });
+    error.mockRestore();
+    expect((await deps.state.jobs(1000000)).map((j) => j.key)).toEqual([SUBTASK_GROUP]);
+  });
+  it('still answers Computing when the job record cannot be stored', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = fnDeps({ subtasksOf: never }, { sleep: async () => {} });
+    deps.state.addJob = async () => { throw new Error('KVS down'); };
+    expect((await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV)).error).toBe('Computing, retry in a minute');
+    error.mockRestore();
+  });
+  it('answers Computing and queues the computation instead of throwing on an unexpected failure', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = fnDeps({}, { ready: async () => { throw new Error('KVS down'); } });
+    expect(await handleFunction(deps, 'parentsOf', payload('q'), DEV)).toEqual({ error: 'Computing, retry in a minute', storeErrorAsPrecomputation: false });
+    error.mockRestore();
+    expect(deps.pushed).toEqual([[{ kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] }, null]]);
   });
   it('queues the computation when Jira keeps failing', async () => {
     const deps = fnDeps({ subtasksOf: async () => { throw Object.assign(new Error('down'), { name: 'JiraError', status: 503 }); } });

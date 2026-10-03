@@ -58,10 +58,25 @@ async function fromCache(deps, functionName, userArgs, page) {
   return null;
 }
 
+/** Queues the computation of a group; never throws, so Jira always gets the Computing answer (a function that throws fails the whole search). */
 async function defer(deps, functionName, userArgs) {
-  await deps.state.addJob({ key: groupKey(functionName, userArgs), functionName, userArgs, at: deps.now() });
-  await deps.queue.push({ kind: 'compute', functionName, userArgs });
+  try {
+    await deps.state.addJob({ key: groupKey(functionName, userArgs), functionName, userArgs, at: deps.now() });
+    await deps.queue.push({ kind: 'compute', functionName, userArgs });
+  } catch (error) {
+    console.error(`${functionName} defer failed: ${error?.name} ${error?.message}`);
+  }
   return { error: ERR.computing() };
+}
+
+async function evaluateSafely(deps, functionName, payload, context) {
+  try {
+    return await evaluateClause(deps, functionName, payload, context);
+  } catch (error) {
+    console.error(`${functionName} failed: ${error?.name} ${error?.status ?? ''}`);
+    const parsed = parseArgs(functionName, payload?.clause?.arguments);
+    return parsed.error ? { error: ERR.computing() } : defer(deps, functionName, parsed.userArgs);
+  }
 }
 
 async function evaluateClause(deps, functionName, payload, context) {
@@ -83,9 +98,9 @@ async function evaluateClause(deps, functionName, payload, context) {
   return fragmentFor(functionName, userArgs, page, outcome, deps.levels);
 }
 
-/** One JQL function clause → stored JQL, or an error Jira shows in the editor (never stored, so the next search retries); the log gets value-free text only. */
+/** One JQL function clause → stored JQL, or an error Jira shows in the editor; never throws (Jira answers a thrown call with "Your query couldn't be processed"); the log gets value-free text only. */
 export async function handleFunction(deps, functionName, payload, context) {
-  const reply = await evaluateClause(deps, functionName, payload, context);
+  const reply = await evaluateSafely(deps, functionName, payload, context);
   if (!reply.error) return { jql: reply.jql };
   if (reply.error !== ERR.computing()) await deps.state.recordError({ at: deps.now(), functionName, message: reply.log ?? LOG.rejected() });
   return { error: reply.error, storeErrorAsPrecomputation: false };

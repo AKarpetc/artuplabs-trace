@@ -9,8 +9,8 @@ export const BULK_BATCH = 100;
 export const BULK_CONCURRENCY = 8;
 export const CACHE_CHUNK = 5000;
 export const PAGE_CACHE_MS = 10 * 60 * 1000;
-/** Compute budget of one function call: 20 s under the platform's 25 s, leaving time to queue the job and log. */
-export const FUNCTION_BUDGET_MS = 20 * 1000;
+/** Compute budget of one function call: Jira waits about 15 s for an answer (measured) before it calls again, so 10 s leaves time to queue the job and answer. */
+export const FUNCTION_BUDGET_MS = 10 * 1000;
 export const WORKER_BUDGET_MS = 240 * 1000;
 export const LEASE_MS = 90 * 1000;
 export const PENDING_STALE_MS = 6 * 60 * 1000;
@@ -27,7 +27,7 @@ export const REQUEST_ATTEMPTS = 6;
 /** First backoff step of a retried Jira request; it doubles per attempt. */
 export const RETRY_BASE_MS = 300;
 /** Longest single retry sleep: the retries of one request (attempts − 1 sleeps) stay inside the function budget. */
-export const RETRY_MAX_MS = 3000;
+export const RETRY_MAX_MS = 1800;
 /** Longest retry sleep of a queue worker: a long Retry-After is mostly waited, yet one sleep stays well inside the refresh lease (LEASE_MS). */
 export const WORKER_RETRY_MAX_MS = 30 * 1000;
 /** Delay of the follow-up refresh after a pass that kept its journal rows (a failed group or a later pass wrote first). */

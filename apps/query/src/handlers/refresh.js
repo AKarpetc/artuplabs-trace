@@ -149,7 +149,11 @@ export async function onRefresh(deps, event) {
   if ((await deps.journal.read(1)).length && !(await deps.state.pending.get())) await pushRefresh(deps, deps.now(), kept ? REFRESH_RETRY_DELAY_S : undefined);
   const verify = [...new Set(passes.flatMap((p) => p.touched))].slice(0, MAX_TOUCHED);
   if (!body.verify && verify.length) {
-    await deps.queue.push({ kind: 'refresh', ts: deps.now(), verify, kinds: [...new Set(passes.flatMap((p) => p.kinds))].sort() }, VERIFY_DELAY_S);
+    try {
+      await deps.queue.push({ kind: 'refresh', ts: deps.now(), verify, kinds: [...new Set(passes.flatMap((p) => p.kinds))].sort() }, VERIFY_DELAY_S);
+    } catch (error) {
+      console.error(`verify push failed: ${error?.message}`);
+    }
   }
   if (passes.length) {
     await deps.state.lastRefresh.set({ at: deps.now(), passes: passes.length, changed: passes.reduce((s, p) => s + p.changed, 0), oldestEventMs: Math.max(...passes.map((p) => p.oldestEventMs ?? 0)) });

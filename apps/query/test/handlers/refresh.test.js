@@ -252,6 +252,15 @@ describe('onRefresh', () => {
     expect([await deps.state.pending.get(), await deps.state.lease.get()]).toEqual([null, null]);
     expect(deps.pushed).toEqual([[{ kind: 'refresh', ts: 1000000, verify: ['9'], kinds: ['issue-created'] }, 20]]);
   });
+  it('finishes its passes when the queue refuses the verify job', async () => {
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) }, queue: { push: async () => { throw new Error('400 Bad Request'); } } });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    expect((await onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } })).passes).toHaveLength(1);
+    error.mockRestore();
+    expect(await deps.state.lastRefresh.get()).toMatchObject({ passes: 1, changed: 1 });
+  });
   it('records the last refresh', async () => {
     const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];
     const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });

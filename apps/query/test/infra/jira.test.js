@@ -18,10 +18,10 @@ function scripted(answers) {
 
 describe('call', () => {
   it('waits Retry-After on 429 and then succeeds', async () => {
-    const { request } = scripted([reply(429, {}, { 'retry-after': '2' }), reply(200, { ok: 1 })]);
+    const { request } = scripted([reply(429, {}, { 'retry-after': '1' }), reply(200, { ok: 1 })]);
     const sleep = vi.fn(async () => {});
     expect(await createJira(request, { sleep }).call('GET', '/x')).toEqual({ ok: 1 });
-    expect(sleep.mock.calls).toEqual([[2000]]);
+    expect(sleep.mock.calls).toEqual([[1000]]);
   });
   it('gives up on a 5xx after the last attempt', async () => {
     const { request, calls } = scripted([reply(503, {}), reply(503, {}), reply(503, { errorMessages: ['down'] })]);
