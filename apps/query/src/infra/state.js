@@ -1,10 +1,11 @@
 import { ERROR_LOG_SIZE, JOB_PAGE, PAGE_CACHE_MS } from '../core/limits.js';
 
 const JOB_PREFIX = 'q:job:';
+const HEAVY_PREFIX = 'q:hq:';
 
 const INDEX_PARTS = ['sprint', 'comments'];
 
-/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`. */
+/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`, each group waiting in the heavy lane `q:hq:<hash(group)>`, and the start of the computation that last wrote a group `q:gw:<hash(group)>`. */
 export function createState({ kvs, hash, beginsWith }) {
   const record = (key) => ({
     get: async () => (await kvs.get(key)) ?? null,
@@ -13,6 +14,18 @@ export function createState({ kvs, hash, beginsWith }) {
   });
   const progressKey = (part) => `idx:progress:${part}`;
   const jobKey = (group) => `${JOB_PREFIX}${hash(group)}`;
+  const heavyKey = (group) => `${HEAVY_PREFIX}${hash(group)}`;
+  async function withPrefix(prefix) {
+    const rows = [];
+    let cursor;
+    do {
+      const query = kvs.query().where('key', beginsWith(prefix)).limit(JOB_PAGE);
+      const page = await (cursor ? query.cursor(cursor) : query).getMany();
+      rows.push(...(page.results ?? []));
+      cursor = page.nextCursor;
+    } while (cursor);
+    return rows;
+  }
   return {
     pending: record('q:pending'),
     lease: record('q:running'),
@@ -36,15 +49,22 @@ export function createState({ kvs, hash, beginsWith }) {
     },
     errors: async () => (await kvs.get('log:errors')) ?? [],
     addJob: (job) => kvs.set(jobKey(job.key), job),
+    heavy: {
+      lease: record('q:heavy'),
+      get: async (key) => (await kvs.get(heavyKey(key))) ?? null,
+      put: (job) => kvs.set(heavyKey(job.key), job),
+      take: (key) => kvs.delete(heavyKey(key)),
+      async oldest() {
+        const queued = (await withPrefix(HEAVY_PREFIX)).map((r) => r.value);
+        return queued.reduce((a, b) => (a === null || b.at < a.at ? b : a), null);
+      },
+    },
+    groupWrite: {
+      get: async (key) => (await kvs.get(`q:gw:${hash(key)}`)) ?? null,
+      set: (key, startedAt) => kvs.set(`q:gw:${hash(key)}`, startedAt),
+    },
     async jobs(now) {
-      const rows = [];
-      let cursor;
-      do {
-        const query = kvs.query().where('key', beginsWith(JOB_PREFIX)).limit(JOB_PAGE);
-        const page = await (cursor ? query.cursor(cursor) : query).getMany();
-        rows.push(...(page.results ?? []));
-        cursor = page.nextCursor;
-      } while (cursor);
+      const rows = await withPrefix(JOB_PREFIX);
       const isLive = (job) => now - job.at < PAGE_CACHE_MS;
       for (const row of rows.filter((r) => !isLive(r.value))) {
         const current = await kvs.get(row.key);

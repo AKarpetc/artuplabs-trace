@@ -5,7 +5,7 @@ import { Queue } from '@forge/events';
 import { FUNCTION_BY_NAME } from './core/catalog.js';
 import { RETRY_MAX_MS, TREE_LEVELS } from './core/limits.js';
 import { readinessError } from './core/readiness.js';
-import { appJira } from './infra/jira.js';
+import { appJira, withDeadline } from './infra/jira.js';
 import { createValueCache } from './infra/cache.js';
 import { createJournal } from './infra/journal.js';
 import { createState } from './infra/state.js';
@@ -37,6 +37,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     queue: createQueueClient(new Queue({ key: 'query-refresh' })),
     backfillQueue: createQueueClient(new Queue({ key: 'query-backfill' })),
     compute: { ...createHierarchyCompute({ jira }), ...createLinkCompute({ jira }), ...createBoardCompute({ jira }) },
+    withDeadline,
     indexEvent: async () => null,
     indexReconcile: async () => null,
     hash: sha1,

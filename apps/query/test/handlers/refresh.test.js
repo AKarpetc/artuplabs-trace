@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ids, makeDeps, RECENT } from './makeDeps.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
-import { FAILED_ROWS_KEEP_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
+import { FAILED_ROWS_KEEP_MS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
+const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
 const jiraError = (status) => Object.assign(new Error(`Jira answered ${status}`), { name: 'JiraError', status });
 
 describe('refreshOnce', () => {
@@ -338,7 +339,7 @@ describe('onRefresh', () => {
   });
   it('runs a compute job into the cache', async () => {
     const deps = makeDeps({ compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
-    expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } })).toEqual({ computed: 'parentsOf["q"]' });
+    expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } })).toEqual({ computed: 'parentsOf["q"]', changed: 0 });
     expect((await deps.cache.meta('parentsOf["q"]')).source).toBe('job');
   });
   it('keeps watching a compute job from the moment it completes', async () => {
@@ -350,5 +351,119 @@ describe('onRefresh', () => {
   it('answers the argument error of a compute job without computing', async () => {
     const deps = makeDeps();
     expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: [] } })).toEqual({ error: 'Usage: parentsOf(subquery)' });
+  });
+});
+
+describe('heavy groups in a refresh pass', () => {
+  const heavyPcs = [{ id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'parent in (1)', used: RECENT }];
+  const lightPcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];
+  it('gives each group a deadline inside the pass and the worker budget', async () => {
+    const deps = makeDeps({ pcs: lightPcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps, { deadline: 1000000 + 5000 });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999600);
+    await refreshOnce(deps);
+    expect(deps.deadlines).toEqual([1005000, 1000000 + REFRESH_GROUP_BUDGET_MS]);
+  });
+  it('hands a group that runs out of its pass budget to the heavy lane and drops the rows', async () => {
+    const deps = makeDeps({ pcs: [...heavyPcs, ...lightPcs], compute: { childIssuesOf: async () => { throw deadlineError(); }, hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    const pass = await refreshOnce(deps);
+    expect(pass).toMatchObject({ recomputed: 1, handed: 1, failed: 0, changed: 1 });
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
+    expect(await deps.state.heavy.get('childIssuesOf["q"]')).toEqual({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 1000000 });
+    expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
+    expect(await deps.journal.read(10)).toEqual([]);
+  });
+  it('hands a group known to be slow to the heavy lane without computing it', async () => {
+    const compute = { childIssuesOf: vi.fn() };
+    const deps = makeDeps({ pcs: heavyPcs, compute });
+    await deps.cache.write('childIssuesOf["q"]', { values: ['1'], watch: ['9'], field: 'parent', rootFilter: null, at: 1, source: 'job', ms: REFRESH_GROUP_BUDGET_MS });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-updated'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ recomputed: 0, handed: 1 });
+    expect(compute.childIssuesOf).not.toHaveBeenCalled();
+  });
+  it('does not queue a heavy group again while it waits in the lane', async () => {
+    const deps = makeDeps({ pcs: heavyPcs, compute: { childIssuesOf: async () => { throw deadlineError(); } } });
+    await deps.state.heavy.put({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 990000 });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect([deps.pushed, (await deps.state.heavy.get('childIssuesOf["q"]')).at]).toEqual([[], 990000]);
+  });
+  it('queues a heavy group again when its lane entry is too old to be trusted', async () => {
+    const deps = makeDeps({ pcs: heavyPcs, compute: { childIssuesOf: async () => { throw deadlineError(); } } });
+    await deps.state.heavy.put({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 1000000 - HEAVY_QUEUED_STALE_MS });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect([deps.pushed, (await deps.state.heavy.get('childIssuesOf["q"]')).at]).toEqual([[[{ kind: 'heavy' }, null]], 1000000]);
+  });
+  it('skips the updates of a group a later computation already wrote and writes the others', async () => {
+    const deps = makeDeps({ pcs: [...heavyPcs, ...lightPcs], compute: { childIssuesOf: async () => ({ ids: ['3'], field: 'parent', watch: ['9'] }), hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await deps.state.groupWrite.set('childIssuesOf["q"]', 1000001);
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ changed: 1, stale: false });
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
+    expect([await deps.state.groupWrite.get('hasSubtasks[]'), await deps.state.groupWrite.get('childIssuesOf["q"]')]).toEqual([1000000, 1000001]);
+    expect(await deps.journal.read(10)).toEqual([]);
+  });
+  it('remembers how long a group took to compute', async () => {
+    const deps = makeDeps({ pcs: lightPcs });
+    deps.compute.hasSubtasks = async () => { deps.advance(1500); return { ids: ['2'], field: 'id', watch: null }; };
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect((await deps.cache.meta('hasSubtasks[]')).ms).toBe(1500);
+  });
+});
+
+describe('onRefresh heavy lane', () => {
+  const pcs = [{ id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'parent in (1)', error: 'Computing, retry in a minute', used: RECENT }];
+  const queued = (key, at) => ({ key: `childIssuesOf[${JSON.stringify(key)}]`, functionName: 'childIssuesOf', userArgs: [key], at });
+  it('runs the oldest waiting group, writes its precomputations and clears their error', async () => {
+    const deps = makeDeps({ pcs, compute: { childIssuesOf: async () => ({ ids: ['3'], field: 'parent', watch: ['9'] }) } });
+    await deps.state.heavy.put(queued('q', 990000));
+    expect(await onRefresh(deps, { body: { kind: 'heavy' } })).toEqual({ heavy: { computed: 'childIssuesOf["q"]', changed: 1 } });
+    expect(deps.written).toEqual([{ id: 'c', value: 'parent in (3)', error: null }]);
+    expect([await deps.state.heavy.oldest(), await deps.state.heavy.lease.get(), deps.pushed]).toEqual([null, null, []]);
+    expect(deps.deadlines).toEqual([1000000 + WORKER_BUDGET_MS]);
+  });
+  it('pushes itself again while more groups wait', async () => {
+    const deps = makeDeps({ compute: { childIssuesOf: async () => ({ ids: ['3'], field: 'parent', watch: ['9'] }) } });
+    await deps.state.heavy.put(queued('b', 995000));
+    await deps.state.heavy.put(queued('a', 990000));
+    expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy.computed).toBe('childIssuesOf["a"]');
+    expect([(await deps.state.heavy.oldest()).key, deps.pushed]).toEqual(['childIssuesOf["b"]', [[{ kind: 'heavy' }, null]]]);
+  });
+  it('leaves at once while another runner holds the lane', async () => {
+    const deps = makeDeps({ compute: { childIssuesOf: vi.fn() } });
+    await deps.state.heavy.put(queued('a', 990000));
+    await deps.state.heavy.lease.set(999000);
+    expect(await onRefresh(deps, { body: { kind: 'heavy' } })).toEqual({ busy: true });
+    expect(deps.compute.childIssuesOf).not.toHaveBeenCalled();
+  });
+  it('logs a group that runs past the worker budget and leaves its precomputations as they are', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = makeDeps({ pcs, compute: { childIssuesOf: async () => { throw deadlineError(); } } });
+    await deps.state.heavy.put(queued('q', 990000));
+    expect(await onRefresh(deps, { body: { kind: 'heavy' } })).toEqual({ heavy: { computed: 'childIssuesOf["q"]', timedOut: true } });
+    error.mockRestore();
+    expect(deps.written).toEqual([]);
+    expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'childIssuesOf', message: 'Refresh ran out of time' }]);
+    expect(await deps.state.heavy.lease.get()).toBeNull();
+  });
+  it('does not overwrite a group that a later computation wrote while it ran', async () => {
+    const deps = makeDeps({ pcs });
+    deps.compute.childIssuesOf = async () => { await deps.state.groupWrite.set('childIssuesOf["q"]', 1000001); return { ids: ['3'], field: 'parent', watch: ['9'] }; };
+    await deps.state.heavy.put(queued('q', 990000));
+    expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy.changed).toBe(0);
+    expect(deps.written).toEqual([]);
+  });
+});
+
+describe('onRefresh compute job precomputations', () => {
+  it('writes the value of a deferred group over the Computing error Jira stored', async () => {
+    const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], error: 'Computing, retry in a minute', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
+    expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } })).toEqual({ computed: 'parentsOf["q"]', changed: 1 });
+    expect(deps.written).toEqual([{ id: 'root', value: 'id in (4)', error: null }]);
   });
 });

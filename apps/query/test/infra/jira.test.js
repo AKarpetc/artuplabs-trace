@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
-const { createJira, JiraError } = await import('../../src/infra/jira.js');
+const { createJira, JiraError, withDeadline } = await import('../../src/infra/jira.js');
 const { FUNCTION_BUDGET_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
@@ -15,6 +15,29 @@ function scripted(answers) {
   };
   return { calls, request };
 }
+
+describe('deadline scope', () => {
+  it('refuses a request once the deadline of its scope has passed', async () => {
+    const { calls, request } = scripted([reply(200, {})]);
+    const jira = createJira(request, { clock: () => 5000 });
+    await expect(withDeadline(5000, () => jira.call('GET', '/x'))).rejects.toMatchObject({ name: 'DeadlineError' });
+    expect(calls).toEqual([]);
+  });
+  it('sends requests before the deadline and outside any scope', async () => {
+    const { calls, request } = scripted([reply(200, { a: 1 }), reply(200, { b: 2 })]);
+    const jira = createJira(request, { clock: () => 4999 });
+    expect(await withDeadline(5000, () => jira.call('GET', '/x'))).toEqual({ a: 1 });
+    expect(await jira.call('GET', '/y')).toEqual({ b: 2 });
+    expect(calls).toHaveLength(2);
+  });
+  it('keeps the deadlines of parallel scopes apart', async () => {
+    const { request } = scripted([reply(200, { ok: 1 })]);
+    const jira = createJira(request, { clock: () => 100 });
+    const late = withDeadline(50, () => jira.call('GET', '/x')).catch((e) => e.name);
+    const early = withDeadline(500, () => jira.call('GET', '/y'));
+    expect(await Promise.all([late, early])).toEqual(['DeadlineError', { ok: 1 }]);
+  });
+});
 
 describe('call', () => {
   it('waits Retry-After on 429 and then succeeds', async () => {

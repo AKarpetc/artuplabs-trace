@@ -21,6 +21,7 @@ export const LOG = {
   ambiguous: (what) => `${what} is ambiguous`,
   excluded: () => 'Project is excluded',
   rejected: () => 'Function call rejected',
+  refreshTimedOut: () => 'Refresh ran out of time',
   refreshFailed: (status) => (status ? `Refresh failed: Jira answered ${status}` : 'Refresh failed'),
 };
 

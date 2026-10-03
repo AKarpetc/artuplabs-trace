@@ -37,6 +37,26 @@ describe('state', () => {
     await Promise.all(jobs.map((j) => state.addJob(j)));
     expect(await state.jobs(2)).toEqual(jobs);
   });
+  it('keeps each queued heavy group under its own key and finds the oldest across pages', async () => {
+    const kvs = createFakeKvs({ pageSize: 1 });
+    const state = createState({ kvs, hash: (s) => `h${s}`, beginsWith });
+    await state.heavy.put({ key: 'b', functionName: 'f', userArgs: [], at: 20 });
+    await state.heavy.put({ key: 'a', functionName: 'f', userArgs: [], at: 30 });
+    await state.heavy.put({ key: 'c', functionName: 'f', userArgs: [], at: 10 });
+    expect([(await state.heavy.oldest()).key, (await state.heavy.get('a')).at]).toEqual(['c', 30]);
+    await state.heavy.take('c');
+    expect([(await state.heavy.oldest()).key, [...kvs.data.keys()].sort()]).toEqual(['b', ['q:hq:ha', 'q:hq:hb']]);
+  });
+  it('has no oldest heavy group and no group write time before any is stored', async () => {
+    const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
+    expect([await state.heavy.oldest(), await state.heavy.get('a'), await state.groupWrite.get('a'), await state.heavy.lease.get()]).toEqual([null, null, null, null]);
+  });
+  it('stores the start time of the computation that last wrote a group', async () => {
+    const kvs = createFakeKvs();
+    const state = createState({ kvs, hash: (s) => `h${s}`, beginsWith });
+    await state.groupWrite.set('a', 77);
+    expect([await state.groupWrite.get('a'), kvs.data.get('q:gw:ha')]).toEqual([77, 77]);
+  });
   it('stores excluded projects sorted and unique', async () => {
     const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
     await state.setExcluded(['B', 'A', 'B']);

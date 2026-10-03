@@ -24,6 +24,18 @@ describe('onReconcile', () => {
     expect(await onReconcile(deps)).toEqual({ groups: 0, changed: 0, index: null });
     expect(compute.hasSubtasks).not.toHaveBeenCalled();
   });
+  it('hands a group that runs out of time to the heavy lane', async () => {
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT, updated: old }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => { throw Object.assign(new Error('late'), { name: 'DeadlineError' }); } } });
+    expect(await onReconcile(deps)).toEqual({ groups: 1, changed: 0, index: null });
+    expect([(await deps.state.heavy.get('hasSubtasks[]')).functionName, deps.pushed]).toEqual(['hasSubtasks', [[{ kind: 'heavy' }, null]]]);
+  });
+  it('restarts the heavy lane when groups wait in it', async () => {
+    const deps = makeDeps();
+    await deps.state.heavy.put({ key: 'hasSubtasks[]', functionName: 'hasSubtasks', userArgs: [], at: 1 });
+    await onReconcile(deps);
+    expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
+  });
   it('reports the index pass', async () => {
     const deps = makeDeps({ indexReconcile: async () => ({ started: ['sprint'] }) });
     expect(await onReconcile(deps)).toEqual({ groups: 0, changed: 0, index: { started: ['sprint'] } });

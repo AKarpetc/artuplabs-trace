@@ -1,0 +1,118 @@
+import { groupKey, parseArgs, splitPage } from '../core/args.js';
+import { FUNCTION_BY_NAME } from '../core/catalog.js';
+import { LOG } from '../core/errors.js';
+import { groupPrecomputations } from '../core/affected.js';
+import { ACTIVE_MS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
+import { computeGroup, fragmentFor } from './functions.js';
+
+/** Whether a computation stopped because it ran past its deadline. */
+export const isDeadline = (error) => error?.name === 'DeadlineError';
+
+/** Pushes a queue body; a refused push is logged, never thrown (the next event, pass or reconcile pushes again). */
+export async function pushQuietly(deps, body, delay) {
+  try {
+    await deps.queue.push(body, delay);
+    return true;
+  } catch (error) {
+    console.error(`${body.kind} push failed: ${error?.message}`);
+    return false;
+  }
+}
+
+async function keepJob(deps, functionName, userArgs, result) {
+  if (result.ids) await deps.state.addJob({ key: groupKey(functionName, userArgs), functionName, userArgs, at: deps.now() });
+}
+
+async function recompute(deps, group, reconcile, source) {
+  const parsed = parseArgs(group.functionName, group.userArgs);
+  const gate = parsed.error ? null : await deps.ready(group.functionName);
+  if (parsed.error || gate) return { error: parsed.error ?? gate };
+  return computeGroup(deps, group.functionName, parsed.args, group.userArgs, { reconcile, source });
+}
+
+/** Precomputation updates whose stored value or error changed; a value clears a stored error, which Jira keeps otherwise. */
+export function updatesFor(group, result, levels) {
+  const updates = [];
+  for (const pc of group.items) {
+    const r = fragmentFor(group.functionName, group.userArgs, splitPage(pc.arguments).page, result, levels);
+    const storedError = pc.error ?? null;
+    if ((r.jql ?? null) === (pc.value ?? null) && (r.error ?? null) === storedError) continue;
+    if (r.error) updates.push({ id: pc.id, error: r.error });
+    else updates.push(storedError === null ? { id: pc.id, value: r.jql } : { id: pc.id, value: r.jql, error: null });
+  }
+  return updates;
+}
+
+/** Recomputes one group and returns its precomputation updates (a group without precomputations is a background job). */
+export async function rewrite(deps, group, reconcile) {
+  const result = await recompute(deps, group, reconcile, group.items.length ? 'refresh' : 'job');
+  if (!group.items.length) await keepJob(deps, group.functionName, group.userArgs, result);
+  return updatesFor(group, result, deps.levels);
+}
+
+/** Writes the updates of each group unless a computation that started later already wrote that group; returns how many were written. */
+export async function writeGroups(deps, startedAt, byGroup) {
+  const out = [];
+  for (const [key, updates] of byGroup) {
+    if (!updates.length || ((await deps.state.groupWrite.get(key)) ?? 0) > startedAt) continue;
+    await deps.state.groupWrite.set(key, startedAt);
+    out.push(...updates);
+  }
+  if (out.length) await deps.jira.writePrecomputations(out);
+  return out.length;
+}
+
+/** Whether the last computation of a group took longer than a refresh pass may spend on it. */
+export async function isHeavy(deps, group) {
+  return ((await deps.cache.meta(group.key))?.ms ?? 0) >= REFRESH_GROUP_BUDGET_MS;
+}
+
+/** Queues a group in the heavy lane, once: an entry that is waiting will start after this call, so it sees every change made before it. */
+export async function handOff(deps, group) {
+  const waiting = await deps.state.heavy.get(group.key);
+  if (waiting && deps.now() - waiting.at < HEAVY_QUEUED_STALE_MS) return;
+  await deps.state.heavy.put({ key: group.key, functionName: group.functionName, userArgs: group.userArgs, at: deps.now() });
+  await pushQuietly(deps, { kind: 'heavy' });
+}
+
+/** Computes one group within the worker budget and writes its precomputations (clearing a stored Computing error); a group still without precomputations stays a background job. */
+export async function runGroupJob(deps, { functionName, userArgs }) {
+  const startedAt = deps.now();
+  const parsed = parseArgs(functionName, userArgs);
+  if (parsed.error) return { error: parsed.error };
+  const key = groupKey(functionName, parsed.userArgs);
+  const bare = { key, functionName, family: FUNCTION_BY_NAME.get(functionName)?.family ?? 'query', userArgs: parsed.userArgs, items: [] };
+  let result;
+  try {
+    result = await deps.withDeadline(startedAt + WORKER_BUDGET_MS, () => recompute(deps, bare, [], 'job'));
+  } catch (error) {
+    if (!isDeadline(error)) throw error;
+    console.error(`${functionName} ran out of time`);
+    await deps.state.recordError({ at: deps.now(), functionName, message: LOG.refreshTimedOut() });
+    return { computed: key, timedOut: true };
+  }
+  const group = groupPrecomputations(await deps.jira.precomputations(), { now: deps.now(), activeMs: ACTIVE_MS }).find((g) => g.key === key);
+  if (!group) {
+    await keepJob(deps, functionName, parsed.userArgs, result);
+    return { computed: key, changed: 0 };
+  }
+  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, updatesFor(group, result, deps.levels)]]) };
+}
+
+/** Heavy lane runner: one waiting group per invocation under a lease, then it pushes itself while groups wait. */
+export async function runHeavy(deps) {
+  if (deps.now() - ((await deps.state.heavy.lease.get()) ?? 0) < HEAVY_LEASE_MS) return { busy: true };
+  await deps.state.heavy.lease.set(deps.now());
+  let heavy = null;
+  try {
+    const job = await deps.state.heavy.oldest();
+    if (job) {
+      await deps.state.heavy.take(job.key);
+      heavy = await runGroupJob(deps, job);
+    }
+  } finally {
+    await deps.state.heavy.lease.clear();
+  }
+  if (await deps.state.heavy.oldest()) await pushQuietly(deps, { kind: 'heavy' });
+  return { heavy };
+}

@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import api, { assumeTrustedRoute } from '@forge/api';
 import {
   BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, LIST_PAGE, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
@@ -12,6 +13,21 @@ export class JiraError extends Error {
     this.name = 'JiraError';
     this.status = status;
   }
+}
+
+/** A request was refused because the computation it belongs to ran past its deadline. */
+export class DeadlineError extends Error {
+  constructor() {
+    super('Computation deadline passed');
+    this.name = 'DeadlineError';
+  }
+}
+
+const deadlines = new AsyncLocalStorage();
+
+/** Runs task in a scope whose Jira requests are refused (DeadlineError) from `deadline` (epoch ms) on; parallel scopes stay apart. */
+export function withDeadline(deadline, task) {
+  return deadlines.run(deadline, task);
 }
 
 const wait = (ms) => new Promise((resolve) => {
@@ -29,10 +45,12 @@ function messagesOf(raw) {
   }
 }
 
-/** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff, each sleep capped at `retryMaxMs`. */
-export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS } = {}) {
+/** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff, each sleep capped at `retryMaxMs`; no request starts after the deadline of the current scope. */
+export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now } = {}) {
   async function call(method, path, body) {
     for (let attempt = 1; ; attempt += 1) {
+      const deadline = deadlines.getStore();
+      if (deadline !== undefined && clock() >= deadline) throw new DeadlineError();
       const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
       const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
       if ((res.status === 429 || res.status >= 500) && attempt < attempts) {

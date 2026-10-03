@@ -26,6 +26,11 @@ describe('value cache', () => {
     expect([...kvs.data.keys()].filter((k) => k.startsWith('v:g:c'))).toEqual(['v:g:cg2_0']);
     expect(await cache.watch('g')).toBeNull();
   });
+  it('keeps how long the group took to compute', async () => {
+    const cache = createValueCache({ kvs: createFakeKvs(), hash: (s) => s, random: () => 'a' });
+    await cache.write('g', { values: ['1'], watch: null, field: 'id', rootFilter: null, at: 7, source: 'job', ms: 1234 });
+    expect((await cache.meta('g')).ms).toBe(1234);
+  });
   it('knows nothing about a group never written', async () => {
     const cache = createValueCache({ kvs: createFakeKvs(), hash: (s) => s });
     expect([await cache.meta('x'), await cache.watch('x')]).toEqual([null, null]);

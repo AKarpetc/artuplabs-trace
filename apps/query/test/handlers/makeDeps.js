@@ -20,6 +20,7 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, write, ...extr
   const pushed = [];
   const written = [];
   const searched = [];
+  const deadlines = [];
   return {
     kvs,
     journal: createJournal({ kvs, beginsWith, random: () => String((tag += 1)).padStart(4, '0') }),
@@ -37,6 +38,10 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, write, ...extr
       writePrecomputations: write ?? (async (updates) => { written.push(...updates); }),
     },
     compute,
+    withDeadline: (deadline, task) => {
+      deadlines.push(deadline);
+      return task();
+    },
     ready: async () => null,
     indexEvent: async () => null,
     indexReconcile: async () => null,
@@ -48,6 +53,7 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, write, ...extr
     pushed,
     written,
     searched,
+    deadlines,
     ...extra,
   };
 }

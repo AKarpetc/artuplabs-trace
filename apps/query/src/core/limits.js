@@ -11,7 +11,14 @@ export const CACHE_CHUNK = 5000;
 export const PAGE_CACHE_MS = 10 * 60 * 1000;
 /** Compute budget of one function call: Jira waits about 15 s for an answer (measured) before it calls again, so 10 s leaves time to queue the job and answer. */
 export const FUNCTION_BUDGET_MS = 10 * 1000;
+/** Budget of one queue worker run (refresh passes, a compute job, one heavy group), under the consumer's 300 s limit. */
 export const WORKER_BUDGET_MS = 240 * 1000;
+/** Time one group may compute inside a refresh or reconcile pass; a slower group moves to the heavy lane so it never holds up the journal. */
+export const REFRESH_GROUP_BUDGET_MS = 20 * 1000;
+/** Lease of the heavy lane runner: the consumer's 300 s limit, so a killed runner frees the lane. */
+export const HEAVY_LEASE_MS = 300 * 1000;
+/** Age after which a group waiting in the heavy lane is queued again (its runner message was lost). */
+export const HEAVY_QUEUED_STALE_MS = 30 * 60 * 1000;
 export const LEASE_MS = 90 * 1000;
 export const PENDING_STALE_MS = 6 * 60 * 1000;
 export const JOURNAL_PAGE = 100;
