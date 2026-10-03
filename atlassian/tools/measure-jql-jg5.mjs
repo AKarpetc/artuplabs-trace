@@ -53,6 +53,7 @@ async function api(method, path, body, { raw = false } = {}) {
         method,
         headers: { Authorization: auth(), Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
         body: body ? JSON.stringify(body) : undefined,
+        signal: AbortSignal.timeout(30000),
       });
     } catch (e) {
       stats.retries += 1;
