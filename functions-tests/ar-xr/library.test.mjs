@@ -47,6 +47,26 @@ describe('library proxy', () => {
         assert.equal(fetchCalls.length, 0);
     });
 
+    test('app-manifest.json comes from ASSETS /ar-xr/data/app-manifest.json', async () => {
+        const app = { version: 1, collections: {}, models: [{ id: 'polyhaven:x', path: 'living/x', name: 'X', license: 'CC0-1.0' }] };
+        env.ASSETS.files.set('/ar-xr/data/app-manifest.json', app);
+        await env.ARXR.put('library/app-manifest.json', new Uint8Array([1]));
+        const res = await lib('app-manifest.json');
+        assert.equal(res.status, 200);
+        assert.deepEqual(await res.json(), app);
+        assert.deepEqual(env.ASSETS.calls, ['/ar-xr/data/app-manifest.json']);
+        assert.match(res.headers.get('Content-Type'), /application\/json/);
+        assert.equal(res.headers.get('Cache-Control'), 'public, max-age=300');
+        assert.equal(fetchCalls.length, 0);
+    });
+
+    test('app-manifest.json missing in ASSETS → its status, no-store, no origin fetch', async () => {
+        const res = await lib('app-manifest.json');
+        assert.equal(res.status, 404);
+        assert.equal(res.headers.get('Cache-Control'), 'no-store');
+        assert.equal(fetchCalls.length, 0);
+    });
+
     test('R2 hit is served without origin fetch', async () => {
         await env.ARXR.put('library/living/sofa-a/web.glb', new Uint8Array([9, 9, 9]));
         const res = await lib('living/sofa-a/web.glb');

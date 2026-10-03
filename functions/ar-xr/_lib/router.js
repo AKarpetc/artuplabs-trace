@@ -10,7 +10,7 @@ import {
 import { login, logout, me, register } from './auth.js';
 import { createHandoff, redeemHandoff } from './handoff.js';
 import { getSettings, patchModel, removeModel, requireAdmin } from './settings.js';
-import { isModelPath, parseCredentials, parseLayout, parseModelSettingsPatch, parseQuoteItems, parseRoomName } from './validate.js';
+import { isModelPath, parseCredentials, parseLayout, parseLayoutFrame, parseModelSettingsPatch, parseQuoteItems, parseRoomName } from './validate.js';
 
 export const API_BASE = '/ar-xr/api';
 
@@ -113,8 +113,10 @@ async function route(request, env, url, raw, clock) {
                     return json(layoutView(await requireRoom(env, b, d)));
                 }
                 await requireWriter(env, b, request);
-                const models = parseLayout(await readJson(request));
-                return json(roomView(await saveLayout(env, url, b, d, models, clock())));
+                const body = await readJson(request);
+                const models = parseLayout(body);
+                const frame = parseLayoutFrame(body);
+                return json(roomView(await saveLayout(env, url, b, d, models, clock(), frame)));
             }
         }
     }

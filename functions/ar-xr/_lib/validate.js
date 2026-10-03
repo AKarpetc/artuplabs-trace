@@ -64,6 +64,20 @@ export function parseLayout(body) {
     });
 }
 
+/**
+ * Система координат расстановки: `room` — от углов стены (калибровка, точное восстановление),
+ * `session` — от начала XR-сессии (свободная расстановка). Без поля — `room`, как у прежних расстановок.
+ */
+export const LAYOUT_FRAMES = ['room', 'session'];
+
+export function parseLayoutFrame(body) {
+    if (body.frame === undefined || body.frame === null)
+        return 'room';
+    if (!LAYOUT_FRAMES.includes(body.frame))
+        throw badRequest('Поле frame — "room" или "session".');
+    return body.frame;
+}
+
 /** `{ items:[{modelId, qty?}] }` или `{ models:[{modelId}] }` → `[{modelId, qty}]`. */
 export function parseQuoteItems(body) {
     let source;

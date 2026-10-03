@@ -39,14 +39,17 @@ export async function loadPrices(env, baseUrl, now) {
     }
 }
 
-/** Карта path → name из демо-манифеста; при ошибке — пустая (имена не критичны). */
+/** Карта path → {name, nameRu} из демо-манифеста; при ошибке — пустая (имена не критичны). */
 export async function loadModelNames(env, baseUrl, now) {
     try {
         const manifest = await loadAsset(env, baseUrl, MANIFEST_PATH, now);
         const names = new Map();
         for (const m of Array.isArray(manifest?.models) ? manifest.models : []) {
             if (m && typeof m.path === 'string')
-                names.set(m.path, typeof m.name === 'string' ? m.name : m.path);
+                names.set(m.path, {
+                    name: typeof m.name === 'string' ? m.name : m.path,
+                    nameRu: typeof m.nameRu === 'string' ? m.nameRu : null
+                });
         }
         return names;
     }
@@ -91,11 +94,13 @@ export async function computeQuote(env, baseUrl, items, now) {
             missing.push(modelId);
             continue;
         }
-        const name = typeof override.name === 'string' && override.name ? override.name
-            : names.get(modelId) ?? modelId;
+        const ownerName = typeof override.name === 'string' && override.name ? override.name : null;
+        const listedName = names.get(modelId);
+        const name = ownerName ?? listedName?.name ?? modelId;
+        const nameRu = ownerName ?? listedName?.nameRu ?? name;
         const lineTotal = round2(unit * qty);
         totalUsd += lineTotal;
-        lines.push({ modelId, name, qty, unitUsd: round2(unit), totalUsd: lineTotal });
+        lines.push({ modelId, name, nameRu, qty, unitUsd: round2(unit), totalUsd: lineTotal });
     }
 
     const rates = prices.rates;

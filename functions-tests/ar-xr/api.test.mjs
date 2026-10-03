@@ -106,6 +106,32 @@ describe('device projects and rooms', () => {
         assert.deepEqual(models.data, []);
     });
 
+    test('layout frame: room by default, session stored and returned, other values 400', async () => {
+        const p = await newProject();
+        const room = await call('POST', `/projects/${p.projectId}/rooms`, { body: { name: 'Free' }, headers: tok(p.deviceToken) });
+        assert.equal(room.data.frame, 'room', 'a new room reports the room frame');
+        const lp = `/projects/${p.projectId}/rooms/${room.data.roomId}/layout`;
+        const models = [{ modelId: 'living/sofa-a', matrix: IDENTITY }];
+
+        const legacy = await call('PUT', lp, { body: { models }, headers: tok(p.deviceToken) });
+        assert.equal(legacy.status, 200);
+        assert.equal(legacy.data.frame, 'room', 'no frame field = room (older clients)');
+
+        const session = await call('PUT', lp, { body: { frame: 'session', models }, headers: tok(p.deviceToken) });
+        assert.equal(session.status, 200);
+        assert.equal(session.data.frame, 'session');
+        assert.equal(session.data.quote.totals.USD > 0, true, 'the cost is computed in the session frame too');
+        assert.equal((await call('GET', `/public/projects/${p.projectId}/rooms/${room.data.roomId}/layout`)).data.frame, 'session');
+        assert.equal((await call('GET', `/projects/${p.projectId}/rooms`)).data[0].frame, 'session');
+
+        for (const frame of ['world', 1, true, ''])
+            assert.equal((await call('PUT', lp, { body: { frame, models }, headers: tok(p.deviceToken) })).status, 400, String(frame));
+        assert.equal((await call('GET', `/public/projects/${p.projectId}/rooms/${room.data.roomId}/layout`)).data.frame, 'session', 'a rejected PUT changes nothing');
+
+        const back = await call('PUT', lp, { body: { frame: 'room', models }, headers: tok(p.deviceToken) });
+        assert.equal(back.data.frame, 'room');
+    });
+
     test('list sorted by updatedAt desc, rename, delete', async () => {
         const p = await newProject();
         const h = tok(p.deviceToken);
@@ -194,8 +220,8 @@ describe('quote', () => {
         const q = r.data;
         assert.equal(q.currency, 'USD');
         assert.deepEqual(q.lines, [
-            { modelId: 'living/sofa-a', name: 'Sofa A', qty: 3, unitUsd: 399.99, totalUsd: 1199.97 },
-            { modelId: 'living/chair-b', name: 'Стул', qty: 3, unitUsd: 10, totalUsd: 30 }
+            { modelId: 'living/sofa-a', name: 'Sofa A', nameRu: 'Диван A', qty: 3, unitUsd: 399.99, totalUsd: 1199.97 },
+            { modelId: 'living/chair-b', name: 'Стул', nameRu: 'Стул', qty: 3, unitUsd: 10, totalUsd: 30 }
         ]);
         assert.deepEqual(q.missing, ['nope/x']);
         assert.equal(q.totals.USD, 1229.97);

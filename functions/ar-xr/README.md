@@ -14,7 +14,7 @@
 | Имя | Что |
 |---|---|
 | `ARXR` | R2-бакет `artuplabs-ar-xr` |
-| `ASSETS` | статика Pages (`/ar-xr/data/prices.json`, `/ar-xr/data/manifest.json`) |
+| `ASSETS` | статика Pages (`/ar-xr/data/prices.json`, `/ar-xr/data/manifest.json`, `/ar-xr/data/app-manifest.json`) |
 | `ARXR_ADMIN_TOKEN` | секрет демо-админа; нет секрета → admin-эндпоинты отвечают 503 |
 
 ## Ключи R2
@@ -39,7 +39,9 @@
 429 — throttle (вход, погашение кода, > 10 активных кодов), 503 — нет цен / нет секрета админа. `OPTIONS` → 204.
 
 - `POST /projects`, `GET /projects/:p`, `GET|POST /projects/:p/rooms`, `GET|PUT|DELETE /projects/:p/rooms/:r`,
-  `GET|PUT /projects/:p/rooms/:r/layout` (PUT пересчитывает `quote` и `itemCount`).
+  `GET|PUT /projects/:p/rooms/:r/layout` (PUT пересчитывает `quote` и `itemCount`; необязательное
+  `frame: "room" | "session"` — система координат расстановки, по умолчанию `room`; комната и публичная
+  расстановка возвращают `frame`).
 - `GET /public/projects/:p/rooms/:r`, `GET /public/projects/:p/rooms/:r/layout`, `GET /public/projects/:p/models` → `[]`.
 - `POST /quote`.
 - `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout`.

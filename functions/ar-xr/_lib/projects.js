@@ -66,7 +66,8 @@ export function roomView(room) {
         createdAt: room.createdAt,
         updatedAt: room.updatedAt,
         itemCount: room.itemCount ?? 0,
-        quote: room.quote ?? null
+        quote: room.quote ?? null,
+        frame: room.frame ?? 'room'
     };
 }
 
@@ -127,7 +128,7 @@ export async function deleteRoom(env, projectId, roomId) {
 }
 
 /** Сохраняет расстановку и пересчитывает смету; недоступные цены не мешают сохранению (quote: null). */
-export async function saveLayout(env, baseUrl, projectId, roomId, models, now) {
+export async function saveLayout(env, baseUrl, projectId, roomId, models, now, frame = 'room') {
     const room = await requireRoom(env, projectId, roomId);
     let quote = null;
     if (models.length > 0) {
@@ -140,6 +141,7 @@ export async function saveLayout(env, baseUrl, projectId, roomId, models, now) {
         }
     }
     room.models = models;
+    room.frame = frame;
     room.itemCount = models.length;
     room.quote = quote;
     room.updatedAt = new Date(now).toISOString();
@@ -148,7 +150,7 @@ export async function saveLayout(env, baseUrl, projectId, roomId, models, now) {
 }
 
 export function layoutView(room) {
-    return { roomId: room.roomId, models: Array.isArray(room.models) ? room.models : [] };
+    return { roomId: room.roomId, frame: room.frame ?? 'room', models: Array.isArray(room.models) ? room.models : [] };
 }
 
 /**

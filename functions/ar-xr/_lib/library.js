@@ -11,6 +11,16 @@ export const MAX_WRITE_THROUGH_BYTES = 95 * 1024 * 1024;
 const CACHE_CONTROL = 'public, max-age=86400';
 const MANIFEST_CACHE_CONTROL = 'public, max-age=300';
 
+/**
+ * Манифесты библиотеки — статика ASSETS, а не файлы R2/Yandex: `manifest.json` — демо (IKEA с ценой),
+ * `app-manifest.json` — каталог приложения (открытые лицензии и модели «по фото», без цен;
+ * генерирует demo-site/library-tools/make_app_manifest.py).
+ */
+export const MANIFEST_ASSETS = {
+    'manifest.json': MANIFEST_PATH,
+    'app-manifest.json': '/ar-xr/data/app-manifest.json'
+};
+
 const CONTENT_TYPES = {
     glb: 'model/gltf-binary',
     gltf: 'model/gltf+json',
@@ -103,8 +113,8 @@ export async function handleLibrary(request, env, deps = {}) {
         const head = method === 'HEAD';
         const path = libraryPath(new URL(request.url).pathname);
 
-        if (path === 'manifest.json') {
-            const res = await env.ASSETS.fetch(new Request(new URL(MANIFEST_PATH, request.url)));
+        if (Object.hasOwn(MANIFEST_ASSETS, path)) {
+            const res = await env.ASSETS.fetch(new Request(new URL(MANIFEST_ASSETS[path], request.url)));
             const headers = new Headers(res.headers);
             headers.set('Content-Type', 'application/json; charset=utf-8');
             headers.set('Cache-Control', res.ok ? MANIFEST_CACHE_CONTROL : 'no-store');

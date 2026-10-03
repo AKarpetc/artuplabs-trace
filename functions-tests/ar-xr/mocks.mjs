@@ -128,7 +128,7 @@ export const PRICES = {
 export const MANIFEST = {
     version: 1,
     models: [
-        { id: 'ikea:1', path: 'living/sofa-a', name: 'Sofa A' },
+        { id: 'ikea:1', path: 'living/sofa-a', name: 'Sofa A', nameRu: 'Диван A' },
         { id: 'ikea:2', path: 'living/chair-b', name: 'Chair B' },
         { id: 'ikea:3', path: 'kitchen/table-c', name: 'Table C' }
     ]
