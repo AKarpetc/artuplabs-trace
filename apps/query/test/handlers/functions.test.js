@@ -127,7 +127,7 @@ describe('handleFunction', () => {
   it('recomputes instead of serving a partial list when cached chunks keep missing', async () => {
     const deps = fnDeps({ subtasksOf: async () => ({ ids: ['5'], field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', watch: ['5'] }) });
     await deps.cache.write(SUBTASK_GROUP, jobEntry(['4']));
-    for (const key of [...deps.kvs.data.keys()].filter((k) => k.startsWith(`v:${SUBTASK_GROUP}:c`))) deps.kvs.data.delete(key);
+    for (const key of [...deps.kvs.data.keys()].filter((k) => k.startsWith(`v:${SUBTASK_GROUP}:k`))) deps.kvs.data.delete(key);
     expect(await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV)).toEqual({ jql: '(issuetype in subTaskIssueTypes()) AND (parent in (5))' });
   });
   it('returns native JQL as it is', async () => {
