@@ -1,0 +1,8 @@
+{
+  "name": "distributb2b-root",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:ar-xr": "node --test \"functions-tests/ar-xr/*.test.mjs\""
+  }
+}
