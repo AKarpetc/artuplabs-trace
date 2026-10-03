@@ -1,0 +1,40 @@
+/** Values one stored JQL list may hold (Forge precomputation limit). */
+export const VALUE_LIMIT = 1000;
+/** Page calls one stored fragment may hold (measured: 9 work, 10 return nothing, 11 fail). */
+export const TREE_FANOUT = 9;
+/** Levels of page calls under the root; 2 only after the live probe passes. */
+export const TREE_LEVELS = 1;
+export const ID_PAGE = 5000;
+export const BULK_BATCH = 100;
+export const BULK_CONCURRENCY = 8;
+export const CACHE_CHUNK = 5000;
+export const PAGE_CACHE_MS = 10 * 60 * 1000;
+/** Compute budget of one function call: 20 s under the platform's 25 s, leaving time to queue the job and log. */
+export const FUNCTION_BUDGET_MS = 20 * 1000;
+export const WORKER_BUDGET_MS = 240 * 1000;
+export const LEASE_MS = 90 * 1000;
+export const PENDING_STALE_MS = 6 * 60 * 1000;
+export const JOURNAL_PAGE = 100;
+export const MAX_TOUCHED = 50;
+export const VERIFY_DELAY_S = 20;
+export const ACTIVE_MS = 7 * 24 * 60 * 60 * 1000;
+export const RECONCILE_USED_MS = 24 * 60 * 60 * 1000;
+export const RECONCILE_STALE_MS = 60 * 60 * 1000;
+export const RECONCILE_MAX_GROUPS = 50;
+export const MAX_DEPTH = 10;
+export const PRECOMPUTATION_BATCH = 50;
+export const REQUEST_ATTEMPTS = 6;
+/** First backoff step of a retried Jira request; it doubles per attempt. */
+export const RETRY_BASE_MS = 300;
+/** Page size of Jira lists read with startAt (boards, sprints, projects, group members). */
+export const LIST_PAGE = 50;
+export const PRECOMPUTATION_PAGE = 100;
+export const USER_SEARCH_MAX = 50;
+/** Issues per changelog bulkfetch request (Jira rejects 1 001). */
+export const CHANGELOG_BATCH = 1000;
+/** Change histories per changelog bulkfetch page. */
+export const CHANGELOG_PAGE = 10000;
+/** Groups recomputed in parallel by one refresh or reconcile pass. */
+export const REFRESH_CONCURRENCY = 4;
+export const ERROR_LOG_SIZE = 20;
+export const COUNT_MAX = 10000;

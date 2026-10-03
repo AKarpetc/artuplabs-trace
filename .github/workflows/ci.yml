@@ -103,7 +103,7 @@ jobs:
         run: npm run lint
       - name: "Query: test"
         working-directory: apps/query
-        run: npm test
+        run: npm run coverage
       - name: "Query: UI test"
         working-directory: apps/query
         run: npm run test:ui
