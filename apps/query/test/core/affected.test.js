@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { familyWants, groupPrecomputations, isTimeRelative, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
+import { familyWants, groupPrecomputations, isTimeRelative, needsRepair, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
 
 const row = (ts, ids, kinds) => ({ key: `t:${String(ts).padStart(15, '0')}:abc`, value: { ids, kinds } });
 const NOW = Date.parse('2026-10-10T12:00:00Z');
@@ -76,7 +76,7 @@ describe('queryOverlap', () => {
 });
 
 describe('reconcileTargets', () => {
-  const group = (functionName, userArgs, used, updated) => ({ key: functionName, functionName, family: 'query', userArgs, items: [{ id: 'x', used: iso(used), updated: iso(updated) }] });
+  const group = (functionName, userArgs, used, updated) => ({ key: functionName, functionName, family: 'query', userArgs, items: [{ id: 'x', used: iso(used), updated: iso(updated), value: 'id in (1)' }] });
   it('picks groups used in the last day that were not rewritten for an hour or depend on the clock', () => {
     const stale = group('a', ['project = A'], HOUR, 2 * HOUR);
     const fresh = group('b', ['project = A'], HOUR, 10 * 60000);
@@ -91,10 +91,31 @@ describe('reconcileTargets', () => {
   });
 });
 
+describe('needsRepair', () => {
+  it('flags a stored value that still carries an error, which makes Jira answer no issues', () => {
+    expect(needsRepair({ value: 'id in (1)', error: 'Computing, retry in a minute' })).toBe(true);
+    expect(needsRepair({ value: 'id in (1)', error: '' })).toBe(true);
+  });
+  it('accepts a value alone or an error alone', () => {
+    expect([needsRepair({ value: 'id in (1)' }), needsRepair({ value: 'id in (1)', error: null }), needsRepair({ error: 'Board "B" not found' })]).toEqual([false, false, false]);
+  });
+  it('flags a precomputation with neither value nor error', () => {
+    expect(needsRepair({ id: 'x' })).toBe(true);
+  });
+});
+
+describe('reconcileTargets for broken precomputations', () => {
+  it('picks a recently rewritten group whose stored value still carries an error', () => {
+    const broken = { key: 'a', functionName: 'a', family: 'query', userArgs: ['x'], items: [{ id: 'x', used: iso(HOUR), updated: iso(60000), value: 'id in (1)', error: 'Computing, retry in a minute' }] };
+    const fine = { key: 'b', functionName: 'b', family: 'query', userArgs: ['x'], items: [{ id: 'y', used: iso(HOUR), updated: iso(60000), value: 'id in (1)' }] };
+    expect(reconcileTargets([broken, fine], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50 })).toEqual([broken]);
+  });
+});
+
 describe('reconcileTargets without rewrite times', () => {
   it('takes the creation time when a precomputation was never rewritten, and treats no time as oldest', () => {
-    const created = { key: 'a', functionName: 'a', family: 'query', userArgs: ['x'], items: [{ id: 'x', used: iso(HOUR), created: iso(30 * 60000) }] };
-    const blank = { key: 'b', functionName: 'b', family: 'query', userArgs: ['x'], items: [{ id: 'y', used: iso(HOUR) }] };
+    const created = { key: 'a', functionName: 'a', family: 'query', userArgs: ['x'], items: [{ id: 'x', used: iso(HOUR), created: iso(30 * 60000), value: 'id in (1)' }] };
+    const blank = { key: 'b', functionName: 'b', family: 'query', userArgs: ['x'], items: [{ id: 'y', used: iso(HOUR), value: 'id in (1)' }] };
     expect(reconcileTargets([created, blank], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50 })).toEqual([blank]);
   });
 });

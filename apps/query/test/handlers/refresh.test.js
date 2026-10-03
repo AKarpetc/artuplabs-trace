@@ -84,6 +84,14 @@ describe('refreshOnce', () => {
     expect((await refreshOnce(deps)).recomputed).toBe(0);
     expect(compute.parentsOf).not.toHaveBeenCalled();
   });
+  it('repairs a group whose stored value still carries an error although the events do not touch it', async () => {
+    const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', error: 'Computing, retry in a minute', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['1'], field: 'id', watch: ['7'] }) } });
+    await deps.cache.write('parentsOf["q"]', { values: ['1'], watch: ['7'], field: 'id', rootFilter: null, at: 1, source: 'refresh' });
+    await deps.journal.append({ ids: ['5'], kinds: ['issue-updated'] }, 999500);
+    expect((await refreshOnce(deps)).recomputed).toBe(1);
+    expect(deps.written).toEqual([{ id: 'root', value: 'id in (1)', error: null }]);
+  });
   it('recomputes every group when the journal page asks for everything', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: RECENT }];
     const seen = [];
@@ -221,6 +229,14 @@ describe('rewrite', () => {
   it('stores the error a value source answers', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ error: 'Board "B" not found', log: 'Board not found' }) } });
     expect(await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1' }]), [])).toEqual([{ id: 'x', error: 'Board "B" not found' }]);
+  });
+  it('clears the error Jira kept next to a value when the value is written', async () => {
+    const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 1' }) } });
+    expect(await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1', error: 'Computing, retry in a minute' }]), [])).toEqual([{ id: 'x', value: 'sprint = 1', error: null }]);
+  });
+  it('replaces a stored error with the value and clears the error', async () => {
+    const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 2' }) } });
+    expect(await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], error: 'Board "B" not found' }]), [])).toEqual([{ id: 'x', value: 'sprint = 2', error: null }]);
   });
   it('writes nothing when the stored value is unchanged', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 1' }) } });

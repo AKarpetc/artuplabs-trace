@@ -62,13 +62,19 @@ export function isTimeRelative(userArgs) {
   return userArgs.some((a) => RELATIVE.test(a));
 }
 
+/** A stored precomputation Jira cannot answer from: a value that still carries an error (Jira keeps the error and returns no issues), or neither. */
+export function needsRepair(pc) {
+  const hasError = pc.error !== undefined && pc.error !== null;
+  return Boolean(pc.value) === hasError;
+}
+
 const lastWrite = (g) => Math.min(...g.items.map((pc) => Date.parse(pc.updated ?? pc.created ?? '') || 0));
 
-/** Groups the hourly reconcile recomputes: used within usedMs and not rewritten for staleMs, or tied to the clock. */
+/** Groups the hourly reconcile recomputes: used within usedMs and not rewritten for staleMs, tied to the clock, or needing repair. */
 export function reconcileTargets(groups, { now, usedMs, staleMs, max }) {
   return groups
     .filter((g) => g.items.some((pc) => pc.used && now - Date.parse(pc.used) <= usedMs))
-    .filter((g) => now - lastWrite(g) >= staleMs || isTimeRelative(g.userArgs))
+    .filter((g) => now - lastWrite(g) >= staleMs || isTimeRelative(g.userArgs) || g.items.some(needsRepair))
     .sort((a, b) => lastWrite(a) - lastWrite(b))
     .slice(0, max);
 }

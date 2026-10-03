@@ -1,7 +1,7 @@
 import { groupKey, parseArgs, splitPage } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
-import { familyWants, groupPrecomputations, queryOverlap, summarizeJournal } from '../core/affected.js';
+import { familyWants, groupPrecomputations, needsRepair, queryOverlap, summarizeJournal } from '../core/affected.js';
 import {
   ACTIVE_MS, FAILED_ROWS_KEEP_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_RETRY_DELAY_S, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
@@ -33,7 +33,7 @@ async function keepJob(deps, functionName, userArgs, result) {
 }
 
 async function isStale(deps, group, summary) {
-  if (summary.all) return true;
+  if (summary.all || group.items.some(needsRepair)) return true;
   if (group.family !== 'query') return familyWants(group.family, summary.kinds);
   if (!summary.touched.length) return false;
   const parsed = parseArgs(group.functionName, group.userArgs);
@@ -50,7 +50,7 @@ async function isStale(deps, group, summary) {
   return queryOverlap({ touched: summary.touched, watch, liveHits });
 }
 
-/** Recomputes one group; returns the precomputation updates whose stored value or error changed (a group without precomputations is a background job). */
+/** Recomputes one group; returns the precomputation updates whose stored value or error changed; a value clears a stored error, which Jira keeps otherwise (a group without precomputations is a background job). */
 export async function rewrite(deps, group, reconcile) {
   const parsed = parseArgs(group.functionName, group.userArgs);
   const gate = parsed.error ? null : await deps.ready(group.functionName);
@@ -62,7 +62,10 @@ export async function rewrite(deps, group, reconcile) {
   const updates = [];
   for (const pc of group.items) {
     const r = fragmentFor(group.functionName, group.userArgs, splitPage(pc.arguments).page, result, deps.levels);
-    if ((r.jql ?? null) !== (pc.value ?? null) || (r.error ?? null) !== (pc.error ?? null)) updates.push(r.error ? { id: pc.id, error: r.error } : { id: pc.id, value: r.jql });
+    const storedError = pc.error ?? null;
+    if ((r.jql ?? null) === (pc.value ?? null) && (r.error ?? null) === storedError) continue;
+    if (r.error) updates.push({ id: pc.id, error: r.error });
+    else updates.push(storedError === null ? { id: pc.id, value: r.jql } : { id: pc.id, value: r.jql, error: null });
   }
   return updates;
 }
