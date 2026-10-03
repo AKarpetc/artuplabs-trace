@@ -1,0 +1,48 @@
+import { describe, expect, it } from 'vitest';
+import { fakeJira, issue } from '../fakeJira.js';
+import { createHierarchyCompute } from '../../src/compute/hierarchy.js';
+
+const ISSUES = [
+  issue(1, { level: 1 }),
+  issue(10, { parent: [1, 1], subtasks: [100, 101] }),
+  issue(11, { parent: [1, 1] }),
+  issue(100, { level: -1, parent: [10, 0] }),
+  issue(101, { level: -1, parent: [10, 0] }),
+  issue(12),
+];
+const ctx = { reconcile: [] };
+const make = (searches) => createHierarchyCompute({ jira: fakeJira({ issues: ISSUES, searches }) });
+
+describe('hierarchy compute', () => {
+  it('subtasksOf keeps the inner issues as parents under the subtask filter', async () => {
+    expect(await make({ S: ['11', '10'] }).subtasksOf({ subquery: 'S' }, ctx)).toEqual({ ids: ['10', '11'], field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', watch: ['11', '10'] });
+  });
+  it('subtasksOf keeps only parents with subtasks above 1 000 inner issues', async () => {
+    const many = [...Array.from({ length: 1001 }, (_, i) => String(5000 + i)), '10'];
+    const result = await make({ S: many }).subtasksOf({ subquery: 'S' }, ctx);
+    expect(result.ids).toEqual(['10']);
+  });
+  it('parentsOf returns direct parents of any level', async () => {
+    expect(await make({ S: ['100', '11', '12'] }).parentsOf({ subquery: 'S' }, ctx)).toEqual({ ids: ['1', '10'], field: 'id', watch: ['100', '11', '12'] });
+  });
+  it('epicsOf loads the story above a subtask to reach the epic', async () => {
+    const result = await make({ S: ['100', '12'] }).epicsOf({ subquery: 'S' }, ctx);
+    expect(result).toEqual({ ids: ['1'], field: 'id', watch: ['1', '10', '12', '100'] });
+  });
+  it('issuesInEpics keeps the epics of the subquery as parents', async () => {
+    expect(await make({ S: ['1', '10'] }).issuesInEpics({ subquery: 'S' }, ctx)).toEqual({ ids: ['1'], field: 'parent', watch: ['1', '10'] });
+  });
+  it('childIssuesOf walks all levels by default and stops at the depth', async () => {
+    const compute = make({ S: ['1'] });
+    expect(await compute.childIssuesOf({ subquery: 'S' }, ctx)).toEqual({ ids: ['1', '10'], field: 'parent', watch: ['1', '10', '11', '100', '101'] });
+    expect(await compute.childIssuesOf({ subquery: 'S', depth: 1 }, ctx)).toEqual({ ids: ['1'], field: 'parent', watch: ['1', '10', '11'] });
+  });
+  it('hasSubtasks returns the parents of all subtasks', async () => {
+    expect(await make({}).hasSubtasks({}, ctx)).toEqual({ ids: ['10'], field: 'id', watch: null });
+  });
+  it('passes touched issues to the inner search for read-after-write', async () => {
+    const jira = fakeJira({ issues: ISSUES, searches: { S: ['10'] } });
+    await createHierarchyCompute({ jira }).parentsOf({ subquery: 'S' }, { reconcile: ['10'] });
+    expect(jira.calls[0]).toEqual(['search', 'S', ['10']]);
+  });
+});

@@ -42,5 +42,5 @@ export function buildFragment({ functionName, userArgs, page, values, field, roo
   if (shape.kind === 'tree' && shape.levels === 1) body = anyOf(span(1, shape.leaves).map(leafCall));
   if (shape.kind === 'tree' && shape.levels === 2) body = anyOf(span(1, shape.mids).map((index) => pageCall(functionName, userArgs, { kind: 'mid', index })));
   if (!rootFilter) return { jql: body };
-  return { jql: `${rootFilter} AND ${body.startsWith('(') ? body : `(${body})`}` };
+  return { jql: `(${rootFilter}) AND ${body.startsWith('(') ? body : `(${body})`}` };
 }

@@ -22,7 +22,10 @@ describe('treeShape', () => {
 
 describe('buildFragment', () => {
   it('stores up to 1 000 values as one list under the root filter', () => {
-    expect(buildFragment({ ...base, page: null, values: valuesOf(['3', '5']), levels: 1 })).toEqual({ jql: 'issuetype in subTaskIssueTypes() AND (parent in (3,5))' });
+    expect(buildFragment({ ...base, page: null, values: valuesOf(['3', '5']), levels: 1 })).toEqual({ jql: '(issuetype in subTaskIssueTypes()) AND (parent in (3,5))' });
+  });
+  it('keeps an OR inside the root filter from escaping the AND', () => {
+    expect(buildFragment({ ...base, rootFilter: 'project = A OR project = B', page: null, values: valuesOf(['3']), levels: 1 })).toEqual({ jql: '(project = A OR project = B) AND (parent in (3))' });
   });
   it('omits the filter when there is none', () => {
     expect(buildFragment({ ...base, rootFilter: undefined, field: 'id', page: null, values: valuesOf(['7']), levels: 1 })).toEqual({ jql: 'id in (7)' });
@@ -32,7 +35,7 @@ describe('buildFragment', () => {
   });
   it('splits 2 500 values into three leaf calls that quote the subquery', () => {
     expect(buildFragment({ ...base, page: null, values: valuesOf(ids(2500)), levels: 1 })).toEqual({
-      jql: `issuetype in subTaskIssueTypes() AND (${call('l1')} OR ${call('l2')} OR ${call('l3')})`,
+      jql: `(issuetype in subTaskIssueTypes()) AND (${call('l1')} OR ${call('l2')} OR ${call('l3')})`,
     });
   });
   it('gives each leaf its own 1 000 values without the root filter', () => {
@@ -43,7 +46,7 @@ describe('buildFragment', () => {
   });
   it('routes 12 000 values through two middle nodes at two levels', () => {
     const v = valuesOf(ids(12000));
-    expect(buildFragment({ ...base, page: null, values: v, levels: 2 })).toEqual({ jql: `issuetype in subTaskIssueTypes() AND (${call('m1')} OR ${call('m2')})` });
+    expect(buildFragment({ ...base, page: null, values: v, levels: 2 })).toEqual({ jql: `(issuetype in subTaskIssueTypes()) AND (${call('m1')} OR ${call('m2')})` });
     expect(buildFragment({ ...base, page: { kind: 'mid', index: 2 }, values: v, levels: 2 })).toEqual({ jql: `(${call('l10')} OR ${call('l11')} OR ${call('l12')})` });
   });
   it('returns EMPTY for a middle node beyond the leaves', () => {
