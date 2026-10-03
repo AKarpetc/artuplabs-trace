@@ -47,6 +47,10 @@
 - [ ] Показать переводы носителям: ja, ko, zh-CN, zh-TW, is, et, fi, cs, sk, hu, ro, tr, pt-PT (файлы `apps/*/static/app/src/i18n/locales/`).
 - [ ] До **2026-12-27** — перевыпустить токены Atlassian и Cloudflare (лежат в `.env`).
 
+### 7a. Сверить адрес ИП (⏱ 5 мин) — до Partner Verification
+- [ ] В анкете, листинге и на сайте стоит **Protozanov Street 119, apt. 33**, а в уведомлении об ИП (`IE/Уведомление.pdf`) — **наб. им. Е. П. Славского, 32, кв. 132, 070004**. Скажите, какой верный; при замене — обновить профиль вендора и перевыложить сайт.
+- [ ] Письмо Atlassian: ArtUp Query потратило 90% бесплатной записи Forge KVS за октябрь (dev). Начислений пока нет; замер и расчёт — в следующей сессии ArtUp Query.
+
 ### 8. ArtUp Reports — подан на одобрение 2026-09-30
 - [x] C1/C2 браузерная приёмка пройдена 2026-09-30 (кроме п.6 — нет второго аккаунта; сделать до одобрения): [atlassian/plans/2026-09-30-artup-reports-browser-test.md](atlassian/plans/2026-09-30-artup-reports-browser-test.md).
 - [x] Production: `forge deploy -e production` 2026-09-30 → версия 2.0.0, eligible для Runs on Atlassian; dev 3.5.0.
