@@ -1,0 +1,305 @@
+{
+  "samples": [
+    {
+      "id": 1,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/sub-tasks",
+      "scriptrunner": "issueFunction in subtasksOf(\"project = SSP\") AND resolution is empty",
+      "query": "issue in subtasksOf(\"project = JQLG AND labels = jg-mid\") AND resolution is EMPTY",
+      "group": "query",
+      "reference": {
+        "fn": "subtasksOf",
+        "args": [
+          "project = JQLG AND labels = jg-mid"
+        ],
+        "and": "resolution is EMPTY"
+      },
+      "meaning": "незакрытые подзадачи задач выборки"
+    },
+    {
+      "id": 2,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/sub-tasks",
+      "scriptrunner": "issueFunction in parentsOf(\"project = JRA AND status = 'In progress'\")",
+      "query": "issue in parentsOf(\"project = JQLG AND labels = jg-task AND resolution is EMPTY\")",
+      "group": "query",
+      "reference": {
+        "fn": "parentsOf",
+        "args": [
+          "project = JQLG AND labels = jg-task AND resolution is EMPTY"
+        ],
+        "and": null
+      },
+      "meaning": "родители незакрытых задач выборки"
+    },
+    {
+      "id": 3,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/issue-links",
+      "scriptrunner": "issueFunction in issuesInEpics(\"project = SSP and status = 'To Do'\")",
+      "query": "issue in issuesInEpics(\"project = JQLG AND issuetype = Epic\")",
+      "group": "query",
+      "reference": {
+        "fn": "issuesInEpics",
+        "args": [
+          "project = JQLG AND issuetype = Epic"
+        ],
+        "and": null
+      },
+      "meaning": "задачи эпиков проекта"
+    },
+    {
+      "id": 4,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/issue-links",
+      "scriptrunner": "issueFunction in linkedIssuesOf(\"status = Open\", \"blocks\") and resolution is empty",
+      "query": "issue in linkedIssuesOf(\"project = JQLG AND labels = jg-lnk\", \"blocks\") AND resolution is EMPTY",
+      "group": "query",
+      "reference": {
+        "fn": "linkedIssuesOf",
+        "args": [
+          "project = JQLG AND labels = jg-lnk",
+          "blocks"
+        ],
+        "and": "resolution is EMPTY"
+      },
+      "meaning": "незакрытые задачи, которые блокирует выборка"
+    },
+    {
+      "id": 5,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/issue-links",
+      "scriptrunner": "issueFunction in linkedIssuesOfRecursive(\"issue = SSP-1\", \"blocks\")",
+      "query": "issue in linkedIssuesOfRecursive(\"project = JQLG AND labels = jg-lnk\", \"blocks\")",
+      "group": "query",
+      "reference": {
+        "fn": "linkedIssuesOfRecursive",
+        "args": [
+          "project = JQLG AND labels = jg-lnk",
+          "blocks"
+        ],
+        "and": null
+      },
+      "meaning": "транзитивное замыкание связи blocks"
+    },
+    {
+      "id": 6,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/issue-links",
+      "scriptrunner": "issueFunction in linkedIssuesOfRecursiveLimited(\"project = SSP\", 2)",
+      "query": "issue in linkedIssuesOfRecursiveLimited(\"project = JQLG AND labels = jg-lnk\", 2, \"blocks\")",
+      "group": "query",
+      "reference": {
+        "fn": "linkedIssuesOfRecursiveLimited",
+        "args": [
+          "project = JQLG AND labels = jg-lnk",
+          "2",
+          "blocks"
+        ],
+        "and": null
+      },
+      "meaning": "замыкание связи blocks на глубину 2"
+    },
+    {
+      "id": 7,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/issue-links",
+      "scriptrunner": "issueFunction in hasLinks(\"blocks\")",
+      "query": "issue in hasLinks(\"blocks\") AND project = JQLG",
+      "group": "site",
+      "reference": {
+        "fn": "hasLinks",
+        "args": [
+          "blocks"
+        ],
+        "and": "project = JQLG"
+      },
+      "meaning": "задачи с исходящей или входящей связью blocks"
+    },
+    {
+      "id": 8,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/issue-links",
+      "scriptrunner": "issueFunction in hasLinks()",
+      "query": "issue in hasLinks() AND project = JQLG AND labels = jg-lnk",
+      "group": "site",
+      "reference": {
+        "fn": "hasLinks",
+        "args": [],
+        "and": "project = JQLG AND labels = jg-lnk"
+      },
+      "meaning": "задачи с любой связью"
+    },
+    {
+      "id": 9,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/issue-links",
+      "scriptrunner": "issueFunction in hasLinkType(\"Blocks\") and resolution is empty",
+      "query": "issue in hasLinkType(\"Blocks\") AND resolution is EMPTY AND project = JQLG",
+      "group": "site",
+      "reference": {
+        "fn": "hasLinkType",
+        "args": [
+          "Blocks"
+        ],
+        "and": "resolution is EMPTY AND project = JQLG"
+      },
+      "meaning": "незакрытые задачи со связью типа Blocks"
+    },
+    {
+      "id": 10,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/issue-links",
+      "scriptrunner": "issueFunction in hasLinkType(\"Blocks\") and resolution is empty",
+      "query": "issue in hasLinkType(\"Duplicate\") AND project = JQLG",
+      "group": "site",
+      "reference": {
+        "fn": "hasLinkType",
+        "args": [
+          "Duplicate"
+        ],
+        "and": "project = JQLG"
+      },
+      "meaning": "задачи со связью типа Duplicate в любом направлении"
+    },
+    {
+      "id": 11,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/sub-tasks",
+      "scriptrunner": "issueFunction in hasSubtasks()",
+      "query": "issue in hasSubtasks() AND project = JQLG",
+      "group": "site",
+      "reference": {
+        "fn": "hasSubtasks",
+        "args": [],
+        "and": "project = JQLG"
+      },
+      "meaning": "задачи, у которых есть подзадачи"
+    },
+    {
+      "id": 12,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/sub-tasks",
+      "scriptrunner": "issueFunction in hasSubtasks()",
+      "query": "issue in hasSubtasks() AND project = RPT AND resolution is EMPTY",
+      "group": "site",
+      "reference": {
+        "fn": "hasSubtasks",
+        "args": [],
+        "and": "project = RPT AND resolution is EMPTY"
+      },
+      "meaning": "незакрытые задачи RPT с подзадачами"
+    },
+    {
+      "id": 13,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/sprint",
+      "scriptrunner": "issueFunction in previousSprint(\"Development Scrum\")",
+      "query": "issue in previousSprint(\"JQLG board\")",
+      "group": "board",
+      "reference": {
+        "fn": "previousSprint",
+        "args": [
+          "JQLG board"
+        ],
+        "and": null
+      },
+      "meaning": "задачи последнего закрытого спринта доски"
+    },
+    {
+      "id": 14,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/sprint",
+      "scriptrunner": "issueFunction in addedAfterSprintStart(\"Development Scrum\", \"Sprint 25\")",
+      "query": "issue in addedAfterSprintStart(\"JQLG board\")",
+      "group": "sprint",
+      "reference": {
+        "fn": "addedAfterSprintStart",
+        "args": [
+          "JQLG board"
+        ],
+        "and": null
+      },
+      "meaning": "добавлены в активный спринт после его старта"
+    },
+    {
+      "id": 15,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/sprint",
+      "scriptrunner": "issueFunction in incompleteInSprint(\"Development Scrum\", \"Sprint 25\")",
+      "query": "issue in incompleteInSprint(\"JQLG board\", \"Sprint 1\")",
+      "group": "sprint",
+      "reference": {
+        "fn": "incompleteInSprint",
+        "args": [
+          "JQLG board",
+          "Sprint 1"
+        ],
+        "and": null
+      },
+      "meaning": "не закрыты на момент закрытия спринта"
+    },
+    {
+      "id": 16,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/comments",
+      "scriptrunner": "issueFunction in commented(\"after -7d\")",
+      "query": "issue in commented(\"after -7d\") AND project = JQLG",
+      "group": "comment",
+      "reference": {
+        "fn": "commented",
+        "args": [
+          "after -7d"
+        ],
+        "and": "project = JQLG"
+      },
+      "meaning": "задачи с комментарием за последние 7 дней"
+    },
+    {
+      "id": 17,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/comments",
+      "scriptrunner": "issueFunction in lastComment(\"inRole Developers\")",
+      "query": "issue in lastComment(\"inRole Administrators\") AND project = JQLG",
+      "group": "comment",
+      "reference": {
+        "fn": "lastComment",
+        "args": [
+          "inRole Administrators"
+        ],
+        "and": "project = JQLG"
+      },
+      "meaning": "последний комментарий оставил участник роли"
+    },
+    {
+      "id": 18,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/attachments",
+      "scriptrunner": "issueFunction in fileAttached(\"after -1w by currentUser()\")",
+      "query": "issue in fileAttached(\"after -7d\") AND project = JQLG",
+      "group": "attachment",
+      "reference": {
+        "fn": "fileAttached",
+        "args": [
+          "after -7d"
+        ],
+        "and": "project = JQLG"
+      },
+      "meaning": "вложения за последние 7 дней"
+    },
+    {
+      "id": 19,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/date",
+      "scriptrunner": "issueFunction in dateCompare(\"\", \"created +2w > resolutionDate\")",
+      "query": "issue in dateCompare(\"project = JQLG AND resolution is not EMPTY\", \"created + 2w > resolutiondate\")",
+      "group": "fields",
+      "reference": {
+        "fn": "dateCompare",
+        "args": [
+          "project = JQLG AND resolution is not EMPTY",
+          "created + 2w > resolutiondate"
+        ],
+        "and": null
+      },
+      "meaning": "решены в течение двух недель после создания"
+    },
+    {
+      "id": 20,
+      "source": "https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/calculations",
+      "scriptrunner": "issueFunction in expression(\"\", \"timespent > originalestimate + 5*wd\")",
+      "query": "issue in expression(\"project = RPT\", \"timespent > originalestimate + 5d\")",
+      "group": "fields",
+      "reference": {
+        "fn": "expression",
+        "args": [
+          "project = RPT",
+          "timespent > originalestimate + 5d"
+        ],
+        "and": null
+      },
+      "meaning": "потрачено больше оценки более чем на 5 рабочих дней"
+    }
+  ]
+}
