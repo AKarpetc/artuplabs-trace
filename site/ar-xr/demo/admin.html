@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111418">
-  <title>ArtUp AR XR — демо-админка</title>
+  <title data-i18n="admin.docTitle">ArtUp AR XR — демо-админка</title>
   <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
   <link type="text/css" href="./styles/demo.css" rel="stylesheet" />
   <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); страница работает и без них. -->
@@ -16,46 +16,53 @@
 <body>
   <header class="ax-header demo-head">
     <div class="ax-container ax-header-row">
-      <a class="ax-product" href="../" aria-label="ArtUp AR XR — о продукте">
+      <a class="ax-product" href="../" aria-label="ArtUp AR XR — о продукте" data-i18n-attr="aria-label:nav.productLabel">
         <img src="../assets/ar-xr-icon.svg" alt="" width="26" height="26"><span>ArtUp AR XR</span>
       </a>
-      <nav class="ax-nav" aria-label="Разделы демо">
+      <nav class="ax-nav" aria-label="Разделы демо" data-i18n-attr="aria-label:nav.label">
         <ul>
-          <li><a href="./demo.html#catalog">Каталог</a></li>
-          <li><a href="./plans.html">Мои планы</a></li>
-          <li><a class="nav-small" aria-current="page" href="./admin.html">Админка</a></li>
+          <li><a href="./demo.html#catalog" data-i18n="nav.catalog">Каталог</a></li>
+          <li><a href="./plans.html" data-i18n="nav.designs">Мои дизайны</a></li>
+          <li><a class="nav-small" aria-current="page" href="./admin.html" data-i18n="nav.admin">Админка</a></li>
         </ul>
       </nav>
-      <div class="ax-header-actions"><div id="accountSlot" class="account-slot" hidden></div></div>
+      <div class="ax-header-actions">
+        <div data-lang-switch hidden></div>
+        <div id="accountSlot" class="account-slot" hidden></div>
+      </div>
     </div>
   </header>
 
   <main class="page-main">
-    <h1>Демо-админка</h1>
-    <p class="muted">Название, цена, скрытие и масштаб в XR для моделей демо-каталога. Изменения видны на витрине и в XR после перезагрузки.</p>
+    <h1 data-i18n="admin.title">Демо-админка</h1>
+    <p class="muted" data-i18n="admin.lead">Название, цена, скрытие и масштаб в XR для моделей демо-каталога. Изменения видны на витрине и в XR после перезагрузки.</p>
     <p id="admin-status" class="page-status" role="status" hidden></p>
 
     <form id="admin-login" class="admin-login ax-card" hidden>
       <div class="ax-field">
-        <label for="admin-token">Токен демо-админки</label>
+        <label for="admin-token" data-i18n="admin.tokenLabel">Токен демо-админки</label>
         <input id="admin-token" class="ax-input" type="password" autocomplete="off" required>
-        <span class="ax-hint">Хранится только в этой вкладке до её закрытия.</span>
+        <span class="ax-hint" data-i18n="admin.tokenHint">Хранится только в этой вкладке до её закрытия.</span>
       </div>
-      <button class="ax-btn ax-btn-primary" type="submit">Войти</button>
+      <button class="ax-btn ax-btn-primary" type="submit" data-i18n="account.signIn">Войти</button>
     </form>
 
     <section id="admin-workspace" class="admin-workspace" hidden>
       <div class="page-toolbar">
-        <input id="admin-search" class="ax-input" type="search" placeholder="Поиск: название, путь, раздел" aria-label="Поиск моделей" style="max-width: 28rem">
+        <input id="admin-search" class="ax-input" type="search" placeholder="Поиск: название, путь, раздел" aria-label="Поиск моделей" data-i18n-attr="placeholder:admin.searchPlaceholder;aria-label:admin.searchLabel" style="max-width: 28rem">
         <span id="admin-count" class="ax-muted"></span>
-        <button id="admin-logout" class="ax-btn ax-btn-ghost ax-btn-sm" type="button">Выйти</button>
+        <button id="admin-logout" class="ax-btn ax-btn-ghost ax-btn-sm" type="button" data-i18n="account.signOut">Выйти</button>
       </div>
       <div id="admin-list" class="admin-list"></div>
-      <button id="admin-more" class="ax-btn ax-btn-secondary" type="button" hidden>Показать ещё</button>
+      <button id="admin-more" class="ax-btn ax-btn-secondary" type="button" hidden data-i18n="common.showMore">Показать ещё</button>
     </section>
   </main>
 
-  <script type="module" src="./dist/demoAdmin.bandle.js"></script>
+  <footer class="page-footer" data-contacts>
+    <span>ArtUp Labs</span> · <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>
+  </footer>
+
+  <script type="module" src="./dist/demoAdmin.bandle.js?v=2"></script>
 </body>
 
 </html>

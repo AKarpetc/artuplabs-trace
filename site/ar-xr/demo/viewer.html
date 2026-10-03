@@ -2,7 +2,7 @@
 <html lang="ru">
 
 <head>
-    <title>ArtUp AR XR — просмотр модели</title>
+    <title data-i18n="viewer.docTitle">ArtUp AR XR — просмотр модели</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- app-clip-banner:start -->
@@ -28,13 +28,13 @@
             <div id="qr-code" class="qr-code">
             </div>
         </div>
-        <span class="qr-code__text">Отсканируйте этот QR-код с помощью мобильного устройства, чтобы увидеть эту модель в дополненной реальности.</span>
+        <span class="qr-code__text" data-i18n="viewer.qrText">Отсканируйте этот QR-код с помощью мобильного устройства, чтобы увидеть эту модель в дополненной реальности.</span>
     </div>
 
 
     <div class="viewer-wrapper">
         <div class="viewer" id="container">
-            <a class="back_button hidden" id="back" onclick="backOnClick()">&laquo; Назад</a>
+            <a class="back_button hidden" id="back" onclick="backOnClick()">&laquo; <span data-i18n="common.back">Назад</span></a>
             <!-- <model-viewer> — скрытая пусковая площадка AR: единственный режим и артефакт под платформу
                  задаёт src/viewer/render.js; reveal="manual" — сам он ничего не скачивает. -->
             <model-viewer id="model-viewer" class="hidden" ar reveal="manual" loading="lazy" camera-controls
@@ -45,13 +45,13 @@
                 <div id="ar-prompt">
                     <img src="./img/ar_hand_prompt.png">
                 </div>
-                <button slot="ar-button" id="ar-button" class="ar-button">
+                <button slot="ar-button" id="ar-button" class="ar-button" data-i18n="viewer.viewInSpace">
                     Просмотр в пространстве
                 </button>
             </model-viewer>
             <!-- Скрыта, пока пусковая площадка не подтвердила, что выбранный AR consumer здесь доступен. -->
             <button onclick="aRShow()" id="ar-button-repiter" class="ar-button hidden">
-                <span class="view-span">
+                <span class="view-span" data-i18n="viewer.viewInSpace">
                     Просмотр в пространстве
                 </span>
             </button>
@@ -75,7 +75,7 @@
         self.ModelViewerElement = self.ModelViewerElement || {};
         self.ModelViewerElement.meshoptDecoderLocation = 'https://cdn.jsdelivr.net/npm/meshoptimizer/meshopt_decoder.js';
         </script>
-    <script type="module" src="./dist/viewer.bandle.js"></script>
+    <script type="module" src="./dist/viewer.bandle.js?v=2"></script>
 </body>
 
 </html>

@@ -1,6 +1,7 @@
 /*
  * Демо ArtUp AR XR (artuplabs.com/ar-xr/demo/): бренд поверх демо-стилей и стили новых частей —
- * цены, выбор для XR, «Мои планы», аккаунт, демо-админка, итог в XR.
+ * цены, выбор для XR, «Мои дизайны», просмотр дизайна в 3D, аккаунт, язык, вход с телефона,
+ * демо-админка, итог и «Сохранить план» в XR.
  *
  * Общие токены и компоненты (.ax-*) — в ../assets/ar-xr.css (владелец — лендинг). Здесь для них
  * только запасные правила через :where() (нулевая специфичность): если общий файл не загрузился,
@@ -133,7 +134,7 @@
 .xr-pick__currency #xrCurrency[hidden] { display: none; }
 .xr-pick__currency:has(#xrCurrency[hidden]) { display: none; }
 
-/* ─── Мои планы и демо-админка ───────────────────────────────────────────── */
+/* ─── Мои дизайны и демо-админка ─────────────────────────────────────────── */
 .page-main { max-width: 72rem; margin: 0 auto; padding: 24px 16px 96px; }
 .page-main h1 { margin: 0 0 8px; font: 600 clamp(26px, 3vw, 34px)/1.2 var(--font-brand, system-ui); }
 .page-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 20px; }
@@ -162,3 +163,87 @@
   .admin-row { grid-template-columns: 96px minmax(0, 1fr) auto; }
   .admin-row__form { grid-column: 2 / -1; }
 }
+
+/* ─── Язык, вход с телефона, контакты, сообщения ─────────────────────────── */
+.lang-switch[hidden], .handoff-slot[hidden] { display: none; }
+.lang-switch button { min-width: 36px; padding: 4px 10px; font-size: 13px; font-weight: 600; }
+.lang-switch--locked { opacity: .5; pointer-events: none; }
+.handoff-slot { display: flex; }
+.handoff-modal { max-width: 22rem; text-align: center; }
+.handoff-qr { display: grid; place-items: center; margin: 4px auto 12px; padding: 12px; border-radius: 12px; background: #fff; width: max-content; }
+.handoff-qr img, .handoff-qr canvas { display: block; width: 240px; height: 240px; }
+.handoff-qr a { color: #0b1320; overflow-wrap: anywhere; max-width: 240px; }
+.page-footer { max-width: 72rem; margin: 0 auto; padding: 0 16px 48px; color: var(--demo-muted); font-size: 14px; }
+.page-footer a, .footer a, .planview__contacts a, .xr-guide__contacts a { color: var(--demo-accent); }
+.ax-toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  z-index: 3000; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  max-width: min(92vw, 34rem); padding: 12px 16px; border-radius: 14px;
+  background: rgba(13, 18, 28, .94); color: #f8fafc; border: 1px solid rgba(255, 255, 255, .18);
+  font: 500 15px/1.35 system-ui, sans-serif; box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
+}
+.ax-toast a { color: #93bfff; font-weight: 600; }
+.ax-toast--error { border-color: #fd9891; }
+.quote-whatsapp { margin-top: 4px; }
+
+@media (max-width: 600px) {
+  .handoff-slot { display: none; }
+}
+
+/* ─── Мои дизайны: сравнение и карточки ─────────────────────────────────── */
+.designs-compare { grid-column: 1 / -1; padding: 16px 20px; }
+.designs-compare__title { margin: 0 0 8px; font-size: 1rem; color: var(--demo-muted); font-weight: 600; }
+.designs-compare ol { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.designs-compare li { display: flex; align-items: baseline; gap: 12px; padding: 4px 0; border-bottom: 1px dashed var(--demo-border); }
+.designs-compare li:last-child { border-bottom: 0; }
+.designs-compare li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.designs-compare li b, .design-card__total { font-variant-numeric: tabular-nums; }
+.design-card { display: flex; flex-direction: column; gap: 8px; }
+.design-card__strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; min-height: 0; }
+.design-card__strip:empty { display: none; }
+.design-card__strip img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 8px; background: #fff; }
+.design-card__total { margin: 0; font: 650 1.6rem/1.2 var(--font-brand, system-ui); color: var(--demo-text); }
+.design-card .plan-card__actions { margin-top: auto; }
+
+/* ─── Дизайн в 3D ────────────────────────────────────────────────────────── */
+main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-height: calc(100vh - 61px); max-width: none; margin: 0; padding: 0; }
+.planview__stage { position: relative; min-height: 60vh; background: #15191f; }
+.planview__stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.planview__status { position: absolute; left: 16px; top: 16px; z-index: 1; margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(13, 18, 28, .8); }
+.planview__status[hidden] { display: none; }
+.planview__panel { display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; border-left: 1px solid var(--demo-border); overflow: auto; }
+.planview__title { margin: 0; font: 600 1.5rem/1.2 var(--font-brand, system-ui); }
+.planview__meta { margin: 0; }
+.planview__items { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; }
+.planview__items li { display: flex; gap: 12px; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--demo-border); }
+.planview__items b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.planview__quote .quote-table { display: none; }
+.planview__hint, .planview__contacts { margin: 0; }
+#planview-currency { align-self: flex-start; }
+#planview-currency[hidden] { display: none; }
+@media (max-width: 860px) {
+  main.planview { grid-template-columns: 1fr; }
+  .planview__stage { min-height: 56vh; }
+  .planview__panel { border-left: 0; border-top: 1px solid var(--demo-border); }
+}
+
+/* ─── XR: «Сохранить план», «Мои дизайны», язык на стартовом экране ───────── */
+.xr-total__text.hidden, .xr-total__button.hidden { display: none; }
+.xr-total__actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.xr-total__button--save { background: #1f9d6b; }
+.xr-total__button--ghost { background: rgba(255, 255, 255, .14); }
+.xr-sheet-overlay { z-index: 2100; }
+.xr-sheet .xr-sheet__total { font-weight: 650; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.xr-sheet .ax-error:empty { display: none; }
+.xr-designs { display: grid; gap: 8px; }
+.xr-designs__item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 12px; text-align: left;
+  border: 1px solid var(--demo-border); border-radius: 12px; background: transparent; color: inherit; cursor: pointer;
+}
+.xr-designs__item[aria-current="true"] { border-color: var(--demo-accent); }
+.xr-designs__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xr-designs__total { font-variant-numeric: tabular-nums; }
+.xr-designs__meta { grid-column: 1 / -1; color: var(--demo-muted); font-size: 13px; }
+.xr-hero__tools { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.xr-hero__tools .lang-switch { color: #f8fafc; }
+.xr-guide__contacts { margin-top: 8px; }

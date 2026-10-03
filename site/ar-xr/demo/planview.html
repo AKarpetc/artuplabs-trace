@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111418">
-  <title data-i18n="designs.docTitle">ArtUp AR XR — мои дизайны</title>
+  <title data-i18n="planview.docTitle">ArtUp AR XR — дизайн в 3D</title>
   <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
   <link type="text/css" href="./styles/demo.css" rel="stylesheet" />
   <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); страница работает и без них. -->
@@ -13,7 +13,7 @@
   <link type="text/css" href="./styles/artuplabs-demo.css" rel="stylesheet" />
 </head>
 
-<body>
+<body class="planview-body">
   <header class="ax-header demo-head">
     <div class="ax-container ax-header-row">
       <a class="ax-product" href="../" aria-label="ArtUp AR XR — о продукте" data-i18n-attr="aria-label:nav.productLabel">
@@ -22,7 +22,7 @@
       <nav class="ax-nav" aria-label="Разделы демо" data-i18n-attr="aria-label:nav.label">
         <ul>
           <li><a href="./demo.html#catalog" data-i18n="nav.catalog">Каталог</a></li>
-          <li><a aria-current="page" href="./plans.html" data-i18n="nav.designs">Мои дизайны</a></li>
+          <li><a href="./plans.html" data-i18n="nav.designs">Мои дизайны</a></li>
           <li><a class="nav-small" href="./admin.html" data-i18n="nav.admin">Админка</a></li>
         </ul>
       </nav>
@@ -34,23 +34,27 @@
     </div>
   </header>
 
-  <main class="page-main">
-    <h1 data-i18n="designs.title">Мои дизайны</h1>
-    <p class="muted" data-i18n="designs.lead">Расстановки мебели, сохранённые в XR кнопкой «Сохранить план». Итог — по ориентировочным ценам IKEA US.</p>
-    <div class="page-toolbar">
-      <div id="currency-switch" hidden></div>
-      <a class="ax-btn ax-btn-secondary ax-btn-sm" href="./xrviewer.html" data-i18n="designs.newInXr">Новая расстановка в XR</a>
+  <main class="planview">
+    <div id="planview-stage" class="planview__stage" aria-label="3D" data-i18n-attr="aria-label:planview.stageLabel">
+      <p id="planview-status" class="planview__status" role="status" data-i18n="common.loading">Загрузка…</p>
     </div>
-    <p id="plans-status" class="page-status" role="status" hidden></p>
-    <div id="plans-list" class="plans-list designs-list" aria-live="polite"></div>
+    <aside class="planview__panel">
+      <h1 id="planview-title" class="planview__title" data-i18n="planview.title">Дизайн</h1>
+      <p id="planview-meta" class="ax-muted planview__meta"></p>
+      <div id="planview-currency" hidden></div>
+      <ol id="planview-items" class="planview__items"></ol>
+      <div id="planview-quote" class="planview__quote"></div>
+      <div class="ax-actions planview__actions">
+        <a id="planview-xr" class="ax-btn ax-btn-primary" href="./xrviewer.html" data-i18n="designs.openXr">Открыть в XR</a>
+        <a id="planview-back" class="ax-btn ax-btn-secondary" href="./plans.html" data-i18n="planview.back">Назад к дизайнам</a>
+      </div>
+      <p class="ax-hint planview__hint" data-i18n="planview.hint">Вращайте сцену мышью или пальцем, колесо или щипок — приблизить. Линия на полу — стена, по углам которой калибровалась комната.</p>
+      <p class="planview__contacts" data-contacts><a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+    </aside>
   </main>
 
-  <footer class="page-footer" data-contacts>
-    <span>ArtUp Labs</span> · <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>
-  </footer>
-
   <script src="./src/common/qrcode.min.js"></script>
-  <script type="module" src="./dist/plans.bandle.js?v=2"></script>
+  <script type="module" src="./dist/planview.bandle.js?v=1"></script>
 </body>
 
 </html>
