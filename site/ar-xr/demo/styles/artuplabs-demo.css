@@ -353,7 +353,7 @@ body:has(#xr-selection-bar:not(.d-none)) .fab { bottom: calc(140px + env(safe-ar
   .ar-main { --xr-tools: 112px; }
   .ar-main .toolbar { width: 104px; }
   .ar-main .toolbar__buttons { display: grid; grid-template-columns: repeat(2, 48px); gap: 8px; align-content: end; justify-content: end; }
-  .session-button__label { font-size: 11px; }
+  .session-button__label { font-size: 11px; padding: 0 4px; }
 }
 /* Длинное название плана не раздвигает сетку шире экрана (иначе мобильный браузер уменьшает всю страницу). */
 .plans-list > *, .designs-compare, .designs-compare li { min-width: 0; }
