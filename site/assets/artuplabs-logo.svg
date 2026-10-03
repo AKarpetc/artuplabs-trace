@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 64" width="248" height="64" role="img" aria-label="ArtUp Labs">
+  <style>
+    .t { fill: #172b4d; font: 700 30px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.5px; }
+    .l { fill: #0b5cd5; font-weight: 600; }
+    @media (prefers-color-scheme: dark) { .t { fill: #e3e8ef; } .l { fill: #6ea8ff; } }
+  </style>
+  <defs>
+    <linearGradient id="aull-g" x1="6" y1="58" x2="58" y2="6" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b5cd5"/>
+      <stop offset="1" stop-color="#7c4dff"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#aull-g)"/>
+  <path d="M14 50 L29 15 L44 50" fill="none" stroke="#fff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22.5 38 H34" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M49 9 C49.9 14.2 50.8 15.1 56 16 C50.8 16.9 49.9 17.8 49 23 C48.1 17.8 47.2 16.9 42 16 C47.2 15.1 48.1 14.2 49 9 Z" fill="#ffd166"/>
+  <text class="t" x="78" y="43">ArtUp <tspan class="l">Labs</tspan></text>
+</svg>
