@@ -421,9 +421,25 @@ describe('heavy groups in a refresh pass', () => {
   it('does not queue a heavy group again while it waits in the lane', async () => {
     const deps = makeDeps({ pcs: heavyPcs, compute: { childIssuesOf: async () => { throw deadlineError(); } } });
     await deps.state.heavy.put({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 990000 });
+    await deps.state.heavy.lease.set(999000);
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
     await refreshOnce(deps);
     expect([deps.pushed, (await deps.state.heavy.get('childIssuesOf["q"]')).at]).toEqual([[], 990000]);
+  });
+  it('restarts an idle heavy lane when a pass meets a group waiting in it', async () => {
+    const deps = makeDeps({ pcs: heavyPcs, compute: { childIssuesOf: vi.fn() } });
+    await deps.state.heavy.put({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 990000 });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
+  });
+  it('leaves a running heavy lane alone when a pass meets a group waiting in it', async () => {
+    const deps = makeDeps({ pcs: heavyPcs, compute: { childIssuesOf: vi.fn() } });
+    await deps.state.heavy.put({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 990000 });
+    await deps.state.heavy.lease.set(999000);
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect(deps.pushed).toEqual([]);
   });
   it('queues a heavy group again when its lane entry is too old to be trusted', async () => {
     const deps = makeDeps({ pcs: heavyPcs, compute: { childIssuesOf: async () => { throw deadlineError(); } } });

@@ -6,7 +6,7 @@ import {
   ACTIVE_MS, FAILED_ROWS_KEEP_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
-import { handOff, isDeadline, isHeavy, pushQuietly, rewrite, runGroupJob, runHeavy, writeGroups } from './groups.js';
+import { handOff, isDeadline, isHeavy, laneIdle, pushQuietly, rewrite, runGroupJob, runHeavy, writeGroups } from './groups.js';
 
 export { rewrite };
 
@@ -98,7 +98,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
       await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
     }
   });
-  if (queued) await pushQuietly(deps, { kind: 'heavy' });
+  if (queued || (handed && (await laneIdle(deps)))) await pushQuietly(deps, { kind: 'heavy' });
   let stale = false;
   let changed = 0;
   if (byGroup.some(([, updates]) => updates.length)) {

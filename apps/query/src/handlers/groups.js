@@ -100,9 +100,14 @@ export async function runGroupJob(deps, { functionName, userArgs }) {
   return { computed: key, changed: await writeGroups(deps, startedAt, [[key, updatesFor(group, result, deps.levels)]]) };
 }
 
+/** Whether no heavy lane runner holds the lease. */
+export async function laneIdle(deps) {
+  return deps.now() - ((await deps.state.heavy.lease.get()) ?? 0) >= HEAVY_LEASE_MS;
+}
+
 /** Heavy lane runner: one waiting group per invocation under a lease, then it pushes itself while groups wait. */
 export async function runHeavy(deps) {
-  if (deps.now() - ((await deps.state.heavy.lease.get()) ?? 0) < HEAVY_LEASE_MS) return { busy: true };
+  if (!(await laneIdle(deps))) return { busy: true };
   await deps.state.heavy.lease.set(deps.now());
   let heavy = null;
   try {
