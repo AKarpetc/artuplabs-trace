@@ -107,25 +107,6 @@
 .quote-totals dd { margin: 0; text-align: right; font-weight: 600; }
 .quote-totals dd.ax-price { font-size: 1.3rem; }
 
-/* ─── Итог в XR ──────────────────────────────────────────────────────────── */
-.xr-total {
-  position: fixed;
-  top: calc(12px + env(safe-area-inset-top, 0px) + 52px);
-  left: calc(12px + env(safe-area-inset-left, 0px));
-  z-index: 920;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  max-width: 60vw; padding: 8px 12px;
-  border: 1px solid rgba(255, 255, 255, .18); border-radius: 14px;
-  background: rgba(13, 18, 28, .72); color: #f8fafc;
-  font: 600 14px/1.3 system-ui, sans-serif;
-  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-}
-.xr-total.hidden { display: none; }
-.xr-total__button {
-  min-height: 36px; padding: 6px 12px; border: 0; border-radius: 999px;
-  background: linear-gradient(135deg, #3d7fe6 0%, #8a63ff 100%); color: #fff;
-  font: 600 13px/1.2 system-ui, sans-serif; cursor: pointer;
-}
 .xr-hero__brand { display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
 .xr-hero__brand .xr-hero__logo { padding: 0; background: none; }
 .xr-pick__links { margin: 0; font-size: 14px; }
@@ -184,7 +165,6 @@
 }
 .ax-toast a { color: #93bfff; font-weight: 600; }
 .ax-toast--error { border-color: #fd9891; }
-.quote-whatsapp { margin-top: 4px; }
 
 @media (max-width: 600px) {
   .handoff-slot { display: none; }
@@ -227,23 +207,7 @@ main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-
   .planview__panel { border-left: 0; border-top: 1px solid var(--demo-border); }
 }
 
-/* ─── XR: «Сохранить план», «Мои дизайны», язык на стартовом экране ───────── */
-.xr-total__text.hidden, .xr-total__button.hidden { display: none; }
-.xr-total__actions { display: flex; flex-wrap: wrap; gap: 6px; }
-.xr-total__button--save { background: #1f9d6b; }
-.xr-total__button--ghost { background: rgba(255, 255, 255, .14); }
-.xr-sheet-overlay { z-index: 2100; }
-.xr-sheet .xr-sheet__total { font-weight: 650; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
-.xr-sheet .ax-error:empty { display: none; }
-.xr-designs { display: grid; gap: 8px; }
-.xr-designs__item {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 12px; text-align: left;
-  border: 1px solid var(--demo-border); border-radius: 12px; background: transparent; color: inherit; cursor: pointer;
-}
-.xr-designs__item[aria-current="true"] { border-color: var(--demo-accent); }
-.xr-designs__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.xr-designs__total { font-variant-numeric: tabular-nums; }
-.xr-designs__meta { grid-column: 1 / -1; color: var(--demo-muted); font-size: 13px; }
+/* ─── XR: инструменты стартового экрана ─────────────────────────────────── */
 .xr-hero__tools { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
 .xr-hero__tools .lang-switch { color: #f8fafc; }
 .xr-guide__contacts { margin-top: 8px; }
@@ -261,3 +225,157 @@ main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-
 .plans-slot--floating { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); z-index: 50; }
 .plans-slot--floating .plans-button { background: rgba(13, 18, 28, .78); color: #f8fafc; border: 1px solid rgba(255, 255, 255, .2); text-decoration: none; padding: 6px 12px; border-radius: 999px; font: 600 14px/1.2 system-ui, sans-serif; display: inline-flex; align-items: center; }
 .xr-hero__tools .plans-button { text-transform: none; letter-spacing: normal; }
+
+/* ─── Листы (sheet.js): шапка, верх с полем и кнопками, прокручиваемое тело ─ */
+.quote-whatsapp { margin-top: 8px; }
+.ax-sheet-overlay { z-index: 2100; }
+.ax-sheet-overlay--top { place-items: start center; padding: 8px 8px 0; align-content: start; }
+.app-sheet { display: flex; flex-direction: column; max-height: calc(100% - 16px); overflow: hidden; }
+.ax-sheet-overlay--top .app-sheet { border-radius: 16px; border-bottom: 1px solid var(--demo-border); max-height: calc(100% - 8px); }
+.ax-sheet-overlay--top .app-sheet::before { display: none; }
+.app-sheet .ax-modal-head { flex: none; }
+.app-sheet__top { flex: none; padding: 4px 20px 8px; }
+.app-sheet__top:empty { display: none; }
+.app-sheet__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.app-sheet__field { margin-bottom: 8px; }
+.app-sheet__actions { justify-content: flex-end; }
+.app-sheet__actions .ax-btn { min-height: 44px; }
+.app-sheet .ax-error:empty { display: none; }
+.app-sheet__note { margin: 0 0 12px; }
+.app-sheet .ax-icon-btn { width: 44px; height: 44px; }
+.save-plan-sheet__items { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+
+/* ─── XR-оверлей: фиксированные места, ничего не перекрывается ──────────────
+ * Ряд 1 (сверху): «Выйти» слева, чип плана справа. Ряд 2: «Сохранить план» и «Мои планы» под «Выйти».
+ * Ряд 3: строка сообщений по центру — уже, чем промежуток между левым краем и колонкой инструментов.
+ * Колонка инструментов — справа (56 px), лента моделей — снизу; калибровка — у нижнего края (лента
+ * в это время скрыта). Отступы учитывают safe area.
+ */
+.ar-main {
+  --xr-edge: 12px;
+  --xr-top: calc(var(--xr-edge) + env(safe-area-inset-top, 0px));
+  --xr-left: calc(var(--xr-edge) + env(safe-area-inset-left, 0px));
+  --xr-right: calc(var(--xr-edge) + env(safe-area-inset-right, 0px));
+  --xr-tools: 64px;
+}
+.xr-controls {
+  position: fixed; z-index: 920;
+  top: calc(var(--xr-top) + 44px + 8px);
+  left: var(--xr-left);
+  max-width: calc(100vw - var(--xr-left) - var(--xr-right) - var(--xr-tools) - 8px);
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.xr-controls.hidden { display: none; }
+.xr-controls__button {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px;
+  background: rgba(13, 18, 28, .72); color: #f8fafc; font: 600 14px/1 system-ui, sans-serif; white-space: nowrap; cursor: pointer;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.xr-controls__button--save { background: #1f9d6b; border-color: transparent; }
+.ar-main .room-badge {
+  top: var(--xr-top); right: var(--xr-right);
+  max-width: calc(100vw - var(--xr-left) - 44px - 8px - var(--xr-right));
+  min-height: 32px; box-sizing: border-box; display: flex; align-items: center;
+}
+.ar-main .log {
+  top: calc(var(--xr-top) + 44px + 8px + 40px + 8px + 40px + 8px);
+  max-width: calc(100vw - 2 * (var(--xr-edge) + var(--xr-tools) + 8px));
+  border-radius: 14px;
+}
+/* Колонка инструментов начинается под чипом плана; по горизонтали она не пересекается ни с рядом кнопок, ни со строкой сообщений. */
+.ar-main .toolbar { top: calc(var(--xr-top) + 44px + 8px); }
+.calibration-ui {
+  top: auto; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(76px + env(safe-area-inset-right, 0px));
+}
+.ar-main--ribbon-left .session-buttons { top: calc(var(--xr-top) + 44px + 8px + 40px + 8px + 40px + 8px); }
+.ar-main--ribbon-left .log { left: calc(var(--xr-left) + 84px + 24px); right: calc(var(--xr-right) + var(--xr-tools) + 8px); transform: none; max-width: none; }
+
+/* ─── Мобильная эргономика: зона касания ≥ 40 px, ничего не перекрывается ──────
+ * Проверка: scratchpad e2e/ergo-check.mjs (360×740, 375×667, 390×844, 412×915, 844×390; RU и EN).
+ */
+/* «Мои планы» в шапке — кнопкой с числом; ссылка того же раздела в меню лишняя. */
+.ax-header-row:has(.plans-slot:not([hidden])) .ax-nav a[href^="./plans.html"] { display: none; }
+.ax-overlay { grid-template-columns: minmax(0, 1fr); }
+.ax-overlay *, .ax-overlay *::before, .ax-overlay *::after { box-sizing: border-box; }
+.quote-table td:first-child { overflow-wrap: anywhere; }
+[data-contacts] { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
+[data-contacts] > a:not(.btn):not(.ax-btn) { display: inline-flex; align-items: center; min-height: 40px; white-space: nowrap; }
+.footer [data-contacts], .footer p[data-contacts] { justify-content: center; }
+
+/* Шапка на телефоне: строка 1 — логотип и «Мои планы», строка 2 — разделы и RU | EN. */
+@media (max-width: 600px) {
+  .demo-head .ax-header-row { flex-wrap: wrap; gap: 4px 8px; padding: 4px 12px; min-height: 0; }
+  .demo-head .ax-header-actions { display: contents; }
+  .demo-head .ax-product { order: 1; }
+  .demo-head .plans-slot { order: 2; margin-left: auto; }
+  .demo-head .ax-nav { order: 3; flex: 1 1 auto; flex-basis: auto; min-width: 0; }
+  .demo-head [data-lang-switch] { order: 4; }
+  .demo-head .handoff-slot, .demo-head .account-slot { order: 5; }
+  .search-bar { top: calc(96px + var(--safe-top, 0px)); }
+}
+
+@media (pointer: coarse) {
+  .demo-head .ax-product, .demo-head .ax-nav a { min-height: 40px; display: flex; align-items: center; }
+  .lang-switch button, .currency-switch button { min-width: 44px; min-height: 40px; }
+  .ax-btn-sm, .plans-button, .ax-btn { min-height: 40px; }
+  .chip { height: 40px; }
+  .pick-toggle, .ax-checkbox { min-height: 40px; display: inline-flex; align-items: center; }
+  .search-bar input { align-self: stretch; }
+  .model-card__credit a { display: inline-block; padding: 13px 0; margin: -13px 0; }
+  .ax-icon-btn { width: 44px; height: 44px; }
+  .xr-hero__brand, .xr-hero__link { min-height: 40px; display: inline-flex; align-items: center; }
+  .xr-designs__item { min-height: 48px; }
+}
+
+/* Кнопка «Наверх» поднимается над панелью выбора, а страница получает отступ под панель. */
+body:has(#xr-selection-bar:not(.d-none)) { padding-bottom: 140px; }
+body:has(#xr-selection-bar:not(.d-none)) .fab { bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
+
+/* Стартовый экран XR: инструменты (Мои планы, RU | EN) переносятся на свою строку, а не за край. */
+.xr-hero__eyebrow { flex-wrap: wrap; row-gap: 8px; }
+.xr-hero__tools { flex-wrap: wrap; }
+
+/* Лента XR: подпись в две строки вместо обрезки; полное название — в title кнопки. */
+.session-button__label {
+  white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.2;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+}
+
+.app-sheet .ax-modal-head h2 { min-width: 0; overflow-wrap: anywhere; }
+.app-sheet .ax-modal-head .ax-icon-btn { flex: none; }
+.model-card__actions .btn { flex: 1 1 auto; min-height: 40px; }
+.viewer-body .model-credit a { display: inline-block; padding: 13px 0; margin: -13px 0; }
+.plans-slot .plans-button { min-height: 40px; }
+.toolbar__buttons { justify-content: safe flex-end; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .ar-main { --xr-tools: 112px; }
+  .ar-main .toolbar { width: 104px; }
+  .ar-main .toolbar__buttons { display: grid; grid-template-columns: repeat(2, 48px); gap: 8px; align-content: end; justify-content: end; }
+  .session-button__label { font-size: 11px; }
+}
+/* Длинное название плана не раздвигает сетку шире экрана (иначе мобильный браузер уменьшает всю страницу). */
+.plans-list > *, .designs-compare, .designs-compare li { min-width: 0; }
+.designs-compare ol { grid-template-columns: minmax(0, 1fr); }
+.designs-compare li span { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .session-button { width: 84px; }
+}
+
+/* «Мои планы» в XR: список планов с итогом и режимом. */
+.xr-designs { display: grid; gap: 8px; }
+.xr-designs__item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 12px; text-align: left;
+  border: 1px solid var(--demo-border); border-radius: 12px; background: transparent; color: inherit; cursor: pointer; font: inherit;
+}
+.xr-designs__item[aria-current="true"] { border-color: var(--demo-accent); }
+.xr-designs__name { font-weight: 600; overflow-wrap: anywhere; }
+.xr-designs__total { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.xr-designs__meta { grid-column: 1 / -1; color: var(--demo-muted); font-size: 13px; }
+
+/* Кнопки режима старта: длинная подпись переносится, а не уходит за край кнопки. */
+.xr-launch .xr-start { white-space: normal; height: auto; min-height: 52px; padding: 10px 16px; line-height: 1.25; text-align: center; }
+
+/* Чип открытого плана: одна строка с многоточием (полное имя — в title и в «Мои планы»). */
+.ar-main .room-badge { display: block; line-height: 20px; }

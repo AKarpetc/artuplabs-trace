@@ -392,6 +392,9 @@ main { padding: 0 var(--gutter); max-width: 1320px; margin: 0 auto; }
   overflow: hidden;
 }
 .model-card__meta { margin: 0; font-size: 13px; color: var(--md-on-surface-variant); }
+/* Автор · источник · лицензия (CC BY требует их у модели); длинная строка не раздвигает карточку. */
+.model-card__credit { margin: 0; font-size: 12px; line-height: 1.35; color: var(--md-on-surface-variant); overflow-wrap: anywhere; }
+.model-card__credit a { color: inherit; }
 .model-card__actions { display: flex; gap: 8px; margin-top: auto; padding-top: 12px; }
 .model-card__actions .btn { flex: 1; height: 36px; padding: 0 12px; }
 

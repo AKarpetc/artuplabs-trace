@@ -80,6 +80,33 @@
 }
 
 /*
+ * Автор, источник и лицензия модели библиотеки (src/common/model/modelCredit.mjs): CC BY требует
+ * показывать их рядом с моделью. Строка внизу слева над кнопкой AR (вверху — кнопка «Мои планы»),
+ * ссылка ведёт на источник.
+ */
+.viewer-body .model-credit {
+    position: absolute;
+    bottom: calc(76px + var(--avt-safe-bottom));
+    left: calc(var(--avt-space-3) + var(--avt-safe-left));
+    z-index: 10;
+    max-width: min(70%, 520px);
+    margin: 0;
+    padding: 6px 12px;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-sm);
+    background: var(--avt-glass);
+    color: var(--avt-ink-inverse);
+    font-size: 12px;
+    line-height: 1.35;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.viewer-body .model-credit a {
+    color: inherit;
+}
+
+/*
  * Кнопка запуска AR: и слот model-viewer, и её видимый дубль на странице. Пусковая площадка
  * скрыта, поэтому дубль — единственная кнопка, которую видит посетитель.
  */

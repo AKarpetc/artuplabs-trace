@@ -164,12 +164,11 @@
         </fieldset>
         <div class="xr-launch">
             <div id="xrStartStatus" class="xr-start-status hidden" role="status"></div>
-            <p class="xr-start-hint" data-i18n="xr.startHint">Свободная — модели сразу ставятся на пол; чтобы сохранить план, в конце отметьте
-                два угла стены. По двум углам — сначала отметьте левый и правый угол стены, расстановка выровняется по комнате.</p>
-            <button onclick="showArFree()" id="xrStartFree" type="button"
-                class="ar-button xr-start avt-btn avt-btn--primary hidden" data-i18n="xr.startFree">Свободная расстановка</button>
             <button onclick="showAr()" id="xrStart" type="button"
-                class="ar-button xr-start avt-btn avt-btn--ghost hidden" data-i18n="xr.startCorners">По двум углам комнаты</button>
+                class="ar-button xr-start avt-btn avt-btn--primary hidden" data-i18n="xr.startCornersBasic">По двум углам комнаты</button>
+            <button onclick="showArFree()" id="xrStartFree" type="button"
+                class="ar-button xr-start avt-btn avt-btn--ghost hidden" data-i18n="xr.startFreeBasic">Свободная расстановка</button>
+            <p id="xrStartHint" class="xr-start-hint" data-i18n="xr.startHintBasic">По двум углам — сначала отметьте левый и правый угол стены, расстановка выровняется по комнате. Свободная — модели сразу ставятся на пол.</p>
         </div>
     </div>
 
@@ -180,15 +179,15 @@
     <div id="ar-main" class="ar-main hidden">
         <span class="log" id="log"></span>
         <div id="roomBadge" class="room-badge hidden"></div>
-        <!-- Итог расставленных моделей по ценам каталога (точный расчёт — на backend), «Сохранить план»
-             и «Мои планы». Сохранение видно, только если проект этого устройства можно менять. -->
-        <div id="xrTotal" class="xr-total hidden" data-xr-dom>
-            <span id="xrTotalText" class="xr-total__text hidden" aria-live="polite"></span>
-            <div class="xr-total__actions">
-                <button id="xrQuoteButton" type="button" class="xr-total__button hidden" onclick="showXrQuote()" data-i18n="xr.calcCost">Рассчитать стоимость</button>
-                <button id="xrSavePlan" type="button" class="xr-total__button xr-total__button--save hidden" onclick="openSavePlan()" data-i18n="xr.savePlan">Сохранить план</button>
-                <button id="xrDesigns" type="button" class="xr-total__button xr-total__button--ghost hidden" onclick="openXrDesigns()" data-i18n="nav.plans">Мои планы</button>
-            </div>
+        <!-- Над камерой — только «Сохранить план» и «Мои планы» (под кнопкой выхода, видны, если проект
+             этого устройства можно менять); цен над камерой нет: смета — в листе «Сохранить план». -->
+        <div id="xrControls" class="xr-controls hidden" data-xr-dom>
+            <button id="xrSavePlan" type="button" class="xr-controls__button xr-controls__button--save" onclick="openSavePlan()">
+                <i class="fa fa-floppy-o" aria-hidden="true"></i><span data-i18n="xr.savePlan">Сохранить план</span>
+            </button>
+            <button id="xrDesigns" type="button" class="xr-controls__button" onclick="openXrDesigns()">
+                <i class="fa fa-folder-open-o" aria-hidden="true"></i><span data-i18n="nav.plans">Мои планы</span>
+            </button>
         </div>
 
         <div id="toolbar" class="toolbar">
