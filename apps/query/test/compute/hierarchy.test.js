@@ -18,9 +18,15 @@ describe('hierarchy compute', () => {
     expect(await make({ S: ['11', '10'] }).subtasksOf({ subquery: 'S' }, ctx)).toEqual({ ids: ['10', '11'], field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', watch: ['11', '10'] });
   });
   it('subtasksOf keeps only parents with subtasks above 1 000 inner issues', async () => {
-    const many = [...Array.from({ length: 1001 }, (_, i) => String(5000 + i)), '10'];
-    const result = await make({ S: many }).subtasksOf({ subquery: 'S' }, ctx);
+    const extra = Array.from({ length: 1001 }, (_, i) => issue(5000 + i));
+    const jira = fakeJira({ issues: [...ISSUES, ...extra], searches: { S: [...extra.map((x) => x.id), '10', '11', '12'] } });
+    const result = await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'S' }, ctx);
     expect(result.ids).toEqual(['10']);
+  });
+  it('subtasksOf reads no issues for up to 1 000 inner issues', async () => {
+    const jira = fakeJira({ issues: ISSUES, searches: { S: ['11', '10'] } });
+    await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'S' }, ctx);
+    expect(jira.calls.filter(([kind]) => kind === 'bulk')).toEqual([]);
   });
   it('parentsOf returns direct parents of any level', async () => {
     expect(await make({ S: ['100', '11', '12'] }).parentsOf({ subquery: 'S' }, ctx)).toEqual({ ids: ['1', '10'], field: 'id', watch: ['100', '11', '12'] });
