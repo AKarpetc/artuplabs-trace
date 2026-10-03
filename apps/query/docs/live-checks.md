@@ -84,19 +84,43 @@ all match reference: no
 
 ## Scopes
 
-| Вызов | Скоуп |
+Источники: OpenAPI `swagger-v3.v3.json` и `swagger.v3.json` (Jira Software) на dac-static.atlassian.com (адреса вверху), страницы событий https://developer.atlassian.com/platform/forge/events-reference/jira/ и https://developer.atlassian.com/platform/forge/events-reference/jira-software/.
+
+| Вызов / событие | Скоуп |
 |---|---|
 | `POST /rest/api/3/changelog/bulkfetch` | `read:jira-work` (Beta: `read:issue-meta:jira`, `read:avatar:jira`, `read:issue.changelog:jira`) |
 | `GET /rest/api/3/jql/function/computation` | Current: нет; Beta: `read:app-data:jira` (необязателен, «we will eventually make it mandatory») |
 | `POST /rest/api/3/jql/function/computation` | Current: нет; Beta: `write:app-data:jira` (то же). Доступно только приложению для своих функций |
-| `GET /rest/agile/1.0/board/{boardId}/sprint` | `read:sprint:jira-software` |
-| события задач (`created:issue`, …) | `read:jira-work` (по странице событий) |
+| `GET /rest/agile/1.0/board/{boardId}/sprint`, `GET /rest/agile/1.0/sprint/{id}` | `read:sprint:jira-software` |
+| `GET /rest/agile/1.0/board` | `read:board-scope:jira-software` и `read:project:jira` |
+| `POST /rest/api/3/search/jql` | Current: `read:jira-work` (Beta: `read:issue-details:jira`, `read:field.default-value:jira`, `read:field.option:jira`, `read:field:jira`, `read:group:jira`) |
+| `POST /rest/api/3/issue/bulkfetch` | Current: `read:jira-work` (Beta: `read:issue-meta:jira`, `read:issue-security-level:jira`, `read:issue.vote:jira`, `read:issue.changelog:jira`, `read:avatar:jira`, `read:issue:jira`, `read:status:jira`, `read:user:jira`, `read:field-configuration:jira`) |
+| `GET /rest/api/3/issueLinkType`, `GET /rest/api/3/field` | `read:jira-work` |
+| `GET /rest/api/3/user/search` (подбор accountId по строке, Task 13) | Current: `read:jira-user` (Beta: `read:user:jira`, `read:user.property:jira`, `read:application-role:jira`, `read:avatar:jira`, `read:group:jira`) |
+| `GET /rest/api/3/project/{project}/role/{id}` (участники роли) | Current: `read:jira-work` (Beta: `read:user:jira`, `read:group:jira`, `read:project-role:jira`, `read:project:jira`, `read:avatar:jira`, `read:project-category:jira`) |
+| `GET /rest/api/3/group/member` (участники группы) | Current: **`manage:jira-configuration`**; Beta: `read:group:jira`, `read:user:jira`, `read:avatar:jira` |
+| события задач (`created|updated|deleted:issue`), связей (`created|deleted:issuelink`), комментариев (`commented:issue`, `deleted:comment`) | `read:jira-work` |
+| события вложений (`created|deleted:attachment`) | classic `read:jira-work`; granular `read:attachment:jira` |
+| события спринтов (все пять) | classic `read:jira-work`; granular `read:sprint:jira-software` |
+
+Нужен ли `read:jira-user`: да, если `user/search` (текст в `by`/`reporter`-подобных аргументах) остаётся в плане; без него эндпоинт недоступен (classic-скоупа взамен нет).
+
+Ожидаемый глобальный список v1 (план, Global Constraints):
+
+- `read:jira-work` — подтверждён: bulkfetch, search/jql, issue/bulkfetch, issueLinkType, field, роль проекта и все события задач, связей, комментариев, вложений и спринтов.
+- `read:jira-user` — подтверждён: нужен для `GET /rest/api/3/user/search`.
+- `read:board-scope:jira-software` — подтверждён: `GET /rest/agile/1.0/board` (вместе с `read:project:jira`, который входит в granular-набор того же вызова; в classic-списке не нужен, пока доски читаются basic/Forge-запросом приложения; точное требование проверит деплой Task 14).
+- `read:sprint:jira-software` — подтверждён: спринты досок и granular-скоуп событий спринтов.
+- `read:app-data:jira` — подтверждён (необязателен сейчас, станет обязательным): `GET .../jql/function/computation`.
+- `write:app-data:jira` — подтверждён (то же): `POST .../jql/function/computation`.
+- `storage:app` — не проверялся по REST-документации (скоуп Forge storage, не Jira); остаётся из плана без изменений.
+- Открыто: classic-скоуп `GET /rest/api/3/group/member` — `manage:jira-configuration` (запись/админ-права недопустимы по «ничего не пишем»); раскрытие групп в `by`-аргументах требует granular `read:group:jira` + `read:user:jira` (+ `read:avatar:jira`) в манифесте либо другого способа — решает контроллер до Task 13.
 
 ## Consequences
 
 - (а) Предел `changelog/bulkfetch` — **1 000** id, подтверждён текстом ошибки 400 на 1 001: `CHANGELOG_BATCH = 1000` (Task 5); `fieldIds` ≤ 10; пагинация `nextPageToken`. Эндпоинт доступен с basic-авторизацией; недоступность из Forge не проверялась (в Forge скоуп `read:jira-work`). Запасной путь не нужен, пометка «J-G6 под угрозой» не ставится. Время обхода (2,9 с на 5 000) на пустых историях не показательно; ворота меряет Task 20.
 - (б) Старт спринта — **`startDate`**: Agile API `activatedDate` не отдаёт (проверено на future/active; closed — после засева). Task 8 `sprintWindow` берёт `startDate` (Q-R37).
 - (в) Контекст функции: **`license`** есть (`active`, `billingPeriod`, `ccpEntitlementId`, `trialEndDate`, `supportEntitlementNumber`), но только у платных приложений Marketplace в production; в DEVELOPMENT/STAGING он `undefined`. **`environmentType`** в списке контекста обработчика не значится — брать из `getAppContext().environmentType`. Task 13 `licenceInput` читает `license` с запасом на `undefined` (dev = без ограничений по окружению, не по лицензии) и `environmentType` из `getAppContext()`.
-- (г) Имена событий для манифеста (Tasks 14, 24, 27): `avi:jira:created|updated|deleted:issue`, `avi:jira:created|deleted:issuelink`, `avi:jira:commented:issue`, `avi:jira:deleted:comment`, `avi:jira:created|deleted:attachment`, `avi:jira-software:created|started|updated|closed|deleted:sprint`. **`avi:jira:updated:comment` в документации отсутствует** — правка комментария отдельным событием не гарантирована; для группы комментариев свежесть по правкам держит часовая сверка, обещание в листинге уточняется (Task 27). `changelog.id` документацией не подтверждён: код обязан работать без него (ключ идемпотентности — запасной, из `issue.id` + `timestamp`/содержимого `items`).
+- (г) Имена событий для манифеста (Tasks 14, 24, 27): `avi:jira:created|updated|deleted:issue`, `avi:jira:created|deleted:issuelink`, `avi:jira:commented:issue`, `avi:jira:deleted:comment`, `avi:jira:created|deleted:attachment`, `avi:jira-software:created|started|updated|closed|deleted:sprint`. **`avi:jira:updated:comment` в документации отсутствует** — правка комментария отдельным событием не гарантирована; Ruling Q-R38: правки комментариев обновляет часовая сверка, листинг не обещает секунды для правок (формулировка — Task 27). `changelog.id` документацией не подтверждён: Ruling Q-R39: идемпотентность событий не зависит от `changelog.id`; запасной ключ — `issue.id` + `timestamp` + содержимое `items`.
 - (д) `issueLinkType` совпал с эталоном **не на 100%**: Blocks outward 1 863 против 1 190. Ruling Q-R36: аргумент, равный имени типа, — обе стороны через `issueLinkType`; аргумент, равный описанию направления, — только если оно не совпадает с именем какого-либо типа (без учёта регистра), иначе вычисляемый список id (дерево). Cloners, Duplicate, Relates точны.
 - Лимиты функции: ответ ≤ 25 с, ≤ 1 000 значений в `{ jql }`, прекомпутации живут 7 дней без вычисления; предел числа модулей `jira:jqlFunction` не документирован — проверить деплоем 24 модулей (Task 14).
