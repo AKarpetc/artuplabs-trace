@@ -14,7 +14,7 @@
 
 ## Для владельца: что решено в плане без вас
 
-Решения записывает в журнал rulings Task 1 (строки таблицы `| Q-Rn | решение | почему |`). Те, что меняют спецификацию:
+Q-R9…Q-R15 записаны в rulings вместе со спецификацией; Task 1 продолжает с Q-R16 (строки таблицы `| Q-Rn | решение | почему |`). Те, что меняют спецификацию:
 
 | # | Решение | Почему | Цена ошибки |
 |---|---|---|---|
@@ -26,9 +26,22 @@
 | Q-R14 | журнал ошибок страницы хранит имя функции и текст ошибки, но не аргументы (в них JQL клиента) | приватность (§4 спецификации) | диагностика без текста запроса |
 | Q-R15 | `currentUser()` внутри аргументов отклоняется явной ошибкой | precomputation общий для всех пользователей (Q-R3), внутренний запрос идёт от имени приложения | — |
 
-Ворота: J-G6 — Task 20 (перед кодом M2), J-G7 — Task 21 (перед кодом M3). Не прошло — группа уходит в v1.1 строкой Ruling, задачи её кода пропускаются, план идёт дальше (Q-R1).
+Решения сверки плана перед исполнением (pre-flight, коммит JQL-7; Task 1 записывает P-1 … P-7 в rulings строками после своих строк сверки, текст решения и «почему» — дословно из этой таблицы; P-8 — сама строка сверки по вопросам 3–4):
 
-Модели исполнителей: у каждой задачи строка **Model** (opus — код, тесты, отладка; sonnet — замеры, сбор данных, браузер, переводы, листинг, простые задачи-копирования).
+| # | Решение | Почему | Цена ошибки |
+|---|---|---|---|
+| P-1 | вердикт полноты J-G6 — 30 из 30 `complete` против эталона B (changelog по REST); сравнение засева A с B — проверка сеялки: расхождение означает починку засева или инструмента и повтор замера, а не «не пройдено» | порог §9 спецификации не меняется | нет |
+| P-2 | J-G7 меряет и вложения (фазы `attachment-latency`, `attachment-complete`); если не проходят только вложения, в v1.1 уходят только `fileAttached` и `hasAttachments(ext)` (Q-R11) | §9: «метаданные комментариев **и вложений**» | лишнее время замера |
+| P-3 | размер случая полноты для каждой функции — максимальный, какой дают данные; функции спринта — плюс один спринт на 1 000+ задач из `jg-task`; `hasComments("1")`, `commented("after 2020-01-01")`, `hasAttachments()` — на всём сайте; документ приёмки пишет фактический размер каждого случая | §8: полнота «на данных > 1 000 и > 10 000» | время засева |
+| P-4 | 25 с — предел платформы на ответ функции; внутренний бюджет вычисления — `FUNCTION_BUDGET_MS = 20 000`, чтобы успеть записать очередь, `q:jobs` и журнал ошибок; поведение по §6 («Computing, retry in a minute») не меняется | запас на запись состояния до предела платформы | нет |
+| P-5 | кэш значений — по группе: `v:<sha1(groupKey)>:{m,c<i>,w<i>}` вместо `v:<pcId>:<chunk>` §3 | страницы дерева читают набор значений корня (Review Focus 2); `w<i>` — список отслеживаемых id, по нему решается, что пересчитывать (§5) | нет |
+| P-6 | эталоны приёмки (`scripts/lib/reference.mjs`) и инструменты замера (`atlassian/tools/*`, `scripts/lib/http.mjs`, `scripts/lib/latency.mjs`) намеренно не импортируют `src/` и держат свои копии `pool`, разбора условий и вычисления выражений | эталон, собранный из кода продукта, не поймает ошибку продукта | дубли кода в скриптах |
+| P-7 | покрытие ветвлений §8 — порог: `npm run coverage` (`@vitest/coverage-v8`), ветви `src/core/**` ≥ 90% | §8: «vitest, покрытие ветвлений» | несколько лишних тестов |
+| P-8 | итог сверки ScriptRunner по вопросам 3–4 Task 1 закрепляется строкой Q-R16+: как в ScriptRunner DC — `commented()` без условий = любой комментарий; `roleLevel`/`groupLevel` = видимость комментария; у `fileAttached` условие `on` сохраняется | §2 записывает `commented(clauses)` без скобок; план делает условия необязательными и добавляет `roleLevel`/`groupLevel`, `on` | нет |
+
+Ворота: J-G6 — Task 20 (перед кодом M2), J-G7 — Task 21 (перед кодом M3). Task 21 исполняется всегда, при любом исходе J-G6. Не прошло — группа уходит в v1.1 строкой Ruling, задачи её кода пропускаются, план идёт дальше (Q-R1).
+
+Модели исполнителей: у каждой задачи строка **Model** (opus — любой код, скрипты, тесты, отладка; sonnet — замеры, сбор данных и документации, браузер, переводы, снимки, листинг). Задача, где есть и то и другое, делится по шагам: «**Model:** opus (шаги …), sonnet (шаги …)».
 
 ---
 
@@ -36,14 +49,14 @@
 
 - Только Forge; ноль Connect-модулей; **ноль egress** — нет `permissions.external`, нет удалённых шрифтов/CDN/картинок; после каждого деплоя `forge eligibility -e development --non-interactive` печатает eligible для Runs on Atlassian.
 - **Ничего не пишем в задачи клиента.** Скоупы v1 (фиксируются Task 3, ожидаемый список): `read:jira-work`, `read:jira-user`, `read:board-scope:jira-software`, `read:sprint:jira-software`, `read:app-data:jira`, `write:app-data:jira` (precomputation API, как в прототипе), `storage:app`. Никогда `write:jira-work` и никакой другой `write:*`, кроме `write:app-data:jira`.
-- Хранилище: KVS — `t:<ts15>:<rand>` (журнал), `v:<sha1>:{m,c<i>,w<i>}` (кэш значений группы, ≤ 5 000 на ключ), `q:pending`, `q:running`, `q:lastWrittenStart`, `q:jobs`, `log:errors`, `log:refresh`, `idx:progress:<part>`, `cfg:excluded`, `cfg:sprintFields`. Forge SQL — `sprint`, `sprint_event`, `status_event` (M2), `comment_meta`, `attachment_meta` (M3). Текст задач, комментариев и вложений не хранится нигде, включая логи.
-- Ошибки в JQL-редакторе — на английском (Q-R6), только из `src/core/errors.js` и `src/core/args.js`; страница и админ-страница — 26 языков: zh-CN, zh-TW, cs-CZ, da-DK, nl-NL, en-US, en-GB, et-EE, fi-FI, fr-FR, de-DE, hu-HU, is-IS, it-IT, ja-JP, ko-KR, no-NO, pl-PL, pt-BR, pt-PT, ro-RO, ru-RU, sk-SK, tr-TR, es-ES, sv-SE. Каждый ключ появляется во всех 26 файлах в том же коммите (тесты сверяют ключи, плейсхолдеры и категории множественного числа).
+- Хранилище: KVS — `t:<ts15>:<rand>` (журнал), `v:<sha1(groupKey)>:{m,c<i>,w<i>}` (кэш значений группы, ≤ 5 000 на ключ; ключ по группе, а не по `pcId` — P-5), `q:pending`, `q:running`, `q:lastWrittenStart`, `q:jobs`, `log:errors`, `log:refresh`, `idx:progress:<part>`, `cfg:excluded`, `cfg:sprintFields`. Forge SQL — `sprint`, `sprint_event`, `status_event` (M2), `comment_meta`, `attachment_meta` (M3). Текст задач, комментариев и вложений не хранится нигде, включая логи.
+- Ошибки в JQL-редакторе — на английском (Q-R6); их тексты формируются только в `src/core/**` (`errors.js` — общие тексты `ERR.*`, в том числе приставка имени функции `ERR.withFunction`; разборщики `args.js`, `links.js`, `boards.js`, `dates.js`, `comment-clauses.js`, `expression.js`), слои `compute`/`handlers` берут их оттуда; текст Jira об ошибке в subquery передаётся как есть (§6); страница и админ-страница — 26 языков: zh-CN, zh-TW, cs-CZ, da-DK, nl-NL, en-US, en-GB, et-EE, fi-FI, fr-FR, de-DE, hu-HU, is-IS, it-IT, ja-JP, ko-KR, no-NO, pl-PL, pt-BR, pt-PT, ro-RO, ru-RU, sk-SK, tr-TR, es-ES, sv-SE. Каждый ключ появляется во всех 26 файлах в том же коммите (тесты сверяют ключи, плейсхолдеры и категории множественного числа).
 - Custom UI: React 18 + компоненты Atlaskit + `@atlaskit/primitives` + токены дизайна. **Никаких hex/rgb/hsl/именованных цветов** в `static/app/src` (guard-тест). Визуальный стандарт Reports: ширина на всю страницу с `space.300` по бокам, секции через `space.400`, карточки `elevation.surface.raised` + `radius.large`, одна основная кнопка на вид, заголовки `@atlaskit/heading`, текст 14px, длинные строки переносятся, загрузка — скелетоны/спиннеры на месте, пустые и ошибочные состояния — иллюстрация + фраза + действие; светлая и тёмная темы.
 - Слои: `src/core/**` — чистые функции: без I/O, без `Date.now()`/`new Date()` без аргумента, без случайности (время и колбэки передаются параметрами). `src/infra/**` — KVS, SQL, REST, очередь. `src/compute/**` — источники значений функций. `src/handlers/**` — оркестрация. Обработчики Forge собираются в `src/index.js` из `src/deps.js`.
-- Все числовые пределы — в `src/core/limits.js` и только там.
-- Стиль кода как в Reports: vanilla JS/JSX, ES-модули, **без `//` комментариев внутри тел функций** (guard-тест), JSDoc 1–2 строки на экспортируемых функциях, без упоминаний задач, плана, спецификации и rulings в коде.
-- Тесты: Vitest; одно поведение на `it`, имя называет поведение; целые значения сравниваются через `toEqual`.
-- Коммиты: `JQL-<n>: <Description>` + пустая строка + `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; нумерация с JQL-6 (Task N → JQL-(N+5)). Локальная ветка `jql-v1`; не пушить, не открывать PR, не сливать в main.
+- Все числовые пределы (размеры страниц и пачек, параллелизм, сроки, предельные значения аргументов) — в `src/core/limits.js` и только там; каталог ссылается на `MAX_DEPTH`/`COUNT_MAX`; задача, которой нужен новый предел, дописывает его в `limits.js`.
+- Стиль кода как в Reports: vanilla JS/JSX, ES-модули, **без `//` комментариев внутри тел функций**, JSDoc 1–2 строки на экспортируемых функциях, без упоминаний задач, плана, спецификации и rulings в коде. Guard-тесты: `test/guards.test.js` (Task 5) — `src/**`; `static/app/test/guards.test.js` (Task 4) — `static/app/src/**`.
+- Тесты: Vitest; одно поведение на `it`, имя называет поведение; целые значения сравниваются через `toEqual`. Покрытие ветвлений (P-7): `npm run coverage` (`@vitest/coverage-v8`), порог — ветви `src/core/**` ≥ 90%; задача, меняющая `src/core/**`, запускает его в шаге Run, CI запускает его вместо `npm test`. Повторяемые в тестах помощники — общими файлами (`test/fakeKvs.js`, `test/fakeJira.js`, `test/handlers/makeDeps.js`), не копиями.
+- Коммиты: `JQL-<n>: <Description>` + пустая строка + `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; нумерация: JQL-6 — план, JQL-7 — поправки pre-flight, Task N → JQL-(N+7) (Task 1 = JQL-8 … Task 34 = JQL-41). Локальная ветка `jql-v1`; не пушить, не открывать PR, не сливать в main.
 - Секреты: `set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a` перед forge и REST; токены не печатать.
 - Регистрация: `forge register -s 249db86b-0aa6-4b81-96ba-62341736ad15` (Developer Space «ArtUp Labs»). Деплой — **только `development`** до решения владельца на чекпоинте C2.
 - `forge install --upgrade` зависает после успеха: запускать как `perl -e 'alarm 300; exec @ARGV' forge install --upgrade …`.
@@ -77,6 +90,7 @@ apps/query/
   src/core/limits.js                 все пределы
   src/core/errors.js                 тексты ошибок JQL-редактора
   src/core/catalog.js                24 функции: имя, ключ, группа, семейство, аргументы, примеры
+  src/core/ids.js                    byNumber, sortIds — порядок id для ядра, compute и infra
   src/core/args.js                   разбор аргументов, токен страницы, ключ группы
   src/core/jql-build.js              EMPTY, quote, pageCall
   src/core/tree.js                   форма дерева, фрагмент корня/узла/листа
@@ -111,11 +125,14 @@ apps/query/
   src/handlers/backfill.js           первичное заполнение индекса порциями (M2, M3)
   src/handlers/lifecycle.js          установка/обновление: миграции и запуск backfill
   src/handlers/resolvers.js          getAccess, getStatus, админ-действия
-  test/**                            зеркалит src/; test/fakeKvs.js, test/fakeJira.js, test/fixtures/**
+  src/handlers/indexing.js           части индекса, запись по событиям, добивка пропусков
+  src/handlers/admin.js              действия админ-страницы
+  test/**                            зеркалит src/; test/fakeKvs.js, test/fakeJira.js, test/handlers/makeDeps.js, test/fixtures/**
+  test/guards.test.js                guard-тест src/**: без `//` в функциях, ядро без часов, без упоминаний плана
   scripts/live-checks.mjs            Task 3
-  scripts/acceptance.mjs, scripts/lib/{http.mjs,reference.mjs,report.mjs}   Task 16, 31
+  scripts/acceptance.mjs, scripts/lib/{http.mjs,latency.mjs,reference.mjs,report.mjs}   Task 16, 31
   scripts/gen-manifest-functions.mjs Task 13: блок YAML функций из каталога
-  static/app/                        Custom UI (копия оболочки Reports): global-page, admin-page
+  static/app/                        Custom UI (копия оболочки Reports): global-page, admin-page; общие components/Card.jsx, status/IndexProgress.jsx
 ```
 
 Вне `apps/query`: `atlassian/tools/j-g67-index/` и `atlassian/tools/{seed-jira-sprints.mjs,seed-jira-comments.mjs,measure-jql-jg67.mjs}` (прототип и замеры ворот J-G6/J-G7), `atlassian/plans/2026-10-03-artup-query-acceptance.md`, `atlassian/listing-query/`, `site/query/`, правовые страницы `site/{privacy,terms,security,support}.html`.
@@ -134,7 +151,7 @@ apps/query/
 - Modify: `atlassian/plans/2026-10-03-artup-query-v1-rulings.md`
 
 **Interfaces:**
-- Produces: `sr-samples.json` = `{ "samples": [ { "id": 1, "source": "<URL страницы документации>", "scriptrunner": "<JQL как в документации>", "query": "<тот же смысл на ArtUp Query и данных JQLG/RPT>", "reference": { "fn": "subtasksOf", "args": ["project = JQLG AND labels = jg-mid"], "and": "<родной JQL-сомножитель или null>" }, "meaning": "<одна фраза>" } ] }` (`query` = `issue in <fn>(<args>)` и, если `and` не null, ` AND <and>`; фаза `sr` сверяет его с эталоном `REFERENCES[fn](args)` ∩ `ids(and)`) — ровно 20 записей; потребитель — фаза `sr` скрипта приёмки (Task 31). `docs/scriptrunner.md` — таблица по 24 функциям: имя у нас | имя ScriptRunner DC | имя ScriptRunner Cloud | аргументы DC (порядок) | расхождение | решение.
+- Produces: `sr-samples.json` = `{ "samples": [ { "id": 1, "source": "<URL страницы документации>", "scriptrunner": "<JQL как в документации>", "query": "<тот же смысл на ArtUp Query и данных JQLG/RPT>", "group": "<группа каталога: query|site|board|sprint|comment|attachment|fields>", "reference": { "fn": "subtasksOf", "args": ["project = JQLG AND labels = jg-mid"], "and": "<родной JQL-сомножитель или null>" }, "meaning": "<одна фраза>" } ] }` (`query` = `issue in <fn>(<args>)` и, если `and` не null, ` AND <and>`; фаза `sr` сверяет его с эталоном `REFERENCES[fn](args)` ∩ `ids(and)`, а образец группы, не отгруженной по воротам, пропускает с `skipped: 'v1.1'`) — ровно 20 записей; потребитель — фаза `sr` скрипта приёмки (Task 31). `docs/scriptrunner.md` — таблица по 24 функциям: имя у нас | имя ScriptRunner DC | имя ScriptRunner Cloud | аргументы DC (порядок) | расхождение | решение.
 
 - [ ] **Step 1: Загрузить WebFetch.** Вызвать ToolSearch с запросом `select:WebFetch`.
 
@@ -149,15 +166,15 @@ apps/query/
   4. синтаксис `dateCompare` (операторы, интервалы `+2d`, псевдополя `firstCommented`/`lastCommented`) и `expression` (единицы длительностей);
   5. `hasLinks` / `hasLinkType` — принимают имя типа или описание направления.
 
-- [ ] **Step 5: 20 фильтров-образцов.** Выбрать из документации 20 примеров JQL, покрывающих все группы (по запросу 6, связи 4, иерархия 2, спринты 3, комментарии 2, вложения 1, поля 2), записать в `test/fixtures/sr-samples.json` по схеме Interfaces; в `query` — тот же смысл на наших данных: проекты JQLG/RPT, метки `jg-mid`, `jg-big`, `jg-lnk`, `jg-task`, доска «JQLG board» (создаёт Task 18), `issue in` вместо `issueFunction in`. Проверить: `node -e "const s=require('./apps/query/test/fixtures/sr-samples.json').samples; if(s.length!==20) throw new Error(s.length); console.log('ok')"` → `ok`.
+- [ ] **Step 5: 20 фильтров-образцов.** Выбрать из документации 20 примеров JQL, покрывающих все группы (по запросу 6, связи 4, иерархия 2, спринты 3, комментарии 2, вложения 1, поля 2), записать в `test/fixtures/sr-samples.json` по схеме Interfaces; в `query` — тот же смысл на наших данных: проекты JQLG/RPT, метки `jg-mid`, `jg-big`, `jg-lnk`, `jg-task`, доска «JQLG board» (создаёт Task 18), `issue in` вместо `issueFunction in`. Каждый образец — в пределах возможностей эталона (`scripts/lib/reference.mjs`, Tasks 16, 24, 27, 28), иначе брать другой пример документации: `reference.fn` — функция каталога; комментарии — условия `by <accountId>`, `after`/`before`/`on` (дата `YYYY-MM-DD` или `-N[dhm]`), `inRole`, `inGroup`, `roleLevel`, `groupLevel`; вложения — `by`, `after`, `before`, `on`, `ext`; `dateCompare`/`expression` — поля, числа, длительности `Nw/Nd/Nh/Nm`, `+ - * /`, сравнения, `and`/`or`, псевдополя `firstCommented`/`lastCommented`. Проверить: `node -e "const s=require('./apps/query/test/fixtures/sr-samples.json').samples; const g=['query','site','board','sprint','comment','attachment','fields']; if(s.length!==20||s.some((x)=>!g.includes(x.group))) throw new Error(s.length); console.log('ok')"` → `ok`.
 
-- [ ] **Step 6: Rulings.** Дописать в таблицу `atlassian/plans/2026-10-03-artup-query-v1-rulings.md` строки Q-R9 … Q-R15 из раздела «Для владельца» этого плана (решение и «почему» дословно). Затем по каждому расхождению Step 4 — строку Q-R16 и далее: решение (как делаем у себя) и почему. Обязательно строка про `issue in` вместо `issueFunction in` (мигранты меняют одно слово; страница приложения это объясняет). Если ответ на вопрос 1–3 расходится с допущениями этого плана (рекурсия включает задачи подзапроса только при достижимости по связи; «убраны» = убраны после старта и не возвращены до закрытия; `inRole`/`inGroup` = автор состоит в роли/группе, `roleLevel`/`groupLevel` = видимость), — записать Ruling с выбранным смыслом и поправить ожидания в тестах Task 8 / Task 22 / Task 25 при их исполнении.
+- [ ] **Step 6: Rulings.** Q-R9 … Q-R15 уже записаны в `atlassian/plans/2026-10-03-artup-query-v1-rulings.md` вместе со спецификацией — их не дописывать. Дописать в ту же таблицу, начиная с Q-R16: по каждому расхождению Step 4 — строку: решение (как делаем у себя) и почему. Обязательно строка про `issue in` вместо `issueFunction in` (мигранты меняют одно слово; страница приложения это объясняет). Обязательно строка по вопросам 3–4 (P-8): «как в ScriptRunner DC: `commented()` без условий = любой комментарий; `roleLevel`/`groupLevel` = видимость комментария; у `fileAttached` условие `on` сохраняется» — с цитатой и URL; если документация говорит иначе — записать её смысл и поправить каталог (Task 5) и ожидания Task 25 при их исполнении. После строк сверки — по строке на каждое решение P-1 … P-7 из раздела «Для владельца» (решение и «почему» дословно, следующие номера Q-Rn); P-8 уже записан строкой сверки по вопросам 3–4. Если ответ на вопрос 1–3 расходится с допущениями этого плана (рекурсия включает задачи подзапроса только при достижимости по связи; «убраны» = убраны после старта и не возвращены до закрытия; `inRole`/`inGroup` = автор состоит в роли/группе, `roleLevel`/`groupLevel` = видимость), — записать Ruling с выбранным смыслом и поправить ожидания в тестах Task 8 / Task 22 / Task 25 при их исполнении.
 
 - [ ] **Step 7: Commit**
 
 ```bash
 git add apps/query/docs/scriptrunner.md apps/query/test/fixtures/sr-samples.json atlassian/plans/2026-10-03-artup-query-v1-rulings.md
-git commit -m "JQL-6: Record ScriptRunner names, signatures and 20 sample filters
+git commit -m "JQL-8: Record ScriptRunner names, signatures and 20 sample filters
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -214,21 +231,21 @@ node atlassian/tools/measure-jql-jg5.mjs --phase latency --n 30 && node atlassia
 
 ```bash
 git add atlassian/tools/measure-jql-jg5.mjs atlassian/25_app5_jql.md atlassian/tools/j-g5-jqlfn/src/index.js atlassian/plans/2026-10-03-artup-query-v1-rulings.md
-git commit -m "JQL-7: Confirm zero lost updates on 150 changes with the event journal
+git commit -m "JQL-9: Confirm zero lost updates on 150 changes with the event journal
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ### Task 3: Платформа — changelog/bulkfetch, события спринтов, комментариев, вложений, контекст функции
 
-**Model:** sonnet
+**Model:** opus (шаг 2 — скрипт `scripts/live-checks.mjs`), sonnet (шаги 1, 3, 4 — документация, прогон скрипта, выводы, коммит)
 
 **Files:**
 - Create: `apps/query/scripts/live-checks.mjs`, `apps/query/docs/live-checks.md`, `apps/query/test/fixtures/events/{issue-created,issue-updated-parent,issue-updated-sprint,issue-updated-status,issue-deleted,issuelink-created,issuelink-deleted,sprint-started,sprint-closed,comment-created,comment-deleted,attachment-created}.json`, `apps/query/test/fixtures/changelog-bulkfetch.json`
 - Modify: rulings (при расхождениях)
 
 **Interfaces:**
-- Produces: `docs/live-checks.md` с разделами: «Function payload and context», «Events», «Changelog bulkfetch», «Agile sprints», «issueLinkType», «Scopes». Фикстуры событий — тела событий по документации Forge (поля, которые читает `src/core/events.js`: `eventType`, `issue.id`, `issue.fields.parent.id`, `changelog.id`, `changelog.items[].{field,fieldId,from,to}`, `issueLink.{sourceIssueId,destinationIssueId}`, `sprint.{id,state,startDate,completeDate,originBoardId}`, `comment.{id,author.accountId,created,updated,visibility}`, `attachment.{id,issueId,filename,author.accountId,created}`, `timestamp`). `changelog-bulkfetch.json` — один настоящий ответ на 3 задачи JQLG (без текста: только `issueId`, `changeHistories[].{id,created,items[].{field,fieldId,from,to}}`); Task 22 строит на нём тест.
+- Produces: `docs/live-checks.md` с разделами: «Function payload and context», «Events», «Changelog bulkfetch», «Agile sprints», «issueLinkType», «Scopes». Фикстуры событий — тела событий по документации Forge (поля, которые читает `src/core/events.js`: `eventType`, `issue.id`, `issue.fields.parent.id`, `changelog.id`, `changelog.items[].{field,fieldId,from,to}`, `issueLink.{sourceIssueId,destinationIssueId}`, `sprint.{id,state,startDate,completeDate,originBoardId}`, `comment.{id,author.accountId,created,updated,visibility}`, `attachment.{id,issueId,filename,author.accountId,created}`, `timestamp`). `changelog-bulkfetch.json` — один настоящий ответ на 3 задачи JQLG (без текста: только `issueId`, `changeHistories[].{id,created,items[].{field,fieldId,from,to}}`); Task 22 перезаписывает его тем же скриптом на засеянных задачах спринта (флаги `--keys`, `--roles`, `--sprint`, `--closed-at`) и строит на нём тест.
 
 - [ ] **Step 1: Документация (WebFetch, загрузка — `select:WebFetch`).** Страницы developer.atlassian.com:
   - `platform/forge/manifest-reference/modules/jira-jql-function/` — форма `payload` (ожидается `clause.{field,operator,arguments}`, `precomputationId`), форма ответа `{ jql }` / `{ error, storeErrorAsPrecomputation }`, есть ли `context.license` и `context.environmentType` у обработчика функции;
@@ -237,7 +254,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   Записать цитаты с URL в `docs/live-checks.md`; по ним написать фикстуры событий.
 
 - [ ] **Step 2: Скрипт `scripts/live-checks.mjs`** (базовая авторизация из `.env`, сайт `https://artuplabs-dev.atlassian.net`, только чтение; `fetch` с `AbortSignal.timeout(30000)` и повтором сетевых ошибок, 429 и 5xx до 8 раз, как `measure-jql-jg5.mjs`). Команды:
-  - `changelog` — берёт 1 001 id `project = JQLG ORDER BY id`, шлёт `changelog/bulkfetch` с 1 000 и с 1 001 id (`fieldIds: [<id поля Sprint>, "status"]`, id поля Sprint — из `GET /rest/api/3/field`, где `schema.custom === 'com.pyxis.greenhopper.jira:gh-sprint'`), печатает статус, число историй, наличие `nextPageToken`, тип `created`; затем проходит 5 000 задач и печатает секунды и число запросов (оценка для 50 000 — справочно, ворота меряет Task 20); сохраняет ответ на 3 задачи (ключи `JQLG-1…3`, тексты `fromString`/`toString` удаляются) в `test/fixtures/changelog-bulkfetch.json`;
+  - `changelog` — берёт 1 001 id `project = JQLG ORDER BY id`, шлёт `changelog/bulkfetch` с 1 000 и с 1 001 id (`fieldIds: [<id поля Sprint>, "status"]`, id поля Sprint — из `GET /rest/api/3/field`, где `schema.custom === 'com.pyxis.greenhopper.jira:gh-sprint'`), печатает статус, число историй, наличие `nextPageToken`, тип `created`; затем проходит 5 000 задач и печатает секунды и число запросов (оценка для 50 000 — справочно, ворота меряет Task 20); сохраняет ответ на 3 задачи (ключи `JQLG-1…3`, тексты `fromString`/`toString` удаляются) в `test/fixtures/changelog-bulkfetch.json`; с флагами `--keys K1,K2,K3 --roles r1,r2,r3 --sprint <id спринта> --closed-at <ms>` — только ответ на эти три задачи (`fieldIds: [<id поля Sprint>]`), и в файл рядом с `issueChangeLogs` пишутся `sprintFieldId`, `sprintId`, `closedAt` и `roles: { <issueId>: <роль> }` (роль i-й задачи — i-е слово `--roles`);
   - `linktype` — для каждого типа связи из `GET /rest/api/3/issueLinkType` считает `issueLinkType = "<outward>"` и `issueLinkType = "<inward>"` на `project in (JQLG, RPT)` и сравнивает с эталоном bulkfetch `issuelinks` по всем задачам (Q-R9): печатает `type | outward n/ref | inward n/ref`;
   - `agile` — доски сайта (`GET /rest/agile/1.0/board`), у первой scrum-доски — спринты; печатает имена полей спринта (есть ли `activatedDate`).
 
@@ -249,7 +266,7 @@ Run: `node apps/query/scripts/live-checks.mjs changelog`, затем `linktype`,
 
 ```bash
 git add apps/query/scripts/live-checks.mjs apps/query/docs/live-checks.md apps/query/test/fixtures atlassian/plans/2026-10-03-artup-query-v1-rulings.md
-git commit -m "JQL-8: Record changelog bulkfetch limits, Forge events and the JQL function context
+git commit -m "JQL-10: Record changelog bulkfetch limits, Forge events and the JQL function context
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -258,22 +275,41 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 4: Каркас приложения, оболочка Custom UI, лицензия, CI, первый деплой
 
-**Model:** sonnet
+**Model:** opus
 
 **Files:**
 - Create: `apps/query/{manifest.yml,package.json,.eslintrc,.gitignore,AGENTS.md,README.md,vitest.config.mjs}`, `apps/query/locales/*.json` (26), `apps/query/src/{index.js,access.js}`, `apps/query/src/handlers/resolvers.js`, `apps/query/resources/icon.svg`, `apps/query/test/{access.test.js,resolvers.test.js,manifestLocales.test.js,fakeKvs.js}`, `apps/query/static/app/**` (оболочка из Reports: `package.json`, `vite.config.js`, `global-page/index.html`, `admin-page/index.html`, `src/{theme.js,api.js}`, `src/i18n/index.js`, `src/i18n/locales/*.json` (26), `src/app/{GlobalApp.jsx,AdminApp.jsx,globalMain.jsx,adminMain.jsx,AccessGate.jsx,useAccess.js}`, `src/components/{AppHeader.jsx,PageLayout.jsx,icons.js}`, `src/illustrations/{AppIcon.jsx,EmptyIllustration.jsx,LockIllustration.jsx}`, `test/{setup.js,i18n.test.js,guards.test.js,smoke.test.jsx}`)
 - Modify: `.github/workflows/ci.yml`
 
 **Interfaces:**
-- Produces: `decideLicence({ environmentType, license }) → { licensed: boolean }` (`src/access.js`, копия Reports); резолвер `getAccess → { licensed, environmentType }`; `createResolverDefinitions(deps)` в `src/handlers/resolvers.js` (Task 15 и 29 добавляют ключи); UI: `I18nProvider`, `useT()`, `resolveLocale(raw)`, `call(key, payload)`, `AppError`, `bootstrap()` — копии Reports; `test/fakeKvs.js` — копия `apps/reports/test/fakeKvs.js` (`createFakeKvs({ pageSize })`).
+- Produces: `decideLicence({ environmentType, license }) → { licensed: boolean }` (`src/access.js`, копия Reports); резолвер `getAccess → { licensed, environmentType }`; `createResolverDefinitions(deps)` в `src/handlers/resolvers.js` (Task 15 и 29 добавляют ключи); UI: `I18nProvider`, `useT()`, `resolveLocale(raw)`, `call(key, payload)`, `AppError`, `bootstrap()` — копии Reports; `test/fakeKvs.js` — копия `apps/reports/test/fakeKvs.js` (`createFakeKvs({ pageSize })`); `vitest.config.mjs` с порогом покрытия ветвлений `src/core/**` ≥ 90% и скрипт `npm run coverage` (P-7).
 
 - [ ] **Step 1: Создать и зарегистрировать приложение.** Из корня репозитория:
 
 ```bash
-test ! -e apps/query && mkdir -p apps/query && cd apps/query
+test ! -e apps/query/manifest.yml && mkdir -p apps/query && cd apps/query
 set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
-cp ../reports/{.eslintrc,vitest.config.mjs,AGENTS.md} .
+cp ../reports/{.eslintrc,AGENTS.md} .
 mkdir -p test && cp ../reports/test/fakeKvs.js test/
+```
+
+Каталог `apps/query` уже есть (Tasks 1 и 3 создали `docs/`, `scripts/`, `test/fixtures/`), поэтому признак готового каркаса — `manifest.yml`, а не каталог; если `manifest.yml` уже есть, цепочка останавливается до `cd`, и каркас не пересоздаётся. `vitest.config.mjs` — не копия Reports, а с покрытием (P-7):
+
+```js
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    include: ['test/**/*.test.js'],
+    environment: 'node',
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.js'],
+      reporter: ['text-summary'],
+      thresholds: { 'src/core/**': { branches: 90 } },
+    },
+  },
+});
 ```
 
 Записать манифест Step 4 с `id: placeholder`, затем `forge register -s 249db86b-0aa6-4b81-96ba-62341736ad15 --accept-terms "ArtUp Query"` (перепишет `app.id`). В `AGENTS.md` заменить «Reports» на «Query», убрать абзац про экспорт.
@@ -410,7 +446,7 @@ app:
 
 Остальные 25 файлов — настоящий перевод второго ключа (ru-RU: «Настройки ArtUp Query»), первый не переводится. `resources/icon.svg` — копия `apps/reports/resources/icon.svg` (перекраска — Task 33).
 
-- [ ] **Step 5: `package.json`** — копия `apps/reports/package.json`, `"name": "artuplabs-query"`, зависимости ровно: `"@forge/api": "8.2.0"`, `"@forge/kvs": "2.0.7"`, `"@forge/events": "3.0.7"`, `"@forge/sql": "4.0.7"`, `"@forge/resolver": "2.0.0"`; devDependencies `"eslint": "8.57.1"`, `"vitest": "5.0.2"`, `"yaml": "2.9.1"`; скрипты как в Reports без `screenshots`. `.gitignore`: `node_modules/`, `static/app/dist/`, `static/app/screenshots/`, `data/`, `.env`. `npm install`.
+- [ ] **Step 5: `package.json`** — копия `apps/reports/package.json`, `"name": "artuplabs-query"`, зависимости ровно: `"@forge/api": "8.2.0"`, `"@forge/kvs": "2.0.7"`, `"@forge/events": "3.0.7"`, `"@forge/sql": "4.0.7"`, `"@forge/resolver": "2.0.0"`; devDependencies `"eslint": "8.57.1"`, `"vitest": "5.0.2"`, `"@vitest/coverage-v8": "5.0.2"`, `"yaml": "2.9.1"`; скрипты как в Reports без `screenshots`, плюс `"coverage": "vitest run --coverage"` (первый прогон с порогом — Task 5, когда появляется `src/core`). `.gitignore`: `node_modules/`, `static/app/dist/`, `static/app/screenshots/`, `data/`, `.env`. `npm install`.
 
 - [ ] **Step 6: Оболочка UI.** Скопировать из `apps/reports/static/app` и переименовать:
   - `package.json` → `"name": "artuplabs-query-ui"`, `build`: `vite build --mode global-page && vite build --mode admin-page`; зависимости — только Atlaskit-пакеты Reports, `@forge/bridge`, `react`, `react-dom`, `lodash` (без exceljs, docx, pdfmake, docxtemplater, pizzip, без `overrides`); devDependencies как в Reports без `pdfjs-dist`;
@@ -459,7 +495,7 @@ Expected: деплой и установка успешны (если «already 
 
 ```bash
 git add apps/query .github/workflows/ci.yml
-git commit -m "JQL-9: Scaffold ArtUp Query with the licence resolver, the Custom UI shell and CI
+git commit -m "JQL-11: Scaffold ArtUp Query with the licence resolver, the Custom UI shell and CI
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -469,13 +505,15 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Model:** opus
 
 **Files:**
-- Create: `apps/query/src/core/{limits.js,errors.js,catalog.js,args.js}`
-- Test: `apps/query/test/core/{catalog.test.js,args.test.js}`
+- Create: `apps/query/src/core/{limits.js,errors.js,catalog.js,args.js}`, `apps/query/test/guards.test.js`
+- Modify: `.github/workflows/ci.yml` (шаг тестов блока Query — `npm run coverage`)
+- Test: `apps/query/test/core/{catalog.test.js,args.test.js}`, `apps/query/test/guards.test.js`
 
 **Interfaces:**
 - Produces:
-  - `limits.js`: `VALUE_LIMIT=1000`, `TREE_FANOUT=9`, `TREE_LEVELS=1`, `ID_PAGE=5000`, `BULK_BATCH=100`, `BULK_CONCURRENCY=8`, `CACHE_CHUNK=5000`, `PAGE_CACHE_MS`, `FUNCTION_BUDGET_MS=20000`, `WORKER_BUDGET_MS=240000`, `LEASE_MS=90000`, `PENDING_STALE_MS`, `JOURNAL_PAGE=100`, `MAX_TOUCHED=50`, `VERIFY_DELAY_S=20`, `ACTIVE_MS` (7 дней), `RECONCILE_USED_MS` (24 ч), `RECONCILE_STALE_MS` (1 ч), `RECONCILE_MAX_GROUPS=50`, `MAX_DEPTH=10`, `PRECOMPUTATION_BATCH=50`, `REQUEST_ATTEMPTS=6`, `CHANGELOG_BATCH` (из Task 3), `ERROR_LOG_SIZE=20`, `COUNT_MAX=10000`.
-  - `errors.js`: `ERR.{unlicensed(), computing(), indexBuilding(done,total), notFound(what,value), ambiguous(what,value,count), tooMany(count,capacity), excluded(key), perUser(word)}` → string.
+  - `limits.js`: `VALUE_LIMIT=1000`, `TREE_FANOUT=9`, `TREE_LEVELS=1`, `ID_PAGE=5000`, `BULK_BATCH=100`, `BULK_CONCURRENCY=8`, `CACHE_CHUNK=5000`, `PAGE_CACHE_MS`, `FUNCTION_BUDGET_MS=20000`, `WORKER_BUDGET_MS=240000`, `LEASE_MS=90000`, `PENDING_STALE_MS`, `JOURNAL_PAGE=100`, `MAX_TOUCHED=50`, `VERIFY_DELAY_S=20`, `ACTIVE_MS` (7 дней), `RECONCILE_USED_MS` (24 ч), `RECONCILE_STALE_MS` (1 ч), `RECONCILE_MAX_GROUPS=50`, `MAX_DEPTH=10`, `PRECOMPUTATION_BATCH=50`, `REQUEST_ATTEMPTS=6`, `RETRY_BASE_MS=300`, `LIST_PAGE=50`, `PRECOMPUTATION_PAGE=100`, `USER_SEARCH_MAX=50`, `CHANGELOG_BATCH` (из Task 3), `CHANGELOG_PAGE=10000`, `REFRESH_CONCURRENCY=4`, `ERROR_LOG_SIZE=20`, `COUNT_MAX=10000`. `FUNCTION_BUDGET_MS` — внутренний бюджет 20 с под предел платформы 25 с (P-4). Пределы индекса (`SQL_IN_CHUNK`, `SPRINT_FIELDS_TTL_MS`, `RECONCILE_RECENT_MAX`, `COMMENT_PAGE`) и админ-страницы (`EXCLUDED_MAX`) дописывают Tasks 23, 27, 29.
+  - `errors.js`: `ERR.{unlicensed(), computing(), indexBuilding(done,total), notFound(what,value), ambiguous(what,value,count), tooMany(count,capacity), excluded(key), perUser(word), withFunction(functionName, message)}` → string; `withFunction` — приставка `<имя>: ` для ошибок, которые слои `compute`/`handlers` получают от разборщиков или от Jira.
+  - `test/guards.test.js`: в `src/**` нет `//` внутри функций и упоминаний задач/плана/спецификации/rulings; в `src/core/**` нет `Date.now()` и `new Date()` без аргумента.
   - `catalog.js`: `FUNCTIONS: Fn[]`, `FUNCTION_BY_NAME: Map<string, Fn>`, `SHIPPED_GROUPS: string[]`, `shippedFunctions() → Fn[]`, `usage(fn) → string`; `Fn = { name, key, group: 'query'|'site'|'board'|'sprint'|'comment'|'attachment'|'fields', family: 'query'|'links'|'subtasks'|'board'|'sprint'|'comment'|'attachment', args: Arg[], examples: string[] }`, `Arg = { name, type: 'jql'|'text'|'int'|'clauses'|'ext', required, min?, max? }`.
   - `args.js`: `pageToken(page) → string`, `pageOf(token) → Page|null`, `splitPage(raw) → { userArgs: string[], page: Page|null }`, `groupKey(functionName, userArgs) → string`, `parseArgs(functionName, raw) → { args: object, userArgs: string[], page: Page|null } | { error: string }`; `Page = { kind: 'leaf'|'mid', index: number }`.
 
@@ -575,7 +613,35 @@ describe('parseArgs', () => {
 });
 ```
 
-- [ ] **Step 2: Run** `npx vitest run test/core` → FAIL (модулей нет).
+`test/guards.test.js` (серверный код; UI проверяет `static/app/test/guards.test.js` Task 4):
+
+```js
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+const SRC = new URL('../src', import.meta.url).pathname;
+const files = (dir) => readdirSync(dir).flatMap((name) => {
+  const path = join(dir, name);
+  return statSync(path).isDirectory() ? files(path) : [path];
+});
+const code = files(SRC).filter((f) => f.endsWith('.js'));
+const text = (f) => readFileSync(f, 'utf8');
+
+describe('server source guards', () => {
+  it('has no comments inside function bodies', () => {
+    expect(code.filter((f) => /^\s+\/\/(?!\s*eslint)/m.test(text(f)))).toEqual([]);
+  });
+  it('keeps the core free of the clock', () => {
+    expect(code.filter((f) => f.includes('/src/core/') && /\bDate\.now\(|\bnew Date\(\s*\)/.test(text(f)))).toEqual([]);
+  });
+  it('never mentions tasks, the plan, the specification or rulings', () => {
+    expect(code.filter((f) => /\bTask \d|\bplan\b|\bspecification\b|\brulings?\b|\bQ-R\d/i.test(text(f)))).toEqual([]);
+  });
+});
+```
+
+- [ ] **Step 2: Run** `npx vitest run test/core test/guards.test.js` → FAIL (модулей нет; guard-тест проходит уже на коде Task 4 — если нет, поправить скопированные файлы).
 
 - [ ] **Step 3: `src/core/limits.js`**
 
@@ -591,6 +657,7 @@ export const BULK_BATCH = 100;
 export const BULK_CONCURRENCY = 8;
 export const CACHE_CHUNK = 5000;
 export const PAGE_CACHE_MS = 10 * 60 * 1000;
+/** Compute budget of one function call: 20 s under the platform's 25 s, leaving time to queue the job and log. */
 export const FUNCTION_BUDGET_MS = 20 * 1000;
 export const WORKER_BUDGET_MS = 240 * 1000;
 export const LEASE_MS = 90 * 1000;
@@ -605,7 +672,17 @@ export const RECONCILE_MAX_GROUPS = 50;
 export const MAX_DEPTH = 10;
 export const PRECOMPUTATION_BATCH = 50;
 export const REQUEST_ATTEMPTS = 6;
+/** First backoff step of a retried Jira request; it doubles per attempt. */
+export const RETRY_BASE_MS = 300;
+/** Page size of Jira lists read with startAt (boards, sprints, projects, group members). */
+export const LIST_PAGE = 50;
+export const PRECOMPUTATION_PAGE = 100;
+export const USER_SEARCH_MAX = 50;
 export const CHANGELOG_BATCH = 1000;
+/** Change histories per changelog bulkfetch page. */
+export const CHANGELOG_PAGE = 10000;
+/** Groups recomputed in parallel by one refresh or reconcile pass. */
+export const REFRESH_CONCURRENCY = 4;
 export const ERROR_LOG_SIZE = 20;
 export const COUNT_MAX = 10000;
 ```
@@ -627,18 +704,21 @@ export const ERR = {
   tooMany: (count, capacity) => `The result needs ${fmt(count)} issues; one function returns at most ${fmt(capacity)}. Narrow the subquery.`,
   excluded: (key) => `Project ${key} is excluded from the ArtUp Query index`,
   perUser: (word) => `${word} is not supported: results are shared by all users`,
+  withFunction: (functionName, message) => `${functionName}: ${message}`,
 };
 ```
 
 - [ ] **Step 5: `src/core/catalog.js`**
 
 ```js
+import { COUNT_MAX, MAX_DEPTH } from './limits.js';
+
 const SUBQUERY = { name: 'subquery', type: 'jql', required: true };
 const LINK_TYPE = { name: 'linkType', type: 'text', required: false };
 const BOARD = { name: 'board', type: 'text', required: true };
 const SPRINT = { name: 'sprint', type: 'text', required: true };
 const SPRINT_OPTIONAL = { ...SPRINT, required: false };
-const DEPTH = { name: 'depth', type: 'int', required: false, min: 1, max: 10 };
+const DEPTH = { name: 'depth', type: 'int', required: false, min: 1, max: MAX_DEPTH };
 const CLAUSES = { name: 'clauses', type: 'clauses', required: false };
 const EXPRESSION = { name: 'expression', type: 'text', required: true };
 
@@ -665,7 +745,7 @@ export const FUNCTIONS = [
   fn('completeInSprint', 'complete-in-sprint', 'sprint', 'sprint', [BOARD, SPRINT], ['issue in completeInSprint("DEMO board", "DEMO Sprint 6")']),
   fn('commented', 'commented', 'comment', 'comment', [CLAUSES], ['issue in commented("after -7d inRole Developers")']),
   fn('lastComment', 'last-comment', 'comment', 'comment', [{ ...CLAUSES, required: true }], ['issue in lastComment("before -14d")']),
-  fn('hasComments', 'has-comments', 'comment', 'comment', [{ name: 'count', type: 'int', required: false, min: 1, max: 10000 }], ['issue in hasComments("5")']),
+  fn('hasComments', 'has-comments', 'comment', 'comment', [{ name: 'count', type: 'int', required: false, min: 1, max: COUNT_MAX }], ['issue in hasComments("5")']),
   fn('fileAttached', 'file-attached', 'attachment', 'attachment', [CLAUSES], ['issue in fileAttached("after startOfWeek() ext pdf")']),
   fn('hasAttachments', 'has-attachments', 'attachment', 'attachment', [{ name: 'extension', type: 'ext', required: false }], ['issue in hasAttachments("xlsx")']),
   fn('dateCompare', 'date-compare', 'fields', 'query', [SUBQUERY, EXPRESSION], ['issue in dateCompare("project = DEMO", "resolutiondate > duedate")']),
@@ -746,20 +826,20 @@ export function parseArgs(functionName, raw) {
   const args = {};
   for (let i = 0; i < userArgs.length; i += 1) {
     const r = parseOne(f.args[i], userArgs[i]);
-    if (r.error) return { error: `${f.name}: ${r.error}` };
+    if (r.error) return { error: ERR.withFunction(f.name, r.error) };
     args[f.args[i].name] = r.value;
   }
   return { args, userArgs, page };
 }
 ```
 
-- [ ] **Step 7: Run** `npx vitest run test/core` → PASS; `npm run lint` → 0 ошибок.
+- [ ] **Step 7: Run** `npx vitest run test/core test/guards.test.js` → PASS; `npm run coverage` → PASS (ветви `src/core/**` ≥ 90%; если ниже — дописать тесты на непокрытые ветви, порог не снижать); `npm run lint` → 0 ошибок. В `.github/workflows/ci.yml` в блоке Query шаг `npm test` заменить на `npm run coverage`.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add apps/query/src/core apps/query/test/core
-git commit -m "JQL-10: Add the function catalog, limits, error texts and argument parsing
+git add apps/query/src/core apps/query/test/core apps/query/test/guards.test.js .github/workflows/ci.yml
+git commit -m "JQL-12: Add the function catalog, limits, error texts and argument parsing
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -936,13 +1016,13 @@ export function buildFragment({ functionName, userArgs, page, values, field, roo
 }
 ```
 
-- [ ] **Step 5: Run** `npx vitest run test/core` → PASS; `npm run lint` → 0 ошибок.
+- [ ] **Step 5: Run** `npx vitest run test/core` → PASS; `npm run coverage` → PASS (порог ветвлений `src/core/**`); `npm run lint` → 0 ошибок.
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add apps/query/src/core apps/query/test/core
-git commit -m "JQL-11: Build stored JQL with a tree of page calls over 1 000 values
+git commit -m "JQL-13: Build stored JQL with a tree of page calls over 1 000 values
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -952,16 +1032,34 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Model:** opus
 
 **Files:**
-- Create: `apps/query/src/core/{events.js,affected.js}`
-- Test: `apps/query/test/core/{events.test.js,affected.test.js}`
+- Create: `apps/query/src/core/{ids.js,events.js,affected.js}`
+- Test: `apps/query/test/core/{ids.test.js,events.test.js,affected.test.js}`
 
 **Interfaces:**
 - Consumes: `FUNCTION_BY_NAME` (Task 5), `splitPage`, `groupKey` (Task 5), `JOURNAL_PAGE`, `MAX_TOUCHED`, фикстуры `test/fixtures/events/*.json` (Task 3).
 - Produces:
+  - `ids.js` (общий помощник ядра, `compute` и `infra` — одна реализация вместо копий в каждом модуле): `byNumber(a, b) → number` (сравнение id-строк как чисел), `sortIds(ids: Iterable) → string[]` (без повторов, строки, по возрастанию числа).
   - `events.js`: `eventRecord(event) → { ids: string[], kinds: Kind[] }`; `Kind = 'issue-created'|'issue-updated'|'issue-deleted'|'parent'|'sprint-field'|'status'|'link'|'sprint'|'comment'|'attachment'|'unknown'`.
   - `affected.js`: `summarizeJournal(rows, { page, maxTouched }) → { touched: string[], kinds: Kind[], all: boolean, firstAt: number|null }` (`rows = [{ key: 't:<ts15>:<rand>', value: { ids, kinds } }]`); `groupPrecomputations(pcs, { now, activeMs }) → Group[]`, `Group = { key, functionName, family, userArgs, items: Pc[] }`, `Pc = { id, functionName, arguments, value?, error?, used?, created?, updated? }`; `familyWants(family, kinds) → boolean`; `queryOverlap({ touched, watch: Set|null, liveHits: string[]|null }) → boolean`; `isTimeRelative(userArgs) → boolean`; `reconcileTargets(groups, { now, usedMs, staleMs, max }) → Group[]`.
 
-- [ ] **Step 1: Падающие тесты.** `test/core/events.test.js`:
+- [ ] **Step 1: Падающие тесты.** `test/core/ids.test.js`:
+
+```js
+import { describe, expect, it } from 'vitest';
+import { byNumber, sortIds } from '../../src/core/ids.js';
+
+describe('ids', () => {
+  it('orders id strings by number', () => {
+    expect(['10', '9', '100'].sort(byNumber)).toEqual(['9', '10', '100']);
+  });
+  it('drops duplicates and turns numbers into strings', () => {
+    expect(sortIds([3, '1', '3', 2])).toEqual(['1', '2', '3']);
+    expect(sortIds(new Set(['20', '3']))).toEqual(['3', '20']);
+  });
+});
+```
+
+`test/core/events.test.js`:
 
 ```js
 import { readFileSync, readdirSync } from 'node:fs';
@@ -1102,11 +1200,25 @@ describe('isTimeRelative', () => {
 });
 ```
 
-- [ ] **Step 2: Run** `npx vitest run test/core/events.test.js test/core/affected.test.js` → FAIL.
+- [ ] **Step 2: Run** `npx vitest run test/core/ids.test.js test/core/events.test.js test/core/affected.test.js` → FAIL.
 
-- [ ] **Step 3: `src/core/events.js`**
+- [ ] **Step 3: `src/core/ids.js` и `src/core/events.js`.** `src/core/ids.js`:
 
 ```js
+/** Comparator of numeric id strings. */
+export const byNumber = (a, b) => Number(a) - Number(b);
+
+/** Distinct ids as strings, in ascending numeric order. */
+export function sortIds(ids) {
+  return [...new Set([...ids].map(String))].sort(byNumber);
+}
+```
+
+`src/core/events.js`:
+
+```js
+import { sortIds } from './ids.js';
+
 const PARENT_FIELDS = new Set(['IssueParentAssociation', 'parent', 'Parent', 'Epic Link']);
 const NUMERIC = /^\d+$/;
 
@@ -1143,7 +1255,7 @@ export function eventRecord(event) {
     kinds.add('attachment');
     add(event?.attachment?.issueId);
   } else kinds.add('unknown');
-  return { ids: [...ids].sort((a, b) => Number(a) - Number(b)), kinds: [...kinds].sort() };
+  return { ids: sortIds(ids), kinds: [...kinds].sort() };
 }
 ```
 
@@ -1153,6 +1265,7 @@ export function eventRecord(event) {
 import { JOURNAL_PAGE, MAX_TOUCHED } from './limits.js';
 import { FUNCTION_BY_NAME } from './catalog.js';
 import { groupKey, splitPage } from './args.js';
+import { sortIds } from './ids.js';
 
 const FAMILY_KINDS = {
   query: [],
@@ -1176,7 +1289,7 @@ export function summarizeJournal(rows, { page = JOURNAL_PAGE, maxTouched = MAX_T
     for (const id of row.value?.ids ?? []) ids.add(String(id));
     for (const kind of row.value?.kinds ?? ['unknown']) kinds.add(kind);
   }
-  const touched = [...ids].sort((a, b) => Number(a) - Number(b));
+  const touched = sortIds(ids);
   const all = rows.length >= page || kinds.has('unknown') || touched.length > maxTouched;
   return { touched, kinds: [...kinds].sort(), all, firstAt };
 }
@@ -1227,13 +1340,13 @@ export function reconcileTargets(groups, { now, usedMs, staleMs, max }) {
 
 В тесте «picks groups…» ожидаемый порядок `[stale, clock]` совпадает с сортировкой по времени записи (2 ч назад раньше 10 мин назад).
 
-- [ ] **Step 5: Run** `npx vitest run test/core` → PASS. Если фикстура Task 3 даёт `unknown` — сверить имя события с `docs/live-checks.md` и поправить ветку в `eventRecord` (имена событий — из документации, не из догадки).
+- [ ] **Step 5: Run** `npx vitest run test/core` → PASS; `npm run coverage` → PASS (порог ветвлений `src/core/**`). Если фикстура Task 3 даёт `unknown` — сверить имя события с `docs/live-checks.md` и поправить ветку в `eventRecord` (имена событий — из документации, не из догадки).
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add apps/query/src/core apps/query/test/core
-git commit -m "JQL-12: Map product events to touched issues and decide which results go stale
+git commit -m "JQL-14: Map product events to touched issues and decide which results go stale
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -1247,7 +1360,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Test: `apps/query/test/core/{links.test.js,hierarchy.test.js,boards.test.js}`
 
 **Interfaces:**
-- Consumes: `MAX_DEPTH`, `ERR`, `quote` (Tasks 5, 6).
+- Consumes: `MAX_DEPTH`, `ERR`, `quote` (Tasks 5, 6), `sortIds` (Task 7).
 - Produces:
   - `links.js`: `matchLinkType(types, arg|undefined) → { filter: LinkFilter|null } | { error }`, `LinkFilter = { typeId: string, direction: 'any'|'outward'|'inward' }`; `linkedIds(issuelinks, filter) → string[]`; `hasLinksJql(types, filter) → string`; `closure(starts, depth, neighboursOf) → Promise<string[]>` (`neighboursOf(ids) → Promise<Map<string, string[]>>`).
   - `hierarchy.js`: `nodesFrom(issues, nodes = new Map()) → Map<string, Node>`, `Node = { id, parentId: string|null|undefined, level: number, loaded: boolean }`; `parentIds(ids, nodes) → string[]`; `epicOf(id, nodes) → string|null|undefined`; `unresolvedParents(ids, nodes) → string[]`; `descendantParents(starts, depth, childrenOf) → Promise<{ parents: string[], seen: string[] }>` (`childrenOf(ids) → Promise<Map<string, string[]>>`).
@@ -1440,9 +1553,9 @@ describe('sprints', () => {
 import { MAX_DEPTH } from './limits.js';
 import { ERR } from './errors.js';
 import { quote } from './jql-build.js';
+import { sortIds } from './ids.js';
 
 const norm = (s) => String(s ?? '').trim().toLowerCase();
-const byNumber = (a, b) => Number(a) - Number(b);
 
 /** Link type argument (type name or direction description) → filter, null for every link, or `{ error }`. */
 export function matchLinkType(types, arg) {
@@ -1502,7 +1615,7 @@ export async function closure(starts, depth, neighboursOf) {
     }
     frontier = [...next];
   }
-  return [...reached].sort(byNumber);
+  return sortIds(reached);
 }
 ```
 
@@ -1512,8 +1625,7 @@ export async function closure(starts, depth, neighboursOf) {
 
 ```js
 import { MAX_DEPTH } from './limits.js';
-
-const byNumber = (a, b) => Number(a) - Number(b);
+import { sortIds } from './ids.js';
 
 /** Nodes from bulkfetched issues (fields parent, issuetype): each issue, and a stub of its parent if not loaded. */
 export function nodesFrom(issues, nodes = new Map()) {
@@ -1529,7 +1641,7 @@ export function nodesFrom(issues, nodes = new Map()) {
 
 /** Distinct direct parents of the issues. */
 export function parentIds(ids, nodes) {
-  return [...new Set(ids.map((id) => nodes.get(String(id))?.parentId).filter(Boolean))].sort(byNumber);
+  return sortIds(ids.map((id) => nodes.get(String(id))?.parentId).filter(Boolean));
 }
 
 /** Epic (level 1) above an issue: its id, null when there is none, undefined when a parent must be loaded first. */
@@ -1557,7 +1669,7 @@ export function unresolvedParents(ids, nodes) {
     while (node?.loaded && node.parentId) node = nodes.get(node.parentId);
     if (node && !node.loaded) out.add(node.id);
   }
-  return [...out].sort(byNumber);
+  return sortIds(out);
 }
 
 /** Parents whose children are the descendants of the starts within depth: `parent in (these)` returns levels 1..depth. */
@@ -1579,7 +1691,7 @@ export async function descendantParents(starts, depth, childrenOf) {
     }
     frontier = next;
   }
-  return { parents: [...parents].sort(byNumber), seen: [...seen].sort(byNumber) };
+  return { parents: sortIds(parents), seen: sortIds(seen) };
 }
 ```
 
@@ -1632,13 +1744,13 @@ export function nextFuture(sprints) {
 
 Поле старта (`activatedDate` или `startDate`) — по выводу (б) Task 3; если `activatedDate` в ответе Agile нет, `sprintWindow` всё равно берёт `startDate`.
 
-- [ ] **Step 6: Run** `npx vitest run test/core` → PASS; `npm run lint` → 0 ошибок.
+- [ ] **Step 6: Run** `npx vitest run test/core` → PASS; `npm run coverage` → PASS (порог ветвлений `src/core/**`); `npm run lint` → 0 ошибок.
 
 - [ ] **Step 7: Commit**
 
 ```bash
 git add apps/query/src/core apps/query/test/core
-git commit -m "JQL-13: Add pure link, hierarchy, board and sprint helpers
+git commit -m "JQL-15: Add pure link, hierarchy, board and sprint helpers
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -1652,7 +1764,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Test: `apps/query/test/infra/jira.test.js`
 
 **Interfaces:**
-- Consumes: `ID_PAGE`, `BULK_BATCH`, `BULK_CONCURRENCY`, `CHANGELOG_BATCH`, `PRECOMPUTATION_BATCH`, `REQUEST_ATTEMPTS` (Task 5).
+- Consumes: `ID_PAGE`, `BULK_BATCH`, `BULK_CONCURRENCY`, `CHANGELOG_BATCH`, `CHANGELOG_PAGE`, `PRECOMPUTATION_BATCH`, `PRECOMPUTATION_PAGE`, `REQUEST_ATTEMPTS`, `RETRY_BASE_MS`, `LIST_PAGE`, `USER_SEARCH_MAX`, `MAX_TOUCHED` (Task 5); чисел в коде клиента нет — только эти пределы.
 - Produces:
   - `pool(items, concurrency, task) → Promise<results[]>` (порядок сохраняется).
   - `class JiraError extends Error { name: 'JiraError', status: number }` — ответ, который повтор не исправит.
@@ -1771,7 +1883,10 @@ export async function pool(items, concurrency, task) {
 
 ```js
 import api, { assumeTrustedRoute } from '@forge/api';
-import { BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, ID_PAGE, PRECOMPUTATION_BATCH, REQUEST_ATTEMPTS } from '../core/limits.js';
+import {
+  BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, LIST_PAGE, MAX_TOUCHED, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
+  REQUEST_ATTEMPTS, RETRY_BASE_MS, USER_SEARCH_MAX,
+} from '../core/limits.js';
 import { pool } from './pool.js';
 
 /** Jira answered with an error that a retry will not fix. */
@@ -1805,7 +1920,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS 
       const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
       const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
       if ((res.status === 429 || res.status >= 500) && attempt < attempts) {
-        await sleep(Number(res.headers.get('retry-after')) * 1000 || 300 * 2 ** attempt);
+        await sleep(Number(res.headers.get('retry-after')) * 1000 || RETRY_BASE_MS * 2 ** attempt);
         continue;
       }
       const raw = await res.text();
@@ -1814,7 +1929,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS 
     }
   }
 
-  async function paged(path, size = 50) {
+  async function paged(path, size = LIST_PAGE) {
     const out = [];
     let startAt = 0;
     for (;;) {
@@ -1834,7 +1949,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS 
         jql,
         fields: ['id'],
         maxResults: ID_PAGE,
-        ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, 50).map(Number) } : {}),
+        ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, MAX_TOUCHED).map(Number) } : {}),
         ...(nextPageToken ? { nextPageToken } : {}),
       });
       out.push(...(page.issues ?? []).map((x) => String(x.id)));
@@ -1866,7 +1981,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS 
     for (const chunk of chunks(ids, CHANGELOG_BATCH)) {
       let nextPageToken;
       do {
-        const page = await call('POST', '/rest/api/3/changelog/bulkfetch', { issueIdsOrKeys: chunk, fieldIds, maxResults: 10000, ...(nextPageToken ? { nextPageToken } : {}) });
+        const page = await call('POST', '/rest/api/3/changelog/bulkfetch', { issueIdsOrKeys: chunk, fieldIds, maxResults: CHANGELOG_PAGE, ...(nextPageToken ? { nextPageToken } : {}) });
         for (const log of page?.issueChangeLogs ?? []) {
           const key = String(log.issueId);
           out.set(key, [...(out.get(key) ?? []), ...(log.changeHistories ?? [])]);
@@ -1905,11 +2020,11 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS 
     statusCategories: async () => new Map(((await call('GET', '/rest/api/3/status')) ?? []).map((s) => [String(s.id), s.statusCategory?.key ?? 'new'])),
     allBoards: () => paged('/rest/agile/1.0/board'),
     sprints: (boardId) => paged(`/rest/agile/1.0/board/${enc(boardId)}/sprint?state=active,closed,future`),
-    precomputations: () => paged('/rest/api/3/jql/function/computation', 100),
+    precomputations: () => paged('/rest/api/3/jql/function/computation', PRECOMPUTATION_PAGE),
     writePrecomputations: async (updates) => {
       for (const batch of chunks(updates, PRECOMPUTATION_BATCH)) await call('POST', '/rest/api/3/jql/function/computation?skipNotFoundPrecomputations=true', { values: batch });
     },
-    userIds: async (query) => ((await call('GET', `/rest/api/3/user/search?query=${enc(query)}&maxResults=50`)) ?? []).map((u) => u.accountId),
+    userIds: async (query) => ((await call('GET', `/rest/api/3/user/search?query=${enc(query)}&maxResults=${USER_SEARCH_MAX}`)) ?? []).map((u) => u.accountId),
     approximateCount: async (jql) => (await call('POST', '/rest/api/3/search/approximate-count', { jql }))?.count ?? 0,
   };
 }
@@ -1924,7 +2039,7 @@ export const appJira = () => createJira((path, init) => api.asApp().requestJira(
 
 ```bash
 git add apps/query/src/infra apps/query/test/infra
-git commit -m "JQL-14: Add the app Jira client with retries, paging and batched reads
+git commit -m "JQL-16: Add the app Jira client with retries, paging and batched reads
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -1941,7 +2056,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: `test/fakeKvs.js` (Task 4), `CACHE_CHUNK`, `ERROR_LOG_SIZE`, `PAGE_CACHE_MS` (Task 5).
 - Produces:
   - `createJournal({ kvs, beginsWith, random }) → { append(record, ts), read(limit) → [{ key, value }], remove(keys) }`; ключ `t:<ts, 15 цифр>:<rand>`.
-  - `createValueCache({ kvs, hash }) → { meta(key) → Meta|null, values(key, meta, from, to) → string[], watch(key) → Set|null, write(key, { values, watch, field, rootFilter, at, source }) }`; `Meta = { at, n, nw: number|null, field, rootFilter: string|null, source: 'function'|'refresh'|'job' }`.
+  - `createValueCache({ kvs, hash }) → { meta(key) → Meta|null, values(key, meta, from, to) → string[], watch(key) → Set|null, write(key, { values, watch, field, rootFilter, at, source }) }`; `Meta = { at, n, nw: number|null, field, rootFilter: string|null, source: 'function'|'refresh'|'job' }`; `key` — `groupKey` группы (корень и все её страницы читают один набор значений), в KVS — `v:<sha1(groupKey)>:{m,c<i>,w<i>}`, а не `v:<pcId>:<chunk>` §3 (P-5).
   - `createState({ kvs }) → { pending, lease, lastWrittenStart, lastRefresh: { get(), set(v), clear() }, progress: { get() → { sprint?, comments? }|null, getPart(part), setPart(part, value), clearPart(part) }, excluded() → string[], setExcluded(keys), recordError(entry), errors() → entry[], addJob(job), jobs(now) → job[] }`; `job = { key, functionName, userArgs, at }`; прогресс каждой части индекса — свой ключ `idx:progress:<part>`, чтобы заполнение двух частей не затирало друг друга.
   - `createQueueClient(queue) → { push(body, delayInSeconds?) }`.
 
@@ -2182,7 +2297,7 @@ export function createQueueClient(queue) {
 
 ```bash
 git add apps/query/src/infra apps/query/test/infra
-git commit -m "JQL-15: Add the event journal, the value cache and refresh state in KVS
+git commit -m "JQL-17: Add the event journal, the value cache and refresh state in KVS
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -2196,7 +2311,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Test: `apps/query/test/compute/hierarchy.test.js`
 
 **Interfaces:**
-- Consumes: `Jira.searchIds`, `Jira.bulkIssues` (Task 9); `nodesFrom`, `parentIds`, `epicOf`, `unresolvedParents`, `descendantParents` (Task 8); `VALUE_LIMIT`, `MAX_DEPTH`.
+- Consumes: `Jira.searchIds`, `Jira.bulkIssues` (Task 9); `nodesFrom`, `parentIds`, `epicOf`, `unresolvedParents`, `descendantParents` (Task 8); `sortIds` (Task 7); `VALUE_LIMIT`, `MAX_DEPTH`.
 - Produces:
   - Контракт источника значений (общий для `src/compute/*`): `(args, { reconcile: string[] }) → Promise<Result>`, `Result = { ids: string[] (по возрастанию числа), field: 'id'|'parent', rootFilter?: string, watch: string[]|null } | { native: string } | { error: string }`; `watch` — id, чья правка может изменить результат (null — не отслеживается, решает семейство).
   - `createHierarchyCompute({ jira }) → { subtasksOf, parentsOf, epicsOf, issuesInEpics, childIssuesOf, hasSubtasks }`; `SUBTASK_FILTER = 'issuetype in subTaskIssueTypes()'`.
@@ -2314,11 +2429,10 @@ describe('hierarchy compute', () => {
 ```js
 import { MAX_DEPTH, VALUE_LIMIT } from '../core/limits.js';
 import { descendantParents, epicOf, nodesFrom, parentIds, unresolvedParents } from '../core/hierarchy.js';
+import { sortIds } from '../core/ids.js';
 
 /** Root filter of subtasksOf. */
 export const SUBTASK_FILTER = 'issuetype in subTaskIssueTypes()';
-
-const sorted = (ids) => [...new Set(ids.map(String))].sort((a, b) => Number(a) - Number(b));
 
 /** Value sources of the hierarchy functions and hasSubtasks. */
 export function createHierarchyCompute({ jira }) {
@@ -2348,7 +2462,7 @@ export function createHierarchyCompute({ jira }) {
       const ids = await inner(subquery, reconcile);
       let parents = ids;
       if (ids.length > VALUE_LIMIT) parents = (await jira.bulkIssues(ids, ['subtasks'])).filter((x) => x.fields?.subtasks?.length).map((x) => x.id);
-      return { ids: sorted(parents), field: 'parent', rootFilter: SUBTASK_FILTER, watch: ids };
+      return { ids: sortIds(parents), field: 'parent', rootFilter: SUBTASK_FILTER, watch: ids };
     },
     async parentsOf({ subquery }, { reconcile }) {
       const ids = await inner(subquery, reconcile);
@@ -2357,12 +2471,12 @@ export function createHierarchyCompute({ jira }) {
     async epicsOf({ subquery }, { reconcile }) {
       const ids = await inner(subquery, reconcile);
       const nodes = await loadNodes(ids);
-      return { ids: sorted(ids.map((id) => epicOf(id, nodes)).filter(Boolean)), field: 'id', watch: sorted([...ids, ...nodes.keys()]) };
+      return { ids: sortIds(ids.map((id) => epicOf(id, nodes)).filter(Boolean)), field: 'id', watch: sortIds([...ids, ...nodes.keys()]) };
     },
     async issuesInEpics({ subquery }, { reconcile }) {
       const ids = await inner(subquery, reconcile);
       const epics = (await jira.bulkIssues(ids, ['issuetype'])).filter((x) => x.fields?.issuetype?.hierarchyLevel === 1).map((x) => x.id);
-      return { ids: sorted(epics), field: 'parent', watch: ids };
+      return { ids: sortIds(epics), field: 'parent', watch: ids };
     },
     async childIssuesOf({ subquery, depth }, { reconcile }) {
       const ids = await inner(subquery, reconcile);
@@ -2372,7 +2486,7 @@ export function createHierarchyCompute({ jira }) {
     async hasSubtasks() {
       const subtasks = await jira.searchIds(SUBTASK_FILTER);
       const parents = (await jira.bulkIssues(subtasks, ['parent'])).map((x) => x.fields?.parent?.id).filter(Boolean);
-      return { ids: sorted(parents), field: 'id', watch: null };
+      return { ids: sortIds(parents), field: 'id', watch: null };
     },
   };
 }
@@ -2386,7 +2500,7 @@ export function createHierarchyCompute({ jira }) {
 
 ```bash
 git add apps/query/src/compute apps/query/test/compute apps/query/test/fakeJira.js
-git commit -m "JQL-16: Compute subtasks, parents, epics, epic children, descendants and hasSubtasks
+git commit -m "JQL-18: Compute subtasks, parents, epics, epic children, descendants and hasSubtasks
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -2400,7 +2514,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Test: `apps/query/test/compute/{links.test.js,boards.test.js}`
 
 **Interfaces:**
-- Consumes: контракт источника значений и `fakeJira` (Task 11); `matchLinkType`, `linkedIds`, `hasLinksJql`, `closure` (Task 8); `matchBoard`, `lastClosed`, `nextFuture` (Task 8); `EMPTY` (Task 6); `MAX_DEPTH`.
+- Consumes: контракт источника значений и `fakeJira` (Task 11); `matchLinkType`, `linkedIds`, `hasLinksJql`, `closure` (Task 8); `matchBoard`, `lastClosed`, `nextFuture` (Task 8); `EMPTY` (Task 6); `sortIds` (Task 7); `MAX_DEPTH`.
 - Produces: `createLinkCompute({ jira }) → { linkedIssuesOf, linkedIssuesOfRecursive, linkedIssuesOfRecursiveLimited, hasLinks, hasLinkType }`; `createBoardCompute({ jira }) → { previousSprint, nextSprint, boardOf(arg) → { item }|{ error } }`.
 
 - [ ] **Step 1: Падающие тесты.** `test/compute/links.test.js`:
@@ -2487,8 +2601,7 @@ describe('board compute', () => {
 ```js
 import { MAX_DEPTH } from '../core/limits.js';
 import { closure, hasLinksJql, linkedIds, matchLinkType } from '../core/links.js';
-
-const sorted = (ids) => [...new Set(ids.map(String))].sort((a, b) => Number(a) - Number(b));
+import { sortIds } from '../core/ids.js';
 
 /** Value sources of the link functions; hasLinks/hasLinkType compile to Jira's own issueLinkType clause. */
 export function createLinkCompute({ jira }) {
@@ -2516,7 +2629,7 @@ export function createLinkCompute({ jira }) {
       const map = await linksOf(frontier, reconcile);
       return new Map(frontier.map((id) => [id, linkedIds(map.get(id), f.filter)]));
     });
-    return { ids: reached, field: 'id', watch: sorted([...ids, ...reached]) };
+    return { ids: reached, field: 'id', watch: sortIds([...ids, ...reached]) };
   }
 
   async function hasLinks({ linkType }) {
@@ -2531,7 +2644,7 @@ export function createLinkCompute({ jira }) {
       if (f.error) return f;
       const ids = await jira.searchIds(subquery, { reconcile });
       const map = await linksOf(ids, reconcile);
-      return { ids: sorted(ids.flatMap((id) => linkedIds(map.get(id), f.filter))), field: 'id', watch: ids };
+      return { ids: sortIds(ids.flatMap((id) => linkedIds(map.get(id), f.filter))), field: 'id', watch: ids };
     },
     linkedIssuesOfRecursive: (args, { reconcile }) => recursive(args, MAX_DEPTH, reconcile),
     linkedIssuesOfRecursiveLimited: (args, { reconcile }) => recursive(args, args.depth, reconcile),
@@ -2568,7 +2681,7 @@ export function createBoardCompute({ jira }) {
 
 ```bash
 git add apps/query/src/compute apps/query/test/compute
-git commit -m "JQL-17: Compute linked issues, link closures, hasLinks and previous or next sprint
+git commit -m "JQL-19: Compute linked issues, link closures, hasLinks and previous or next sprint
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -2586,7 +2699,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: Tasks 5–12; `decideLicence` (Task 4); поля лицензии в контексте функции — `docs/live-checks.md` (Task 3, вывод «в»).
 - Produces:
   - `readiness.js`: `indexPartOf(group) → 'sprint'|'comments'|null`, `readinessError(progress, group) → string|null`; `progress = { sprint?: Part, comments?: Part }`, `Part = { generation, startedAt, done, total, cursor|null, finishedAt|null, readyAt|null }` (`readyAt` — первое полное заполнение; переиндексация проекта его не сбрасывает, сброс индекса — сбрасывает).
-  - `functions.js`: `licenceInput(payload, context) → { environmentType, license }`; `computeGroup(deps, functionName, args, userArgs, { reconcile, source }) → Promise<Result>` (пишет кэш для результатов-списков); `fragmentFor(functionName, userArgs, page, result, levels) → { jql }|{ error }`; `handleFunction(deps, functionName, payload, context) → { jql } | { error, storeErrorAsPrecomputation: false }`; `createFunctionHandlers(deps) → { [functionName]: (payload, context) => Promise }`.
+  - `functions.js` (бюджет `FUNCTION_BUDGET_MS` = 20 с — внутренний, под предел платформы 25 с, P-4; ошибка Jira по subquery передаётся как есть с приставкой `ERR.withFunction`): `licenceInput(payload, context) → { environmentType, license }`; `computeGroup(deps, functionName, args, userArgs, { reconcile, source }) → Promise<Result>` (пишет кэш для результатов-списков); `fragmentFor(functionName, userArgs, page, result, levels) → { jql }|{ error }`; `handleFunction(deps, functionName, payload, context) → { jql } | { error, storeErrorAsPrecomputation: false }`; `createFunctionHandlers(deps) → { [functionName]: (payload, context) => Promise }`.
   - `Deps = { jira, state, cache, journal, queue, backfillQueue, compute: { [functionName]: source }, indexEvent(event), indexReconcile(), now(), sleep(ms), levels, debugEvents, ready(functionName) → string|null }`; `createDeps()` в `src/deps.js`.
 
 - [ ] **Step 1: Падающие тесты.** `test/core/readiness.test.js`:
@@ -2802,7 +2915,7 @@ export async function computeGroup(deps, functionName, args, userArgs, { reconci
     result = await deps.compute[functionName](args, { reconcile });
   } catch (error) {
     if (error?.name !== 'JiraError' || error.status !== 400) throw error;
-    result = { error: `${functionName}: ${error.message}` };
+    result = { error: ERR.withFunction(functionName, error.message) };
   }
   if (result.ids) {
     await deps.cache.write(groupKey(functionName, userArgs), { values: result.ids, watch: result.watch ?? null, field: result.field, rootFilter: result.rootFilter ?? null, at: deps.now(), source });
@@ -2962,13 +3075,13 @@ console.log(lines.join('\n'));
 
 Run: `node scripts/gen-manifest-functions.mjs`; вставить блок `jira:jqlFunction` в `modules` манифеста, функции `fn-*` — в список `function` (рядом с `resolver`). Строка-подсказка «(append …)» в манифест не идёт.
 
-- [ ] **Step 8: Run** `npx vitest run` → PASS; `npm run lint` → 0 ошибок; `forge lint` → без ошибок (предупреждение о числе модулей — сверить с пределом из Task 3).
+- [ ] **Step 8: Run** `npx vitest run` → PASS; `npm run coverage` → PASS (порог ветвлений `src/core/**`, включая `readiness.js`); `npm run lint` → 0 ошибок; `forge lint` → без ошибок (предупреждение о числе модулей — сверить с пределом из Task 3).
 
 - [ ] **Step 9: Commit**
 
 ```bash
 git add apps/query
-git commit -m "JQL-18: Evaluate JQL functions with cached tree pages, a compute budget and M1 manifest entries
+git commit -m "JQL-20: Evaluate JQL functions with cached tree pages, a compute budget and M1 manifest entries
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -2978,28 +3091,30 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Model:** opus
 
 **Files:**
-- Create: `apps/query/src/handlers/{trigger.js,refresh.js,reconcile.js}`
-- Modify: `apps/query/src/index.js`, `apps/query/manifest.yml`
-- Test: `apps/query/test/handlers/{trigger.test.js,refresh.test.js,reconcile.test.js}`
+- Create: `apps/query/src/handlers/{trigger.js,refresh.js,reconcile.js}`, `apps/query/test/handlers/makeDeps.js` (общий помощник трёх файлов тестов)
+- Modify: `apps/query/src/index.js`, `apps/query/manifest.yml`, `apps/query/test/manifestFunctions.test.js`
+- Test: `apps/query/test/handlers/{trigger.test.js,refresh.test.js,reconcile.test.js}`, `apps/query/test/manifestFunctions.test.js`
 
 **Interfaces:**
-- Consumes: `eventRecord` (Task 7), `summarizeJournal`, `groupPrecomputations`, `familyWants`, `queryOverlap`, `reconcileTargets` (Task 7), `computeGroup`, `fragmentFor` (Task 13), `pool` (Task 9), journal/cache/state (Task 10), механика прототипа и исправления Task 2.
-- Produces: `onEvent(deps, event) → { ids, kinds }`; `pushRefresh(deps, ts) → boolean`; `refreshOnce(deps) → Pass|null`, `Pass = { touched, kinds, events, all, groups, recomputed, changed, stale, oldestEventMs }`; `rewrite(deps, group, reconcile) → Update[]` (`Update = { id, value } | { id, error }`); `onRefresh(deps, event) → { passes } | { busy: true } | { computed } | { error }`; `onReconcile(deps) → { groups, changed, index }`. Тела задач очереди `query-refresh`: `{ kind: 'refresh', ts }`, `{ kind: 'refresh', ts, verify: string[], kinds: Kind[] }` (с задержкой 20 с), `{ kind: 'compute', functionName, userArgs }`.
+- Consumes: `eventRecord` (Task 7), `summarizeJournal`, `groupPrecomputations`, `familyWants`, `queryOverlap`, `reconcileTargets` (Task 7), `computeGroup`, `fragmentFor` (Task 13), `pool` (Task 9), journal/cache/state (Task 10), `REFRESH_CONCURRENCY` (Task 5), механика прототипа и исправления Task 2.
+- Produces: `onEvent(deps, event) → { ids, kinds }`; `pushRefresh(deps, ts) → boolean`; `refreshOnce(deps) → Pass|null`, `Pass = { touched, kinds, events, all, groups, recomputed, changed, stale, oldestEventMs }`; `rewrite(deps, group, reconcile) → Update[]` (`Update = { id, value } | { id, error }`); `onRefresh(deps, event) → { passes } | { busy: true } | { computed } | { error }`; `onReconcile(deps) → { groups, changed, index }`. Тела задач очереди `query-refresh`: `{ kind: 'refresh', ts }`, `{ kind: 'refresh', ts, verify: string[], kinds: Kind[] }` (с задержкой 20 с), `{ kind: 'compute', functionName, userArgs }`. Триггер `query-events` подписан и на события спринтов (`avi:jira-software:*:sprint`) уже в M1: по Q-R9 `previousSprint`/`nextSprint` строятся в M1 и их семейство `board` устаревает от вида `sprint`; Task 24 только включает запись этих событий в индекс. `test/handlers/makeDeps.js`: `makeDeps({ pcs, compute, searches, write }) → Deps & { kvs, advance(ms), pushed: [body, delay|null][], written: Update[] }`, `ids(n, from)`, `RECENT`.
 
-- [ ] **Step 1: Падающие тесты.** Общий помощник в начале `test/handlers/refresh.test.js` (тот же блок — в `trigger.test.js` и `reconcile.test.js`):
+- [ ] **Step 1: Падающие тесты.** Общий помощник `test/handlers/makeDeps.js` — один файл, его импортируют `refresh.test.js`, `trigger.test.js` и `reconcile.test.js` (не копировать блок в каждый файл):
 
 ```js
-import { describe, expect, it, vi } from 'vitest';
 import { createFakeKvs } from '../fakeKvs.js';
 import { createJournal } from '../../src/infra/journal.js';
 import { createValueCache } from '../../src/infra/cache.js';
 import { createState } from '../../src/infra/state.js';
-import { onRefresh, refreshOnce } from '../../src/handlers/refresh.js';
 
-const ids = (n, from = 1) => Array.from({ length: n }, (_, i) => String(from + i));
-const RECENT = new Date(999000).toISOString();
+/** n id strings starting at `from`. */
+export const ids = (n, from = 1) => Array.from({ length: n }, (_, i) => String(from + i));
 
-function makeDeps({ pcs = [], compute = {}, searches = {}, write } = {}) {
+/** A `used` time inside the active window of the test clock. */
+export const RECENT = new Date(999000).toISOString();
+
+/** Handler dependencies over a fake KVS and a scripted Jira; records pushed jobs and written precomputations. */
+export function makeDeps({ pcs = [], compute = {}, searches = {}, write } = {}) {
   const kvs = createFakeKvs({ pageSize: 1000 });
   let now = 1000000;
   let tag = 0;
@@ -3032,6 +3147,10 @@ function makeDeps({ pcs = [], compute = {}, searches = {}, write } = {}) {
 Тесты `refresh.test.js`:
 
 ```js
+import { describe, expect, it, vi } from 'vitest';
+import { ids, makeDeps, RECENT } from './makeDeps.js';
+import { onRefresh, refreshOnce } from '../../src/handlers/refresh.js';
+
 describe('refreshOnce', () => {
   it('does nothing on an empty journal', async () => {
     expect(await refreshOnce(makeDeps())).toBeNull();
@@ -3079,6 +3198,13 @@ describe('refreshOnce', () => {
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999600);
     await refreshOnce(deps);
     expect(deps.written).toEqual([{ id: 'h', value: 'id in (1,2)' }]);
+  });
+  it('recomputes previousSprint when a sprint starts or closes', async () => {
+    const pcs = [{ id: 'p', functionName: 'previousSprint', arguments: ['DEMO board'], value: 'sprint = 1', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { previousSprint: async () => ({ native: 'sprint = 2' }) } });
+    await deps.journal.append({ ids: [], kinds: ['sprint'] }, 999500);
+    await refreshOnce(deps);
+    expect(deps.written).toEqual([{ id: 'p', value: 'sprint = 2' }]);
   });
   it('keeps the journal rows when the write fails', async () => {
     const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];
@@ -3136,9 +3262,11 @@ describe('onRefresh', () => {
 });
 ```
 
-`test/handlers/trigger.test.js` (помощник `makeDeps` — как выше, без импорта `refresh.js`):
+`test/handlers/trigger.test.js`:
 
 ```js
+import { describe, expect, it } from 'vitest';
+import { makeDeps } from './makeDeps.js';
 import { onEvent } from '../../src/handlers/trigger.js';
 
 describe('onEvent', () => {
@@ -3168,9 +3296,11 @@ describe('onEvent', () => {
 });
 ```
 
-`test/handlers/reconcile.test.js` (тот же помощник):
+`test/handlers/reconcile.test.js`:
 
 ```js
+import { describe, expect, it } from 'vitest';
+import { makeDeps, RECENT } from './makeDeps.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
 
 describe('onReconcile', () => {
@@ -3191,7 +3321,16 @@ describe('onReconcile', () => {
 });
 ```
 
-- [ ] **Step 2: Run** `npx vitest run test/handlers` → FAIL.
+В `test/manifestFunctions.test.js` (Task 13) дописать в `describe('manifest JQL functions')`:
+
+```js
+  it('subscribes the event trigger to sprint events for the board functions', () => {
+    const events = manifest.modules.trigger.find((t) => t.key === 'query-events').events;
+    expect(events.filter((e) => e.startsWith('avi:jira-software:') && e.endsWith(':sprint')).length).toBeGreaterThanOrEqual(2);
+  });
+```
+
+- [ ] **Step 2: Run** `npx vitest run test/handlers test/manifestFunctions.test.js` → FAIL.
 
 - [ ] **Step 3: `src/handlers/refresh.js`**
 
@@ -3199,7 +3338,7 @@ describe('onReconcile', () => {
 import { groupKey, parseArgs, splitPage } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { familyWants, groupPrecomputations, queryOverlap, summarizeJournal } from '../core/affected.js';
-import { ACTIVE_MS, JOURNAL_PAGE, LEASE_MS, MAX_TOUCHED, VERIFY_DELAY_S, WORKER_BUDGET_MS } from '../core/limits.js';
+import { ACTIVE_MS, JOURNAL_PAGE, LEASE_MS, MAX_TOUCHED, REFRESH_CONCURRENCY, VERIFY_DELAY_S, WORKER_BUDGET_MS } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { computeGroup, fragmentFor } from './functions.js';
 
@@ -3264,7 +3403,7 @@ export async function refreshOnce(deps) {
   const reconcile = summary.touched.slice(0, MAX_TOUCHED);
   const updates = [];
   let recomputed = 0;
-  await pool(all, 4, async (group) => {
+  await pool(all, REFRESH_CONCURRENCY, async (group) => {
     if (!(await isStale(deps, group, summary))) return;
     recomputed += 1;
     updates.push(...(await rewrite(deps, group, reconcile)));
@@ -3350,7 +3489,7 @@ export async function onEvent(deps, event) {
 
 ```js
 import { groupPrecomputations, reconcileTargets } from '../core/affected.js';
-import { ACTIVE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS } from '../core/limits.js';
+import { ACTIVE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, REFRESH_CONCURRENCY } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { rewrite } from './refresh.js';
 
@@ -3361,7 +3500,7 @@ export async function onReconcile(deps) {
     now: startedAt, usedMs: RECONCILE_USED_MS, staleMs: RECONCILE_STALE_MS, max: RECONCILE_MAX_GROUPS,
   });
   const updates = [];
-  await pool(groups, 4, async (group) => {
+  await pool(groups, REFRESH_CONCURRENCY, async (group) => {
     updates.push(...(await rewrite(deps, group, [])));
   });
   let changed = 0;
@@ -3398,6 +3537,11 @@ export const onReconcile = () => handleReconcile(deps);
         - avi:jira:deleted:issue
         - avi:jira:created:issuelink
         - avi:jira:deleted:issuelink
+        - avi:jira-software:created:sprint
+        - avi:jira-software:started:sprint
+        - avi:jira-software:closed:sprint
+        - avi:jira-software:updated:sprint
+        - avi:jira-software:deleted:sprint
       filter:
         ignoreSelf: true
   consumer:
@@ -3409,6 +3553,8 @@ export const onReconcile = () => handleReconcile(deps);
       function: on-reconcile
       interval: hour
 ```
+
+Имена событий спринтов — по выводу «г» Task 3 (`docs/live-checks.md`); если какого-то из пяти нет, строка убирается, тест выше требует хотя бы начало и закрытие спринта. В M1 `indexEvent` — пустая функция, событие спринта только пишет запись журнала вида `sprint`, и `refresh` переписывает `previousSprint`/`nextSprint` (тест «recomputes previousSprint…»).
 
 и в список `function`:
 
@@ -3429,7 +3575,7 @@ export const onReconcile = () => handleReconcile(deps);
 
 ```bash
 git add apps/query
-git commit -m "JQL-19: Refresh precomputations from journaled events with verify passes and an hourly reconcile
+git commit -m "JQL-21: Refresh precomputations from journaled events with verify passes and an hourly reconcile
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -3439,13 +3585,13 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Model:** opus
 
 **Files:**
-- Create: `apps/query/static/app/src/app/useStatus.js`, `apps/query/static/app/src/reference/{FunctionReference.jsx,FunctionCard.jsx,MigrationNote.jsx,copy.js}`, `apps/query/static/app/src/status/StatusPanel.jsx`
+- Create: `apps/query/static/app/src/app/useStatus.js`, `apps/query/static/app/src/components/Card.jsx`, `apps/query/static/app/src/reference/{FunctionReference.jsx,FunctionCard.jsx,MigrationNote.jsx,copy.js}`, `apps/query/static/app/src/status/{StatusPanel.jsx,IndexProgress.jsx}`
 - Modify: `apps/query/src/handlers/resolvers.js`, `apps/query/static/app/src/app/GlobalApp.jsx`, `apps/query/static/app/src/i18n/locales/*.json` (26), `apps/query/static/app/package.json` (`@atlaskit/code`, `@atlaskit/textfield`, `@atlaskit/progress-bar`, `@atlaskit/dynamic-table` — версии как в Reports, `@atlaskit/code` — текущая, закреплённая точно), `apps/query/static/app/test/guards.test.js` (вернуть тест «no `<pre>`»)
-- Test: `apps/query/test/resolvers.test.js`, `apps/query/static/app/test/{reference.test.jsx,status.test.jsx}`
+- Test: `apps/query/test/resolvers.test.js`, `apps/query/static/app/test/{reference.test.jsx,status.test.jsx,shared.test.jsx}`
 
 **Interfaces:**
 - Consumes: `shippedFunctions`, `usage` (Task 5), `Deps.state`, `Deps.now` (Task 13), `LEASE_MS`.
-- Produces: резолвер `getStatus → { functions: [{ name, group, usage, examples }], queue: { pending: boolean, running: boolean }, lastRefresh: { at, passes, changed, oldestEventMs }|null, errors: [{ at, functionName, message }], progress: Progress|null, excluded: string[] }` (без лицензии — ошибка `unlicensed`); UI: `useStatus(everyMs) → { status: 'loading'|'ready'|'error', data?, error?, reload }`, `copyText(text) → Promise<void>`, компоненты `FunctionReference({ functions })`, `FunctionCard({ fn })`, `StatusPanel({ status })`. Ключи i18n: `tabs.*`, `reference.*`, `group.<7 групп>`, `fn.<24 функции>` (описания всех 24 сразу — последующие этапы только расширяют `SHIPPED_GROUPS`), `status.*`.
+- Produces: резолвер `getStatus → { functions: [{ name, group, usage, examples }], queue: { pending: boolean, running: boolean }, lastRefresh: { at, passes, changed, oldestEventMs }|null, errors: [{ at, functionName, message }], progress: Progress|null, excluded: string[] }` (без лицензии — ошибка `unlicensed`); UI: `useStatus(everyMs) → { status: 'loading'|'ready'|'error', data?, error?, reload }`, `copyText(text) → Promise<void>`, компоненты `FunctionReference({ functions })`, `FunctionCard({ fn })`, `StatusPanel({ status })`; общие для страницы приложения и админ-страницы (Task 29 их импортирует, не копирует): `Card({ children, testId })` — карточка `elevation.surface.raised` + `radius.large` + `space.300`, `IndexProgress({ progress })` — строки частей индекса (полоса + «N of M issues» / «Ready»). Ключи i18n: `tabs.*`, `reference.*`, `group.<7 групп>`, `fn.<24 функции>` (описания всех 24 сразу — последующие этапы только расширяют `SHIPPED_GROUPS`), `status.*`.
 
 - [ ] **Step 1: Падающий тест резолвера** — дописать в `test/resolvers.test.js`:
 
@@ -3572,7 +3718,9 @@ const BASE = { queue: { pending: false, running: false }, lastRefresh: null, err
 describe('StatusPanel', () => {
   it('shows an idle queue, no update yet and no errors', () => {
     view(BASE);
-    expect([screen.getByText('Idle'), screen.getByText('No update yet'), screen.getByText('No errors in the JQL editor so far.')].every(Boolean)).toBe(true);
+    expect(screen.getByText('Idle')).toBeTruthy();
+    expect(screen.getByText('No update yet')).toBeTruthy();
+    expect(screen.getByText('No errors in the JQL editor so far.')).toBeTruthy();
   });
   it('shows index progress per part', () => {
     view({ ...BASE, progress: { sprint: { done: 12400, total: 50000 }, comments: { done: 5, total: 5, finishedAt: 1 } } });
@@ -3587,9 +3735,82 @@ describe('StatusPanel', () => {
 });
 ```
 
+`static/app/test/shared.test.jsx`:
+
+```jsx
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { I18nProvider } from '../src/i18n/index.js';
+import { Card } from '../src/components/Card.jsx';
+import { IndexProgress } from '../src/status/IndexProgress.jsx';
+
+const view = (progress) => render(<I18nProvider locale="en-US"><IndexProgress progress={progress} /></I18nProvider>);
+
+describe('Card', () => {
+  it('renders its children under the test id', () => {
+    render(<Card testId="card"><span>inside</span></Card>);
+    expect(screen.getByTestId('card').textContent).toBe('inside');
+  });
+});
+
+describe('IndexProgress', () => {
+  it('counts the issues of a part that is filling', () => {
+    view({ sprint: { done: 5, total: 10 } });
+    expect(screen.getByText('5 of 10 issues')).toBeTruthy();
+  });
+  it('says Ready for a finished part', () => {
+    view({ comments: { done: 3, total: 3, finishedAt: 1 } });
+    expect(screen.getByText('Ready')).toBeTruthy();
+  });
+  it('renders nothing without progress', () => {
+    const { container } = view(null);
+    expect(container.textContent).toBe('');
+  });
+});
+```
+
 Run: `npm --prefix static/app test` → FAIL.
 
-- [ ] **Step 4: Компоненты.** `src/reference/copy.js`:
+- [ ] **Step 4: Компоненты.** `src/components/Card.jsx`:
+
+```jsx
+import { Box, xcss } from '@atlaskit/primitives';
+
+const cardStyles = xcss({ backgroundColor: 'elevation.surface.raised', boxShadow: 'elevation.shadow.raised', borderRadius: 'radius.large', padding: 'space.300' });
+
+/** Raised card of the app pages: surface, shadow, large radius and space.300 padding. */
+export function Card({ children, testId }) {
+  return <Box xcss={cardStyles} testId={testId}>{children}</Box>;
+}
+```
+
+`src/status/IndexProgress.jsx`:
+
+```jsx
+import ProgressBar from '@atlaskit/progress-bar';
+import { Stack, Text } from '@atlaskit/primitives';
+import { formatNumber, useI18n } from '../i18n/index.js';
+
+/** Progress of each index part: a bar and "N of M issues", or "Ready" once the part finished. */
+export function IndexProgress({ progress }) {
+  const { t, locale } = useI18n();
+  const parts = Object.entries(progress ?? {});
+  if (!parts.length) return null;
+  return (
+    <Stack space="space.200">
+      {parts.map(([part, p]) => (
+        <Stack key={part} space="space.075">
+          <Text weight="medium">{t(`status.part.${part}`)}</Text>
+          <ProgressBar value={p.total ? p.done / p.total : 0} ariaLabel={t(`status.part.${part}`)} />
+          <Text color="color.text.subtle">{p.finishedAt ? t('status.indexReady') : t('status.indexProgress', { done: formatNumber(locale, p.done), total: formatNumber(locale, p.total) })}</Text>
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+```
+
+`src/reference/copy.js`:
 
 ```js
 /** Copies text: the async Clipboard API, or a hidden textarea with execCommand where the iframe blocks it. */
@@ -3620,11 +3841,11 @@ import { Code } from '@atlaskit/code';
 import Heading from '@atlaskit/heading';
 import Lozenge from '@atlaskit/lozenge';
 import { Box, Inline, Stack, Text, xcss } from '@atlaskit/primitives';
+import { Card } from '../components/Card.jsx';
 import { CopyIcon } from '../components/icons.js';
 import { useT } from '../i18n/index.js';
 import { copyText } from './copy.js';
 
-const cardStyles = xcss({ backgroundColor: 'elevation.surface.raised', boxShadow: 'elevation.shadow.raised', borderRadius: 'radius.large', padding: 'space.300' });
 const exampleStyles = xcss({ minWidth: '0', overflowWrap: 'anywhere' });
 
 /** One function: signature, description and examples, each with a copy button. */
@@ -3636,7 +3857,7 @@ export function FunctionCard({ fn }) {
     setCopied(example);
   };
   return (
-    <Box xcss={cardStyles} testId={`fn-${fn.name}`}>
+    <Card testId={`fn-${fn.name}`}>
       <Stack space="space.150">
         <Heading size="small" as="h3"><Code>{fn.usage}</Code></Heading>
         <Text>{t(`fn.${fn.name}`)}</Text>
@@ -3648,7 +3869,7 @@ export function FunctionCard({ fn }) {
           </Inline>
         ))}
       </Stack>
-    </Box>
+    </Card>
   );
 }
 ```
@@ -3731,25 +3952,25 @@ export function FunctionReference({ functions }) {
 import DynamicTable from '@atlaskit/dynamic-table';
 import Heading from '@atlaskit/heading';
 import Lozenge from '@atlaskit/lozenge';
-import ProgressBar from '@atlaskit/progress-bar';
-import { Box, Inline, Stack, Text, xcss } from '@atlaskit/primitives';
-import { formatDate, formatNumber, useI18n } from '../i18n/index.js';
+import { Inline, Stack, Text } from '@atlaskit/primitives';
+import { Card } from '../components/Card.jsx';
+import { formatDate, useI18n } from '../i18n/index.js';
+import { IndexProgress } from './IndexProgress.jsx';
 
-const cardStyles = xcss({ backgroundColor: 'elevation.surface.raised', boxShadow: 'elevation.shadow.raised', borderRadius: 'radius.large', padding: 'space.300' });
 const iso = (ms) => new Date(ms).toISOString();
 
 /** Refresh queue, last update, index progress per part and the recent JQL editor errors. */
 export function StatusPanel({ status }) {
   const { t, locale } = useI18n();
   const queue = status.queue.running ? ['inprogress', 'status.running'] : status.queue.pending ? ['moved', 'status.pending'] : ['success', 'status.idle'];
-  const parts = Object.entries(status.progress ?? {});
+  const hasParts = Object.keys(status.progress ?? {}).length > 0;
   const rows = status.errors.map((e, i) => ({
     key: `${e.at}-${i}`,
     cells: [{ key: 't', content: formatDate(locale, iso(e.at)) }, { key: 'f', content: e.functionName }, { key: 'm', content: e.message }],
   }));
   return (
     <Stack space="space.400">
-      <Box xcss={cardStyles}>
+      <Card>
         <Stack space="space.150">
           <Heading size="small" as="h2">{t('status.queue')}</Heading>
           <Inline space="space.100" alignBlock="center" shouldWrap>
@@ -3757,30 +3978,24 @@ export function StatusPanel({ status }) {
             <Text>{status.lastRefresh ? t('status.lastRefresh', { time: formatDate(locale, iso(status.lastRefresh.at)) }) : t('status.never')}</Text>
           </Inline>
         </Stack>
-      </Box>
-      {parts.length ? (
-        <Box xcss={cardStyles}>
+      </Card>
+      {hasParts ? (
+        <Card>
           <Stack space="space.200">
             <Heading size="small" as="h2">{t('status.index')}</Heading>
-            {parts.map(([part, p]) => (
-              <Stack key={part} space="space.075">
-                <Text weight="medium">{t(`status.part.${part}`)}</Text>
-                <ProgressBar value={p.total ? p.done / p.total : 0} ariaLabel={t(`status.part.${part}`)} />
-                <Text color="color.text.subtle">{p.finishedAt ? t('status.indexReady') : t('status.indexProgress', { done: formatNumber(locale, p.done), total: formatNumber(locale, p.total) })}</Text>
-              </Stack>
-            ))}
+            <IndexProgress progress={status.progress} />
             {status.excluded.length ? <Text>{t('status.excluded', { keys: status.excluded.join(', ') })}</Text> : null}
           </Stack>
-        </Box>
+        </Card>
       ) : null}
-      <Box xcss={cardStyles}>
+      <Card>
         <Stack space="space.150">
           <Heading size="small" as="h2">{t('status.errors')}</Heading>
           {rows.length ? (
             <DynamicTable head={{ cells: [{ key: 't', content: t('status.time') }, { key: 'f', content: t('status.function') }, { key: 'm', content: t('status.message') }] }} rows={rows} />
           ) : <Text>{t('status.noErrors')}</Text>}
         </Stack>
-      </Box>
+      </Card>
     </Stack>
   );
 }
@@ -3888,7 +4103,7 @@ export function useStatus(everyMs = 0) {
 
 ```bash
 git add apps/query
-git commit -m "JQL-20: Add the function reference and the refresh status page in 26 languages
+git commit -m "JQL-22: Add the function reference and the refresh status page in 26 languages
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -3898,16 +4113,17 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Model:** opus
 
 **Files:**
-- Create: `apps/query/scripts/lib/{http.mjs,reference.mjs,report.mjs}`, `apps/query/scripts/acceptance.mjs`
+- Create: `apps/query/scripts/lib/{http.mjs,latency.mjs,reference.mjs,report.mjs}`, `apps/query/scripts/acceptance.mjs`
 - Test: `apps/query/test/scripts/report.test.js`
 
 **Interfaces:**
 - Consumes: `.env` (`FORGE_EMAIL`, `FORGE_API_TOKEN`), засев JQLG/RPT, доска RPT из засева Reports.
 - Produces:
   - `http.mjs`: `SITE`, `stats = { requests, retries, timeouts }`, `sleep(ms)`, `api(method, path, body, { raw, attempts, timeoutMs, unsafe }) → json | { status, text }` (таймаут 30 с, повтор сетевых ошибок, 429, 5xx; для `unsafe: true` — сетевую ошибку не повторяет, бросает `UnsafeRetryError`, чтобы вызывающий проверил, применилось ли изменение), `pool(items, n, task)`, `ids(jql) → { ids } | { error }`, `bulk(ids, fields) → issue[]`.
-  - `reference.mjs`: `REFERENCES[functionName](userArgs, options) → Promise<string[]>` — эталоны независимым REST-обходом (без `src/`); M1 — 13 функций.
+  - `latency.mjs` (общий модуль замера свежести; его импортируют `acceptance.mjs`, фазы `fresh` Tasks 24, 27, 28, фаза `burst` Task 31 и `atlassian/tools/measure-jql-jg67.mjs` Task 19 — функции замера не копируются по скриптам): `waitFor(clause, id, present, since) → seconds|null` (null — не видно за 10 мин, потеря), `linkId(fromId, toId) → string|null`, `latencyResult(rows, startedAt) → { seconds, summary, overall, raw }`, `latency({ n, log })` — 5 видов изменений × n против функций M1.
+  - `reference.mjs`: `REFERENCES[functionName](userArgs, options) → Promise<string[]>` — эталоны независимым REST-обходом (без `src/`, P-6); M1 — 13 функций; `myAccountId() → string` (из `/rest/api/3/myself`, кэш на процесс).
   - `report.mjs`: `pct(values, p)`, `summary(values) → { n, p50, p90, max }`, `compare(got, ref) → { count, reference, missing, extra, complete }`, `save(name, data) → path` (в `apps/query/data/`).
-  - `acceptance.mjs <phase> [--tag t] [--n 30] [--board <name|id>] [--group query]`: фазы `complete` (полнота по таблице случаев), `fresh` (свежесть и потери), `seed-tm` (team-managed проект). Task 31 добавляет `burst`, `audit`, `errors`, `sr`; Tasks 24, 27, 28 — случаи и эталоны своих групп.
+  - `acceptance.mjs <phase> [--tag t] [--n 30] [--board <name|id>] [--group query|board] [--cases m1]`: фазы `complete` (полнота по таблице случаев; случай — `[fn, userArgs, note, and?]`, `@board` → `--board`, `@me` → `myAccountId()`, `and` — родной JQL, который приписывается ` AND (and)` к запросу функции, чтобы сузить результат до области эталона), `fresh` (свежесть и потери; группы `query` и `board`), `seed-tm` (team-managed проект). Task 31 добавляет `burst`, `audit`, `errors`, `sr`; Tasks 24, 27, 28 — случаи и эталоны своих групп.
 
 - [ ] **Step 1: Падающий тест** `test/scripts/report.test.js`:
 
@@ -4016,7 +4232,7 @@ export async function api(method, path, body, { raw = false, attempts = 8, timeo
   throw new Error(`${method} ${path} → gave up after ${attempts} attempts`);
 }
 
-/** Runs task over items with at most n in flight. */
+/** Runs task over items with at most n in flight (own copy, not src/infra/pool.js: the tools stay independent of the app, P-6). */
 export async function pool(items, n, task) {
   const out = new Array(items.length);
   let next = 0;
@@ -4067,6 +4283,14 @@ async function must(jql) {
   const r = await ids(jql);
   if (r.error) throw new Error(`${jql}: ${r.error}`);
   return r.ids;
+}
+
+let me = null;
+
+/** Account id of the user the tool runs as. */
+export async function myAccountId() {
+  me = me ?? (await api('GET', '/rest/api/3/myself')).accountId;
+  return me;
 }
 
 async function children(parentIds) {
@@ -4199,7 +4423,8 @@ export const REFERENCES = {
 ```js
 #!/usr/bin/env node
 import { api, bulk, ids, sleep, stats } from './lib/http.mjs';
-import { REFERENCES } from './lib/reference.mjs';
+import { latency, latencyResult, waitFor } from './lib/latency.mjs';
+import { myAccountId, REFERENCES } from './lib/reference.mjs';
 import { compare, save, summary } from './lib/report.mjs';
 
 const args = { phase: process.argv[2], n: 30, tag: '', board: 'RPT board', group: 'query' };
@@ -4210,7 +4435,7 @@ const log = (s) => process.stderr.write(`${new Date().toISOString().slice(11, 19
 const q = (s) => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 const clause = (fn, userArgs) => `issue in ${fn}(${userArgs.map(q).join(', ')})`;
 
-/** Completeness cases: function, user arguments, what the case proves. Later stages append their own. */
+/** Completeness cases: function, user arguments, what the case proves, optional native JQL ANDed to the result. Later stages append their own. */
 export const CASES = {
   m1: [
     ['subtasksOf', ['project = JQLG AND labels = jg-mid'], '1 200 subtasks (> 1 000)'],
@@ -4257,11 +4482,12 @@ async function complete() {
   await ensureFilter();
   const list = CASES[args.cases ?? 'm1'];
   const rows = [];
-  for (const [fn, raw, note] of list) {
-    const userArgs = raw.map((a) => (a === '@board' ? args.board : a));
-    const jql = clause(fn, userArgs);
+  for (const [fn, raw, note, and] of list) {
+    const userArgs = [];
+    for (const a of raw) userArgs.push(a === '@board' ? args.board : a.includes('@me') ? a.replace('@me', await myAccountId()) : a);
+    const jql = and ? `${clause(fn, userArgs)} AND (${and})` : clause(fn, userArgs);
     const got = await evaluate(jql);
-    const row = { fn, userArgs, note, seconds: got.seconds, attempts: got.attempts, error: got.error };
+    const row = { fn, userArgs, note, and: and ?? null, seconds: got.seconds, attempts: got.attempts, error: got.error };
     if (got.ids) Object.assign(row, compare(got.ids, await REFERENCES[fn](userArgs, args)));
     log(`${fn} ${note}: ${JSON.stringify(row)}`);
     rows.push(row);
@@ -4271,7 +4497,131 @@ async function complete() {
 }
 ```
 
-Фаза `fresh` (группа `query`, M1): скопировать из `atlassian/tools/measure-jql-jg5.mjs` функции `waitFor`, `linkId`, `latency` дословно и заменить в `latency` три условия на функции приложения: `C_SUB = 'issue in subtasksOf("project = JQLG AND labels = jg-mid")'`, `C_LNK = 'issue in linkedIssuesOf("project = JQLG AND labels = jg-lnk")'`, `C_IN = 'issue in subtasksOf("project = JQLG AND labels = jg-in")'`; `api` и `ids` — из `lib/http.mjs` (с таймаутом); `TIMEOUT_MS = 10 * 60 * 1000`, `POLL_MS = 2000`; итог сохранить через `save('acceptance-fresh-query' + tag, result)`; потерянным считается изменение, не видимое за 10 мин (`timeouts`).
+Фаза `fresh` (группы `query` и `board`, M1). Замер свежести — общий модуль `scripts/lib/latency.mjs` (перенос механики `atlassian/tools/measure-jql-jg5.mjs` с функциями приложения вместо функций прототипа; `api`, `ids`, `bulk`, `sleep` — из `lib/http.mjs` с таймаутом); потерянным считается изменение, не видимое за 10 мин (`timeouts`):
+
+```js
+import { api, bulk, ids, sleep } from './http.mjs';
+import { summary } from './report.mjs';
+
+const POLL_MS = 2000;
+const TIMEOUT_MS = 10 * 60 * 1000;
+const round = (ms) => Math.round(ms / 100) / 10;
+
+/** Polls `(clause) AND id = X` until present (or absent): seconds from `since`, or null after 10 minutes (a lost change). */
+export async function waitFor(clause, id, present, since) {
+  for (;;) {
+    const r = await api('POST', '/rest/api/3/search/jql', { jql: `(${clause}) AND id = ${id}`, fields: ['id'], maxResults: 1 }, { raw: true });
+    const found = r.status === 200 && JSON.parse(r.text).issues.length > 0;
+    if (r.status === 200 && found === present) return round(Date.now() - since);
+    if (Date.now() - since > TIMEOUT_MS) return null;
+    await sleep(POLL_MS);
+  }
+}
+
+/** Id of the link between two issues, or null. */
+export async function linkId(fromId, toId) {
+  const x = await api('GET', `/rest/api/3/issue/${fromId}?fields=issuelinks`);
+  return x.fields.issuelinks.find((l) => (l.outwardIssue ?? l.inwardIssue)?.id === String(toId))?.id ?? null;
+}
+
+/** Seconds per kind of change and overall; null (not visible within 10 minutes) counts as a timeout. */
+export function latencyResult(rows, startedAt) {
+  const seen = (list) => list.filter((x) => x !== null);
+  const lost = (list) => list.filter((x) => x === null).length;
+  const all = Object.values(rows).flat();
+  return {
+    seconds: round(Date.now() - startedAt),
+    summary: Object.fromEntries(Object.entries(rows).map(([k, v]) => [k, { ...summary(seen(v)), timeouts: lost(v) }])),
+    overall: { ...summary(seen(all)), timeouts: lost(all) },
+    raw: rows,
+  };
+}
+
+/** M1 freshness: n changes of five kinds on JQLG, each awaited in subtasksOf or linkedIssuesOf of the app. */
+export async function latency({ n, log }) {
+  const project = await api('GET', '/rest/api/3/project/JQLG');
+  const subType = (await api('GET', `/rest/api/3/issuetype/project?projectId=${project.id}`)).find((t) => t.subtask);
+  const C_SUB = 'issue in subtasksOf("project = JQLG AND labels = jg-mid")';
+  const C_LNK = 'issue in linkedIssuesOf("project = JQLG AND labels = jg-lnk")';
+  const C_IN = 'issue in subtasksOf("project = JQLG AND labels = jg-in")';
+  for (const c of [C_SUB, C_LNK, C_IN]) log(`warm ${c}: ${(await ids(c)).ids?.length}`);
+  const mid = (await ids('project = JQLG AND labels = jg-mid ORDER BY key')).ids;
+  const lnk = (await ids('project = JQLG AND labels = jg-lnk ORDER BY key')).ids;
+  const small = await bulk((await ids('project = JQLG AND labels = jg-small ORDER BY key')).ids.slice(0, n + 5), ['subtasks', 'labels']);
+  const targets = (await ids('project = JQLG AND labels = jg-task AND issueLinkType is EMPTY AND labels not in (jg-big, jg-mid, jg-small, jg-lnk, jg-sprint, jg-sprint-big) ORDER BY key DESC')).ids;
+  const rows = { newSubtask: [], newLink: [], deletedLink: [], enterQuery: [], leaveQuery: [] };
+  const subStream = async () => {
+    for (let i = 0; i < n; i += 1) {
+      const parent = mid[(i * 7) % mid.length];
+      const created = await api('POST', '/rest/api/3/issue', { fields: { project: { id: project.id }, issuetype: { id: subType.id }, summary: `aq measure sub ${i}`, labels: ['jg', 'jg-measure'], parent: { id: parent } } });
+      rows.newSubtask.push(await waitFor(C_SUB, created.id, true, Date.now()));
+      log(`newSubtask ${i}: ${rows.newSubtask.at(-1)} s`);
+    }
+  };
+  const linkStream = async () => {
+    for (let i = 0; i < n; i += 1) {
+      const from = lnk[(i * 11) % lnk.length];
+      const to = targets[i];
+      await api('POST', '/rest/api/3/issueLink', { type: { name: 'Relates' }, outwardIssue: { id: from }, inwardIssue: { id: to } });
+      rows.newLink.push(await waitFor(C_LNK, to, true, Date.now()));
+      await api('DELETE', `/rest/api/3/issueLink/${await linkId(from, to)}`, undefined, { raw: true });
+      rows.deletedLink.push(await waitFor(C_LNK, to, false, Date.now()));
+      log(`link ${i}: +${rows.newLink.at(-1)} s −${rows.deletedLink.at(-1)} s`);
+    }
+  };
+  const fieldStream = async () => {
+    for (let i = 0; i < n; i += 1) {
+      const x = small[i];
+      const sub = x.fields.subtasks[0].id;
+      await api('PUT', `/rest/api/3/issue/${x.id}`, { update: { labels: [{ add: 'jg-in' }] } });
+      rows.enterQuery.push(await waitFor(C_IN, sub, true, Date.now()));
+      await api('PUT', `/rest/api/3/issue/${x.id}`, { update: { labels: [{ remove: 'jg-in' }] } });
+      rows.leaveQuery.push(await waitFor(C_IN, sub, false, Date.now()));
+      log(`field ${i}: in ${rows.enterQuery.at(-1)} s out ${rows.leaveQuery.at(-1)} s`);
+    }
+  };
+  const t0 = Date.now();
+  await Promise.all([subStream(), linkStream(), fieldStream()]);
+  return latencyResult(rows, t0);
+}
+```
+
+В `acceptance.mjs` — группа `query` и группа `board` (свежесть `previousSprint`/`nextSprint` по событиям спринтов, Task 17 Step 5): на доске `--board` без активного спринта n раз создать будущий спринт с самой ранней датой старта, положить в него задачу из бэклога доски и ждать её в `nextSprint`; затем запустить и закрыть спринт и ждать задачу в `previousSprint`:
+
+```js
+const tagged = (name) => `${name}${args.tag ? `-${args.tag}` : ''}`;
+
+async function queryLatency() {
+  const result = await latency({ n: args.n, log });
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-query'), { stats, ...result });
+}
+
+async function boardLatency() {
+  const DAY = 86400000;
+  const board = (await api('GET', `/rest/agile/1.0/board?name=${encodeURIComponent(args.board)}`)).values.find((b) => b.name === args.board);
+  if (!board) throw new Error(`board ${args.board} not found`);
+  if ((await api('GET', `/rest/agile/1.0/board/${board.id}/sprint?state=active`)).values.length) throw new Error(`board ${args.board} has an active sprint: close it first`);
+  const backlog = (await api('GET', `/rest/agile/1.0/board/${board.id}/backlog?fields=key&maxResults=${args.n}`)).issues.map((x) => String(x.id));
+  const C_NEXT = clause('nextSprint', [args.board]);
+  const C_PREV = clause('previousSprint', [args.board]);
+  const rows = { nextSprint: [], previousSprint: [] };
+  const t0 = Date.now();
+  for (const x of backlog) {
+    const created = Date.now();
+    const sprint = await api('POST', '/rest/agile/1.0/sprint', { name: `AQ fresh ${created}`, originBoardId: board.id, startDate: new Date(created - DAY).toISOString(), endDate: new Date(created + DAY).toISOString() });
+    await api('POST', `/rest/agile/1.0/sprint/${sprint.id}/issue`, { issues: [x] });
+    rows.nextSprint.push(await waitFor(C_NEXT, x, true, created));
+    await api('POST', `/rest/agile/1.0/sprint/${sprint.id}`, { state: 'active' });
+    await api('POST', `/rest/agile/1.0/sprint/${sprint.id}`, { state: 'closed' });
+    rows.previousSprint.push(await waitFor(C_PREV, x, true, Date.now()));
+    log(`board ${x}: next ${rows.nextSprint.at(-1)} s, previous ${rows.previousSprint.at(-1)} s`);
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-board'), { stats, ...result });
+}
+```
 
 Фаза `seed-tm` — team-managed проект для строки §4 брифа «company- и team-managed»:
 
@@ -4311,7 +4661,7 @@ async function seedTeamManaged() {
 
 ```js
 /** Freshness phases by function group; later stages add sprint, comment, attachment and fields. */
-export const FRESH = { query: latency };
+export const FRESH = { query: queryLatency, board: boardLatency };
 
 const PHASES = { complete, fresh: () => FRESH[args.group](), 'seed-tm': seedTeamManaged };
 if (!PHASES[args.phase]) {
@@ -4324,13 +4674,13 @@ PHASES[args.phase]().then(() => log(`requests ${stats.requests}, retries ${stats
 });
 ```
 
-- [ ] **Step 6: Проверка.** `node --check apps/query/scripts/acceptance.mjs && node --check apps/query/scripts/lib/reference.mjs` → без вывода; `npx vitest run` → PASS; `npm run lint` → 0 ошибок.
+- [ ] **Step 6: Проверка.** `node --check apps/query/scripts/acceptance.mjs && node --check apps/query/scripts/lib/reference.mjs && node --check apps/query/scripts/lib/latency.mjs` → без вывода; `npx vitest run` → PASS; `npm run lint` → 0 ошибок.
 
 - [ ] **Step 7: Commit**
 
 ```bash
 git add apps/query/scripts apps/query/test/scripts
-git commit -m "JQL-21: Add the acceptance tool with request timeouts, REST references and M1 cases
+git commit -m "JQL-23: Add the acceptance tool with request timeouts, REST references and M1 cases
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -4344,7 +4694,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: Tasks 4–16; прототип J-G5 установлен на сайте (Task 2).
-- Produces: таблица полноты M1 (`data/acceptance-complete-m1.json`), свежесть и потери на 150 изменениях (`data/acceptance-fresh-query.json`), подтверждённые формы событий; при расхождениях — Ruling и задача на исправление.
+- Produces: таблица полноты M1 (`data/acceptance-complete-m1.json`), свежесть и потери на 150 изменениях (`data/acceptance-fresh-query.json`), свежесть `previousSprint`/`nextSprint` по событиям спринтов (`data/acceptance-fresh-board.json`), подтверждённые формы событий (включая события спринтов); при расхождениях — Ruling и задача на исправление.
 
 - [ ] **Step 1: Снять прототип с сайта** (одинаковые имена `subtasksOf`/`linkedIssuesOf` у двух приложений на одном сайте):
 
@@ -4365,21 +4715,21 @@ forge eligibility -e development --non-interactive
 
 Expected: eligible for Runs on Atlassian; в редакторе JQL на `artuplabs-dev` подсказка показывает 13 функций.
 
-- [ ] **Step 3: Формы событий.** Сделать по одному изменению каждого вида на JQLG (новая подзадача, смена родителя, новая и удалённая связь, удаление задачи) через `node apps/query/scripts/live-checks.mjs` или REST вручную; `forge logs -e development --since 10m | grep '"event"'`; сравнить ключи и пары `[field, fieldId]` с фикстурами `test/fixtures/events/*.json`. Расхождение → поправить фикстуру; если `eventRecord` даёт `unknown` или теряет id — исполнитель opus чинит `src/core/events.js` с тестом (отдельный коммит `JQL-22`-подзадачи не делается: исправление входит в коммит этой задачи).
+- [ ] **Step 3: Формы событий.** Сделать по одному изменению каждого вида на JQLG (новая подзадача, смена родителя, новая и удалённая связь, удаление задачи) и на доске RPT (создание, старт и закрытие спринта) через `node apps/query/scripts/live-checks.mjs` или REST вручную; `forge logs -e development --since 10m | grep '"event"'`; сравнить ключи и пары `[field, fieldId]` с фикстурами `test/fixtures/events/*.json`. Расхождение → поправить фикстуру; если `eventRecord` даёт `unknown` или теряет id — исполнитель opus чинит `src/core/events.js` с тестом (отдельный коммит `JQL-24`-подзадачи не делается: исправление входит в коммит этой задачи).
 
 - [ ] **Step 4: Полнота M1.** `node apps/query/scripts/acceptance.mjs complete --cases m1 --board "<доска RPT из засева Reports>"` (имя доски — `GET /rest/agile/1.0/board?projectKeyOrId=RPT`; если у доски нет закрытого и будущего спринта — создать их через Agile API и записать это в `docs/live-checks.md`). Затем `node apps/query/scripts/acceptance.mjs seed-tm` и повторить `complete` для случаев JQLT. Критерий: `complete: true` у каждой строки. Строка с `complete: false` → стоп, исполнитель opus находит причину (сравнить `missing`/`extra` с эталоном), чинит с тестом, повтор.
 
-- [ ] **Step 5: Свежесть и потери M1.** `node apps/query/scripts/acceptance.mjs fresh --group query --n 30` → 150 изменений. Критерий: `overall.timeouts === 0` и `overall.p90 ≤ 60`. Холодный первый поиск `subtasksOf("project in (JQLG, RPT)")` — записать секунды и было ли «Computing, retry in a minute» (строка §4 «первый результат на 50 000 задач»).
+- [ ] **Step 5: Свежесть и потери M1.** `node apps/query/scripts/acceptance.mjs fresh --group query --n 30` → 150 изменений. Критерий: `overall.timeouts === 0` и `overall.p90 ≤ 60`. Холодный первый поиск `subtasksOf("project in (JQLG, RPT)")` — записать секунды и было ли «Computing, retry in a minute» (строка §4 «первый результат на 50 000 задач»). Затем свежесть функций доски по событиям спринтов (§3, §5 «секунды»): `node apps/query/scripts/acceptance.mjs fresh --group board --n 10 --board "<доска RPT>"` — 10 раз «новый будущий спринт с задачей → `nextSprint`» и «старт и закрытие спринта → `previousSprint`»; если у доски есть активный спринт, фаза останавливается с ошибкой — закрыть его через Agile API (`POST /rest/agile/1.0/sprint/{id} { state: 'closed' }`) и записать это в `docs/live-checks.md`. Критерий: в `data/acceptance-fresh-board.json` у `nextSprint` и `previousSprint` `timeouts === 0` и `p90 ≤ 60`. Не прошло → исполнитель opus сверяет имена событий спринтов в манифесте (Task 14) с `forge logs`, чинит с тестом, повтор.
 
 - [ ] **Step 6: Отключить отладку**: `forge variables unset -e development QUERY_DEBUG_EVENTS` и повторный `forge deploy -e development --non-interactive`.
 
-- [ ] **Step 7: Записать** в `docs/live-checks.md` раздел «M1 on site»: таблица полноты (функция, случай, count, reference, missing, extra, секунды), свежесть (p50/p90/max, потери), холодный старт, team-managed (создан скриптом или владельцем).
+- [ ] **Step 7: Записать** в `docs/live-checks.md` раздел «M1 on site»: таблица полноты (функция, случай, count, reference, missing, extra, секунды), свежесть (p50/p90/max, потери) по группам `query` и `board`, холодный старт, team-managed (создан скриптом или владельцем).
 
 - [ ] **Step 8: Commit**
 
 ```bash
 git add apps/query/docs apps/query/test/fixtures apps/query/src atlassian/plans/2026-10-03-artup-query-v1-rulings.md
-git commit -m "JQL-22: Record M1 completeness, freshness and live event shapes on the dev site
+git commit -m "JQL-24: Record M1 completeness, freshness and live event shapes on the dev site
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -4399,15 +4749,16 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `apps/query/scripts/lib/http.mjs` (Task 16: `api`, `ids`, `bulk`, `pool`, `sleep`, `UnsafeRetryError`).
-- Produces: `atlassian/data/jg6-seed.json` = `{ board: { id, name }, sprints: [{ id, name, startedAt, closedAt, initial: [key], added: [{ key, at }], removed: [{ key, at }], readded: [{ key, at }], done: [key] }], active: { id, name }, future: [{ id, name }] }` — эталон «вручную» для J-G6; `atlassian/data/jg7-seed.json` = `{ comments: { before, after, restricted: { role, group } }, attachments: { added, byExt } }`.
+- Produces: `atlassian/data/jg6-seed.json` = `{ board: { id, name }, sprints: [{ id, name, startedAt, closedAt, initial: [key], added: [{ key, at }], removed: [{ key, at }], readded: [{ key, at }], done: [key] }], big: { id, name, startedAt, closedAt, initial: [key], added: [{ key, at }], removed: [{ key, at }], done: [key] }, active: { id, name }, future: [{ id, name }] }` (`closedAt` — время в мс непосредственно перед запросом закрытия) — эталон «вручную» для J-G6 (30 спринтов `sprints`) и большой спринт `big` для полноты функций спринта на > 1 000 задач (P-3; в ворота J-G6 не входит); `atlassian/data/jg7-seed.json` = `{ comments: { before, after, restricted: { role, group } }, attachments: { added, byExt } }`.
 
 - [ ] **Step 1: `seed-jira-sprints.mjs`.** Скрипт (возобновляемый: существующие спринты с тем же именем пропускаются, их записи читаются из `jg6-seed.json`):
-  1. метка `jg-sprint` на задачах `project = JQLG AND labels = jg-task AND key >= JQLG-8000 AND key < JQLG-9000` (1 000 задач; `PUT /rest/api/3/issue/{id}` с `update.labels.add`, 4 параллельно), пропуская уже помеченные;
-  2. фильтр «JQLG board filter» (`project = JQLG AND labels = jg-sprint ORDER BY Rank ASC`, `sharePermissions: [{ type: 'authenticated' }]`) и scrum-доска «JQLG board» (`POST /rest/agile/1.0/board { name, type: 'scrum', filterId, location: { type: 'project', projectKeyOrId: 'JQLG' } }`), если их нет;
+  1. метка `jg-sprint` на задачах `project = JQLG AND labels = jg-task AND key >= JQLG-8000 AND key < JQLG-9000` (1 000 задач) и метка `jg-sprint-big` на задачах `project = JQLG AND labels = jg-task AND key >= JQLG-10000 AND key < JQLG-12200` (2 200 задач; если `jg-task` в диапазоне меньше — сдвинуть верхнюю границу, пока не наберётся 2 200); `PUT /rest/api/3/issue/{id}` с `update.labels.add`, 4 параллельно, пропуская уже помеченные;
+  2. фильтр «JQLG board filter» (`project = JQLG AND labels in (jg-sprint, jg-sprint-big) ORDER BY Rank ASC`, `sharePermissions: [{ type: 'authenticated' }]`) и scrum-доска «JQLG board» (`POST /rest/agile/1.0/board { name, type: 'scrum', filterId, location: { type: 'project', projectKeyOrId: 'JQLG' } }`), если их нет;
   3. переход в Done: `GET /rest/api/3/issue/{key}/transitions`, первый переход, у которого `to.statusCategory.key === 'done'`;
   4. для s = 1…30 по очереди: создать спринт `JQLG S<s>` (`POST /rest/agile/1.0/sprint { name, originBoardId }`); положить 20 задач (`POST /rest/agile/1.0/sprint/{id}/issue { issues }`); запустить (`POST /rest/agile/1.0/sprint/{id} { state: 'active', startDate: now, endDate: now + 14 d }`); подождать 3 с; добавить 5 задач (время каждой — `added`); убрать 3 из начальных в бэклог (`POST /rest/agile/1.0/backlog/issue`, время — `removed`); вернуть 1 из убранных (`readded`); перевести 10 начальных в Done (`done`); закрыть (`state: 'closed'`); после закрытия прочитать поле Sprint у всех задач спринта и записать в лог, что Jira сделала с незавершёнными;
-  5. затем `JQLG S31` — активный с 20 задачами, `JQLG S32`, `JQLG S33` — будущие (для `nextSprint` и замера свежести);
-  6. все запросы — через `api` из `apps/query/scripts/lib/http.mjs` (таймаут 30 с, повтор сетевых ошибок); POST, меняющие состав спринта, — с `{ unsafe: true }`: при `UnsafeRetryError` перечитать `GET /rest/agile/1.0/sprint/{id}/issue` и повторить только неприменённое.
+  5. большой спринт `JQLG SB` (только в полном прогоне, без `--limit`): создать; положить 1 100 задач `jg-sprint-big` (`initial`; Agile API принимает до 50 задач за запрос — пачками по 50); запустить; добавить остальные 1 100 задач `jg-sprint-big` (`added`); убрать в бэклог 1 050 из начальных (`removed`); перевести в Done все 1 100 добавленных (`done`); закрыть. Ожидаемо: `addedAfterSprintStart` — 1 100, `removedAfterSprintStart` — 1 050, `completeInSprint` — 1 100, `incompleteInSprint` — 50 (оставшиеся начальные);
+  6. затем `JQLG S31` — активный с 20 задачами, `JQLG S32`, `JQLG S33` — будущие (для `nextSprint` и замера свежести);
+  7. все запросы — через `api` из `apps/query/scripts/lib/http.mjs` (таймаут 30 с, повтор сетевых ошибок); POST, меняющие состав спринта, — с `{ unsafe: true }`: при `UnsafeRetryError` перечитать `GET /rest/agile/1.0/sprint/{id}/issue` и повторить только неприменённое.
   Сохранить `atlassian/data/jg6-seed.json` после каждого спринта.
 
 - [ ] **Step 2: `seed-jira-comments.mjs`.**
@@ -4423,7 +4774,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ```bash
 git add atlassian/tools/seed-jira-sprints.mjs atlassian/tools/seed-jira-comments.mjs
-git commit -m "JQL-23: Add seeders for 30 sprints with known history and restricted comments and attachments
+git commit -m "JQL-25: Add seeders for 30 sprints with known history and restricted comments and attachments
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -4438,8 +4789,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Create: `atlassian/tools/j-g67-index/{manifest.yml,package.json,src/index.js}`, `atlassian/tools/measure-jql-jg67.mjs`
 
 **Interfaces:**
-- Consumes: `jg6-seed.json`, `jg7-seed.json` (Task 18), `apps/query/scripts/lib/{http.mjs,report.mjs}` (Task 16), выводы Task 3 (имена событий, предел changelog).
-- Produces: JQL-функции прототипа `g6AddedAfterSprintStart(board, sprint)` и `g7Commented(clauses)` (`by <accountId>`, `after <YYYY-MM-DD>`); webtrigger `g67-control` (`?action=start&part=sprint|comments`, `?action=progress`, `?action=reset`); `measure-jql-jg67.mjs --phase backfill|sprint-reference|sprint-latency|comment-latency|comment-complete [--part sprint|comments] [--url <webtrigger>] [--n 30]` → `atlassian/data/jg67-<phase>.json`.
+- Consumes: `jg6-seed.json`, `jg7-seed.json` (Task 18), `apps/query/scripts/lib/{http.mjs,latency.mjs,report.mjs}` (Task 16; `waitFor` — из общего `latency.mjs`, не копия), выводы Task 3 (имена событий, предел changelog).
+- Produces: JQL-функции прототипа `g6AddedAfterSprintStart(board, sprint)`, `g7Commented(clauses)` (`by <accountId>`, `after <YYYY-MM-DD>`) и `g7HasAttachments(ext)` (вложения J-G7, P-2); webtrigger `g67-control` (`?action=start&part=sprint|comments`, `?action=progress`, `?action=reset`); `measure-jql-jg67.mjs --phase backfill|sprint-reference|sprint-latency|comment-latency|comment-complete|attachment-latency|attachment-complete [--part sprint|comments] [--url <webtrigger>] [--n 30]` → `atlassian/data/jg67-<phase>.json`.
 
 - [ ] **Step 1: Манифест** `atlassian/tools/j-g67-index/manifest.yml`:
 
@@ -4470,6 +4821,17 @@ modules:
         - in
         - not in
       function: fn-commented
+    - key: g7-has-attachments
+      name: g7HasAttachments
+      arguments:
+        - name: ext
+          required: true
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-attachments
   trigger:
     - key: g67-events
       function: on-event
@@ -4494,6 +4856,8 @@ modules:
       handler: index.added
     - key: fn-commented
       handler: index.commented
+    - key: fn-attachments
+      handler: index.hasAttachments
     - key: on-event
       handler: index.onEvent
     - key: on-backfill
@@ -4690,7 +5054,12 @@ async function commentedValue([clauses]) {
   return rows.length > 1000 ? { error: `${rows.length} values` } : { jql: list(rows) };
 }
 
-const VALUE = { g6AddedAfterSprintStart: addedValue, g7Commented: commentedValue };
+async function attachmentsValue([ext]) {
+  const rows = (await sql.prepare('SELECT DISTINCT issue_id FROM attachment_meta WHERE ext = ?').bindParams(String(ext).replace(/^\.+/, '').toLowerCase()).execute()).rows;
+  return rows.length > 1000 ? { error: `${rows.length} values` } : { jql: list(rows) };
+}
+
+const VALUE = { g6AddedAfterSprintStart: addedValue, g7Commented: commentedValue, g7HasAttachments: attachmentsValue };
 
 async function evaluate(name, args) {
   try {
@@ -4706,6 +5075,10 @@ export const added = async (payload) => {
 };
 export const commented = async (payload) => {
   const r = await evaluate('g7Commented', payload.clause.arguments);
+  return r.error ? { error: r.error, storeErrorAsPrecomputation: false } : r;
+};
+export const hasAttachments = async (payload) => {
+  const r = await evaluate('g7HasAttachments', payload.clause.arguments);
   return r.error ? { error: r.error, storeErrorAsPrecomputation: false } : r;
 };
 
@@ -4757,14 +5130,16 @@ export async function onControl(request) {
 }
 ```
 
-Прототип индексирует `sprint`-часть одним проходом changelog и `comments`-часть одним проходом bulkfetch — время каждой части меряется отдельно (две строки ворот).
+Прототип индексирует `sprint`-часть одним проходом changelog и `comments`-часть (комментарии и вложения) одним проходом bulkfetch — время каждой части меряется отдельно (две строки ворот).
 
-- [ ] **Step 3: `atlassian/tools/measure-jql-jg67.mjs`** — фазы (`api`, `ids`, `bulk`, `pool`, `sleep`, `stats` — из `apps/query/scripts/lib/http.mjs`; `summary`, `compare` — из `report.mjs`; результат — `atlassian/data/jg67-<phase>.json`):
+- [ ] **Step 3: `atlassian/tools/measure-jql-jg67.mjs`** — фазы (`api`, `ids`, `bulk`, `pool`, `sleep`, `stats` — из `apps/query/scripts/lib/http.mjs`; `waitFor` — из `apps/query/scripts/lib/latency.mjs`; `summary`, `compare` — из `report.mjs`; результат — `atlassian/data/jg67-<phase>.json`):
   - `backfill --part sprint|comments --url <URL webtrigger>`: `GET <url>?action=start&part=<part>`; каждые 30 с `GET <url>?action=progress` до `finishedAt`; итог: минуты, `done`, `total`.
-  - `sprint-reference`: для 30 закрытых спринтов из `jg6-seed.json`: результат `issue in g6AddedAfterSprintStart("JQLG board", "<имя>")`; эталон A — ключи `added` + `readded` из `jg6-seed.json` (то, что засев сделал после старта); эталон B — по REST: для задач спринта и задач из `removed` — `GET /rest/api/3/issue/{key}/changelog` (все страницы), события поля `Sprint` с добавлением id спринта после `activatedDate ?? startDate` и не позже `completeDate`; `compare` с обоими; ворота — 30 из 30 `complete` против эталона B и совпадение A с B.
+  - `sprint-reference`: для 30 закрытых спринтов из `jg6-seed.json`: результат `issue in g6AddedAfterSprintStart("JQLG board", "<имя>")`; эталон A — ключи `added` + `readded` из `jg6-seed.json` (то, что засев сделал после старта); эталон B — по REST: для задач спринта и задач из `removed` — `GET /rest/api/3/issue/{key}/changelog` (все страницы), события поля `Sprint` с добавлением id спринта после `activatedDate ?? startDate` и не позже `completeDate`; `compare` с обоими. Вердикт ворот — 30 из 30 `complete` против эталона B (§9: «эталон, восстановленный из changelog»); сравнение A с B — проверка сеялки, не часть ворот (P-1): расхождение A и B печатается отдельной строкой `seeder-check` и означает починку засева или инструмента и повтор замера.
   - `sprint-latency --n 30`: активный `JQLG S31`; n раз: взять задачу `labels = jg-sprint AND sprint is EMPTY`, `POST /rest/agile/1.0/sprint/{id}/issue` (`unsafe: true`, при `UnsafeRetryError` — проверить состав и не повторять применённое), затем каждые 2 с `issue in g6AddedAfterSprintStart("JQLG board", "JQLG S31") AND id = X` до появления (таймаут 10 мин) → секунды; `summary`.
-  - `comment-latency --n 30`: n раз комментарий «probe N» к задаче `JQLG` из `labels = jg-mid`, затем ожидание `issue in g7Commented("by <accountId из /myself> after <сегодня UTC>") AND id = X`; `summary`.
+  - `comment-latency --n 30`: n раз комментарий «probe N» к задаче `JQLG` из `labels = jg-mid`, затем `waitFor('issue in g7Commented("by <accountId из /myself> after <сегодня UTC>")', X, true, t)`; `summary`.
   - `comment-complete`: результат `g7Commented("by <accountId> after 2020-01-01")` против эталона — `bulk(все id project in (JQLG, RPT), ['comment'])` (+ догрузка `GET …/comment`, где `total > comments.length`), задачи с комментарием этого автора; `compare`.
+  - `attachment-latency --n 30` (P-2): n раз вложение `probe-<N>.jg7` (multipart, `X-Atlassian-Token: no-check`) к i-й задаче из `project = JQLG AND labels = jg-mid ORDER BY key`, у которой ещё нет вложения `.jg7` (проверка по `bulk(…, ['attachment'])` до прогона), затем `waitFor('issue in g7HasAttachments("jg7")', X, true, t)`; `summary`.
+  - `attachment-complete` (P-2): для каждого расширения `xlsx`, `pdf`, `png`, `txt`, `docx` — результат `g7HasAttachments("<ext>")` против эталона `bulk(все id project in (JQLG, RPT), ['attachment'])` (задачи с вложением, имя которого оканчивается на `.<ext>`); `compare`; итог — `complete` у всех пяти.
 
 - [ ] **Step 4: Деплой и проверка.**
 
@@ -4776,13 +5151,13 @@ perl -e 'alarm 300; exec @ARGV' forge install -e development --site artuplabs-de
 forge webtrigger -e development --site artuplabs-dev.atlassian.net --product jira
 ```
 
-`node --check atlassian/tools/measure-jql-jg67.mjs`; `GET <url>?action=progress` → JSON с `sprint: null, comments: null`.
+`node --check atlassian/tools/measure-jql-jg67.mjs`; `GET <url>?action=progress` → JSON с `sprint: null, comments: null`; в редакторе JQL сайта подсказка показывает `g6AddedAfterSprintStart`, `g7Commented`, `g7HasAttachments`.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add atlassian/tools/j-g67-index atlassian/tools/measure-jql-jg67.mjs
-git commit -m "JQL-24: Add the index probe and the measurement tool for gates J-G6 and J-G7
+git commit -m "JQL-26: Add the index probe and the measurement tool for gates J-G6 and J-G7
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -4796,7 +5171,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: Tasks 18, 19.
-- Produces: вердикт J-G6 «пройдено / не пройдено» с числами. Не пройдено → Task 21 не исполняется (функции истории спринтов не отгружаются), `SHIPPED_GROUPS` без `sprint`, справочник и листинг без истории спринтов; Tasks 22–23 (ядро истории и инфраструктура индекса) исполняются, только если пройден J-G7 (Task 22 идёт сразу после этой задачи).
+- Produces: вердикт J-G6 «пройдено / не пройдено» с числами. После этой задачи **всегда** идёт Task 21 (замер J-G7) — при любом исходе J-G6. Не пройдено → Task 24 (функции истории спринтов) не исполняется, `sprint` не входит в `SHIPPED_GROUPS`, справочник и листинг без истории спринтов; `previousSprint`/`nextSprint` остаются (Q-R9). Tasks 22–23 (ядро истории и инфраструктура индекса) исполняются, если пройден J-G6 **или** J-G7.
 
 Ворота (спецификация §9, дословно, записаны до замера): **«J-G6: заполнение индекса (узлы, связи, changelog Sprint+status через `POST /rest/api/3/changelog/bulkfetch`) на 50 000 задач ≤ 60 мин; событие → функция спринта p90 ≤ 60 с; `addedAfterSprintStart` на 30 спринтах совпадает с эталоном, восстановленным из changelog вручную, на 100%. Не прошло — группа уходит в v1.1 (Ruling), остальное идёт»**. По Q-R9 узлы и связи не индексируются — меряется то, что строится (changelog Sprint+status); порог тот же.
 
@@ -4812,19 +5187,19 @@ Expected: в `jg6-seed.json` 30 закрытых спринтов, S31 акти�
 
 - [ ] **Step 2: Заполнение индекса спринтов.** `node atlassian/tools/measure-jql-jg67.mjs --phase backfill --part sprint --url <URL>` → минуты. Порог ≤ 60.
 
-- [ ] **Step 3: Полнота на 30 спринтах.** `node atlassian/tools/measure-jql-jg67.mjs --phase sprint-reference` → 30 строк; порог — все `complete` против эталона B и A = B.
+- [ ] **Step 3: Полнота на 30 спринтах.** `node atlassian/tools/measure-jql-jg67.mjs --phase sprint-reference` → 30 строк; порог — 30 из 30 `complete` против эталона B (changelog по REST). Строка `seeder-check` (A ≠ B) — не вердикт ворот (P-1): починить засев (`seed-jira-sprints.mjs`) или инструмент, повторить Step 1–3; записать, что чинилось.
 
 - [ ] **Step 4: Свежесть.** `node atlassian/tools/measure-jql-jg67.mjs --phase sprint-latency --n 30` → p90. Порог ≤ 60 с.
 
-- [ ] **Step 5: Вердикт.** Строка в §11 брифа: `| J-G6 | заполнение changelog Sprint+status на <N> задачах — <M> мин; полнота addedAfterSprintStart 30/30 (эталон changelog и засев совпали); свежесть p50 … p90 … max … с; потерь … | <дата> | пройдено / не пройдено |`.
-  - В любом случае дальше — Task 22 (ворота J-G7), затем по итогам обоих ворот.
-  - Не пройдено (любая из трёх частей) → строка rulings: `| Q-Rn | J-G6 не пройден (<какая часть, числа>): функции addedAfterSprintStart, removedAfterSprintStart, incompleteInSprint, completeInSprint — в v1.1; previousSprint/nextSprint остаются (Q-R9) | ворота §9, Q-R1 |`; Task 21 пропустить; в Task 30 и Task 31 случаи группы `sprint` не запускать; план идёт дальше с Task 22.
+- [ ] **Step 5: Вердикт.** Строка в §11 брифа: `| J-G6 | заполнение changelog Sprint+status на <N> задачах — <M> мин; полнота addedAfterSprintStart <k>/30 против эталона changelog (проверка засева: A = B / чинилось: …); свежесть p50 … p90 … max … с; потерь … | <дата> | пройдено / не пройдено |`.
+  - В любом случае дальше — Task 21 (ворота J-G7); после неё — по итогам обоих ворот (граф в конце плана).
+  - Не пройдено (любая из трёх частей) → строка rulings: `| Q-Rn | J-G6 не пройден (<какая часть, числа>): функции addedAfterSprintStart, removedAfterSprintStart, incompleteInSprint, completeInSprint — в v1.1; previousSprint/nextSprint остаются (Q-R9) | ворота §9, Q-R1 |`; Task 24 пропустить; Tasks 22–23 — только если J-G7 пройден (Task 21); в Task 30, 31 и 32 случаи и фазы группы `sprint` не запускать.
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add atlassian/25_app5_jql.md atlassian/plans/2026-10-03-artup-query-v1-rulings.md
-git commit -m "JQL-25: Record the J-G6 gate measurement for sprint history
+git commit -m "JQL-27: Record the J-G6 gate measurement for sprint history
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -4838,15 +5213,16 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: прототип и инструмент Task 19, засев Task 20 Step 1.
-- Produces: вердикт J-G7. Не пройдено → по Q-R11 Tasks 25 и 27 не исполняются (а если не пройден и J-G6 — ещё Tasks 22–24), `comment` и `attachment` не входят в `SHIPPED_GROUPS`; Tasks 26 и 28 (`dateCompare`, `expression`) исполняются без псевдополей `firstCommented`/`lastCommented`.
+- Исполняется всегда, при любом исходе J-G6 (Task 20).
+- Produces: вердикт J-G7 отдельно для комментариев и для вложений (P-2). Не пройдены оба → по Q-R11 Tasks 25 и 27 не исполняются, `comment` и `attachment` не входят в `SHIPPED_GROUPS`; Tasks 26 и 28 (`dateCompare`, `expression`) исполняются без псевдополей `firstCommented`/`lastCommented`. Не пройдены только вложения → в v1.1 уходят только `fileAttached` и `hasAttachments(ext)` (`attachment` не входит в `SHIPPED_GROUPS`), Tasks 25 и 27 исполняются для `comment`. Не пройдены только комментарии → в v1.1 уходят `commented`, `lastComment`, `hasComments` и псевдополя, Tasks 25 и 27 исполняются для `attachment`. Если не пройдены и J-G6, и J-G7 целиком — Tasks 22–23 тоже не исполняются (Task 24 зависит только от J-G6).
 
 Ворота (спецификация §9, дословно, записаны до замера): **«J-G7: заполнение метаданных комментариев и вложений на 50 000 задач (6 000+ комментариев) ≤ 60 мин; p90 ≤ 60 с; полнота 100%. Не прошло — группа в v1.1»**.
 
 - [ ] **Step 1: Заполнение.** `node atlassian/tools/measure-jql-jg67.mjs --phase backfill --part comments --url <URL>` → минуты (порог ≤ 60); число комментариев в индексе ≥ 6 000 (сверить с `jg7-seed.json`).
 
-- [ ] **Step 2: Свежесть.** `node atlassian/tools/measure-jql-jg67.mjs --phase comment-latency --n 30` → p90 (порог ≤ 60 с).
+- [ ] **Step 2: Свежесть.** Две строки: `node atlassian/tools/measure-jql-jg67.mjs --phase comment-latency --n 30` → p90 комментариев; `node atlassian/tools/measure-jql-jg67.mjs --phase attachment-latency --n 30` → p90 вложений (порог каждой ≤ 60 с, без потерь за 10 мин).
 
-- [ ] **Step 3: Полнота.** `node atlassian/tools/measure-jql-jg67.mjs --phase comment-complete` → `complete: true` (порог 100%).
+- [ ] **Step 3: Полнота.** Две строки: `node atlassian/tools/measure-jql-jg67.mjs --phase comment-complete` → `complete: true`; `node atlassian/tools/measure-jql-jg67.mjs --phase attachment-complete` → `complete: true` у всех пяти расширений (порог каждой 100%).
 
 - [ ] **Step 4: Снять прототип с сайта.**
 
@@ -4855,13 +5231,17 @@ set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
 cd atlassian/tools/j-g67-index && forge uninstall -e development --site artuplabs-dev.atlassian.net --product jira --non-interactive
 ```
 
-- [ ] **Step 5: Вердикт.** Строка §11 брифа: `| J-G7 | заполнение комментариев и вложений: <N> задач, <C> комментариев, <A> вложений — <M> мин; свежесть p50 … p90 … max … с; полнота <x>% | <дата> | пройдено / не пройдено |`. Не пройдено → строка rulings `| Q-Rn | J-G7 не пройден (<часть, числа>): commented, lastComment, hasComments, fileAttached, hasAttachments(ext) — в v1.1; dateCompare и expression остаются без firstCommented/lastCommented (Q-R11) | ворота §9, Q-R1 |`, Tasks 25 и 27 пропустить.
+- [ ] **Step 5: Вердикт.** Строка §11 брифа: `| J-G7 | заполнение комментариев и вложений: <N> задач, <C> комментариев, <A> вложений — <M> мин; свежесть комментариев p50 … p90 … max … с, вложений p50 … p90 … max … с; полнота комментариев <x>%, вложений <y>% | <дата> | комментарии: пройдено / не пройдено; вложения: пройдено / не пройдено |`. Заполнение (Step 1) общее: не прошло оно — не пройдены обе части.
+  - Не пройдены обе → строка rulings `| Q-Rn | J-G7 не пройден (<часть, числа>): commented, lastComment, hasComments, fileAttached, hasAttachments(ext) — в v1.1; dateCompare и expression остаются без firstCommented/lastCommented (Q-R11) | ворота §9, Q-R1 |`, Tasks 25 и 27 пропустить.
+  - Не пройдены только вложения → строка rulings `| Q-Rn | J-G7 по вложениям не пройден (<числа>): fileAttached, hasAttachments(ext) — в v1.1; функции комментариев отгружаются (P-2, Q-R11) | ворота §9, Q-R1 |`; Tasks 25 и 27 исполняются, в Task 27 `SHIPPED_GROUPS` += только `'comment'`.
+  - Не пройдены только комментарии → строка rulings `| Q-Rn | J-G7 по комментариям не пройден (<числа>): commented, lastComment, hasComments и псевдополя firstCommented/lastCommented — в v1.1; функции вложений отгружаются (Q-R11) | ворота §9, Q-R1 |`; Tasks 25 и 27 исполняются, в Task 27 `SHIPPED_GROUPS` += только `'attachment'`.
+  - Дальше — Tasks 22–23, если пройден J-G6 или хотя бы одна часть J-G7; иначе — Task 26 (граф в конце плана).
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add atlassian/25_app5_jql.md atlassian/plans/2026-10-03-artup-query-v1-rulings.md
-git commit -m "JQL-26: Record the J-G7 gate measurement for comment and attachment metadata
+git commit -m "JQL-28: Record the J-G7 gate measurement for comment and attachment metadata
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -4874,13 +5254,23 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Files:**
 - Create: `apps/query/src/core/sprint-history.js`
+- Modify: `apps/query/test/fixtures/changelog-bulkfetch.json` (перезапись на засеянных задачах спринта)
 - Test: `apps/query/test/core/sprint-history.test.js`
 
 **Interfaces:**
-- Consumes: фикстура `test/fixtures/changelog-bulkfetch.json` (Task 3); `Window = { startAt, completeAt }` из `sprintWindow` (Task 8).
+- Consumes: команда `changelog` скрипта `scripts/live-checks.mjs` с флагами `--keys/--roles/--sprint/--closed-at` (Task 3); `atlassian/data/jg6-seed.json` (засев Task 20 Step 1); `Window = { startAt, completeAt }` из `sprintWindow` (Task 8); `byNumber`, `sortIds` (Task 7).
 - Produces: `toMs(value) → number|null` (понимает `+0000`); `sprintIdsOf(value) → Set<string>`; `sprintEvents(issueId, histories, sprintFieldIds: Set) → SprintEvent[]`, `SprintEvent = { issueId, sprintId, kind: 'added'|'removed', at, changeId }`; `statusEvents(issueId, histories, categoryOf: Map) → StatusEvent[]`, `StatusEvent = { issueId, at, from, to, changeId }`; `addedAfterStart(events, sprintId, window) → string[]`; `removedAfterStart(events, sprintId, window) → string[]`; `membersAt(currentIds, events, sprintId, t) → Set<string>`; `categoryAt(changes, t, current) → string`; `sprintOutcome({ sprintId, window, now, currentIds, events, statusByIssue: Map, currentCategory: Map }) → { complete: string[], incomplete: string[] }`.
 
-- [ ] **Step 1: Падающие тесты** `test/core/sprint-history.test.js`:
+- [ ] **Step 1: Перезаписать фикстуру changelog.** Фикстура Task 3 (JQLG-1…3) записана до засева спринтов и изменений поля Sprint не содержит — тест на ней ничего бы не проверял. Из `atlassian/data/jg6-seed.json` взять спринт `JQLG S1` (`sprints[0]`): `R` — ключ из `readded` (добавлен до старта, убран, возвращён), `X` — ключ из `removed`, которого нет в `readded` (добавлен до старта, убран), `A` — ключ из `added` (добавлен после старта); затем из корня репозитория:
+
+```bash
+set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
+node apps/query/scripts/live-checks.mjs changelog --keys R,X,A --roles readded,removed,added --sprint <sprints[0].id> --closed-at <sprints[0].closedAt>
+```
+
+(вместо `R,X,A` — три ключа). Файл `test/fixtures/changelog-bulkfetch.json` содержит `sprintFieldId`, `sprintId`, `closedAt`, `roles` и `issueChangeLogs` трёх задач, без текстов.
+
+- [ ] **Step 2: Падающие тесты** `test/core/sprint-history.test.js`:
 
 ```js
 import { readFileSync } from 'node:fs';
@@ -4919,10 +5309,14 @@ describe('changelog parsing', () => {
       { issueId: '7', at: 30, from: 'indeterminate', to: 'done', changeId: '3' },
     ]);
   });
-  it('reads the recorded bulkfetch answer into events with numeric ids and times', () => {
+  it('reads the seeded sprint history from a recorded bulkfetch answer', () => {
     const answer = JSON.parse(readFileSync(new URL('../fixtures/changelog-bulkfetch.json', import.meta.url), 'utf8'));
-    const events = (answer.issueChangeLogs ?? []).flatMap((log) => sprintEvents(log.issueId, log.changeHistories, new Set()));
-    expect(events.every((e) => /^\d+$/.test(e.sprintId) && Number.isFinite(e.at))).toBe(true);
+    const kindsOf = (log) => sprintEvents(log.issueId, log.changeHistories, new Set([answer.sprintFieldId]))
+      .filter((e) => e.sprintId === String(answer.sprintId) && e.at < answer.closedAt)
+      .sort((a, b) => a.at - b.at)
+      .map((e) => e.kind);
+    const byRole = Object.fromEntries(answer.issueChangeLogs.map((log) => [answer.roles[log.issueId], kindsOf(log)]));
+    expect(byRole).toEqual({ readded: ['added', 'removed', 'added'], removed: ['added', 'removed'], added: ['added'] });
   });
 });
 
@@ -4961,15 +5355,15 @@ describe('membership and categories at a time', () => {
 });
 ```
 
-- [ ] **Step 2: Run** `npx vitest run test/core/sprint-history.test.js` → FAIL.
+- [ ] **Step 3: Run** `npx vitest run test/core/sprint-history.test.js` → FAIL.
 
-- [ ] **Step 3: `src/core/sprint-history.js`**
+- [ ] **Step 4: `src/core/sprint-history.js`**
 
 ```js
+import { sortIds } from './ids.js';
+
 const NUMERIC = /^\d+$/;
-const byNumber = (a, b) => Number(a) - Number(b);
 const byTime = (a, b) => a.at - b.at || Number(a.changeId) - Number(b.changeId);
-const sortIds = (ids) => [...new Set(ids)].sort(byNumber);
 
 /** Epoch ms from a number, an ISO string or Jira's `+0000` form; null when absent. */
 export function toMs(value) {
@@ -5068,13 +5462,13 @@ export function sprintOutcome({ sprintId, window, now, currentIds, events, statu
 
 Смысл «убраны» (не возвращены до закрытия) и «добавлены» (даже если потом убраны) — по Task 1; если сверка с ScriptRunner записала другой смысл, поправить тест и функцию по Ruling.
 
-- [ ] **Step 4: Run** `npx vitest run test/core` → PASS; `npm run lint` → 0 ошибок.
+- [ ] **Step 5: Run** `npx vitest run test/core` → PASS; `npm run coverage` → PASS (порог ветвлений `src/core/**`); `npm run lint` → 0 ошибок.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add apps/query/src/core/sprint-history.js apps/query/test/core/sprint-history.test.js
-git commit -m "JQL-27: Derive sprint additions, removals and outcomes from changelog events
+git add apps/query/src/core/sprint-history.js apps/query/test/core/sprint-history.test.js apps/query/test/fixtures/changelog-bulkfetch.json
+git commit -m "JQL-29: Derive sprint additions, removals and outcomes from changelog events
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -5087,11 +5481,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Files:**
 - Create: `apps/query/src/infra/{schema.js,indexRepo.js}`, `apps/query/src/handlers/{backfill.js,indexing.js,lifecycle.js}`
-- Modify: `apps/query/src/infra/jira.js` (`searchPage`, `projects`), `apps/query/src/infra/state.js` (`sprintFields`), `apps/query/src/deps.js`, `apps/query/src/index.js`, `apps/query/manifest.yml`
+- Modify: `apps/query/src/core/limits.js` (`SQL_IN_CHUNK`, `SPRINT_FIELDS_TTL_MS`, `RECONCILE_RECENT_MAX`), `apps/query/src/infra/jira.js` (`searchPage`, `projects`), `apps/query/src/infra/state.js` (`sprintFields`), `apps/query/src/deps.js`, `apps/query/src/index.js`, `apps/query/manifest.yml`
 - Test: `apps/query/test/infra/{schema.test.js,indexRepo.test.js,jira.test.js}`, `apps/query/test/handlers/{backfill.test.js,indexing.test.js,lifecycle.test.js}`
 
 **Interfaces:**
-- Consumes: `sprintEvents`, `statusEvents` (Task 22), `sprintWindow` (Task 8), `indexPartOf` (Task 13), `SHIPPED_GROUPS`, `CHANGELOG_BATCH`, `WORKER_BUDGET_MS`.
+- Consumes: `sprintEvents`, `statusEvents` (Task 22), `sprintWindow` (Task 8), `indexPartOf` (Task 13), `SHIPPED_GROUPS`, `CHANGELOG_BATCH`, `WORKER_BUDGET_MS`; новые пределы этой задачи — в `limits.js`.
 - Produces:
   - `Jira.searchPage(jql, nextPageToken|null) → { ids: string[], nextPageToken: string|null }`, `Jira.projects() → [{ id, key }]`.
   - `state.sprintFields: { get(), set(v), clear() }` — `{ ids: string[], at }`.
@@ -5100,7 +5494,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `startBackfill(deps, part, { projects }) → Part`; `onBackfill(deps, event) → { finished }|{ continued }|{ skipped }`; тело задачи очереди `query-backfill`: `{ kind: 'backfill', part, generation }`.
   - `createIndexing(deps) → { parts: { sprint: IndexPart }, indexEvent(event), reconcileIndex() → { started, reindexed } , shippedParts() → string[], shippedTables() → string[] }`; `IndexPart = { tables: string[], prepare(), index(ids, project: { id, key }) }`.
   - `onLifecycle(deps) → { started: string[] }`.
-  - `Deps` дополняется: `repo`, `indexParts`, `migrate()`, `shippedParts()`; `indexEvent` и `indexReconcile` — из `createIndexing`.
+  - `Deps` дополняется: `repo`, `indexParts`, `migrate()`, `shippedParts()`; `indexEvent` и `indexReconcile` — из `createIndexing`. В `createDeps()` `repo` — локальная константа `const repo = createIndexRepo();`, объявленная до литерала `deps`; Tasks 24, 27, 28 передают в свои `create*Compute` именно её (не `deps.repo` внутри литерала — это ReferenceError при загрузке модуля).
+  - `limits.js` += `SQL_IN_CHUNK = 500` (id в одном `IN (…)` и строк в одном `INSERT`), `SPRINT_FIELDS_TTL_MS` = 24 ч (кэш id полей Sprint), `RECONCILE_RECENT_MAX = 2000` (задач, перечитываемых часовой добивкой индекса).
+  - События спринтов пишутся в индекс (`sprint`), только когда часть `sprint` отгружена (`shippedParts()` её содержит — после Task 24); подписка триггера на них есть с Task 14.
 
 - [ ] **Step 1: Падающие тесты.** `test/infra/indexRepo.test.js`:
 
@@ -5333,7 +5729,18 @@ describe('index reads', () => {
 
 - [ ] **Step 2: Run** `npx vitest run` → FAIL.
 
-- [ ] **Step 3: `src/infra/schema.js`**
+- [ ] **Step 3: Пределы и `src/infra/schema.js`.** В конец `src/core/limits.js`:
+
+```js
+/** Ids in one SQL `IN (…)` list and rows in one INSERT. */
+export const SQL_IN_CHUNK = 500;
+/** How long the ids of the Sprint fields stay cached. */
+export const SPRINT_FIELDS_TTL_MS = 24 * 60 * 60 * 1000;
+/** Recently updated issues the hourly reconcile re-reads into the index. */
+export const RECONCILE_RECENT_MAX = 2000;
+```
+
+`src/infra/schema.js`:
 
 ```js
 import { migrationRunner } from '@forge/sql';
@@ -5381,10 +5788,10 @@ export async function runMigrations() {
 
 ```js
 import { sql } from '@forge/sql';
+import { SQL_IN_CHUNK } from '../core/limits.js';
 
-const CHUNK = 500;
 const marks = (n) => new Array(n).fill('?').join(',');
-const chunks = (list) => Array.from({ length: Math.ceil(list.length / CHUNK) }, (_, i) => list.slice(i * CHUNK, (i + 1) * CHUNK));
+const chunks = (list) => Array.from({ length: Math.ceil(list.length / SQL_IN_CHUNK) }, (_, i) => list.slice(i * SQL_IN_CHUNK, (i + 1) * SQL_IN_CHUNK));
 
 /** One prepared statement on the app's Forge SQL database. */
 export const execute = (query, params = []) => sql.prepare(query).bindParams(...params).execute();
@@ -5507,12 +5914,12 @@ export async function onBackfill(deps, event) {
 ```js
 import { SHIPPED_GROUPS } from '../core/catalog.js';
 import { sprintWindow } from '../core/boards.js';
+import { RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS } from '../core/limits.js';
 import { indexPartOf } from '../core/readiness.js';
 import { sprintEvents, statusEvents } from '../core/sprint-history.js';
 import { startBackfill } from './backfill.js';
 
 const SPRINT_FIELD = 'com.pyxis.greenhopper.jira:gh-sprint';
-const DAY_MS = 24 * 60 * 60 * 1000;
 const RECENT_JQL = 'updated >= -2h';
 
 const sprintRow = (s, boardId) => ({ id: String(s.id), boardId: String(boardId ?? s.originBoardId ?? 0), name: s.name ?? '', state: s.state ?? '', ...sprintWindow(s) });
@@ -5521,7 +5928,7 @@ const sprintRow = (s, boardId) => ({ id: String(s.id), boardId: String(boardId ?
 export function createIndexing(deps) {
   async function sprintFieldIds() {
     const cached = await deps.state.sprintFields.get();
-    if (cached && deps.now() - cached.at < DAY_MS) return new Set(cached.ids);
+    if (cached && deps.now() - cached.at < SPRINT_FIELDS_TTL_MS) return new Set(cached.ids);
     const ids = (await deps.jira.fields()).filter((f) => f.schema?.custom === SPRINT_FIELD).map((f) => f.id);
     await deps.state.sprintFields.set({ ids, at: deps.now() });
     return new Set(ids);
@@ -5563,6 +5970,7 @@ export function createIndexing(deps) {
     const type = String(event?.eventType ?? '');
     if (!shippedParts().length) return;
     if (type.startsWith('avi:jira-software:') && type.endsWith(':sprint')) {
+      if (!shippedParts().includes('sprint')) return;
       if (type.endsWith(':deleted:sprint')) await deps.repo.deleteSprint(String(event.sprint.id));
       else await deps.repo.upsertSprints([sprintRow(event.sprint)]);
       return;
@@ -5593,7 +6001,7 @@ export function createIndexing(deps) {
     }
     const excluded = await deps.state.excluded();
     const jql = excluded.length ? `${RECENT_JQL} AND project not in (${excluded.map((k) => `"${k}"`).join(', ')})` : RECENT_JQL;
-    const recent = (await deps.jira.searchPage(jql, null)).ids.slice(0, 2000);
+    const recent = (await deps.jira.searchPage(jql, null)).ids.slice(0, RECONCILE_RECENT_MAX);
     const byProject = new Map();
     for (const issue of await deps.jira.bulkIssues(recent, ['project'])) {
       const p = issue.fields.project;
@@ -5632,7 +6040,42 @@ export async function onLifecycle(deps) {
 }
 ```
 
-- [ ] **Step 9: Сборка.** `src/deps.js`: добавить `repo: createIndexRepo()`, `migrate: runMigrations`; после создания объекта `deps` — `const indexing = createIndexing(deps); deps.indexParts = indexing.parts; deps.indexEvent = indexing.indexEvent; deps.indexReconcile = indexing.reconcileIndex; deps.shippedParts = indexing.shippedParts;` (функция `createDeps` собирает объект в `const deps = { … }`, дописывает эти поля и возвращает его). `src/index.js`:
+- [ ] **Step 9: Сборка.** `src/deps.js` — импорты `createIndexRepo` (`./infra/indexRepo.js`), `runMigrations` (`./infra/schema.js`), `createIndexing` (`./handlers/indexing.js`); `createDeps` целиком:
+
+```js
+/** Production dependencies of every handler. */
+export function createDeps() {
+  const jira = appJira();
+  const state = createState({ kvs });
+  const repo = createIndexRepo();
+  const deps = {
+    jira,
+    state,
+    repo,
+    cache: createValueCache({ kvs, hash: sha1 }),
+    journal: createJournal({ kvs, beginsWith: WhereConditions.beginsWith }),
+    queue: createQueueClient(new Queue({ key: 'query-refresh' })),
+    backfillQueue: createQueueClient(new Queue({ key: 'query-backfill' })),
+    compute: { ...createHierarchyCompute({ jira }), ...createLinkCompute({ jira }), ...createBoardCompute({ jira }) },
+    migrate: runMigrations,
+    now: () => Date.now(),
+    sleep: (ms) => new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    }),
+    levels: Number(process.env.QUERY_TREE_LEVELS) || TREE_LEVELS,
+    debugEvents: process.env.QUERY_DEBUG_EVENTS === '1',
+    ready: async (functionName) => readinessError(await state.progress.get(), FUNCTION_BY_NAME.get(functionName).group),
+  };
+  const indexing = createIndexing(deps);
+  deps.indexParts = indexing.parts;
+  deps.indexEvent = indexing.indexEvent;
+  deps.indexReconcile = indexing.reconcileIndex;
+  deps.shippedParts = indexing.shippedParts;
+  return deps;
+}
+```
+
+Tasks 24, 27, 28 дописывают свои источники в `compute` этого литерала, передавая локальную `repo`. `src/index.js`:
 
 ```js
 import { onBackfill as handleBackfill } from './handlers/backfill.js';
@@ -5650,7 +6093,7 @@ export const onLifecycle = () => handleLifecycle(deps);
 
 ```bash
 git add apps/query
-git commit -m "JQL-28: Store sprint and status history in Forge SQL with a resumable backfill and event writes
+git commit -m "JQL-30: Store sprint and status history in Forge SQL with a resumable backfill and event writes
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -5668,7 +6111,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `addedAfterStart`, `removedAfterStart`, `sprintOutcome` (Task 22), `matchBoard`, `matchSprint`, `activeSprint`, `sprintWindow` (Task 8), `IndexRepo.sprintEventsOf`, `IndexRepo.statusEventsOf` (Task 23), `ERR.excluded`, `ERR.notFound`.
-- Produces: `createSprintCompute({ jira, repo, state, now }) → { addedAfterSprintStart, removedAfterSprintStart, incompleteInSprint, completeInSprint }` (результат — `{ ids, field: 'id', watch: null }`); случаи `CASES.m2` и эталоны `REFERENCES.{addedAfterSprintStart,removedAfterSprintStart,completeInSprint,incompleteInSprint}`; фаза `fresh --group sprint`.
+- Produces: `createSprintCompute({ jira, repo, state, now }) → { addedAfterSprintStart, removedAfterSprintStart, incompleteInSprint, completeInSprint }` (результат — `{ ids, field: 'id', watch: null }`); случаи `CASES.m2` (30 спринтов засева и большой спринт `big` на 2 200 задач — полнота на > 1 000, P-3) и эталоны `REFERENCES.{addedAfterSprintStart,removedAfterSprintStart,completeInSprint,incompleteInSprint}`; фаза `fresh --group sprint`. События спринтов подписаны в Task 14; эта задача только включает их запись в индекс — через `SHIPPED_GROUPS` часть `sprint` попадает в `shippedParts()`.
 
 - [ ] **Step 1: Падающие тесты** `test/compute/sprints.test.js`:
 
@@ -5774,7 +6217,7 @@ export function createSprintCompute({ jira, repo, state, now }) {
 }
 ```
 
-- [ ] **Step 4: Отгрузка группы.** `SHIPPED_GROUPS = ['query', 'site', 'board', 'sprint']`; в `catalog.test.js` ожидание `SHIPPED_GROUPS` и список `shippedFunctions` дополнить четырьмя функциями спринта; в `indexing.test.js` убрать `vi.mock` каталога. `src/deps.js`: `compute` += `createSprintCompute({ jira, repo, state, now: () => Date.now() })`. Манифест: `node scripts/gen-manifest-functions.mjs` → заменить блок `jira:jqlFunction`, добавить функции `fn-*`; в `trigger query-events` добавить события спринтов (`avi:jira-software:created:sprint`, `started`, `closed`, `updated`, `deleted` — имена по Task 3).
+- [ ] **Step 4: Отгрузка группы.** `SHIPPED_GROUPS = ['query', 'site', 'board', 'sprint']`; в `catalog.test.js` ожидание `SHIPPED_GROUPS` и список `shippedFunctions` дополнить четырьмя функциями спринта; в `indexing.test.js` убрать `vi.mock` каталога. `src/deps.js`: в литерале `deps` (Task 23) `compute` += `...createSprintCompute({ jira, repo, state, now: () => Date.now() })` — `repo` и `state` — локальные константы `createDeps`, объявленные до литерала. Манифест: `node scripts/gen-manifest-functions.mjs` → заменить блок `jira:jqlFunction`, добавить функции `fn-*`; триггер `query-events` не менять — события спринтов в нём с Task 14.
 
 - [ ] **Step 5: Эталоны и случаи приёмки.** В `scripts/lib/reference.mjs` добавить (независимо от `src/`):
 
@@ -5861,7 +6304,75 @@ async function outcomeRef([board, sprint], { candidates }) {
 }
 ```
 
-(`customfield_10020` — id поля Sprint с этого сайта из `docs/live-checks.md`; если другой — подставить его.) В `acceptance.mjs`: `args.candidates` по умолчанию `'project = JQLG AND labels = jg-sprint'`; `CASES.m2` строится из `atlassian/data/jg6-seed.json`: для каждого из 30 закрытых спринтов — `addedAfterSprintStart` и `removedAfterSprintStart` (`['JQLG board', name]`), для первых 10 — `completeInSprint` и `incompleteInSprint`, плюс `['addedAfterSprintStart', ['JQLG board'], 'active sprint']`. Фаза `fresh --group sprint` (`FRESH.sprint = async () => { … }`): n раз добавить в активный `JQLG S31` задачу из `labels = jg-sprint AND sprint is EMPTY` (Agile API, `unsafe: true`) и ждать `issue in addedAfterSprintStart("JQLG board") AND id = X` (как `waitFor`); n раз перевести задачу S31 в Done и ждать `issue in completeInSprint("JQLG board", "JQLG S31") AND id = X`; итог — `save('acceptance-fresh-sprint' + tag, …)`.
+(`customfield_10020` — id поля Sprint с этого сайта из `docs/live-checks.md`; если другой — подставить его.) В `acceptance.mjs` (в импорт из `./lib/http.mjs` добавить `UnsafeRetryError`; если импорта `readFileSync` ещё нет — `import { readFileSync } from 'node:fs';` в начало файла) — случаи `CASES.m2` из засева (геттер: файл засева читается, только когда выбран `--cases m2`), область эталонов и фаза `fresh --group sprint`; `waitFor`, `latencyResult` — из общего `lib/latency.mjs` (Task 16). Блок вставить сразу после `export const FRESH = …` и до `const PHASES` (к `CASES` и `FRESH` нельзя обращаться до их объявления):
+
+```js
+const JG6_SEED = new URL('../../../atlassian/data/jg6-seed.json', import.meta.url);
+const jg6Seed = () => JSON.parse(readFileSync(JG6_SEED, 'utf8'));
+args.candidates = args.candidates ?? 'project = JQLG AND labels in (jg-sprint, jg-sprint-big)';
+
+Object.defineProperty(CASES, 'm2', {
+  enumerable: true,
+  get() {
+    const seed = jg6Seed();
+    const board = 'JQLG board';
+    const SPRINT_FUNCTIONS = ['addedAfterSprintStart', 'removedAfterSprintStart', 'completeInSprint', 'incompleteInSprint'];
+    return [
+      ...seed.sprints.flatMap((s) => [
+        ['addedAfterSprintStart', [board, s.name], `${s.name}: added after the start`],
+        ['removedAfterSprintStart', [board, s.name], `${s.name}: removed after the start`],
+      ]),
+      ...seed.sprints.slice(0, 10).flatMap((s) => [
+        ['completeInSprint', [board, s.name], `${s.name}: done at the close`],
+        ['incompleteInSprint', [board, s.name], `${s.name}: not done at the close`],
+      ]),
+      ['addedAfterSprintStart', [board], 'active sprint'],
+      ...SPRINT_FUNCTIONS.map((fn) => [fn, [board, seed.big.name], `${seed.big.name}: sprint of 2 200 issues (> 1 000)`]),
+    ];
+  },
+});
+
+async function addToSprint(sprintId, issueId) {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    try {
+      await api('POST', `/rest/agile/1.0/sprint/${sprintId}/issue`, { issues: [issueId] }, { unsafe: true });
+      return;
+    } catch (error) {
+      if (!(error instanceof UnsafeRetryError)) throw error;
+      if ((await ids(`sprint = ${sprintId} AND id = ${issueId}`)).ids?.length) return;
+      await sleep(1000 * attempt);
+    }
+  }
+  throw new Error(`issue ${issueId} was not added to sprint ${sprintId}`);
+}
+
+async function toDone(issueId) {
+  const { transitions } = await api('GET', `/rest/api/3/issue/${issueId}/transitions`);
+  const done = transitions.find((t) => t.to?.statusCategory?.key === 'done');
+  await api('POST', `/rest/api/3/issue/${issueId}/transitions`, { transition: { id: done.id } });
+}
+
+FRESH.sprint = async () => {
+  const { active } = jg6Seed();
+  const free = (await ids('project = JQLG AND labels = jg-sprint AND sprint is EMPTY ORDER BY key')).ids.slice(0, args.n);
+  const open = (await ids(`sprint = ${active.id} AND statusCategory != Done ORDER BY key`)).ids.slice(0, args.n);
+  const rows = { addedAfterStart: [], completed: [] };
+  const t0 = Date.now();
+  for (const x of free) {
+    const t = Date.now();
+    await addToSprint(active.id, x);
+    rows.addedAfterStart.push(await waitFor(clause('addedAfterSprintStart', ['JQLG board']), x, true, t));
+  }
+  for (const x of open) {
+    const t = Date.now();
+    await toDone(x);
+    rows.completed.push(await waitFor(clause('completeInSprint', ['JQLG board', active.name]), x, true, t));
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-sprint'), { stats, ...result });
+};
+```
 
 - [ ] **Step 6: Run** `npx vitest run` → PASS; `npm run lint` → 0 ошибок; `forge lint` → без ошибок; `node --check apps/query/scripts/acceptance.mjs`.
 
@@ -5869,7 +6380,7 @@ async function outcomeRef([board, sprint], { candidates }) {
 
 ```bash
 git add apps/query
-git commit -m "JQL-29: Ship sprint history functions over the index with REST references
+git commit -m "JQL-31: Ship sprint history functions over the index with REST references
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -5880,17 +6391,17 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Model:** opus
 
-Исполняется, только если J-G7 пройден.
+Исполняется, только если J-G7 пройден хотя бы по одной части — комментариям или вложениям (Task 21, P-2).
 
 **Files:**
 - Create: `apps/query/src/core/{dates.js,comment-clauses.js}`
 - Test: `apps/query/test/core/{dates.test.js,comment-clauses.test.js}`
 
 **Interfaces:**
-- Consumes: `ERR` (Task 5).
+- Consumes: `ERR` (Task 5), `sortIds` (Task 7).
 - Produces:
   - `dates.js`: `DAY_MS`, `startOfDayMs(ms) → ms`, `parseDate(text, now) → { ms } | { error }` (UTC; `YYYY-MM-DD`, `YYYY/MM/DD`, `… HH:mm`, `±N[mhdw]`, `start|endOf(Day|Week|Month|Year)(±N | "±N[mhdw]")`, неделя с понедельника).
-  - `comment-clauses.js`: `tokenize(text) → { words } | { error }`; `parseClauses(text, kind: 'comment'|'attachment', now) → { clauses } | { error }`, `Clauses = { by?, inRole?, inGroup?, roleLevel?, groupLevel?, after?, before?, onStart?, onEnd?, ext? }`; `metaMatches(meta, clauses, people) → boolean`, `Meta = { id, issueId, projectId, author, createdAt, visType, visValue, ext }`, `People = { by?: Set, inGroup?: Set, inRole?: Map<projectId, Set> }`; `issuesWith(metas, clauses, { last, people }) → string[]`; `issuesWithCount(metas, n) → string[]`.
+  - `comment-clauses.js`: `tokenize(text) → { words } | { error }`; `parseClauses(text, kind: 'comment'|'attachment', now) → { clauses } | { error }`, `Clauses = { by?, inRole?, inGroup?, roleLevel?, groupLevel?, after?, before?, onStart?, onEnd?, ext? }`; `metaMatches(meta, clauses, people) → boolean`, `Meta = { id, issueId, projectId, author, createdAt, visType, visValue, ext }`, `People = { by?: Set, inGroup?: Set, inRole?: Map<projectId, Set> }`; `issuesWith(metas, clauses, { last, people }) → string[]`. Счёт комментариев на задачу (`hasComments`) — в SQL (`IndexRepo.issuesWithCommentCount`, Task 27), отдельной функции ядра нет. Условия — по итогу сверки ScriptRunner (P-8, Task 1): пустые условия = любой комментарий; `roleLevel`/`groupLevel` — видимость комментария; у вложений есть `on`.
 
 - [ ] **Step 1: Падающие тесты.** `test/core/dates.test.js`:
 
@@ -5934,7 +6445,7 @@ describe('parseDate', () => {
 
 ```js
 import { describe, expect, it } from 'vitest';
-import { issuesWith, issuesWithCount, metaMatches, parseClauses, tokenize } from '../../src/core/comment-clauses.js';
+import { issuesWith, metaMatches, parseClauses, tokenize } from '../../src/core/comment-clauses.js';
 
 const NOW = Date.UTC(2026, 9, 8, 15, 0);
 const DAY = 86400000;
@@ -5991,10 +6502,6 @@ describe('matching', () => {
     expect(metaMatches(metas[0], { after: 100 }, {})).toBe(false);
     expect(metaMatches(metas[0], { before: 101 }, {})).toBe(true);
     expect(metaMatches(metas[0], { onStart: 0, onEnd: 100 }, {})).toBe(false);
-  });
-  it('counts comments per issue', () => {
-    expect(issuesWithCount(metas, 2)).toEqual(['10']);
-    expect(issuesWithCount(metas, 1)).toEqual(['10', '11', '12']);
   });
 });
 ```
@@ -6060,6 +6567,7 @@ export function parseDate(text, now) {
 
 ```js
 import { DAY_MS, parseDate, startOfDayMs } from './dates.js';
+import { sortIds } from './ids.js';
 
 const KEYWORDS = {
   comment: ['by', 'after', 'before', 'on', 'inrole', 'ingroup', 'rolelevel', 'grouplevel'],
@@ -6068,7 +6576,6 @@ const KEYWORDS = {
 const CANONICAL = { inrole: 'inRole', ingroup: 'inGroup', rolelevel: 'roleLevel', grouplevel: 'groupLevel' };
 const WORD = /"((?:[^"\\]|\\.)*)"|(\S+)/g;
 const eq = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
-const byNumber = (a, b) => Number(a) - Number(b);
 
 /** Clause text → words; a double-quoted part keeps its spaces. */
 export function tokenize(text) {
@@ -6136,24 +6643,17 @@ function lastPerIssue(metas) {
 /** Issues with a matching comment or attachment; with `last`, only each issue's latest comment is checked. */
 export function issuesWith(metas, clauses, { last = false, people = {} } = {}) {
   const pool = last ? lastPerIssue(metas) : metas;
-  return [...new Set(pool.filter((m) => metaMatches(m, clauses, people)).map((m) => String(m.issueId)))].sort(byNumber);
-}
-
-/** Issues with at least n comments. */
-export function issuesWithCount(metas, n) {
-  const counts = new Map();
-  for (const m of metas) counts.set(String(m.issueId), (counts.get(String(m.issueId)) ?? 0) + 1);
-  return [...counts].filter(([, c]) => c >= n).map(([id]) => id).sort(byNumber);
+  return sortIds(pool.filter((m) => metaMatches(m, clauses, people)).map((m) => m.issueId));
 }
 ```
 
-- [ ] **Step 5: Run** `npx vitest run test/core` → PASS; `npm run lint` → 0 ошибок.
+- [ ] **Step 5: Run** `npx vitest run test/core` → PASS; `npm run coverage` → PASS (порог ветвлений `src/core/**`); `npm run lint` → 0 ошибок.
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add apps/query/src/core apps/query/test/core
-git commit -m "JQL-30: Parse UTC dates and comment and attachment clauses
+git commit -m "JQL-32: Parse UTC dates and comment and attachment clauses
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -6403,13 +6903,13 @@ export function fieldValue(raw) {
 
 Позиция в ошибке (`at 1`, `at 7`) — номер первого непрочитанного символа, считая с 1.
 
-- [ ] **Step 4: Run** `npx vitest run test/core` → PASS; `npm run lint` → 0 ошибок.
+- [ ] **Step 4: Run** `npx vitest run test/core` → PASS; `npm run coverage` → PASS (порог ветвлений `src/core/**`, включая `expression.js`); `npm run lint` → 0 ошибок.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add apps/query/src/core/expression.js apps/query/test/core/expression.test.js
-git commit -m "JQL-31: Parse and evaluate field comparisons and arithmetic for dateCompare and expression
+git commit -m "JQL-33: Parse and evaluate field comparisons and arithmetic for dateCompare and expression
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -6418,16 +6918,16 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Model:** opus
 
-Исполняется, только если J-G7 пройден.
+Исполняется, если J-G7 пройден хотя бы по одной части — комментариям или вложениям (Task 21, P-2); отгружаются только прошедшие группы.
 
 **Files:**
 - Create: `apps/query/src/compute/comments.js`
-- Modify: `apps/query/src/infra/schema.js` (v004, v005), `apps/query/src/infra/indexRepo.js`, `apps/query/src/handlers/indexing.js` (часть `comments`, события), `apps/query/src/core/catalog.js` (`SHIPPED_GROUPS` + `'comment'`, `'attachment'`), `apps/query/test/core/catalog.test.js`, `apps/query/src/deps.js`, `apps/query/manifest.yml`, `apps/query/scripts/lib/reference.mjs`, `apps/query/scripts/acceptance.mjs`
+- Modify: `apps/query/src/core/limits.js` (`COMMENT_PAGE`), `apps/query/src/infra/schema.js` (v004, v005), `apps/query/src/infra/indexRepo.js`, `apps/query/src/handlers/indexing.js` (часть `comments`, события), `apps/query/src/core/catalog.js` (`SHIPPED_GROUPS` + прошедшие `'comment'`, `'attachment'`), `apps/query/test/core/catalog.test.js`, `apps/query/src/deps.js`, `apps/query/manifest.yml`, `apps/query/scripts/lib/{http.mjs,reference.mjs}`, `apps/query/scripts/acceptance.mjs`
 - Test: `apps/query/test/compute/comments.test.js`, `apps/query/test/infra/{schema.test.js,indexRepo.test.js}`, `apps/query/test/handlers/indexing.test.js`
 
 **Interfaces:**
-- Consumes: `parseClauses`, `issuesWith`, `issuesWithCount` (Task 25), `Jira.userIds`, `Jira.groupMemberIds`, `Jira.roleMemberIds` (Task 9), `createIndexing` (Task 23).
-- Produces: таблицы `comment_meta(comment_id PK, issue_id, project_id, author, created_at, updated_at, vis_type, vis_value)`, `attachment_meta(attachment_id PK, issue_id, project_id, author, created_at, ext)`; `IndexRepo.{upsertComments(metas), deleteComment(id), upsertAttachments(metas), deleteAttachment(id), commentMetas({ after, before, authors }) → Meta[], lastCommentMetas() → Meta[], issuesWithCommentCount(n) → string[], attachmentMetas({ ext }) → Meta[], commentBounds(issueIds) → Map<issueId, { first, last }>}`; часть индекса `comments` (`tables: ['comment_meta', 'attachment_meta']`); `createCommentCompute({ jira, repo, now }) → { commented, lastComment, hasComments, fileAttached, hasAttachments }`.
+- Consumes: `parseClauses`, `issuesWith` (Task 25), `ERR.notFound`, `ERR.withFunction` (Task 5), `sortIds` (Task 7), `Jira.userIds`, `Jira.groupMemberIds`, `Jira.roleMemberIds` (Task 9), `createIndexing`, локальная `repo` в `createDeps` (Task 23), `myAccountId`, `waitFor`, `latencyResult` (Task 16).
+- Produces: таблицы `comment_meta(comment_id PK, issue_id, project_id, author, created_at, updated_at, vis_type, vis_value)`, `attachment_meta(attachment_id PK, issue_id, project_id, author, created_at, ext)`; `IndexRepo.{upsertComments(metas), deleteComment(id), upsertAttachments(metas), deleteAttachment(id), commentMetas({ after, before, authors }) → Meta[], lastCommentMetas() → Meta[], issuesWithCommentCount(n) → string[], attachmentMetas({ ext }) → Meta[], commentBounds(issueIds) → Map<issueId, { first, last }>}`; часть индекса `comments` (`tables: ['comment_meta', 'attachment_meta']`); `createCommentCompute({ jira, repo, now }) → { commented, lastComment, hasComments, fileAttached, hasAttachments }`; `limits.js` += `COMMENT_PAGE = 5000` (комментариев в одном чтении `GET /issue/{id}/comment`); `http.mjs` += `upload(issueId, filename, text)`; эталоны `REFERENCES.{commented,lastComment,hasComments,fileAttached,hasAttachments}` — свой разбор условий, область по умолчанию `project in (JQLG, RPT)` (P-6); случаи `CASES.m3` (через `M3_PARTS`), фазы `fresh --group comment|attachment`.
 
 - [ ] **Step 1: Падающие тесты** `test/compute/comments.test.js`:
 
@@ -6548,7 +7048,14 @@ describe('comment and attachment events', () => {
 
 - [ ] **Step 2: Run** `npx vitest run` → FAIL.
 
-- [ ] **Step 3: Миграции и репозиторий.** В `runMigrations` после v003:
+- [ ] **Step 3: Предел, миграции и репозиторий.** В конец `src/core/limits.js`:
+
+```js
+/** Comments read in one call when bulkfetch returned only part of an issue's comments. */
+export const COMMENT_PAGE = 5000;
+```
+
+В `runMigrations` после v003:
 
 ```js
     .enqueue('v004_comment_meta', `CREATE TABLE IF NOT EXISTS comment_meta (
@@ -6612,7 +7119,7 @@ describe('comment and attachment events', () => {
     },
     async issuesWithCommentCount(n) {
       const { rows } = await run('SELECT issue_id FROM comment_meta GROUP BY issue_id HAVING COUNT(*) >= ?', [n]);
-      return (rows ?? []).map((r) => String(r.issue_id)).sort((a, b) => Number(a) - Number(b));
+      return sortIds((rows ?? []).map((r) => r.issue_id));
     },
     async attachmentMetas({ ext } = {}) {
       const { rows } = await run(`SELECT attachment_id, issue_id, project_id, author, created_at, ext FROM attachment_meta${ext ? ' WHERE ext = ?' : ''}`, ext ? [ext] : []);
@@ -6628,7 +7135,7 @@ describe('comment and attachment events', () => {
     },
 ```
 
-и вне `createIndexRepo`:
+и в начало `indexRepo.js` — `import { sortIds } from '../core/ids.js';`, а вне `createIndexRepo`:
 
 ```js
 const commentMeta = (r) => ({ id: String(r.comment_id), issueId: String(r.issue_id), projectId: String(r.project_id), author: r.author, createdAt: Number(r.created_at), visType: r.vis_type ?? null, visValue: r.vis_value ?? null, ext: '' });
@@ -6652,7 +7159,7 @@ const toAttachment = (a, issueId, projectId) => ({ id: String(a.id), issueId: St
         const attachments = [];
         for (const issue of await deps.jira.bulkIssues(ids, ['comment', 'attachment'])) {
           let list = issue.fields?.comment?.comments ?? [];
-          if ((issue.fields?.comment?.total ?? 0) > list.length) list = (await deps.jira.call('GET', `/rest/api/3/issue/${issue.id}/comment?maxResults=5000`))?.comments ?? [];
+          if ((issue.fields?.comment?.total ?? 0) > list.length) list = (await deps.jira.call('GET', `/rest/api/3/issue/${issue.id}/comment?maxResults=${COMMENT_PAGE}`))?.comments ?? [];
           comments.push(...list.map((c) => toMeta(c, issue.id, project.id)));
           attachments.push(...(issue.fields?.attachment ?? []).map((a) => toAttachment(a, issue.id, project.id)));
         }
@@ -6684,13 +7191,14 @@ const toAttachment = (a, issueId, projectId) => ({ id: String(a.id), issueId: St
     }
 ```
 
-(`toMs` — импорт из `core/sprint-history.js`; имена событий — по Task 3.)
+(`toMs` — импорт из `core/sprint-history.js`; `COMMENT_PAGE` — в импорт из `../core/limits.js`; имена событий — по Task 3.)
 
 - [ ] **Step 5: `src/compute/comments.js`**
 
 ```js
 import { issuesWith, parseClauses } from '../core/comment-clauses.js';
 import { ERR } from '../core/errors.js';
+import { sortIds } from '../core/ids.js';
 
 const ACCOUNT = /^[0-9a-f]{24}$|^\d+:[0-9a-f-]{36}$/i;
 
@@ -6716,10 +7224,10 @@ export function createCommentCompute({ jira, repo, now }) {
 
   const run = (name, kind, load, last) => async ({ clauses: text = '' }) => {
     const parsed = parseClauses(text, kind, now());
-    if (parsed.error) return { error: `${name}: ${parsed.error}` };
+    if (parsed.error) return { error: ERR.withFunction(name, parsed.error) };
     const metas = await load(parsed.clauses);
     const p = await people(parsed.clauses, metas);
-    if (p.error) return { error: `${name}: ${p.error}` };
+    if (p.error) return { error: ERR.withFunction(name, p.error) };
     return { ids: issuesWith(metas, parsed.clauses, { last, people: p.people }), field: 'id', watch: null };
   };
 
@@ -6732,7 +7240,7 @@ export function createCommentCompute({ jira, repo, now }) {
     },
     async hasAttachments({ extension }) {
       if (extension === undefined) return { native: 'attachments is not EMPTY' };
-      return { ids: [...new Set((await repo.attachmentMetas({ ext: extension })).map((m) => m.issueId))].sort((a, b) => Number(a) - Number(b)), field: 'id', watch: null };
+      return { ids: sortIds((await repo.attachmentMetas({ ext: extension })).map((m) => m.issueId)), field: 'id', watch: null };
     },
   };
 }
@@ -6740,41 +7248,207 @@ export function createCommentCompute({ jira, repo, now }) {
 
 `ACCOUNT` узнаёт accountId Atlassian (24 hex или `NNNNNN:uuid`); всё остальное ищется как имя или почта через `user/search`.
 
-- [ ] **Step 6: Отгрузка, манифест, эталоны.** `SHIPPED_GROUPS` += `'comment', 'attachment'`; `catalog.test.js` — ожидания; `deps.js` — `compute` += `createCommentCompute({ jira, repo, now: () => Date.now() })`; манифест — блок функций из генератора, в `trigger query-events` — события комментариев и вложений (имена по Task 3). Эталоны в `reference.mjs` (без `src/`):
+- [ ] **Step 6: Отгрузка, манифест, эталоны.** `SHIPPED_GROUPS` += группы, прошедшие J-G7 (Task 21): `'comment'` и/или `'attachment'`; `catalog.test.js` — ожидания; `deps.js` — в литерале `deps` (Task 23) `compute` += `...createCommentCompute({ jira, repo, now: () => Date.now() })`, `repo` — локальная константа `createDeps`; манифест — блок функций из генератора, в `trigger query-events` — события комментариев и вложений (имена по Task 3; события вложений — только если группа `attachment` отгружена).
+
+`scripts/lib/http.mjs` — загрузка вложения (нужна фазе `fresh --group attachment`):
 
 ```js
+/** Uploads one small file as an attachment of an issue; not retried, because a retry could attach it twice. */
+export async function upload(issueId, filename, text) {
+  stats.requests += 1;
+  const form = new FormData();
+  form.append('file', new Blob([text]), filename);
+  const res = await fetch(`${SITE}/rest/api/3/issue/${issueId}/attachments`, {
+    method: 'POST',
+    headers: { Authorization: auth(), Accept: 'application/json', 'X-Atlassian-Token': 'no-check' },
+    body: form,
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`upload ${issueId} → ${res.status} ${(await res.text()).slice(0, 300)}`);
+  return res.json();
+}
+```
+
+Эталоны в `reference.mjs` — свой разбор условий и своя проверка, без `src/` (P-6); область по умолчанию — `project in (JQLG, RPT)`, переопределяется `--scope`; поддержаны условия `by` (accountId или имя), `after`/`before`/`on` (`YYYY-MM-DD` или `-N[dhm]`), `inRole`, `inGroup`, `roleLevel`, `groupLevel`, `ext` — образцы ScriptRunner (Task 1) и случаи `CASES.m3` пишутся только этими условиями:
+
+```js
+const SCOPE = 'project in (JQLG, RPT)';
+const DAY = 86400000;
+const commentCache = new Map();
+
 async function allComments(scopeJql) {
+  if (commentCache.has(scopeJql)) return commentCache.get(scopeJql);
   const out = [];
-  for (const x of await bulk(await must(scopeJql), ['comment', 'attachment'])) {
+  for (const x of await bulk(await must(scopeJql), ['comment', 'attachment', 'project'])) {
     let list = x.fields.comment?.comments ?? [];
     if ((x.fields.comment?.total ?? 0) > list.length) list = (await api('GET', `/rest/api/3/issue/${x.id}/comment?maxResults=5000`)).comments;
-    out.push({ id: String(x.id), comments: list, attachments: x.fields.attachment ?? [] });
+    out.push({ id: String(x.id), project: x.fields.project.key, comments: list, attachments: x.fields.attachment ?? [] });
   }
+  commentCache.set(scopeJql, out);
   return out;
 }
 
-Object.assign(REFERENCES, {
-  async commented([clauses], { scope, accountId, since }) {
-    return uniq((await allComments(scope)).filter((x) => x.comments.some((c) => c.author.accountId === accountId && jiraMs(c.created) > since)).map((x) => x.id));
+const words = (text) => [...String(text ?? '').matchAll(/"([^"]*)"|(\S+)/g)].map((m) => m[1] ?? m[2]);
+const lower = (v) => String(v ?? '').toLowerCase();
+
+function dateOf(text) {
+  const rel = /^-(\d+)([dhm])$/.exec(text);
+  if (rel) return Date.now() - Number(rel[1]) * { d: DAY, h: 3600000, m: 60000 }[rel[2]];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return Date.parse(`${text}T00:00:00Z`);
+  throw new Error(`reference: unsupported date ${text}`);
+}
+
+async function membersOfGroup(name) {
+  const out = [];
+  for (let startAt = 0; ; startAt += 50) {
+    const page = await api('GET', `/rest/api/3/group/member?groupname=${encodeURIComponent(name)}&includeInactiveUsers=true&startAt=${startAt}&maxResults=50`);
+    out.push(...page.values.map((u) => u.accountId));
+    if (page.isLast || !page.values.length) return new Set(out);
+  }
+}
+
+async function membersOfRole(projectKey, roleName) {
+  const roles = await api('GET', `/rest/api/3/project/${projectKey}/role`);
+  const url = Object.entries(roles).find(([name]) => lower(name) === lower(roleName))?.[1];
+  if (!url) return new Set();
+  const role = await api('GET', `/rest/api/3/project/${projectKey}/role/${String(url).split('/').pop()}`);
+  const out = (role.actors ?? []).filter((a) => a.actorUser).map((a) => a.actorUser.accountId);
+  for (const a of (role.actors ?? []).filter((x) => x.actorGroup)) out.push(...(await membersOfGroup(a.actorGroup.name)));
+  return new Set(out);
+}
+
+const DATE_TESTS = {
+  after: (t) => (item) => jiraMs(item.created) > t,
+  before: (t) => (item) => jiraMs(item.created) < t,
+  on: (t) => {
+    const day = Math.floor(t / DAY) * DAY;
+    return (item) => jiraMs(item.created) >= day && jiraMs(item.created) < day + DAY;
   },
-  async hasComments([n], { scope }) {
+};
+
+/** Clause text → test of one comment or attachment of a project, written apart from the app's parser. */
+async function clauseTest(text, projects) {
+  const w = words(text);
+  const tests = [];
+  for (let i = 0; i < w.length; i += 2) {
+    const key = lower(w[i]);
+    const value = w[i + 1];
+    if (value === undefined) throw new Error(`reference: clause ${w[i]} has no value`);
+    if (DATE_TESTS[key]) tests.push(DATE_TESTS[key](dateOf(value)));
+    else if (key === 'by') {
+      const people = /^[0-9a-f]{24}$|^\d+:[0-9a-f-]{36}$/i.test(value) ? [value] : (await api('GET', `/rest/api/3/user/search?query=${encodeURIComponent(value)}`)).map((u) => u.accountId);
+      tests.push((item) => people.includes(item.author?.accountId));
+    } else if (key === 'ext') tests.push((item) => lower(item.filename).endsWith(`.${lower(value).replace(/^\.+/, '')}`));
+    else if (key === 'rolelevel') tests.push((item) => item.visibility?.type === 'role' && lower(item.visibility.value) === lower(value));
+    else if (key === 'grouplevel') tests.push((item) => item.visibility?.type === 'group' && [item.visibility.value, item.visibility.identifier].some((v) => lower(v) === lower(value)));
+    else if (key === 'ingroup') {
+      const members = await membersOfGroup(value);
+      tests.push((item) => members.has(item.author?.accountId));
+    } else if (key === 'inrole') {
+      const byProject = new Map();
+      for (const p of projects) byProject.set(p, await membersOfRole(p, value));
+      tests.push((item, project) => byProject.get(project).has(item.author?.accountId));
+    } else throw new Error(`reference: unsupported clause ${w[i]}`);
+  }
+  return (item, project) => tests.every((t) => t(item, project));
+}
+
+const latest = (comments) => [...comments].sort((a, b) => jiraMs(a.created) - jiraMs(b.created) || Number(a.id) - Number(b.id)).slice(-1);
+
+async function matching(text, scope, itemsOf) {
+  const issues = await allComments(scope);
+  const test = await clauseTest(text, [...new Set(issues.map((x) => x.project))]);
+  return uniq(issues.filter((x) => itemsOf(x).some((item) => test(item, x.project))).map((x) => x.id));
+}
+
+Object.assign(REFERENCES, {
+  commented: ([text = ''], { scope = SCOPE } = {}) => matching(text, scope, (x) => x.comments),
+  lastComment: ([text = ''], { scope = SCOPE } = {}) => matching(text, scope, (x) => latest(x.comments)),
+  fileAttached: ([text = ''], { scope = SCOPE } = {}) => matching(text, scope, (x) => x.attachments),
+  async hasComments([n], { scope = SCOPE } = {}) {
     return uniq((await allComments(scope)).filter((x) => x.comments.length >= Number(n ?? 1)).map((x) => x.id));
   },
-  async hasAttachments([ext], { scope }) {
-    return uniq((await allComments(scope)).filter((x) => x.attachments.some((a) => !ext || a.filename.toLowerCase().endsWith(`.${ext}`))).map((x) => x.id));
+  async hasAttachments([ext], { scope = SCOPE } = {}) {
+    const want = ext === undefined ? null : lower(ext).replace(/^\.+/, '');
+    return uniq((await allComments(scope)).filter((x) => x.attachments.some((a) => !want || lower(a.filename).endsWith(`.${want}`))).map((x) => x.id));
   },
 });
 ```
 
-`CASES.m3`: `['commented', ['by <accountId> after 2020-01-01'], 'author, all time']` (подстановка `@me` → `accountId` из `/myself`, `since` = 2020-01-01), `['hasComments', ['3'], '≥ 3 comments']`, `['hasAttachments', ['pdf'], 'one extension']`, `['commented', ['roleLevel <роль из jg7-seed.json>'], 'restricted to a role']` (эталон — комментарии с `visibility.type === 'role'`), `['lastComment', ['by @me'], 'last comment']`. Фазы `fresh --group comment` и `--group attachment` (`FRESH.comment`, `FRESH.attachment`, каждая сохраняет `acceptance-fresh-<группа>`): по n новых комментариев/вложений и ожидание `commented("by @me after <сегодня>")` / `hasAttachments("<ext>")`.
+В `acceptance.mjs` (в импорт из `./lib/http.mjs` добавить `upload`; если импорта `readFileSync` ещё нет — `import { readFileSync } from 'node:fs';` в начало файла) — блок сразу после `export const FRESH = …` и до `const PHASES`. Случаи M3 собираются из частей (`M3_PARTS`), потому что Task 28 добавляет свою часть и тогда, когда эта задача не исполнялась. Каждый случай сужен до области эталонов (`and` = `project in (JQLG, RPT)`); размер — максимальный, какой дают данные (P-3): `hasComments("1")`, `commented("after 2020-01-01")` и `hasAttachments()` — все задачи с комментариями/вложениями; если результат случая больше ёмкости дерева (9 000 при одном уровне), случай переносится в `CASES.tree2` (Q-R10). Часть вложений (`attachmentCases`, `FRESH.attachment`) добавлять, только если группа `attachment` отгружена; часть комментариев (`commentCases`, `FRESH.comment`) — только если отгружена `comment`:
 
-- [ ] **Step 7: Run** `npx vitest run` → PASS; `npm run lint` → 0 ошибок; `forge lint` → без ошибок.
+```js
+const REF_SCOPE = 'project in (JQLG, RPT)';
+const JG7_SEED = new URL('../../../atlassian/data/jg7-seed.json', import.meta.url);
+const M3_PARTS = [];
+Object.defineProperty(CASES, 'm3', { enumerable: true, get: () => M3_PARTS.flatMap((part) => part()) });
+
+const commentCases = () => {
+  const { comments } = JSON.parse(readFileSync(JG7_SEED, 'utf8'));
+  return [
+    ['hasComments', ['1'], 'every issue with a comment (site-wide)', REF_SCOPE],
+    ['hasComments', ['3'], 'at least 3 comments', REF_SCOPE],
+    ['commented', [], 'no clauses: any comment', REF_SCOPE],
+    ['commented', ['after 2020-01-01'], 'any author since 2020 (site-wide)', REF_SCOPE],
+    ['commented', ['by @me after 2020-01-01'], 'one author, all time', REF_SCOPE],
+    ['commented', [`roleLevel "${comments.restricted.role}"`], 'restricted to a role', REF_SCOPE],
+    ['commented', [`groupLevel "${comments.restricted.group}"`], 'restricted to a group', REF_SCOPE],
+    ['lastComment', ['by @me'], 'last comment by one author', REF_SCOPE],
+  ];
+};
+const attachmentCases = () => [
+  ['hasAttachments', [], 'every issue with an attachment (site-wide, native)', REF_SCOPE],
+  ['hasAttachments', ['pdf'], 'one extension', REF_SCOPE],
+  ['fileAttached', ['ext xlsx after 2020-01-01'], 'extension and date', REF_SCOPE],
+];
+M3_PARTS.push(commentCases);
+M3_PARTS.push(attachmentCases);
+
+FRESH.comment = async () => {
+  const me = await myAccountId();
+  const today = new Date().toISOString().slice(0, 10);
+  const mid = (await ids('project = JQLG AND labels = jg-mid ORDER BY key')).ids;
+  const targets = (await bulk(mid, ['comment']))
+    .filter((x) => !(x.fields.comment?.comments ?? []).some((c) => c.author?.accountId === me && String(c.created).startsWith(today)))
+    .map((x) => String(x.id))
+    .slice(0, args.n);
+  const rows = { comment: [] };
+  const t0 = Date.now();
+  for (const [i, x] of targets.entries()) {
+    const t = Date.now();
+    await api('POST', `/rest/api/3/issue/${x}/comment`, { body: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: `aq probe ${i}` }] }] } });
+    rows.comment.push(await waitFor(clause('commented', [`by ${me} after ${today}`]), x, true, t));
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-comment'), { stats, ...result });
+};
+
+FRESH.attachment = async () => {
+  const ext = `aq${Date.now() % 1000000}`;
+  const targets = (await ids('project = JQLG AND labels = jg-mid ORDER BY key')).ids.slice(0, args.n);
+  const rows = { attachment: [] };
+  const t0 = Date.now();
+  for (const x of targets) {
+    const t = Date.now();
+    await upload(x, `probe.${ext}`, 'aq probe');
+    rows.attachment.push(await waitFor(clause('hasAttachments', [ext]), x, true, t));
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-attachment'), { stats, ...result });
+};
+```
+
+Расширение вложения уникально на прогон, поэтому до загрузки ни одна задача ему не соответствует.
+
+- [ ] **Step 7: Run** `npx vitest run` → PASS; `npm run lint` → 0 ошибок; `forge lint` → без ошибок; `node --check apps/query/scripts/acceptance.mjs && node --check apps/query/scripts/lib/reference.mjs && node --check apps/query/scripts/lib/http.mjs` → без вывода.
 
 - [ ] **Step 8: Commit**
 
 ```bash
 git add apps/query
-git commit -m "JQL-32: Ship comment and attachment functions over a metadata index
+git commit -m "JQL-34: Ship comment and attachment functions over a metadata index
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -6785,12 +7459,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Files:**
 - Create: `apps/query/src/compute/fields.js`
-- Modify: `apps/query/src/core/catalog.js` (`SHIPPED_GROUPS` + `'fields'`), `apps/query/test/core/catalog.test.js`, `apps/query/src/deps.js`, `apps/query/manifest.yml`, `apps/query/scripts/lib/reference.mjs`, `apps/query/scripts/acceptance.mjs`
+- Modify: `apps/query/src/core/errors.js` (`ERR.needsCommentIndex`), `apps/query/src/core/catalog.js` (`SHIPPED_GROUPS` + `'fields'`), `apps/query/test/core/catalog.test.js`, `apps/query/src/deps.js`, `apps/query/manifest.yml`, `apps/query/scripts/lib/reference.mjs`, `apps/query/scripts/acceptance.mjs`
 - Test: `apps/query/test/compute/fields.test.js`
 
 **Interfaces:**
-- Consumes: `parseExpression`, `evaluate`, `fieldValue` (Task 26), `Jira.fields`, `Jira.searchIds`, `Jira.bulkIssues`, `IndexRepo.commentBounds` (Task 27, если группа `comment` отгружена).
-- Produces: `createFieldCompute({ jira, repo, commentsShipped: () => boolean }) → { dateCompare, expression }` (результат `{ ids, field: 'id', watch: inner }`).
+- Consumes: `parseExpression`, `evaluate`, `fieldValue` (Task 26), `ERR.notFound`, `ERR.withFunction` (Task 5), `sortIds` (Task 7), `Jira.fields`, `Jira.searchIds`, `Jira.bulkIssues`, `IndexRepo.commentBounds` (Task 27, если группа `comment` отгружена), локальная `repo` в `createDeps` (Task 23, если исполнялась), `M3_PARTS`, `waitFor`, `latencyResult` (Tasks 16, 27).
+- Produces: `createFieldCompute({ jira, repo, commentsShipped: () => boolean }) → { dateCompare, expression }` (результат `{ ids, field: 'id', watch: inner }`); `ERR.needsCommentIndex(field)` — текст ошибки собирается в `src/core/errors.js`, не в `compute`; эталоны `REFERENCES.{dateCompare,expression}` со своим вычислением выражения (P-6); случаи M3 полей и фаза `fresh --group fields`.
 
 - [ ] **Step 1: Падающие тесты** `test/compute/fields.test.js`:
 
@@ -6844,13 +7518,21 @@ describe('field compute', () => {
 
 - [ ] **Step 2: Run** `npx vitest run test/compute/fields.test.js` → FAIL.
 
-- [ ] **Step 3: `src/compute/fields.js`**
+- [ ] **Step 3: Текст ошибки и `src/compute/fields.js`.** В `ERR` (`src/core/errors.js`) добавить:
 
 ```js
+  needsCommentIndex: (field) => `${field} needs the comment index, which this site does not have`,
+```
+
+`src/compute/fields.js`:
+
+```js
+import { ERR } from '../core/errors.js';
 import { evaluate, fieldValue, parseExpression } from '../core/expression.js';
+import { sortIds } from '../core/ids.js';
 
 const PSEUDO = new Set(['firstcommented', 'lastcommented']);
-const sorted = (ids) => [...new Set(ids.map(String))].sort((a, b) => Number(a) - Number(b));
+const PSEUDO_NAME = { firstcommented: 'firstCommented', lastcommented: 'lastCommented' };
 
 /** Value sources of dateCompare and expression: the subquery's issues whose field expression is true. */
 export function createFieldCompute({ jira, repo, commentsShipped }) {
@@ -6860,7 +7542,7 @@ export function createFieldCompute({ jira, repo, commentsShipped }) {
     for (const name of names) {
       if (PSEUDO.has(name)) continue;
       const f = all.find((x) => x.id.toLowerCase() === name.toLowerCase()) ?? all.find((x) => String(x.name).toLowerCase() === name.toLowerCase());
-      if (!f) return { error: `Field "${name}" not found` };
+      if (!f) return { error: ERR.notFound('Field', name) };
       out.set(name, f.id);
     }
     return { ids: out };
@@ -6868,11 +7550,11 @@ export function createFieldCompute({ jira, repo, commentsShipped }) {
 
   const run = (functionName, mode) => async ({ subquery, expression }, { reconcile }) => {
     const parsed = parseExpression(expression);
-    if (parsed.error) return { error: `${functionName}: ${parsed.error}` };
+    if (parsed.error) return { error: ERR.withFunction(functionName, parsed.error) };
     const pseudo = parsed.fields.filter((f) => PSEUDO.has(f));
-    if (pseudo.length && !commentsShipped()) return { error: `${functionName}: ${pseudo[0] === 'firstcommented' ? 'firstCommented' : 'lastCommented'} needs the comment index, which this site does not have` };
+    if (pseudo.length && !commentsShipped()) return { error: ERR.withFunction(functionName, ERR.needsCommentIndex(PSEUDO_NAME[pseudo[0]])) };
     const map = await fieldIds(parsed.fields);
-    if (map.error) return { error: `${functionName}: ${map.error}` };
+    if (map.error) return { error: ERR.withFunction(functionName, map.error) };
     const inner = await jira.searchIds(subquery, { reconcile });
     const issues = await jira.bulkIssues(inner, [...new Set(map.ids.values())].sort());
     const bounds = pseudo.length ? await repo.commentBounds(inner) : new Map();
@@ -6881,41 +7563,193 @@ export function createFieldCompute({ jira, repo, commentsShipped }) {
       if (name === 'lastcommented') return bounds.get(String(issue.id))?.last ?? null;
       return fieldValue(issue.fields?.[map.ids.get(name)]);
     }, mode) === true);
-    return { ids: sorted(matching.map((x) => x.id)), field: 'id', watch: inner };
+    return { ids: sortIds(matching.map((x) => x.id)), field: 'id', watch: inner };
   };
 
   return { dateCompare: run('dateCompare', 'date'), expression: run('expression', 'number') };
 }
 ```
 
-- [ ] **Step 4: Отгрузка, манифест, эталоны.** `SHIPPED_GROUPS` += `'fields'`; `catalog.test.js` — ожидания; `deps.js` — `compute` += `createFieldCompute({ jira, repo: deps.repo ?? null, commentsShipped: () => SHIPPED_GROUPS.includes('comment') })` (`deps.repo` есть, если исполнялся Task 23); манифест — блок из генератора. Эталоны (`reference.mjs`, своя простая арифметика без `src/`):
+- [ ] **Step 4: Отгрузка, манифест, эталоны.** `SHIPPED_GROUPS` += `'fields'`; `catalog.test.js` — ожидания; `deps.js` — в литерале `deps` (Task 23) `compute` += `...createFieldCompute({ jira, repo, commentsShipped: () => SHIPPED_GROUPS.includes('comment') })`, где `repo` — локальная константа `createDeps` (объявлена до литерала, Task 23); если Task 23 не исполнялась, константы нет и вызов пишется `createFieldCompute({ jira, repo: null, commentsShipped: () => SHIPPED_GROUPS.includes('comment') })` — `commentsShipped()` тогда ложно, и `repo` не читается. Обращаться к `deps.repo` внутри литерала `deps` нельзя: это ReferenceError при загрузке модуля. Манифест — блок из генератора.
+
+Эталоны в `reference.mjs` — своё вычисление выражения над полями, без `src/` (P-6): свой разбор (поля и имена в кавычках, псевдонимы `originalestimate`, `remainingestimate`, `due`, `resolved`, числа, длительности `Nw/Nd/Nh/Nm` — календарные для `dateCompare`, рабочие 1d = 8h, 1w = 5d для `expression`, `+ - * /`, сравнения, `and`/`or`, `&&`/`||`), поля по id или имени из `/rest/api/3/field`, `firstCommented`/`lastCommented` — по комментариям REST; пустое поле или деление на ноль — сравнение ложно:
 
 ```js
+const DURATION_REF = { date: { m: 60000, h: 3600000, d: 86400000, w: 604800000 }, number: { m: 60, h: 3600, d: 28800, w: 144000 } };
+const FIELD_ALIAS = { originalestimate: 'timeoriginalestimate', remainingestimate: 'timeestimate', due: 'duedate', resolved: 'resolutiondate' };
+const COMMENT_BOUNDS = new Set(['firstcommented', 'lastcommented']);
+const CMP_REF = { '<': (a, b) => a < b, '<=': (a, b) => a <= b, '>': (a, b) => a > b, '>=': (a, b) => a >= b, '=': (a, b) => a === b, '==': (a, b) => a === b, '!=': (a, b) => a !== b };
+
+/** Expression text → { test(get), fields }, written apart from the app's parser. */
+function compileExpression(text, mode) {
+  const tokens = [...String(text).matchAll(/(\d+(?:\.\d+)?)([wdhm])?(?![\w])|([A-Za-z_][\w.]*)|"([^"]*)"|(<=|>=|!=|==|&&|\|\||[=<>+\-*/()])|(\S)/g)];
+  const fields = new Set();
+  let i = 0;
+  const op = () => tokens[i]?.[5] ?? (['and', 'or'].includes(String(tokens[i]?.[3]).toLowerCase()) ? String(tokens[i][3]).toLowerCase() : undefined);
+  const fail = () => {
+    throw new Error(`reference: cannot read ${text}`);
+  };
+  const arith = (l, r, o) => (get) => {
+    const a = l(get);
+    const b = r(get);
+    if (a === null || b === null) return null;
+    if (o === '+') return a + b;
+    if (o === '-') return a - b;
+    if (o === '*') return a * b;
+    return b === 0 ? null : a / b;
+  };
+  function atom() {
+    const t = tokens[i];
+    i += 1;
+    if (!t || t[6] !== undefined) return fail();
+    if (t[1] !== undefined) {
+      const v = Number(t[1]) * (t[2] ? DURATION_REF[mode][t[2]] : 1);
+      return () => v;
+    }
+    if (t[5] === '(') {
+      const inner = or();
+      i += 1;
+      return inner;
+    }
+    if (t[5] === '-') {
+      const e = atom();
+      return (get) => (e(get) === null ? null : -e(get));
+    }
+    if (t[5] !== undefined) return fail();
+    const name = t[4] ?? FIELD_ALIAS[t[3].toLowerCase()] ?? t[3].toLowerCase();
+    fields.add(name);
+    return (get) => get(name);
+  }
+  function term() {
+    let e = atom();
+    while (op() === '*' || op() === '/') {
+      const o = op();
+      i += 1;
+      e = arith(e, atom(), o);
+    }
+    return e;
+  }
+  function sum() {
+    let e = term();
+    while (op() === '+' || op() === '-') {
+      const o = op();
+      i += 1;
+      e = arith(e, term(), o);
+    }
+    return e;
+  }
+  function cmp() {
+    const l = sum();
+    const o = op();
+    if (!CMP_REF[o]) return fail();
+    i += 1;
+    const r = sum();
+    return (get) => {
+      const a = l(get);
+      const b = r(get);
+      return a !== null && b !== null && CMP_REF[o](a, b);
+    };
+  }
+  function and() {
+    let e = cmp();
+    while (op() === 'and' || op() === '&&') {
+      i += 1;
+      const l = e;
+      const r = cmp();
+      e = (get) => l(get) && r(get);
+    }
+    return e;
+  }
+  function or() {
+    let e = and();
+    while (op() === 'or' || op() === '||') {
+      i += 1;
+      const l = e;
+      const r = and();
+      e = (get) => l(get) || r(get);
+    }
+    return e;
+  }
+  const test = or();
+  if (i < tokens.length) fail();
+  return { test, fields: [...fields] };
+}
+
+function valueOfField(raw) {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'object') return ['votes', 'watchCount', 'value'].map((k) => raw[k]).find((v) => typeof v === 'number') ?? null;
+  if (/^-?\d+(\.\d+)?$/.test(raw)) return Number(raw);
+  const t = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? Date.parse(`${raw}T00:00:00Z`) : jiraMs(raw);
+  return Number.isFinite(t) ? t : null;
+}
+
+async function fieldExpression([q, expr], mode) {
+  const { test, fields } = compileExpression(expr, mode);
+  const all = await api('GET', '/rest/api/3/field');
+  const idOf = new Map(fields.filter((f) => !COMMENT_BOUNDS.has(f)).map((f) => [f, (all.find((x) => x.id.toLowerCase() === f.toLowerCase()) ?? all.find((x) => x.name.toLowerCase() === f.toLowerCase())).id]));
+  const issues = await bulk(await must(q), [...new Set(idOf.values())]);
+  const bounds = new Map();
+  if (fields.some((f) => COMMENT_BOUNDS.has(f))) {
+    for (const x of await allComments(q)) {
+      const times = x.comments.map((c) => jiraMs(c.created));
+      if (times.length) bounds.set(x.id, { firstcommented: Math.min(...times), lastcommented: Math.max(...times) });
+    }
+  }
+  return uniq(issues.filter((x) => test((name) => (COMMENT_BOUNDS.has(name) ? bounds.get(String(x.id))?.[name] ?? null : valueOfField(x.fields[idOf.get(name)])))).map((x) => x.id));
+}
+
 Object.assign(REFERENCES, {
-  async dateCompare([q, expr]) {
-    const issues = await bulk(await must(q), ['created', 'duedate', 'resolutiondate']);
-    const ms = (v) => (v ? Date.parse(v.length === 10 ? `${v}T00:00:00Z` : v.replace(/([+-]\d{2})(\d{2})$/, '$1:$2')) : null);
-    if (expr !== 'resolutiondate > duedate') throw new Error(`no reference for ${expr}`);
-    return uniq(issues.filter((x) => ms(x.fields.resolutiondate) !== null && ms(x.fields.duedate) !== null && ms(x.fields.resolutiondate) > ms(x.fields.duedate)).map((x) => x.id));
-  },
-  async expression([q, expr]) {
-    const issues = await bulk(await must(q), ['timespent', 'timeoriginalestimate', 'votes']);
-    if (expr === 'votes >= 0') return uniq(issues.filter((x) => typeof x.fields.votes?.votes === 'number').map((x) => x.id));
-    if (expr !== 'timespent > originalestimate * 1.2') throw new Error(`no reference for ${expr}`);
-    return uniq(issues.filter((x) => x.fields.timespent !== null && x.fields.timeoriginalestimate !== null && x.fields.timespent > x.fields.timeoriginalestimate * 1.2).map((x) => x.id));
-  },
+  dateCompare: (userArgs) => fieldExpression(userArgs, 'date'),
+  expression: (userArgs) => fieldExpression(userArgs, 'number'),
 });
 ```
 
-Фаза `fresh --group fields` (`FRESH.fields`): n раз задаче RPT из `project = RPT AND resolution is not EMPTY` поставить `duedate` на день раньше даты решения (`PUT /rest/api/3/issue/{id}`) и ждать `issue in dateCompare("project = RPT", "resolutiondate > duedate") AND id = X`; затем вернуть прежний `duedate` и ждать исчезновения; сохранить `acceptance-fresh-fields`. `CASES.m3` += `['dateCompare', ['project = RPT', 'resolutiondate > duedate'], 'dates']`, `['expression', ['project in (JQLG, RPT)', 'timespent > originalestimate * 1.2'], 'work time']`, `['expression', ['project in (JQLG, RPT)', 'votes >= 0'], '50 000 values: tree of 2 levels']`. Если на RPT нет задач с `duedate` раньше `resolutiondate` или с учётом времени — фаза `seed-fields` в `acceptance.mjs` проставляет 50 задачам RPT `duedate`, `resolution`/переход в Done и `timetracking` через REST (числа — в лог).
+`allComments` — из эталонов Task 27; если Task 27 не исполнялась, псевдополя не отгружены, и ветка `firstCommented`/`lastCommented` не вызывается — тогда объявить `allComments` так же, как в Task 27 (функция и `commentCache`), чтобы модуль загружался.
 
-- [ ] **Step 5: Run** `npx vitest run` → PASS; `npm run lint` → 0 ошибок; `forge lint` → без ошибок.
+В `acceptance.mjs` — блок сразу после `export const FRESH = …` и до `const PHASES`. Если Task 27 не исполнялась — сначала объявить `M3_PARTS` и геттер `CASES.m3` так же, как в Task 27. Случай `expression` на 50 000 значений (`project in (JQLG, RPT)`, `votes >= 0`) здесь не ставится: при `TREE_LEVELS = 1` (ёмкость 9 000, Q-R10) это ожидаемая ошибка «The result needs 50,000 issues…», а не неполнота; он живёт только в `CASES.tree2` (Task 30). Размер внутреннего запроса — максимальный, какой дают данные (P-3):
+
+```js
+M3_PARTS.push(() => [
+  ['dateCompare', ['project in (JQLG, RPT)', 'resolutiondate > duedate'], 'dates over 50 000 issues'],
+  ['expression', ['project in (JQLG, RPT)', 'timespent > originalestimate * 1.2'], 'work time over 50 000 issues'],
+  ['expression', ['project = RPT AND key <= RPT-8500', 'votes >= 0'], '8 500 values: one-level tree (> 1 000, ≤ 9 000)'],
+]);
+
+FRESH.fields = async () => {
+  const day = 86400000;
+  const resolvedMs = (x) => Date.parse(x.fields.resolutiondate.replace(/([+-]\d{2})(\d{2})$/, '$1:$2'));
+  const dueMs = (x) => (x.fields.duedate ? Date.parse(`${x.fields.duedate}T00:00:00Z`) : null);
+  const resolved = await bulk((await ids('project = RPT AND resolution is not EMPTY ORDER BY key')).ids, ['duedate', 'resolutiondate']);
+  const targets = resolved.filter((x) => x.fields.resolutiondate && (dueMs(x) === null || dueMs(x) >= resolvedMs(x))).slice(0, args.n);
+  const C = clause('dateCompare', ['project = RPT', 'resolutiondate > duedate']);
+  const rows = { enter: [], leave: [] };
+  const t0 = Date.now();
+  for (const x of targets) {
+    const dayBefore = new Date(Math.floor(resolvedMs(x) / day) * day - day).toISOString().slice(0, 10);
+    let t = Date.now();
+    await api('PUT', `/rest/api/3/issue/${x.id}`, { fields: { duedate: dayBefore } });
+    rows.enter.push(await waitFor(C, x.id, true, t));
+    t = Date.now();
+    await api('PUT', `/rest/api/3/issue/${x.id}`, { fields: { duedate: x.fields.duedate ?? null } });
+    rows.leave.push(await waitFor(C, x.id, false, t));
+    log(`fields ${x.id}: in ${rows.enter.at(-1)} s out ${rows.leave.at(-1)} s`);
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-fields'), { stats, ...result });
+};
+```
+
+Если на RPT нет задач с `duedate` раньше `resolutiondate` или с учётом времени — фаза `seed-fields` в `acceptance.mjs` проставляет 50 задачам RPT `duedate`, `resolution`/переход в Done и `timetracking` через REST (числа — в лог).
+
+- [ ] **Step 5: Run** `npx vitest run` → PASS; `npm run coverage` → PASS (порог ветвлений `src/core/**`); `npm run lint` → 0 ошибок; `forge lint` → без ошибок; `node --check apps/query/scripts/acceptance.mjs && node --check apps/query/scripts/lib/reference.mjs` → без вывода.
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add apps/query
-git commit -m "JQL-33: Ship dateCompare and expression over the subquery's fields
+git commit -m "JQL-35: Ship dateCompare and expression over the subquery's fields
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -6924,13 +7758,20 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Model:** opus
 
+Исполняется, только если исполнялась Task 23 (индекс есть): по §3 админ-страница управляет только индексом, а исключение проектов действует только на индекс (Q-R13); без Task 23 нет `backfill.js`, `indexParts` и `repo`, на которые опирается `admin.js`. Если Task 23 не исполнялась (не пройдены ни J-G6, ни J-G7), вместо шагов ниже — **Без индекса: убрать админ-страницу**:
+  1. `manifest.yml`: удалить модуль `jira:adminPage` (`query-admin-page`) и ресурс `admin-page`;
+  2. `locales/*.json` (26): удалить ключ `module.adminPage.title`; в `test/manifestLocales.test.js` — `const KEYS = ['module.globalPage.title'];`;
+  3. `static/app`: удалить `admin-page/index.html`, `src/app/adminMain.jsx`, `src/app/AdminApp.jsx`; в `vite.config.js` — `pageDirs = { 'global-page': 'global-page' }`; в `package.json` — `"build": "vite build --mode global-page"`; ключ `admin.title` — из 26 файлов `src/i18n/locales`;
+  4. `npx vitest run` → PASS; `npm --prefix static/app test` → PASS; `npm run build:ui` → только `dist/global-page`; `forge lint` → без ошибок;
+  5. коммит `git add apps/query && git commit -m "JQL-36: Remove the admin page: without an index there is nothing to manage" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"`; дальше — Task 30. В Task 33 матрица без `admin`, в Task 32 чек-лист без пункта 7, в Task 34 листинг и правовые страницы без админ-страницы.
+
 **Files:**
 - Create: `apps/query/src/handlers/admin.js`, `apps/query/static/app/src/admin/{AdminPanel.jsx,ResetDialog.jsx}`
-- Modify: `apps/query/src/handlers/resolvers.js`, `apps/query/src/deps.js` (`isAdmin`), `apps/query/static/app/src/app/AdminApp.jsx`, `apps/query/static/app/src/api.js` (`KNOWN_CODES` + `'busy'`), `apps/query/static/app/src/i18n/locales/*.json` (26)
+- Modify: `apps/query/src/core/limits.js` (`EXCLUDED_MAX`), `apps/query/src/handlers/resolvers.js`, `apps/query/src/deps.js` (`isAdmin`), `apps/query/static/app/src/app/AdminApp.jsx`, `apps/query/static/app/src/api.js` (`KNOWN_CODES` + `'busy'`), `apps/query/static/app/src/i18n/locales/*.json` (26)
 - Test: `apps/query/test/handlers/admin.test.js`, `apps/query/static/app/test/admin.test.jsx`
 
 **Interfaces:**
-- Consumes: `startBackfill` (Task 23), `IndexRepo.deleteProject`, `IndexRepo.clear` (Task 23), `createIndexing(...).shippedParts`, `parts[p].tables`, `state.setExcluded`, `state.progress`.
+- Consumes: `startBackfill` (Task 23), `IndexRepo.deleteProject`, `IndexRepo.clear` (Task 23), `createIndexing(...).shippedParts`, `parts[p].tables`, `state.setExcluded`, `state.progress`; UI — общие `Card` и `IndexProgress` (Task 15, импорт, не копия).
 - Produces: резолверы (все требуют лицензию и права администратора Jira, иначе `forbidden`): `adminStatus → { excluded: string[], progress, parts: string[] }`, `setExcluded({ projectKeys: string[] ≤ 200 }) → { excluded }`, `reindexProject({ projectKey }) → { started: string[] }` (`busy`, пока идёт полное заполнение), `resetIndex() → { started: string[] }`; `deps.isAdmin(context) → Promise<boolean>` (боевой: `api.asUser().requestJira(route\`/rest/api/3/mypermissions?permissions=ADMINISTER\`)` → `permissions.ADMINISTER.havePermission`).
 
 - [ ] **Step 1: Падающие тесты** `test/handlers/admin.test.js`:
@@ -7020,10 +7861,18 @@ describe('AdminPanel', () => {
 
 Run: `npx vitest run test/handlers/admin.test.js` и `npm --prefix static/app test` → FAIL.
 
-- [ ] **Step 2: `src/handlers/admin.js`**
+- [ ] **Step 2: Предел и `src/handlers/admin.js`.** В конец `src/core/limits.js`:
+
+```js
+/** Projects one save may exclude from the index. */
+export const EXCLUDED_MAX = 200;
+```
+
+`src/handlers/admin.js`:
 
 ```js
 import { decideLicence } from '../access.js';
+import { EXCLUDED_MAX } from '../core/limits.js';
 import { startBackfill } from './backfill.js';
 
 const PROJECT_KEY = /^[A-Z][A-Z0-9_]{0,99}$/;
@@ -7055,7 +7904,7 @@ export function createAdminActions(deps) {
     },
     async setExcluded({ projectKeys } = {}, context) {
       await guard(context);
-      if (!Array.isArray(projectKeys) || projectKeys.length > 200 || !projectKeys.every((k) => PROJECT_KEY.test(k))) fail('bad-request');
+      if (!Array.isArray(projectKeys) || projectKeys.length > EXCLUDED_MAX || !projectKeys.every((k) => PROJECT_KEY.test(k))) fail('bad-request');
       const before = new Set(await deps.state.excluded());
       await deps.state.setExcluded(projectKeys);
       const after = await deps.state.excluded();
@@ -7107,11 +7956,11 @@ const isAdmin = async () => {
 
 и `isAdmin` в объект `deps`.
 
-- [ ] **Step 3: UI.** `src/admin/AdminPanel.jsx` — три карточки (`elevation.surface.raised`, `radius.large`, `space.300`):
+- [ ] **Step 3: UI.** `src/admin/AdminPanel.jsx` — три карточки `Card` (`import { Card } from '../components/Card.jsx'`, Task 15; свой `cardStyles` не заводить):
   1. «Projects excluded from the index» — `@atlaskit/select` `isMulti` с проектами из `requestJira('/rest/api/3/project/search?maxResults=100')` (все страницы), подпись `Name (KEY)`, начальное значение — `adminStatus.excluded`; основная кнопка «Save» (`testId="save-excluded"`) → `call('setExcluded', { projectKeys })`; ниже — `SectionMessage` с объяснением: исключённые проекты не попадают в индекс истории спринтов, комментариев и вложений; функции по запросу их видят;
   2. «Reindex a project» — одиночный `Select` + кнопка; ошибка `busy` → `SectionMessage` «Wait until the index is built»;
   3. «Rebuild the whole index» — кнопка `appearance="danger"` (`testId="reset-index"`) открывает `ResetDialog` (`@atlaskit/modal-dialog`: заголовок «Rebuild the whole index?», текст о том, что функции истории покажут «Index is building…» до конца заполнения, кнопки «Cancel» и «Rebuild» (`testId="reset-confirm"`) → `call('resetIndex', {})`).
-  Под карточками — прогресс частей индекса (те же строки, что в `StatusPanel`: `ProgressBar` + «N of M issues» / «Ready»). `AdminApp.jsx` — `AccessGate` → `AppHeader` с `t('admin.title')` → `AdminPanel`; ошибка `forbidden` → `EmptyState` «Only Jira administrators can change these settings.».
+  Под карточками — прогресс частей индекса: `<IndexProgress progress={status.progress} />` (`import { IndexProgress } from '../status/IndexProgress.jsx'`, Task 15 — тот же компонент, что в `StatusPanel`, не копия разметки). `AdminApp.jsx` — `AccessGate` → `AppHeader` с `t('admin.title')` → `AdminPanel`; ошибка `forbidden` → `EmptyState` «Only Jira administrators can change these settings.».
   Ключи `en-US.json`:
 
 ```json
@@ -7143,7 +7992,7 @@ const isAdmin = async () => {
 
 ```bash
 git add apps/query
-git commit -m "JQL-34: Add the admin page to exclude projects, reindex a project and rebuild the index
+git commit -m "JQL-36: Add the admin page to exclude projects, reindex a project and rebuild the index
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -7161,11 +8010,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 - [ ] **Step 1: Деплой** (команды Task 17 Step 2, с `forge variables set -e development QUERY_DEBUG_EVENTS 1`). Сразу после установки выполнить в поиске `issue in addedAfterSprintStart("JQLG board")` (и `issue in commented("after -1d")`, если группа отгружена) → ожидается ошибка «Index is building: N of M issues»; записать текст — это проверка строки §6 «индекс строится».
 
-- [ ] **Step 2: Заполнение продуктом.** Каждые 60 с читать прогресс (страница «Status» или `forge logs` по `onBackfill`) до `readyAt` для каждой части; записать минуты (сравнить с J-G6/J-G7 прототипа). Если заполнение не стартовало после `forge deploy` (событие `upgraded` не пришло) — нажать «Rebuild» на админ-странице и записать это в `docs/live-checks.md` как известное поведение.
+- [ ] **Step 2: Заполнение продуктом.** Каждые 60 с читать прогресс (страница «Status» или `forge logs` по `onBackfill`) до `readyAt` для каждой части; записать минуты (сравнить с J-G6/J-G7 прототипа). Если заполнение не стартовало после `forge deploy` (событие `upgraded` не пришло) — нажать «Rebuild» на админ-странице (Task 29) и записать это в `docs/live-checks.md` как известное поведение.
 
 - [ ] **Step 3: Формы событий** спринтов, комментариев, вложений: по одному изменению каждого вида, `forge logs -e development --since 10m | grep '"event"'`, сверить с фикстурами; расхождение → исправление с тестом (исполнитель opus) в коммите этой задачи.
 
-- [ ] **Step 4: Полнота.** `node apps/query/scripts/acceptance.mjs complete --cases m2` и `--cases m3` → все строки `complete: true`. Расхождение → стоп, исправление (opus) с тестом, повтор.
+- [ ] **Step 4: Полнота.** `node apps/query/scripts/acceptance.mjs complete --cases m2` и `--cases m3` → все строки `complete: true` (группы, ушедшие в v1.1, в `CASES` не входят). Случая на 50 000 значений в `m3` нет — он только в `tree2` (Step 6), иначе при `TREE_LEVELS = 1` он дал бы ожидаемую ошибку ёмкости до пробы. Записать фактический размер каждого случая (`reference`) — его переносит Task 32 (P-3). Расхождение → стоп, исправление (opus) с тестом, повтор.
 
 - [ ] **Step 5: Свежесть по группам.** `node apps/query/scripts/acceptance.mjs fresh --group sprint --n 30`, `--group comment --n 30`, `--group attachment --n 30`, `--group fields --n 30` (поля: правка `duedate`/`timetracking` задачи из внутреннего запроса `dateCompare`/`expression`) → p90 ≤ 60 с и 0 потерь в каждой группе.
 
@@ -7184,7 +8033,7 @@ node apps/query/scripts/acceptance.mjs complete --cases tree2
 
 ```bash
 git add apps/query atlassian/plans/2026-10-03-artup-query-v1-rulings.md
-git commit -m "JQL-35: Record M2 and M3 completeness, freshness, index fill time and the two-level tree probe
+git commit -m "JQL-37: Record M2 and M3 completeness, freshness, index fill time and the two-level tree probe
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -7199,16 +8048,13 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Modify: `apps/query/scripts/acceptance.mjs`
 
 **Interfaces:**
-- Consumes: `api`, `ids`, `pool`, `sleep`, `stats`, `UnsafeRetryError` (Task 16), `REFERENCES` (Tasks 16, 24, 27, 28), `compare`, `save`, `test/fixtures/sr-samples.json` (Task 1).
-- Produces: фазы `burst [--burst 200]` → `data/acceptance-burst.json` (`{ created, deleted }`, каждый `{ changes, spreadSeconds, lastChangeToVisibleSeconds, lost }`), `audit [--since -7d]` → `data/acceptance-audit.json` (`{ appAccountId, updatedByApp, pass }`), `errors` → `data/acceptance-errors.json` (`rows: [{ jql, expected, status, message, pass }]`), `sr` → `data/acceptance-sr.json` (20 строк `compare` + `pass`).
+- Consumes: `api`, `ids`, `pool`, `sleep`, `stats`, `UnsafeRetryError` (Task 16), `linkId` (общий `lib/latency.mjs`, Task 16), `REFERENCES` (Tasks 16, 24, 27, 28), `compare`, `save`, `test/fixtures/sr-samples.json` (Task 1, поле `group`).
+- Produces: фазы `burst [--burst 200]` → `data/acceptance-burst.json` (`{ created, deleted }`, каждый `{ changes, spreadSeconds, lastChangeToVisibleSeconds, lost }`), `audit [--since -7d]` → `data/acceptance-audit.json` (`{ appAccountId, updatedByApp, pass }`), `errors [--groups …]` → `data/acceptance-errors.json` (`rows: [{ jql, expected, status, message, pass }]`), `sr [--groups …]` → `data/acceptance-sr.json` (20 строк: `compare` + `pass`, или `skipped: 'v1.1'` для образца группы, не отгруженной по воротам); `--groups` — отгруженные группы через запятую (по умолчанию все семь).
 
-- [ ] **Step 1: Всплеск** — инструмент с таймаутом запросов и повтором сетевых ошибок (сломалось в J-G5: параллельные POST висели ~30 мин и рвались ECONNRESET). Импорт в начале файла расширить: `import { api, bulk, ids, pool, sleep, stats, UnsafeRetryError } from './lib/http.mjs';`.
+- [ ] **Step 1: Всплеск** — инструмент с таймаутом запросов и повтором сетевых ошибок (сломалось в J-G5: параллельные POST висели ~30 мин и рвались ECONNRESET). Импорты в начале файла расширить до `import { api, bulk, ids, pool, sleep, stats, UnsafeRetryError } from './lib/http.mjs';` и `import { latency, latencyResult, linkId, waitFor } from './lib/latency.mjs';` (имена, уже добавленные Tasks 24, 27, сохранить). Id связи читает общий `linkId` — своей копии в `acceptance.mjs` нет.
 
 ```js
-async function linkIdOf(from, to) {
-  const issue = await api('GET', `/rest/api/3/issue/${from}?fields=issuelinks`);
-  return issue.fields.issuelinks.find((l) => (l.outwardIssue ?? l.inwardIssue)?.id === String(to))?.id ?? null;
-}
+const shippedGroups = () => String(args.groups ?? 'query,site,board,sprint,comment,attachment,fields').split(',');
 
 async function createLink([from, to]) {
   for (let attempt = 1; attempt <= 5; attempt += 1) {
@@ -7217,7 +8063,7 @@ async function createLink([from, to]) {
       return;
     } catch (error) {
       if (!(error instanceof UnsafeRetryError)) throw error;
-      if (await linkIdOf(from, to)) return;
+      if (await linkId(from, to)) return;
       await sleep(1000 * attempt);
     }
   }
@@ -7225,7 +8071,7 @@ async function createLink([from, to]) {
 }
 
 async function deleteLink([from, to]) {
-  const id = await linkIdOf(from, to);
+  const id = await linkId(from, to);
   if (id) await api('DELETE', `/rest/api/3/issueLink/${id}`, undefined, { raw: true });
 }
 
@@ -7290,7 +8136,7 @@ const ERRORS = [
 ];
 
 async function errors() {
-  const shipped = String(args.groups ?? 'query,board,sprint,comment,fields').split(',');
+  const shipped = shippedGroups();
   const rows = [];
   for (const [jql, expected, group] of ERRORS.filter((e) => shipped.includes(e[2]))) {
     const r = await api('POST', '/rest/api/3/search/jql', { jql, fields: ['id'], maxResults: 1 }, { raw: true });
@@ -7304,15 +8150,19 @@ async function errors() {
 
 `--groups` — отгруженные группы (по итогам J-G6/J-G7).
 
-- [ ] **Step 4: 20 образцов ScriptRunner.** Импорт `readFileSync` — в начало файла.
+- [ ] **Step 4: 20 образцов ScriptRunner.** Если импорта `readFileSync` ещё нет (Tasks 24, 27) — `import { readFileSync } from 'node:fs';` в начало файла.
 
 ```js
-import { readFileSync } from 'node:fs';
-
 async function sr() {
   const { samples } = JSON.parse(readFileSync(new URL('../test/fixtures/sr-samples.json', import.meta.url), 'utf8'));
+  const shipped = shippedGroups();
   const rows = [];
   for (const s of samples) {
+    if (!shipped.includes(s.group)) {
+      rows.push({ id: s.id, scriptrunner: s.scriptrunner, group: s.group, skipped: 'v1.1', pass: null });
+      log(`sr ${s.id}: skipped, group ${s.group} is in v1.1`);
+      continue;
+    }
     const got = await evaluate(s.query);
     let ref = await REFERENCES[s.reference.fn](s.reference.args, args);
     if (s.reference.and) {
@@ -7323,11 +8173,11 @@ async function sr() {
     rows.push({ ...row, pass: row.complete === true });
     log(`sr ${s.id}: ${JSON.stringify(rows.at(-1))}`);
   }
-  save('acceptance-sr', { stats, rows, passed: rows.filter((r) => r.pass).length });
+  save('acceptance-sr', { stats, rows, passed: rows.filter((r) => r.pass === true).length, skipped: rows.filter((r) => r.skipped).length });
 }
 ```
 
-Образцы групп, не прошедших ворота, пропускаются с пометкой `skipped: 'v1.1'` (группа функции — по `s.reference.fn` и `CASES`).
+Образец группы, не прошедшей ворота (группа — поле `group` образца, Task 1), не сравнивается: строка `skipped: 'v1.1'`; критерий Task 32 — все не пропущенные образцы `pass: true`.
 
 - [ ] **Step 5: Регистрация фаз.** `PHASES` += `{ burst, audit, errors, sr }`; `node --check apps/query/scripts/acceptance.mjs`; `npx vitest run` → PASS.
 
@@ -7335,7 +8185,7 @@ async function sr() {
 
 ```bash
 git add apps/query/scripts/acceptance.mjs
-git commit -m "JQL-36: Add burst, write audit, error and ScriptRunner sample phases to the acceptance tool
+git commit -m "JQL-38: Add burst, write audit, error and ScriptRunner sample phases to the acceptance tool
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -7360,15 +8210,16 @@ node apps/query/scripts/acceptance.mjs complete --cases m3 --tag final
 node apps/query/scripts/acceptance.mjs fresh --group query --n 30 --tag final
 node apps/query/scripts/acceptance.mjs fresh --group sprint --n 30 --tag final
 node apps/query/scripts/acceptance.mjs fresh --group comment --n 30 --tag final
+node apps/query/scripts/acceptance.mjs fresh --group attachment --n 30 --tag final
 node apps/query/scripts/acceptance.mjs fresh --group fields --n 30 --tag final
 node apps/query/scripts/acceptance.mjs burst --burst 200 --tag final
 node apps/query/scripts/acceptance.mjs errors --groups <отгруженные группы>
-node apps/query/scripts/acceptance.mjs sr
+node apps/query/scripts/acceptance.mjs sr --groups <отгруженные группы>
 node apps/query/scripts/acceptance.mjs audit --since -30d
 forge eligibility -e development --non-interactive
 ```
 
-(группы, ушедшие в v1.1 по J-G6/J-G7, не запускать; отметить «v1.1» в документе.)
+(группы, ушедшие в v1.1 по J-G6/J-G7, не запускать — в том числе `fresh --group attachment`, если вложения не прошли J-G7; отметить «v1.1» в документе; `<отгруженные группы>` — `SHIPPED_GROUPS` через запятую.)
 
 - [ ] **Step 2: Документ приёмки** `atlassian/plans/2026-10-03-artup-query-acceptance.md`, раздел (а) — таблица по каждой строке:
 
@@ -7377,7 +8228,7 @@ forge eligibility -e development --non-interactive
 | нет предварительной индексации всего сайта для функций по запросу; первый результат на 50 000 | по J-G5: результат, а не ошибка; при > 20 с — «Computing», затем результат | Task 17 Step 5 | … | … |
 | свежесть | p90 ≤ 60 с, по 30 изменений на группу | `acceptance-fresh-*` | … | … |
 | 0 потерянных обновлений | 0 на ≥ 150 изменениях | `acceptance-fresh-query` (150) + остальные группы | … | … |
-| полнота | 100% против REST на > 1 000 и > 10 000 для каждой функции §2 | `acceptance-complete-*` | … | … |
+| полнота | 100% против REST на > 1 000 и > 10 000 для каждой функции §2 (размер случая — максимальный, какой дают данные, P-3) | `acceptance-complete-*` | … | … |
 | всплеск 200 изменений/мин | замер (обещание листинга: «секунды для обычных правок, до минут при массовых») | `acceptance-burst` | … | … |
 | понятная ошибка вместо пустого результата | все случаи §6 | `acceptance-errors` + Task 30 Step 1 («Index is building») + юнит-тесты (`unlicensed`, `tooMany`) | … | … |
 | ноль egress, RoA | eligible | `forge eligibility` | … | … |
@@ -7385,7 +8236,9 @@ forge eligibility -e development --non-interactive
 | > 1 000 — условием/деревом, иначе ошибка с числом | дерево до 9 000 / 81 000 (Q-R10) | `tree2` + юнит-тест `tooMany` | … | … |
 | аргумент — любой JQL, `filter=…`, список ключей | 3 случая | `CASES.m1` | … | … |
 | company- и team-managed | оба | `CASES.m1` JQLT | … | … |
-| имена ScriptRunner | 20 образцов дают тот же смысл | `acceptance-sr` | … | … |
+| имена ScriptRunner | 20 образцов дают тот же смысл (образцы групп v1.1 — `skipped`, считаются отдельно) | `acceptance-sr` | … | … |
+
+Под таблицей — подтаблица полноты по функциям: функция | случай | фактический размер результата (`reference`) | размер внутреннего запроса (для функций с `subquery`) | complete. Пишется измеренный размер, а не цель «> 1 000 / > 10 000»: где данные дают меньше (например, `incompleteInSprint` большого спринта — 50), так и записать.
 
 Любая строка «не прошло» → стоп: листинг не подаётся (бриф §10), исправление — отдельной задачей с тестом, затем повтор строки.
 
@@ -7396,7 +8249,7 @@ forge eligibility -e development --non-interactive
   4. `issue in previousSprint("Нет такой доски")` → в редакторе понятная ошибка «Board … not found», не пустой результат.
   5. `issue in addedAfterSprintStart("JQLG board")` → задачи, добавленные в активный спринт после старта (если группа в v1).
   6. Оставить комментарий к задаче → `issue in commented("by <ваше имя> after -1d")` находит её (если группа в v1).
-  7. «Настройки → Приложения → ArtUp Query settings»: исключить RPT → «Сохранить» → на странице состояния виден список; вернуть.
+  7. (если админ-страница есть — Task 29) «Настройки → Приложения → ArtUp Query settings»: исключить RPT → «Сохранить» → на странице состояния виден список; вернуть.
   8. Тёмная тема и русский язык интерфейса: всё читается, ничего не обрезано.
   9. Решение владельца: production deploy (`forge deploy -e production`, установка) — делает владелец; подача листинга — владелец (C3).
 
@@ -7404,7 +8257,7 @@ forge eligibility -e development --non-interactive
 
 ```bash
 git add atlassian/plans/2026-10-03-artup-query-acceptance.md
-git commit -m "JQL-37: Record the acceptance run against every quality bar and the owner checklist
+git commit -m "JQL-39: Record the acceptance run against every quality bar and the owner checklist
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -7413,21 +8266,21 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 33: Матрица скриншотов, проверка переполнения, качество переводов, иконка
 
-**Model:** sonnet
+**Model:** opus (шаги 1, 4 — стенд `preview/**`, скрипты `screenshots.mjs`/`contact-sheet.mjs`, иконка в SVG и JSX; правка переполнения кодом, а не переводом), sonnet (шаги 2, 3, 5 — прогон снимков, проход переводов, коммит)
 
 **Files:**
 - Create: `apps/query/static/app/scripts/{screenshots.mjs,contact-sheet.mjs}` (адаптация Reports), `apps/query/static/app/preview/**` (страница-стенд с подменой `@forge/bridge`, как в Reports)
 - Modify: `apps/query/resources/icon.svg`, `apps/query/static/app/src/illustrations/AppIcon.jsx`, файлы локалей, где проба нашла проблемы
 
-- [ ] **Step 1:** Скопировать и адаптировать стенд и скрипты из `apps/reports/static/app/{preview,scripts/screenshots.mjs,scripts/contact-sheet.mjs}`: `MATRIX = { global: { states: ['reference', 'reference-empty-search', 'status-idle', 'status-building', 'status-errors', 'unlicensed'], widths: [1280, 800] }, admin: { states: ['admin', 'admin-busy', 'admin-reset-dialog', 'admin-forbidden'], widths: [1280, 800] } }`; локали en-US, de-DE, ru-RU, ja-JP, fi-FI, zh-CN; темы светлая/тёмная; режим пробы по всем 26 локалям — элементы с `scrollWidth > clientWidth` или текстом, обрезанным `overflow: hidden`.
-- [ ] **Step 2:** `npm run screenshots` → `static/app/screenshots/index.html`; исправить каждое переполнение (короче перевод или перенос), повторять до 0.
+- [ ] **Step 1:** Скопировать и адаптировать стенд и скрипты из `apps/reports/static/app/{preview,scripts/screenshots.mjs,scripts/contact-sheet.mjs}`: `MATRIX = { global: { states: ['reference', 'reference-empty-search', 'status-idle', 'status-building', 'status-errors', 'unlicensed'], widths: [1280, 800] }, admin: { states: ['admin', 'admin-busy', 'admin-reset-dialog', 'admin-forbidden'], widths: [1280, 800] } }` (ключ `admin` — только если админ-страница есть, Task 29); локали en-US, de-DE, ru-RU, ja-JP, fi-FI, zh-CN; темы светлая/тёмная; режим пробы по всем 26 локалям — элементы с `scrollWidth > clientWidth` или текстом, обрезанным `overflow: hidden`.
+- [ ] **Step 2:** `npm run screenshots` → `static/app/screenshots/index.html`; исправить каждое переполнение (короче перевод — sonnet; перенос или вёрстка — исполнитель opus), повторять до 0.
 - [ ] **Step 3:** Проход переводов: для каждой локали — проверка всех ключей носителем-уровнем: термины как в интерфейсе Jira на этом языке («задача», «спринт», «доска», «фильтр», «эпик», «подзадача»); имена функций и условий не переведены. Изменённые ключи — в тело коммита.
 - [ ] **Step 4:** Иконка: перекрасить `resources/icon.svg` и `AppIcon.jsx` в свой цвет ArtUp Query (только токены дизайна в JSX; в SVG-ресурсе цвета допустимы, как в Reports).
 - [ ] **Step 5: Commit**
 
 ```bash
 git add apps/query
-git commit -m "JQL-38: Add the screenshot matrix, fix overflows and translations, recolour the icon
+git commit -m "JQL-40: Add the screenshot matrix, fix overflows and translations, recolour the icon
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -7441,7 +8294,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Modify: `site/index.html`, `site/privacy.html`, `site/terms.html`, `site/security.html`, `site/support.html`, `atlassian/README.md`, `NEXT_STEPS.md`
 
 - [ ] **Step 1: Листинг** по структуре `atlassian/listing-reports/`: имя «ArtUp Query — JQL functions for subtasks, links, sprints and comments», слоган, описание; три главных преимущества по брифу §4 (результат свежий через секунды после правки — p90 из приёмки; полный при любом размере — числа полноты; Runs on Atlassian, ничего не пишет в задачи); список функций по группам (только отгруженные); блок «Coming from ScriptRunner?» (`issue in` вместо `issueFunction in`); честная строка о свежести: «seconds for ordinary edits; bulk imports and bulk edits can take minutes» (Q-R5, числа всплеска из приёмки); цена $175/мес за 200, ≤ 10 бесплатно; быстрый старт (3 шага); ответы Privacy & Security: egress нет; хранится — id задач, спринтов, записей changelog, категории статусов, даты, account id авторов комментариев и вложений, видимость (роль/группа), расширения файлов, кэш id результатов; текст задач, комментариев и вложений не хранится; удаление — по событиям удаления и при деинсталляции (Forge).
-- [ ] **Step 2: Скриншоты** — 5 из матрицы Task 33 (1280, светлая, en-US): справочник, состояние, поиск задач с функцией (снять на `artuplabs-dev` через браузер), админ-страница, пример ошибки в редакторе JQL; размеры Marketplace.
+- [ ] **Step 2: Скриншоты** — 5 из матрицы Task 33 (1280, светлая, en-US): справочник, состояние, поиск задач с функцией (снять на `artuplabs-dev` через браузер), админ-страница (если её нет — Task 29 не исполнялась — второй поиск задач с функцией другой группы), пример ошибки в редакторе JQL; размеры Marketplace.
 - [ ] **Step 3: Страница сайта** `site/query/index.html` в стиле `site/reports/` (тот же CSS, без внешних запросов сверх уже используемых `site/reports`), ссылка с `site/index.html`; `site/docs/query/index.html` — справочник функций (тексты из `fn.*` en-US, примеры), раздел о датах UTC и рабочем времени (Q-R12), исключённые проекты (Q-R13). **Сайт не деплоить** — деплоит владелец.
 - [ ] **Step 4: Правовые страницы.** `site/privacy.html` — новый раздел «What data ArtUp Query processes» (что читает: задачи, связи, иерархию, changelog Sprint/status, метаданные комментариев и вложений — от имени приложения; что хранит — список Step 1; account id авторов — единственные персональные данные; журнал ошибок без аргументов, Q-R14; сроки хранения), ArtUp Query в «In short», списке приложений, таблице субпроцессоров (Atlassian: Forge SQL и Forge storage); `site/terms.html` — ArtUp Query в списках EULA, документации и Provider-Specific Terms (Runs on Atlassian, только чтение задач, хранит только метаданные индекса); `site/security.html` — архитектура и скоупы ArtUp Query (список из манифеста, с объяснением `write:app-data:jira` — только precomputation JQL-функций); `site/support.html` — ArtUp Query в списке поддержки. Даты «Last updated» — дата задачи.
 - [ ] **Step 5: Статус.** `atlassian/README.md` — строка №5 (ArtUp Query: приёмка пройдена, ждёт C2/C3); `NEXT_STEPS.md` — шаги владельца: чек-лист C2, production deploy, подача листинга, деплой сайта. В родительском репозитории `/Users/artyomkarpets/IncomeApps` — строка проекта в `PROJECTS.md` (отдельный коммит там же, тем же форматом сообщения без номера JQL: `Update ArtUp Query status: acceptance passed, waiting for the owner`).
@@ -7449,7 +8302,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ```bash
 git add atlassian/listing-query site atlassian/README.md NEXT_STEPS.md
-git commit -m "JQL-39: Draft the Marketplace listing, product and docs pages and legal updates for ArtUp Query
+git commit -m "JQL-41: Draft the Marketplace listing, product and docs pages and legal updates for ArtUp Query
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -7466,13 +8319,14 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 | C2 | Task 32 | ручная приёмка по чек-листу `2026-10-03-artup-query-acceptance.md`; решение о production deploy (выполняет владелец) |
 | C3 | Task 34 | подача листинга; деплой сайта |
 
-Зависимости: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → {11, 12} → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → [J-G6 или J-G7 пройден: 22 → 23] → [J-G6 пройден: 24] → [J-G7 пройден: 25] → 26 → [J-G7 пройден: 27] → 28 → 29 → 30 → 31 → 32 → 33 → 34. Задачи, пропущенные по воротам, не получают коммитов; номера коммитов остальных не сдвигаются (JQL-(N+5)). Tasks 5–8 (чистое ядро с полным кодом) можно отдать одному исполнителю подряд — по коммиту и ревью на задачу.
+Зависимости: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → {11, 12} → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 (всегда, при любом исходе J-G6) → [J-G6 или J-G7 пройден: 22 → 23] → [J-G6 пройден: 24] → [J-G7 пройден хотя бы по одной части: 25] → 26 → [J-G7 пройден хотя бы по одной части: 27] → 28 → [Task 23 исполнялась: 29; иначе — снятие админ-страницы по Task 29, коммит JQL-36] → 30 → 31 → 32 → 33 → 34. Задачи, пропущенные по воротам, не получают коммитов; номера коммитов остальных не сдвигаются: Task N → JQL-(N+7) (JQL-6 — план, JQL-7 — поправки pre-flight; Task 1 = JQL-8 … Task 34 = JQL-41). Tasks 5–8 (чистое ядро с полным кодом) можно отдать одному исполнителю подряд — по коммиту и ревью на задачу.
 
 | Task | Model | Почему |
 |---|---|---|
-| 1, 2, 3, 17, 20, 21, 30, 32, 33, 34 | sonnet | сверка документации, замеры, деплой и проверки на сайте, приёмка, переводы, листинг |
-| 4 | sonnet | каркас копированием из Reports |
-| 5–16, 18, 19, 22–29, 31 | opus | код и тесты: ядро, клиент, обновление, индекс, UI, прототип и инструменты замера |
+| 1, 2, 17, 20, 21, 30, 32, 34 | sonnet | сверка документации, замеры, деплой и проверки на сайте, приёмка, листинг; исправления кода внутри этих задач — исполнитель opus |
+| 3 | opus (шаг 2), sonnet (шаги 1, 3, 4) | скрипт `live-checks.mjs` — код; документация, прогон и выводы — сбор данных |
+| 33 | opus (шаги 1, 4), sonnet (шаги 2, 3, 5) | стенд, скрипты снимков и иконка — код; прогон снимков и переводы — sonnet |
+| 4–16, 18, 19, 22–29, 31 | opus | код и тесты: каркас, ядро, клиент, обновление, индекс, UI, прототип и инструменты замера |
 
 Ревью: проверка соответствия и качества — той же моделью, что исполнитель задачи; итоговое ревью ветки — opus.
 
@@ -7489,9 +8343,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 | §3 данные KVS и SQL | 10, 23, 27 |
 | §3 порядок вычисления, дерево, права | 6, 9, 13; Q-R3 |
 | §4 приватность, удаление, исключённые проекты | 23 (`deleteIssue`), 27, 29, 34 |
-| §5 свежесть, сверка, первичное заполнение, «Index is building» | 7, 14, 23, 30 |
+| §5 свежесть, сверка, первичное заполнение, «Index is building» | 7, 14 (включая события спринтов для функций доски), 17 (свежесть `previousSprint`/`nextSprint`), 23, 30 |
 | §6 ошибки | 5, 6, 8, 13, 24, 25, 27, 28, 31 |
 | §7 лицензия и цена | 4, 13, 34 |
-| §8 тесты и приёмка | все задачи с кодом (vitest), 16, 17, 30, 31, 32 |
+| §8 тесты и приёмка | все задачи с кодом (vitest), покрытие ветвлений `src/core/**` ≥ 90% (4, 5 и задачи ядра — P-7), 16, 17, 30, 31, 32 |
 | §9 этапы и ворота J-G6, J-G7 | 18–21 |
 | §10 первые проверки | 1, 2, 3 |
