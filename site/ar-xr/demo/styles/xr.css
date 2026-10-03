@@ -1078,3 +1078,19 @@ input[type=range][orient=vertical] {
 .xr-pick__field.hidden {
     display: none;
 }
+
+/* Отладочная панель XR (`?debug=xr`): над лентой по центру, касаний не перехватывает. */
+.xr-debug {
+    position: fixed;
+    left: 50%;
+    bottom: calc(180px + var(--avt-safe-bottom));
+    z-index: 930;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #9ef0a8;
+    font: 11px/1.35 ui-monospace, monospace;
+    white-space: pre;
+    pointer-events: none;
+}
