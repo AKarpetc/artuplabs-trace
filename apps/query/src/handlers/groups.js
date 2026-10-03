@@ -62,8 +62,9 @@ export async function writeGroups(deps, startedAt, byGroup) {
   return out.length;
 }
 
-/** Whether the last computation of a group took longer than a refresh pass may spend on it. */
+/** Whether a group belongs to the heavy lane: it waits there, or its last computation took longer than a refresh pass may spend on it. */
 export async function isHeavy(deps, group) {
+  if (await deps.state.heavy.get(group.key)) return true;
   return ((await deps.cache.meta(group.key))?.ms ?? 0) >= REFRESH_GROUP_BUDGET_MS;
 }
 

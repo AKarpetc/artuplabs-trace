@@ -400,6 +400,14 @@ describe('heavy groups in a refresh pass', () => {
     expect(await refreshOnce(deps)).toMatchObject({ recomputed: 0, handed: 1 });
     expect(compute.childIssuesOf).not.toHaveBeenCalled();
   });
+  it('does not compute a group that waits in the heavy lane', async () => {
+    const compute = { childIssuesOf: vi.fn() };
+    const deps = makeDeps({ pcs: heavyPcs, compute });
+    await deps.state.heavy.put({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 990000 });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ recomputed: 0, handed: 1 });
+    expect(compute.childIssuesOf).not.toHaveBeenCalled();
+  });
   it('does not queue a heavy group again while it waits in the lane', async () => {
     const deps = makeDeps({ pcs: heavyPcs, compute: { childIssuesOf: async () => { throw deadlineError(); } } });
     await deps.state.heavy.put({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 990000 });
