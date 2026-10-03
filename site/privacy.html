@@ -11,258 +11,432 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main" data-i18n-html="t1">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
       <a class="brand" href="index.html"><img class="brand-mark" src="../../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
-      <nav class="site-nav" aria-label="Main">
+      <nav class="site-nav" aria-label="Main" data-i18n-attr="aria-label:a1">
         <ul>
-          <li><a href="index.html">Home</a></li>
+          <li data-i18n-html="t3"><a href="index.html">Home</a></li>
           <li><a href="export/">ArtUp Export</a></li>
           <li><a href="reports/">ArtUp Reports</a></li>
-          <li><a href="docs.html">Docs</a></li>
-          <li><a href="support.html">Support</a></li>
-          <li><a href="security.html">Security</a></li>
-          <li><a href="privacy.html" aria-current="page">Privacy</a></li>
-          <li><a href="terms.html">Terms</a></li>
+          <li data-i18n-html="t6"><a href="docs.html">Docs</a></li>
+          <li data-i18n-html="t7"><a href="support.html">Support</a></li>
+          <li data-i18n-html="t8"><a href="security.html">Security</a></li>
+          <li data-i18n-html="t9"><a href="privacy.html" aria-current="page">Privacy</a></li>
+          <li data-i18n-html="t10"><a href="terms.html">Terms</a></li>
         </ul>
       </nav>
+      <div class="lang-toggle" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.label"><button type="button" data-lang-set="ru" lang="ru" aria-pressed="false">RU</button><button type="button" data-lang-set="en" lang="en" aria-pressed="true">EN</button></div>
     </div>
   </header>
 
   <main id="main" class="doc">
-    <h1>Privacy Policy</h1>
-    <p class="meta">Last updated: 2026-09-30</p>
+    <p class="i18n-note" data-lang="ru" lang="ru">Перевод для удобства. При расхождении действует английская версия.</p>
+    <h1 data-i18n-html="t11">Privacy Policy</h1>
+    <p class="meta" data-i18n-html="t12">Last updated: 2026-09-30</p>
 
     <div class="notice">
-      <p><strong>In short:</strong> ArtUp Trace runs entirely on Atlassian's infrastructure. Its data is stored by Atlassian in your Jira site's data residency region, ArtUp Labs operates no servers that receive it, and the app sends nothing to third parties. ArtUp Export stores nothing at all: it converts Confluence pages in your browser and downloads the result to your computer. ArtUp Reports builds Excel, Word and PDF files from Jira issues in your browser; it stores only export templates, including the Atlassian account id of each template's author, and never stores issue content. This website uses no cookies and no analytics.</p>
+      <p data-i18n-html="t13"><strong>In short:</strong> ArtUp Trace runs entirely on Atlassian's infrastructure. Its data is stored by Atlassian in your Jira site's data residency region, ArtUp Labs operates no servers that receive it, and the app sends nothing to third parties. ArtUp Export stores nothing at all: it converts Confluence pages in your browser and downloads the result to your computer. ArtUp Reports builds Excel, Word and PDF files from Jira issues in your browser; it stores only export templates, including the Atlassian account id of each template's author, and never stores issue content. This website uses no cookies and no analytics.</p>
     </div>
 
     <nav class="toc" aria-labelledby="toc-title">
-      <h2 id="toc-title">Contents</h2>
+      <h2 id="toc-title" data-i18n-html="t14">Contents</h2>
       <ol>
-        <li><a href="#who">Who we are</a></li>
-        <li><a href="#scope">Scope</a></li>
-        <li><a href="#roles">Controller and processor roles</a></li>
-        <li><a href="#what">What data ArtUp Trace processes</a></li>
-        <li><a href="#export">What data ArtUp Export processes</a></li>
-        <li><a href="#reports">What data ArtUp Reports processes</a></li>
-        <li><a href="#why">Why we process it</a></li>
-        <li><a href="#where">Where the data is stored</a></li>
-        <li><a href="#retention">Retention and deletion</a></li>
-        <li><a href="#subprocessors">Sub-processors</a></li>
-        <li><a href="#website">This website</a></li>
-        <li><a href="#email">When you email us</a></li>
-        <li><a href="#payments">Payments</a></li>
-        <li><a href="#security">Security</a></li>
-        <li><a href="#rights">Your rights</a></li>
-        <li><a href="#children">Children</a></li>
-        <li><a href="#changes">Changes to this policy</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li data-i18n-html="t15"><a href="#who">Who we are</a></li>
+        <li data-i18n-html="t16"><a href="#scope">Scope</a></li>
+        <li data-i18n-html="t17"><a href="#roles">Controller and processor roles</a></li>
+        <li data-i18n-html="t18"><a href="#what">What data ArtUp Trace processes</a></li>
+        <li data-i18n-html="t19"><a href="#export">What data ArtUp Export processes</a></li>
+        <li data-i18n-html="t20"><a href="#reports">What data ArtUp Reports processes</a></li>
+        <li data-i18n-html="t21"><a href="#why">Why we process it</a></li>
+        <li data-i18n-html="t22"><a href="#where">Where the data is stored</a></li>
+        <li data-i18n-html="t23"><a href="#retention">Retention and deletion</a></li>
+        <li data-i18n-html="t24"><a href="#subprocessors">Sub-processors</a></li>
+        <li data-i18n-html="t25"><a href="#website">This website</a></li>
+        <li data-i18n-html="t26"><a href="#email">When you email us</a></li>
+        <li data-i18n-html="t27"><a href="#payments">Payments</a></li>
+        <li data-i18n-html="t28"><a href="#security">Security</a></li>
+        <li data-i18n-html="t29"><a href="#rights">Your rights</a></li>
+        <li data-i18n-html="t30"><a href="#children">Children</a></li>
+        <li data-i18n-html="t31"><a href="#changes">Changes to this policy</a></li>
+        <li data-i18n-html="t32"><a href="#contact">Contact</a></li>
       </ol>
     </nav>
 
-    <h2 id="who">1. Who we are</h2>
-    <p>ArtUp Labs is the trade name of Artyom Karpets, an individual entrepreneur (sole proprietor) registered in the Republic of Kazakhstan ("ArtUp Labs", "we", "us").</p>
+    <h2 id="who" data-i18n-html="t33">1. Who we are</h2>
+    <p data-i18n-html="t34">ArtUp Labs is the trade name of Artyom Karpets, an individual entrepreneur (sole proprietor) registered in the Republic of Kazakhstan ("ArtUp Labs", "we", "us").</p>
     <ul>
-      <li>Registered address: Protozanov Street 119, apt. 33, Ust-Kamenogorsk (Oskemen), East Kazakhstan Region, Republic of Kazakhstan</li>
-      <li>IIN: 911223350864</li>
-      <li>Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></li>
+      <li data-i18n-html="t35">Registered address: Protozanov Street 119, apt. 33, Ust-Kamenogorsk (Oskemen), East Kazakhstan Region, Republic of Kazakhstan</li>
+      <li data-i18n-html="t36">IIN: 911223350864</li>
+      <li data-i18n-html="t37">Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></li>
     </ul>
 
-    <h2 id="scope">2. Scope</h2>
-    <p>This policy covers:</p>
+    <h2 id="scope" data-i18n-html="t38">2. Scope</h2>
+    <p data-i18n-html="t39">This policy covers:</p>
     <ul>
-      <li><strong>ArtUp Trace for Jira Cloud</strong> (the "App"), an Atlassian Forge app for requirements traceability, distributed through the Atlassian Marketplace;</li>
-      <li><strong>ArtUp Export for Confluence Cloud</strong> ("ArtUp Export"), an Atlassian Forge app that exports Confluence pages to Markdown, distributed through the Atlassian Marketplace;</li>
-      <li><strong>ArtUp Reports for Jira Cloud</strong> ("ArtUp Reports"), an Atlassian Forge app that exports Jira issues to Excel, Word and PDF files, distributed through the Atlassian Marketplace. Where this policy says "the App", it applies to ArtUp Export and ArtUp Reports as well, except where sections 5 and 6 say otherwise; and</li>
-      <li>the website at <strong>artuplabs.com</strong> (the "Website").</li>
+      <li data-i18n-html="t40"><strong>ArtUp Trace for Jira Cloud</strong> (the "App"), an Atlassian Forge app for requirements traceability, distributed through the Atlassian Marketplace;</li>
+      <li data-i18n-html="t41"><strong>ArtUp Export for Confluence Cloud</strong> ("ArtUp Export"), an Atlassian Forge app that exports Confluence pages to Markdown, distributed through the Atlassian Marketplace;</li>
+      <li data-i18n-html="t42"><strong>ArtUp Reports for Jira Cloud</strong> ("ArtUp Reports"), an Atlassian Forge app that exports Jira issues to Excel, Word and PDF files, distributed through the Atlassian Marketplace. Where this policy says "the App", it applies to ArtUp Export and ArtUp Reports as well, except where sections 5 and 6 say otherwise; and</li>
+      <li data-i18n-html="t43">the website at <strong>artuplabs.com</strong> (the "Website").</li>
     </ul>
-    <p>Your use of Jira Cloud and Confluence Cloud itself is governed by Atlassian's own privacy policy and terms. This policy does not cover Atlassian's processing.</p>
+    <p data-i18n-html="t44">Your use of Jira Cloud and Confluence Cloud itself is governed by Atlassian's own privacy policy and terms. This policy does not cover Atlassian's processing.</p>
 
-    <h2 id="roles">3. Controller and processor roles</h2>
-    <p>For data the App processes within your Jira or Confluence site, <strong>the customer</strong> (the organisation that installed the App) is the data controller, and <strong>ArtUp Labs</strong> acts as a processor on the customer's behalf. The App processes this data only to provide its features, on Atlassian's infrastructure.</p>
-    <p>For email correspondence you send us (for example, a support request), ArtUp Labs is the controller of that correspondence.</p>
+    <h2 id="roles" data-i18n-html="t45">3. Controller and processor roles</h2>
+    <p data-i18n-html="t46">For data the App processes within your Jira or Confluence site, <strong>the customer</strong> (the organisation that installed the App) is the data controller, and <strong>ArtUp Labs</strong> acts as a processor on the customer's behalf. The App processes this data only to provide its features, on Atlassian's infrastructure.</p>
+    <p data-i18n-html="t47">For email correspondence you send us (for example, a support request), ArtUp Labs is the controller of that correspondence.</p>
 
-    <h2 id="what">4. What data ArtUp Trace processes</h2>
-    <h3>4.1 Data the App reads from Jira</h3>
-    <p>The App reads Jira data <strong>as the current user</strong>, so it can only see what that user is already permitted to see. It reads issues, issue links, statuses and basic user information needed to display them. The App <strong>never writes to Jira issues</strong>.</p>
-    <p>The App requests only these Atlassian scopes:</p>
+    <h2 id="what" data-i18n-html="t48">4. What data ArtUp Trace processes</h2>
+    <h3 data-i18n-html="t49">4.1 Data the App reads from Jira</h3>
+    <p data-i18n-html="t50">The App reads Jira data <strong>as the current user</strong>, so it can only see what that user is already permitted to see. It reads issues, issue links, statuses and basic user information needed to display them. The App <strong>never writes to Jira issues</strong>.</p>
+    <p data-i18n-html="t51">The App requests only these Atlassian scopes:</p>
     <ul>
-      <li><code>read:jira-work</code> — read issues, issue links and project data;</li>
-      <li><code>read:jira-user</code> — read basic information about the current user, used for the per-action Jira permission check;</li>
-      <li><code>storage:app</code> — store the App's own data in Forge storage.</li>
+      <li data-i18n-html="t52"><code>read:jira-work</code> — read issues, issue links and project data;</li>
+      <li data-i18n-html="t53"><code>read:jira-user</code> — read basic information about the current user, used for the per-action Jira permission check;</li>
+      <li data-i18n-html="t54"><code>storage:app</code> — store the App's own data in Forge storage.</li>
     </ul>
 
-    <h3>4.2 Data the App stores</h3>
-    <p>The App stores the following in Forge SQL and Forge storage:</p>
+    <h3 data-i18n-html="t55">4.2 Data the App stores</h3>
+    <p data-i18n-html="t56">The App stores the following in Forge SQL and Forge storage:</p>
     <div class="table-wrap">
       <table>
-        <caption>Data stored by ArtUp Trace</caption>
+        <caption data-i18n-html="t57">Data stored by ArtUp Trace</caption>
         <thead>
-          <tr><th scope="col">Category</th><th scope="col">Contents</th></tr>
+          <tr><th scope="col" data-i18n-html="t58">Category</th><th scope="col" data-i18n-html="t59">Contents</th></tr>
         </thead>
         <tbody>
-          <tr><td>Project settings</td><td>Which issue types and link types count as requirements and verification.</td></tr>
-          <tr><td>Requirement records</td><td>Issue id, issue key, summary, status, and a fingerprint hash of the summary and description (used to detect changes).</td></tr>
-          <tr><td>Link records</td><td>Link type, the other issue's key and status, and the time the link was last confirmed.</td></tr>
-          <tr><td>Baselines</td><td>Frozen snapshots of the requirement and link records above.</td></tr>
-          <tr><td>Sync job metadata</td><td>Technical information about background synchronisation jobs (for example, progress and timing).</td></tr>
+          <tr><td data-i18n-html="t60">Project settings</td><td data-i18n-html="t61">Which issue types and link types count as requirements and verification.</td></tr>
+          <tr><td data-i18n-html="t62">Requirement records</td><td data-i18n-html="t63">Issue id, issue key, summary, status, and a fingerprint hash of the summary and description (used to detect changes).</td></tr>
+          <tr><td data-i18n-html="t64">Link records</td><td data-i18n-html="t65">Link type, the other issue's key and status, and the time the link was last confirmed.</td></tr>
+          <tr><td data-i18n-html="t66">Baselines</td><td data-i18n-html="t67">Frozen snapshots of the requirement and link records above.</td></tr>
+          <tr><td data-i18n-html="t68">Sync job metadata</td><td data-i18n-html="t69">Technical information about background synchronisation jobs (for example, progress and timing).</td></tr>
         </tbody>
       </table>
     </div>
-    <p>The App does <strong>not</strong> store personal data: no names, email addresses or Atlassian account ids. It does not store passwords, access tokens or payment data. The full description text of issues is not stored; only a hash of it is.</p>
+    <p data-i18n-html="t70">The App does <strong>not</strong> store personal data: no names, email addresses or Atlassian account ids. It does not store passwords, access tokens or payment data. The full description text of issues is not stored; only a hash of it is.</p>
 
-    <h3>4.3 CSV export</h3>
-    <p>When a user exports to CSV, the file is generated and downloaded directly to that user's device. ArtUp Labs does not receive a copy.</p>
+    <h3 data-i18n-html="t71">4.3 CSV export</h3>
+    <p data-i18n-html="t72">When a user exports to CSV, the file is generated and downloaded directly to that user's device. ArtUp Labs does not receive a copy.</p>
 
-    <h3>4.4 Logs</h3>
-    <p>The Atlassian Forge platform keeps logs of errors raised by the App. By design, the App does not log issue content; logs contain error messages only. ArtUp Labs can view these logs in the Atlassian developer console to diagnose problems.</p>
+    <h3 data-i18n-html="t73">4.4 Logs</h3>
+    <p data-i18n-html="t74">The Atlassian Forge platform keeps logs of errors raised by the App. By design, the App does not log issue content; logs contain error messages only. ArtUp Labs can view these logs in the Atlassian developer console to diagnose problems.</p>
 
-    <h2 id="export">5. What data ArtUp Export processes</h2>
-    <h3>5.1 Data the app reads from Confluence</h3>
-    <p>ArtUp Export reads Confluence <strong>as the current user</strong>, through Atlassian's API in that user's browser, so it can only export what that user is already permitted to see. It reads the pages chosen for export (titles, content, versions, position in the page tree), their labels and attachments, and the display names of page authors and mentioned users. It <strong>never writes to Confluence</strong>.</p>
-    <p>ArtUp Export requests only these read-only Atlassian scopes:</p>
+    <h2 id="export" data-i18n-html="t75">5. What data ArtUp Export processes</h2>
+    <h3 data-i18n-html="t76">5.1 Data the app reads from Confluence</h3>
+    <p data-i18n-html="t77">ArtUp Export reads Confluence <strong>as the current user</strong>, through Atlassian's API in that user's browser, so it can only export what that user is already permitted to see. It reads the pages chosen for export (titles, content, versions, position in the page tree), their labels and attachments, and the display names of page authors and mentioned users. It <strong>never writes to Confluence</strong>.</p>
+    <p data-i18n-html="t78">ArtUp Export requests only these read-only Atlassian scopes:</p>
     <ul>
-      <li><code>read:page:confluence</code> — read pages, their content and versions;</li>
-      <li><code>read:space:confluence</code> — find the space and its top-level pages;</li>
-      <li><code>read:hierarchical-content:confluence</code> — read the page tree in Confluence order;</li>
-      <li><code>read:attachment:confluence</code> — list and download page attachments;</li>
-      <li><code>read:label:confluence</code> — read page labels;</li>
-      <li><code>read:confluence-user</code> — read display names of page authors and mentioned users;</li>
-      <li><code>search:confluence</code> — find pages by title when you pick a page to export;</li>
-      <li><code>storage:app</code> — declared for future versions; the current version does not use it.</li>
+      <li data-i18n-html="t79"><code>read:page:confluence</code> — read pages, their content and versions;</li>
+      <li data-i18n-html="t80"><code>read:space:confluence</code> — find the space and its top-level pages;</li>
+      <li data-i18n-html="t81"><code>read:hierarchical-content:confluence</code> — read the page tree in Confluence order;</li>
+      <li data-i18n-html="t82"><code>read:attachment:confluence</code> — list and download page attachments;</li>
+      <li data-i18n-html="t83"><code>read:label:confluence</code> — read page labels;</li>
+      <li data-i18n-html="t84"><code>read:confluence-user</code> — read display names of page authors and mentioned users;</li>
+      <li data-i18n-html="t85"><code>search:confluence</code> — find pages by title when you pick a page to export;</li>
+      <li data-i18n-html="t86"><code>storage:app</code> — declared for future versions; the current version does not use it.</li>
     </ul>
 
-    <h3>5.2 Where the processing happens</h3>
-    <p>Conversion to Markdown and packing of the zip file happen <strong>in the user's browser</strong>. The resulting zip is downloaded directly to that user's device. Page content, attachments and user names are <strong>not sent to the app's backend</strong>, not sent to ArtUp Labs and not sent anywhere outside Atlassian and the user's browser. Author names are written only into the user's zip.</p>
+    <h3 data-i18n-html="t87">5.2 Where the processing happens</h3>
+    <p data-i18n-html="t88">Conversion to Markdown and packing of the zip file happen <strong>in the user's browser</strong>. The resulting zip is downloaded directly to that user's device. Page content, attachments and user names are <strong>not sent to the app's backend</strong>, not sent to ArtUp Labs and not sent anywhere outside Atlassian and the user's browser. Author names are written only into the user's zip.</p>
 
-    <h3>5.3 Data the app stores</h3>
-    <p><strong>None.</strong> ArtUp Export does not use Forge storage or any other storage: it keeps no settings, no page content, no export history and no personal data. The <code>export-manifest.json</code> file inside each zip (page ids, versions, file paths and options, no page content) exists only in the user's download; when the user drops it back in for an update export, it is read in the browser and not uploaded.</p>
+    <h3 data-i18n-html="t89">5.3 Data the app stores</h3>
+    <p data-i18n-html="t90"><strong>None.</strong> ArtUp Export does not use Forge storage or any other storage: it keeps no settings, no page content, no export history and no personal data. The <code>export-manifest.json</code> file inside each zip (page ids, versions, file paths and options, no page content) exists only in the user's download; when the user drops it back in for an update export, it is read in the browser and not uploaded.</p>
 
-    <h3>5.4 Backend and logs</h3>
-    <p>ArtUp Export's only backend function reports whether the app's licence is active. It receives no page content, so Forge platform logs for ArtUp Export contain no Confluence content.</p>
+    <h3 data-i18n-html="t91">5.4 Backend and logs</h3>
+    <p data-i18n-html="t92">ArtUp Export's only backend function reports whether the app's licence is active. It receives no page content, so Forge platform logs for ArtUp Export contain no Confluence content.</p>
 
-    <h2 id="reports">6. What data ArtUp Reports processes</h2>
-    <h3>6.1 Data the app reads from Jira</h3>
-    <p>ArtUp Reports reads Jira <strong>as the current user</strong>, through Atlassian's API in that user's browser, so it can only export issues that user is already permitted to see. It reads the issues chosen for export (from a search, a saved filter, a board, a backlog, a sprint or a single issue) with the fields selected for the file — which can include descriptions, comments, work logs, issue links, sub-tasks and attachments or images — as well as saved filters, board configuration, the project list and the display names of users shown in the file. It <strong>never writes to Jira</strong>.</p>
-    <p>ArtUp Reports requests only these Atlassian scopes, none of which allows writing to Jira:</p>
+    <h2 id="reports" data-i18n-html="t93">6. What data ArtUp Reports processes</h2>
+    <h3 data-i18n-html="t94">6.1 Data the app reads from Jira</h3>
+    <p data-i18n-html="t95">ArtUp Reports reads Jira <strong>as the current user</strong>, through Atlassian's API in that user's browser, so it can only export issues that user is already permitted to see. It reads the issues chosen for export (from a search, a saved filter, a board, a backlog, a sprint or a single issue) with the fields selected for the file — which can include descriptions, comments, work logs, issue links, sub-tasks and attachments or images — as well as saved filters, board configuration, the project list and the display names of users shown in the file. It <strong>never writes to Jira</strong>.</p>
+    <p data-i18n-html="t96">ArtUp Reports requests only these Atlassian scopes, none of which allows writing to Jira:</p>
     <ul>
-      <li><code>read:jira-work</code> — read issues (search, fields, comments, work logs, links), saved filters, attachments and their thumbnails;</li>
-      <li><code>read:jira-user</code> — read display names of authors, assignees and template authors;</li>
-      <li><code>read:board-scope:jira-software</code> — read the issues of a board or backlog;</li>
-      <li><code>read:sprint:jira-software</code> — read the issues and details of a sprint;</li>
-      <li><code>read:board-scope.admin:jira-software</code> — read board configuration, to find the filter behind a board;</li>
-      <li><code>read:project:jira</code> — read the project list for project templates;</li>
-      <li><code>storage:app</code> — store export templates in Forge storage (section 6.3).</li>
+      <li data-i18n-html="t97"><code>read:jira-work</code> — read issues (search, fields, comments, work logs, links), saved filters, attachments and their thumbnails;</li>
+      <li data-i18n-html="t98"><code>read:jira-user</code> — read display names of authors, assignees and template authors;</li>
+      <li data-i18n-html="t99"><code>read:board-scope:jira-software</code> — read the issues of a board or backlog;</li>
+      <li data-i18n-html="t100"><code>read:sprint:jira-software</code> — read the issues and details of a sprint;</li>
+      <li data-i18n-html="t101"><code>read:board-scope.admin:jira-software</code> — read board configuration, to find the filter behind a board;</li>
+      <li data-i18n-html="t102"><code>read:project:jira</code> — read the project list for project templates;</li>
+      <li data-i18n-html="t103"><code>storage:app</code> — store export templates in Forge storage (section 6.3).</li>
     </ul>
 
-    <h3>6.2 Where the processing happens</h3>
-    <p>The Excel, Word or PDF file is built <strong>in the user's browser</strong> and downloaded directly to that user's device. Issue content, attachments and user names are <strong>not sent to the app's backend</strong>, not sent to ArtUp Labs and not sent anywhere outside Atlassian and the user's browser. The generated file exists only in the user's download.</p>
+    <h3 data-i18n-html="t104">6.2 Where the processing happens</h3>
+    <p data-i18n-html="t105">The Excel, Word or PDF file is built <strong>in the user's browser</strong> and downloaded directly to that user's device. Issue content, attachments and user names are <strong>not sent to the app's backend</strong>, not sent to ArtUp Labs and not sent anywhere outside Atlassian and the user's browser. The generated file exists only in the user's download.</p>
 
-    <h3>6.3 Data the app stores</h3>
-    <p>ArtUp Reports stores <strong>only export templates</strong>, in Forge storage:</p>
+    <h3 data-i18n-html="t106">6.3 Data the app stores</h3>
+    <p data-i18n-html="t107">ArtUp Reports stores <strong>only export templates</strong>, in Forge storage:</p>
     <div class="table-wrap">
       <table>
-        <caption>Data stored by ArtUp Reports</caption>
+        <caption data-i18n-html="t108">Data stored by ArtUp Reports</caption>
         <thead>
-          <tr><th scope="col">Category</th><th scope="col">Contents</th></tr>
+          <tr><th scope="col" data-i18n-html="t109">Category</th><th scope="col" data-i18n-html="t110">Contents</th></tr>
         </thead>
         <tbody>
-          <tr><td>Template settings</td><td>Template name, format (Excel or Word), scope (personal, project or site), the Excel column set and settings (such as layout, paper size and file-name pattern), the placeholders found in an uploaded Word template, file size, update time, and the <strong>Atlassian account id of the template's author</strong>.</td></tr>
-          <tr><td>Template index</td><td>The scope of each template id, used to find the template.</td></tr>
-          <tr><td>Word template files</td><td>The .docx file a user uploads as a template, stored in parts.</td></tr>
+          <tr><td data-i18n-html="t111">Template settings</td><td data-i18n-html="t112">Template name, format (Excel or Word), scope (personal, project or site), the Excel column set and settings (such as layout, paper size and file-name pattern), the placeholders found in an uploaded Word template, file size, update time, and the <strong>Atlassian account id of the template's author</strong>.</td></tr>
+          <tr><td data-i18n-html="t113">Template index</td><td data-i18n-html="t114">The scope of each template id, used to find the template.</td></tr>
+          <tr><td data-i18n-html="t115">Word template files</td><td data-i18n-html="t116">The .docx file a user uploads as a template, stored in parts.</td></tr>
         </tbody>
       </table>
     </div>
-    <p>The account id of a template's author is the <strong>only personal data</strong> ArtUp Reports stores. It is used to show who created a template and to check who may edit it; the author's display name is read from Jira when it is shown and is not stored. ArtUp Reports does <strong>not</strong> store issue fields, descriptions, comments, attachments, work logs, user names, email addresses, passwords, access tokens or payment data, and keeps no export history.</p>
-    <p>A Word template file contains whatever the user uploads; the app does not write Jira content into it. Please do not put confidential text in a template you share with a project or the whole site.</p>
+    <p data-i18n-html="t117">The account id of a template's author is the <strong>only personal data</strong> ArtUp Reports stores. It is used to show who created a template and to check who may edit it; the author's display name is read from Jira when it is shown and is not stored. ArtUp Reports does <strong>not</strong> store issue fields, descriptions, comments, attachments, work logs, user names, email addresses, passwords, access tokens or payment data, and keeps no export history.</p>
+    <p data-i18n-html="t118">A Word template file contains whatever the user uploads; the app does not write Jira content into it. Please do not put confidential text in a template you share with a project or the whole site.</p>
 
-    <h3>6.4 Backend and logs</h3>
-    <p>ArtUp Reports' backend functions save, list and delete templates, check the current user's Jira permissions to decide who may manage a project or site template, and report whether the licence is active. They receive no issue content. If a backend function fails, the Forge platform log contains only the function name and the error message — no issue content, titles or user data. Errors in the browser stay in the user's browser.</p>
+    <h3 data-i18n-html="t119">6.4 Backend and logs</h3>
+    <p data-i18n-html="t120">ArtUp Reports' backend functions save, list and delete templates, check the current user's Jira permissions to decide who may manage a project or site template, and report whether the licence is active. They receive no issue content. If a backend function fails, the Forge platform log contains only the function name and the error message — no issue content, titles or user data. Errors in the browser stay in the user's browser.</p>
 
-    <h2 id="why">7. Why we process it</h2>
-    <p>Data is processed only to provide the App's features: showing coverage of requirements, detecting suspect links, creating and comparing baselines, producing exports (including ArtUp Export's Markdown exports and ArtUp Reports' Excel, Word and PDF files), keeping ArtUp Reports' export templates, and diagnosing errors. We do not use App data for advertising, profiling, selling, or training machine-learning models.</p>
-    <p>Where the GDPR applies, the customer as controller determines the legal basis for processing its Jira data. Our processing of App data is on the customer's instructions, as expressed by installing and using the App. Our processing of support correspondence is based on our legitimate interest in answering your request.</p>
+    <h2 id="why" data-i18n-html="t121">7. Why we process it</h2>
+    <p data-i18n-html="t122">Data is processed only to provide the App's features: showing coverage of requirements, detecting suspect links, creating and comparing baselines, producing exports (including ArtUp Export's Markdown exports and ArtUp Reports' Excel, Word and PDF files), keeping ArtUp Reports' export templates, and diagnosing errors. We do not use App data for advertising, profiling, selling, or training machine-learning models.</p>
+    <p data-i18n-html="t123">Where the GDPR applies, the customer as controller determines the legal basis for processing its Jira data. Our processing of App data is on the customer's instructions, as expressed by installing and using the App. Our processing of support correspondence is based on our legitimate interest in answering your request.</p>
 
-    <h2 id="where">8. Where the data is stored</h2>
-    <p>ArtUp Trace is an Atlassian Forge app with the <strong>"Runs on Atlassian"</strong> designation. It has no external servers and makes no outbound network calls (no egress). All stored data remains in Forge SQL and Forge storage on Atlassian's infrastructure, in the customer's data residency region as handled by Atlassian. ArtUp Labs does not copy App data to its own systems.</p>
-    <p>ArtUp Export is also a Forge app with no external servers and no outbound network calls. It stores no data; Confluence content stays in the customer's Confluence site and, once exported, in the zip file on the user's device, under the customer's control.</p>
-    <p>ArtUp Reports is also a Forge app with no external servers and no outbound network calls. Its templates are stored in Forge storage on Atlassian's infrastructure, in the customer's data residency region as handled by Atlassian. Issue data stays in the customer's Jira site and, once exported, in the file on the user's device, under the customer's control. ArtUp Labs has no copy of either.</p>
+    <h2 id="where" data-i18n-html="t124">8. Where the data is stored</h2>
+    <p data-i18n-html="t125">ArtUp Trace is an Atlassian Forge app with the <strong>"Runs on Atlassian"</strong> designation. It has no external servers and makes no outbound network calls (no egress). All stored data remains in Forge SQL and Forge storage on Atlassian's infrastructure, in the customer's data residency region as handled by Atlassian. ArtUp Labs does not copy App data to its own systems.</p>
+    <p data-i18n-html="t126">ArtUp Export is also a Forge app with no external servers and no outbound network calls. It stores no data; Confluence content stays in the customer's Confluence site and, once exported, in the zip file on the user's device, under the customer's control.</p>
+    <p data-i18n-html="t127">ArtUp Reports is also a Forge app with no external servers and no outbound network calls. Its templates are stored in Forge storage on Atlassian's infrastructure, in the customer's data residency region as handled by Atlassian. Issue data stays in the customer's Jira site and, once exported, in the file on the user's device, under the customer's control. ArtUp Labs has no copy of either.</p>
 
-    <h2 id="retention">9. Retention and deletion</h2>
+    <h2 id="retention" data-i18n-html="t128">9. Retention and deletion</h2>
     <ul>
-      <li>App data is kept while the App is installed, so that coverage, confirmations and baselines remain available.</li>
-      <li>Atlassian deletes app data stored in Forge after the app is uninstalled, according to Atlassian's data retention policy. See <a href="https://developer.atlassian.com/platform/forge/storage/">Atlassian's Forge storage documentation</a> for reference.</li>
-      <li>ArtUp Export keeps no data, so there is nothing to retain or delete after uninstalling it. Zip files users downloaded stay on their devices under the customer's control.</li>
-      <li>ArtUp Reports keeps each template until a user with permission to manage it deletes it in the app; deleting a template removes its settings, its index entry and every part of its Word file. Atlassian deletes the app's Forge storage after the app is uninstalled, according to Atlassian's data retention policy. Files users downloaded stay on their devices under the customer's control.</li>
-      <li>Forge platform logs are retained by Atlassian according to Atlassian's policies.</li>
-      <li>Support emails are kept for as long as needed to handle the request and any follow-up, and deleted on request unless we must keep them by law. Support emails are deleted no later than 24 months after the last message in the conversation.</li>
+      <li data-i18n-html="t129">App data is kept while the App is installed, so that coverage, confirmations and baselines remain available.</li>
+      <li data-i18n-html="t130">Atlassian deletes app data stored in Forge after the app is uninstalled, according to Atlassian's data retention policy. See <a href="https://developer.atlassian.com/platform/forge/storage/">Atlassian's Forge storage documentation</a> for reference.</li>
+      <li data-i18n-html="t131">ArtUp Export keeps no data, so there is nothing to retain or delete after uninstalling it. Zip files users downloaded stay on their devices under the customer's control.</li>
+      <li data-i18n-html="t132">ArtUp Reports keeps each template until a user with permission to manage it deletes it in the app; deleting a template removes its settings, its index entry and every part of its Word file. Atlassian deletes the app's Forge storage after the app is uninstalled, according to Atlassian's data retention policy. Files users downloaded stay on their devices under the customer's control.</li>
+      <li data-i18n-html="t133">Forge platform logs are retained by Atlassian according to Atlassian's policies.</li>
+      <li data-i18n-html="t134">Support emails are kept for as long as needed to handle the request and any follow-up, and deleted on request unless we must keep them by law. Support emails are deleted no later than 24 months after the last message in the conversation.</li>
     </ul>
 
-    <h2 id="subprocessors">10. Sub-processors</h2>
+    <h2 id="subprocessors" data-i18n-html="t135">10. Sub-processors</h2>
     <div class="table-wrap">
       <table>
-        <caption>Sub-processors for App data</caption>
+        <caption data-i18n-html="t136">Sub-processors for App data</caption>
         <thead>
-          <tr><th scope="col">Sub-processor</th><th scope="col">Purpose</th><th scope="col">Location</th></tr>
+          <tr><th scope="col" data-i18n-html="t137">Sub-processor</th><th scope="col" data-i18n-html="t138">Purpose</th><th scope="col" data-i18n-html="t139">Location</th></tr>
         </thead>
         <tbody>
-          <tr><td>Atlassian</td><td>Hosting and running the Apps (Forge), storage for ArtUp Trace (Forge SQL and Forge storage) and ArtUp Reports templates (Forge storage), platform logs, Marketplace licensing and billing</td><td>Customer's data residency region as handled by Atlassian</td></tr>
+          <tr><td>Atlassian</td><td data-i18n-html="t141">Hosting and running the Apps (Forge), storage for ArtUp Trace (Forge SQL and Forge storage) and ArtUp Reports templates (Forge storage), platform logs, Marketplace licensing and billing</td><td data-i18n-html="t142">Customer's data residency region as handled by Atlassian</td></tr>
         </tbody>
       </table>
     </div>
-    <p>We use no other sub-processors for App data. We will update this list before adding one.</p>
+    <p data-i18n-html="t143">We use no other sub-processors for App data. We will update this list before adding one.</p>
 
-    <h2 id="website">11. This website</h2>
-    <p>The Website is a set of static pages. It sets <strong>no cookies</strong>, uses <strong>no analytics</strong>, and loads no third-party scripts, fonts or trackers. Pages are served through Cloudflare, which as our hosting and DNS provider may process technical request data (such as IP addresses) to deliver and protect the site.</p>
+    <h2 id="website" data-i18n-html="t144">11. This website</h2>
+    <p data-i18n-html="t145">The Website is a set of static pages. It sets <strong>no cookies</strong>, uses <strong>no analytics</strong>, and loads no third-party scripts, fonts or trackers. Pages are served through Cloudflare, which as our hosting and DNS provider may process technical request data (such as IP addresses) to deliver and protect the site.</p>
 
-    <h2 id="email">12. When you email us</h2>
-    <p>If you email <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> or <a href="mailto:security@artuplabs.com">security@artuplabs.com</a>, we receive your email address, name (if included) and whatever you choose to send, such as screenshots. Please do not send more Jira or Confluence content than needed. We use this only to answer you. Email is handled by our email provider, Zoho Mail (Zoho Corporation).</p>
+    <h2 id="email" data-i18n-html="t146">12. When you email us</h2>
+    <p data-i18n-html="t147">If you email <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> or <a href="mailto:security@artuplabs.com">security@artuplabs.com</a>, we receive your email address, name (if included) and whatever you choose to send, such as screenshots. Please do not send more Jira or Confluence content than needed. We use this only to answer you. Email is handled by our email provider, Zoho Mail (Zoho Corporation).</p>
 
-    <h2 id="payments">13. Payments</h2>
-    <p>Purchases, licensing and payments are handled by Atlassian through the Atlassian Marketplace. ArtUp Labs does not receive or store payment card data. Atlassian may share with us licence and billing contact information for the purposes described in Atlassian's Marketplace terms.</p>
+    <h2 id="payments" data-i18n-html="t148">13. Payments</h2>
+    <p data-i18n-html="t149">Purchases, licensing and payments are handled by Atlassian through the Atlassian Marketplace. ArtUp Labs does not receive or store payment card data. Atlassian may share with us licence and billing contact information for the purposes described in Atlassian's Marketplace terms.</p>
 
-    <h2 id="security">14. Security</h2>
-    <p>See our <a href="security.html">Security page</a> for the App's architecture, access scopes, and how we handle vulnerabilities and incidents.</p>
+    <h2 id="security" data-i18n-html="t150">14. Security</h2>
+    <p data-i18n-html="t151">See our <a href="security.html">Security page</a> for the App's architecture, access scopes, and how we handle vulnerabilities and incidents.</p>
 
-    <h2 id="rights">15. Your rights</h2>
-    <p>Depending on where you live, you may have the right to access, correct, delete, restrict or object to processing of your personal data, to data portability, and to complain to a data protection authority.</p>
+    <h2 id="rights" data-i18n-html="t152">15. Your rights</h2>
+    <p data-i18n-html="t153">Depending on where you live, you may have the right to access, correct, delete, restrict or object to processing of your personal data, to data portability, and to complain to a data protection authority.</p>
     <ul>
-      <li><strong>App data:</strong> because the customer is the controller, please direct requests to your organisation's Jira or Confluence administrator first. We will help the customer respond. Administrators can remove all App data by uninstalling the App.</li>
-      <li><strong>Correspondence with us:</strong> email <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>. We will respond within one month.</li>
+      <li data-i18n-html="t154"><strong>App data:</strong> because the customer is the controller, please direct requests to your organisation's Jira or Confluence administrator first. We will help the customer respond. Administrators can remove all App data by uninstalling the App.</li>
+      <li data-i18n-html="t155"><strong>Correspondence with us:</strong> email <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>. We will respond within one month.</li>
     </ul>
 
-    <h2 id="children">16. Children</h2>
-    <p>The App and Website are business tools and are not directed at children.</p>
+    <h2 id="children" data-i18n-html="t156">16. Children</h2>
+    <p data-i18n-html="t157">The App and Website are business tools and are not directed at children.</p>
 
-    <h2 id="changes">17. Changes to this policy</h2>
-    <p>We may update this policy, for example when the App gains new features or we add a sub-processor. We will change the "Last updated" date above and, for material changes, notify customers through the Marketplace listing or by email to the technical contact before the change takes effect.</p>
+    <h2 id="changes" data-i18n-html="t158">17. Changes to this policy</h2>
+    <p data-i18n-html="t159">We may update this policy, for example when the App gains new features or we add a sub-processor. We will change the "Last updated" date above and, for material changes, notify customers through the Marketplace listing or by email to the technical contact before the change takes effect.</p>
 
-    <h2 id="contact">18. Contact</h2>
-    <p>ArtUp Labs (Artyom Karpets, individual entrepreneur), Protozanov Street 119, apt. 33, Ust-Kamenogorsk (Oskemen), East Kazakhstan Region, Republic of Kazakhstan<br>
+    <h2 id="contact" data-i18n-html="t160">18. Contact</h2>
+    <p data-i18n-html="t161">ArtUp Labs (Artyom Karpets, individual entrepreneur), Protozanov Street 119, apt. 33, Ust-Kamenogorsk (Oskemen), East Kazakhstan Region, Republic of Kazakhstan<br>
     Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
   </main>
 
   <footer class="site-footer">
     <div class="container">
       <div>
-        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
-        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+        <p data-i18n-html="t162"><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p data-i18n-html="t163">Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · <span style="white-space:nowrap"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: <a href="https://wa.me/77778490070" target="_blank" rel="noopener">+7 777 849 00 70</a></span> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
       </div>
-      <nav aria-label="Footer">
+      <nav aria-label="Footer" data-i18n-attr="aria-label:a2">
         <ul>
           <li><a href="export/">ArtUp Export</a></li>
           <li><a href="reports/">ArtUp Reports</a></li>
-          <li><a href="docs.html">Docs</a></li>
-          <li><a href="support.html">Support</a></li>
-          <li><a href="security.html">Security</a></li>
-          <li><a href="privacy.html">Privacy</a></li>
-          <li><a href="terms.html">Terms</a></li>
+          <li data-i18n-html="t166"><a href="docs.html">Docs</a></li>
+          <li data-i18n-html="t167"><a href="support.html">Support</a></li>
+          <li data-i18n-html="t168"><a href="security.html">Security</a></li>
+          <li data-i18n-html="t169"><a href="privacy.html">Privacy</a></li>
+          <li data-i18n-html="t170"><a href="terms.html">Terms</a></li>
         </ul>
       </nav>
     </div>
   </footer>
+  <script>window.ARTUP_I18N = { en: {}, ru: {
+  "lang.label": "Язык",
+  "t1": "Перейти к содержимому",
+  "t3": "<a href=\"index.html\">Главная<\/a>",
+  "t6": "<a href=\"docs.html\">Документация<\/a>",
+  "t7": "<a href=\"support.html\">Поддержка<\/a>",
+  "t8": "<a href=\"security.html\">Безопасность<\/a>",
+  "t9": "<a href=\"privacy.html\" aria-current=\"page\">Конфиденциальность<\/a>",
+  "t10": "<a href=\"terms.html\">Условия<\/a>",
+  "t11": "Политика конфиденциальности",
+  "t12": "Обновлено: 2026-09-30",
+  "t13": "<strong>Коротко:<\/strong> ArtUp Trace целиком работает на инфраструктуре Atlassian. Его данные хранит Atlassian в регионе размещения данных вашего сайта Jira; у ArtUp Labs нет серверов, которые бы их получали, и приложение ничего не передаёт третьим лицам. ArtUp Export вообще ничего не хранит: оно преобразует страницы Confluence в вашем браузере и скачивает результат на ваш компьютер. ArtUp Reports собирает файлы Excel, Word и PDF из задач Jira в вашем браузере; оно хранит только шаблоны выгрузки, включая идентификатор аккаунта Atlassian автора каждого шаблона, и никогда не хранит содержимое задач. Этот сайт не использует cookie и аналитику.",
+  "t14": "Содержание",
+  "t15": "<a href=\"#who\">Кто мы<\/a>",
+  "t16": "<a href=\"#scope\">Область действия<\/a>",
+  "t17": "<a href=\"#roles\">Роли контролёра и обработчика<\/a>",
+  "t18": "<a href=\"#what\">Какие данные обрабатывает ArtUp Trace<\/a>",
+  "t19": "<a href=\"#export\">Какие данные обрабатывает ArtUp Export<\/a>",
+  "t20": "<a href=\"#reports\">Какие данные обрабатывает ArtUp Reports<\/a>",
+  "t21": "<a href=\"#why\">Зачем мы их обрабатываем<\/a>",
+  "t22": "<a href=\"#where\">Где хранятся данные<\/a>",
+  "t23": "<a href=\"#retention\">Хранение и удаление<\/a>",
+  "t24": "<a href=\"#subprocessors\">Субобработчики<\/a>",
+  "t25": "<a href=\"#website\">Этот сайт<\/a>",
+  "t26": "<a href=\"#email\">Когда вы пишете нам<\/a>",
+  "t27": "<a href=\"#payments\">Платежи<\/a>",
+  "t28": "<a href=\"#security\">Безопасность<\/a>",
+  "t29": "<a href=\"#rights\">Ваши права<\/a>",
+  "t30": "<a href=\"#children\">Дети<\/a>",
+  "t31": "<a href=\"#changes\">Изменения политики<\/a>",
+  "t32": "<a href=\"#contact\">Контакты<\/a>",
+  "t33": "1. Кто мы",
+  "t34": "ArtUp Labs — торговое название ИП Карпец Артём (индивидуальный предприниматель), зарегистрированного в Республике Казахстан («ArtUp Labs», «мы», «нас»).",
+  "t35": "Адрес регистрации: ул. Протозанова, 119, кв. 33, г. Усть-Каменогорск (Өскемен), Восточно-Казахстанская область, Республика Казахстан",
+  "t36": "ИИН: 911223350864",
+  "t37": "Эл. почта: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a>",
+  "t38": "2. Область действия",
+  "t39": "Эта политика распространяется на:",
+  "t40": "<strong>ArtUp Trace для Jira Cloud<\/strong> («Приложение») — приложение на Atlassian Forge для трассировки требований, распространяемое через Atlassian Marketplace;",
+  "t41": "<strong>ArtUp Export для Confluence Cloud<\/strong> («ArtUp Export») — приложение на Atlassian Forge для выгрузки страниц Confluence в Markdown, распространяемое через Atlassian Marketplace;",
+  "t42": "<strong>ArtUp Reports для Jira Cloud<\/strong> («ArtUp Reports») — приложение на Atlassian Forge для выгрузки задач Jira в файлы Excel, Word и PDF, распространяемое через Atlassian Marketplace. Там, где в этой политике говорится о «Приложении», это относится также к ArtUp Export и ArtUp Reports, если в разделах 5 и 6 не указано иное; и",
+  "t43": "сайт <strong>artuplabs.com<\/strong> («Сайт»).",
+  "t44": "Использование самих Jira Cloud и Confluence Cloud регулируется политикой конфиденциальности и условиями Atlassian. Обработку данных компанией Atlassian эта политика не охватывает.",
+  "t45": "3. Роли контролёра и обработчика",
+  "t46": "В отношении данных, которые Приложение обрабатывает на вашем сайте Jira или Confluence, <strong>клиент<\/strong> (организация, установившая Приложение) является контролёром данных, а <strong>ArtUp Labs<\/strong> действует как обработчик по поручению клиента. Приложение обрабатывает эти данные только для работы своих функций и на инфраструктуре Atlassian.",
+  "t47": "В отношении переписки, которую вы ведёте с нами по электронной почте (например, обращения в поддержку), контролёром этой переписки является ArtUp Labs.",
+  "t48": "4. Какие данные обрабатывает ArtUp Trace",
+  "t49": "4.1 Данные, которые Приложение читает из Jira",
+  "t50": "Приложение читает данные Jira <strong>от имени текущего пользователя<\/strong>, поэтому видит только то, что этому пользователю уже разрешено видеть. Оно читает задачи, связи задач, статусы и основные сведения о пользователях, нужные для их отображения. Приложение <strong>никогда не изменяет задачи Jira<\/strong>.",
+  "t51": "Приложение запрашивает только следующие разрешения Atlassian:",
+  "t52": "<code>read:jira-work<\/code> — чтение задач, связей задач и данных проекта;",
+  "t53": "<code>read:jira-user<\/code> — чтение основных сведений о текущем пользователе для проверки прав в Jira при каждом действии;",
+  "t54": "<code>storage:app<\/code> — хранение собственных данных Приложения в хранилище Forge.",
+  "t55": "4.2 Данные, которые хранит Приложение",
+  "t56": "Приложение хранит в Forge SQL и хранилище Forge следующее:",
+  "t57": "Данные, которые хранит ArtUp Trace",
+  "t58": "Категория",
+  "t59": "Данные",
+  "t60": "Настройки проекта",
+  "t61": "Какие типы задач и типы связей считаются требованиями и проверками.",
+  "t62": "Записи о требованиях",
+  "t63": "Идентификатор задачи, ключ задачи, краткое описание, статус и хеш-отпечаток краткого описания и описания (для обнаружения изменений).",
+  "t64": "Записи о связях",
+  "t65": "Тип связи, ключ и статус другой задачи и время последнего подтверждения связи.",
+  "t66": "Базовые срезы",
+  "t67": "Зафиксированные снимки перечисленных выше записей о требованиях и связях.",
+  "t68": "Метаданные заданий синхронизации",
+  "t69": "Технические сведения о фоновых заданиях синхронизации (например, ход выполнения и время).",
+  "t70": "Приложение <strong>не<\/strong> хранит персональные данные: ни имён, ни адресов электронной почты, ни идентификаторов аккаунтов Atlassian. Оно не хранит пароли, токены доступа и платёжные данные. Полный текст описания задач не хранится — только его хеш.",
+  "t71": "4.3 Выгрузка в CSV",
+  "t72": "Когда пользователь выгружает данные в CSV, файл создаётся и скачивается прямо на устройство этого пользователя. ArtUp Labs не получает его копию.",
+  "t73": "4.4 Логи",
+  "t74": "Платформа Atlassian Forge ведёт логи ошибок, возникающих в Приложении. Приложение намеренно не записывает в логи содержимое задач; логи содержат только сообщения об ошибках. ArtUp Labs может просматривать эти логи в консоли разработчика Atlassian для диагностики проблем.",
+  "t75": "5. Какие данные обрабатывает ArtUp Export",
+  "t76": "5.1 Данные, которые приложение читает из Confluence",
+  "t77": "ArtUp Export читает Confluence <strong>от имени текущего пользователя<\/strong> через API Atlassian в браузере этого пользователя, поэтому может выгрузить только то, что пользователю уже разрешено видеть. Оно читает выбранные для выгрузки страницы (названия, содержимое, версии, положение в дереве страниц), их метки и вложения, а также отображаемые имена авторов страниц и упомянутых пользователей. Оно <strong>никогда не изменяет Confluence<\/strong>.",
+  "t78": "ArtUp Export запрашивает только следующие разрешения Atlassian на чтение:",
+  "t79": "<code>read:page:confluence<\/code> — чтение страниц, их содержимого и версий;",
+  "t80": "<code>read:space:confluence<\/code> — поиск пространства и его страниц верхнего уровня;",
+  "t81": "<code>read:hierarchical-content:confluence<\/code> — чтение дерева страниц в порядке Confluence;",
+  "t82": "<code>read:attachment:confluence<\/code> — получение списка и скачивание вложений страниц;",
+  "t83": "<code>read:label:confluence<\/code> — чтение меток страниц;",
+  "t84": "<code>read:confluence-user<\/code> — чтение отображаемых имён авторов страниц и упомянутых пользователей;",
+  "t85": "<code>search:confluence<\/code> — поиск страниц по названию, когда вы выбираете страницу для выгрузки;",
+  "t86": "<code>storage:app<\/code> — заявлено для будущих версий; текущая версия его не использует.",
+  "t87": "5.2 Где происходит обработка",
+  "t88": "Преобразование в Markdown и упаковка в zip-файл выполняются <strong>в браузере пользователя<\/strong>. Получившийся zip-архив скачивается прямо на устройство этого пользователя. Содержимое страниц, вложения и имена пользователей <strong>не передаются в серверную часть приложения<\/strong>, не передаются в ArtUp Labs и никуда за пределы Atlassian и браузера пользователя. Имена авторов записываются только в zip-архив пользователя.",
+  "t89": "5.3 Данные, которые хранит приложение",
+  "t90": "<strong>Никаких.<\/strong> ArtUp Export не использует ни хранилище Forge, ни какое-либо другое хранилище: в нём нет настроек, содержимого страниц, истории выгрузок и персональных данных. Файл <code>export-manifest.json<\/code> внутри каждого zip-архива (идентификаторы страниц, версии, пути к файлам и параметры, без содержимого страниц) существует только в загрузках пользователя; когда пользователь снова добавляет его для обновляющей выгрузки, файл читается в браузере и никуда не загружается.",
+  "t91": "5.4 Серверная часть и логи",
+  "t92": "Единственная серверная функция ArtUp Export сообщает, активна ли лицензия приложения. Она не получает содержимое страниц, поэтому логи платформы Forge для ArtUp Export не содержат содержимого Confluence.",
+  "t93": "6. Какие данные обрабатывает ArtUp Reports",
+  "t94": "6.1 Данные, которые приложение читает из Jira",
+  "t95": "ArtUp Reports читает Jira <strong>от имени текущего пользователя<\/strong> через API Atlassian в браузере этого пользователя, поэтому может выгрузить только те задачи, которые пользователю уже разрешено видеть. Оно читает выбранные для выгрузки задачи (из поиска, сохранённого фильтра, доски, бэклога, спринта или отдельной задачи) с полями, выбранными для файла, — среди них могут быть описания, комментарии, журналы работ, связи задач, подзадачи, вложения или изображения, — а также сохранённые фильтры, конфигурацию досок, список проектов и отображаемые имена пользователей, показанных в файле. Оно <strong>никогда не изменяет Jira<\/strong>.",
+  "t96": "ArtUp Reports запрашивает только следующие разрешения Atlassian, ни одно из которых не позволяет изменять Jira:",
+  "t97": "<code>read:jira-work<\/code> — чтение задач (поиск, поля, комментарии, журналы работ, связи), сохранённых фильтров, вложений и их миниатюр;",
+  "t98": "<code>read:jira-user<\/code> — чтение отображаемых имён авторов, исполнителей и авторов шаблонов;",
+  "t99": "<code>read:board-scope:jira-software<\/code> — чтение задач доски или бэклога;",
+  "t100": "<code>read:sprint:jira-software<\/code> — чтение задач и сведений о спринте;",
+  "t101": "<code>read:board-scope.admin:jira-software<\/code> — чтение конфигурации доски, чтобы найти фильтр, на котором она основана;",
+  "t102": "<code>read:project:jira<\/code> — чтение списка проектов для шаблонов проектов;",
+  "t103": "<code>storage:app<\/code> — хранение шаблонов выгрузки в хранилище Forge (раздел 6.3).",
+  "t104": "6.2 Где происходит обработка",
+  "t105": "Файл Excel, Word или PDF собирается <strong>в браузере пользователя<\/strong> и скачивается прямо на его устройство. Содержимое задач, вложения и имена пользователей <strong>не передаются в серверную часть приложения<\/strong>, не передаются в ArtUp Labs и никуда за пределы Atlassian и браузера пользователя. Созданный файл существует только в загрузках пользователя.",
+  "t106": "6.3 Данные, которые хранит приложение",
+  "t107": "ArtUp Reports хранит в хранилище Forge <strong>только шаблоны выгрузки<\/strong>:",
+  "t108": "Данные, которые хранит ArtUp Reports",
+  "t109": "Категория",
+  "t110": "Данные",
+  "t111": "Настройки шаблона",
+  "t112": "Название шаблона, формат (Excel или Word), область (личный, проекта или сайта), набор столбцов Excel и настройки (например, макет, формат бумаги и шаблон имени файла), заполнители, найденные в загруженном шаблоне Word, размер файла, время обновления и <strong>идентификатор аккаунта Atlassian автора шаблона<\/strong>.",
+  "t113": "Индекс шаблонов",
+  "t114": "Область каждого идентификатора шаблона — используется для поиска шаблона.",
+  "t115": "Файлы шаблонов Word",
+  "t116": "Файл .docx, который пользователь загружает как шаблон; хранится частями.",
+  "t117": "Идентификатор аккаунта автора шаблона — <strong>единственные персональные данные<\/strong>, которые хранит ArtUp Reports. Он нужен, чтобы показать, кто создал шаблон, и проверить, кто может его редактировать; отображаемое имя автора читается из Jira при показе и не хранится. ArtUp Reports <strong>не<\/strong> хранит поля задач, описания, комментарии, вложения, журналы работ, имена пользователей, адреса электронной почты, пароли, токены доступа и платёжные данные и не ведёт историю выгрузок.",
+  "t118": "Файл шаблона Word содержит то, что загрузил пользователь; приложение не записывает в него содержимое Jira. Пожалуйста, не помещайте конфиденциальный текст в шаблон, которым вы делитесь с проектом или со всем сайтом.",
+  "t119": "6.4 Серверная часть и логи",
+  "t120": "Серверные функции ArtUp Reports сохраняют, перечисляют и удаляют шаблоны, проверяют права текущего пользователя в Jira, чтобы решить, кто может управлять шаблоном проекта или сайта, и сообщают, активна ли лицензия. Содержимое задач они не получают. Если серверная функция завершается с ошибкой, лог платформы Forge содержит только имя функции и текст ошибки — без содержимого задач, заголовков и данных пользователей. Ошибки в браузере остаются в браузере пользователя.",
+  "t121": "7. Зачем мы их обрабатываем",
+  "t122": "Данные обрабатываются только для работы функций Приложения: показа покрытия требований, выявления подозрительных связей, создания и сравнения базовых срезов, создания выгрузок (включая выгрузки ArtUp Export в Markdown и файлы Excel, Word и PDF в ArtUp Reports), хранения шаблонов выгрузки ArtUp Reports и диагностики ошибок. Мы не используем данные Приложения для рекламы, профилирования, продажи или обучения моделей машинного обучения.",
+  "t123": "Если применяется GDPR, правовое основание обработки своих данных Jira определяет клиент как контролёр. Мы обрабатываем данные Приложения по поручению клиента, выраженному установкой и использованием Приложения. Переписку с поддержкой мы обрабатываем на основании нашего законного интереса в ответе на ваше обращение.",
+  "t124": "8. Где хранятся данные",
+  "t125": "ArtUp Trace — приложение на Atlassian Forge со статусом <strong>«Runs on Atlassian»<\/strong>. У него нет внешних серверов и исходящих сетевых запросов (нет egress). Все хранимые данные остаются в Forge SQL и хранилище Forge на инфраструктуре Atlassian, в регионе размещения данных клиента, как это обеспечивает Atlassian. ArtUp Labs не копирует данные Приложения в свои системы.",
+  "t126": "ArtUp Export — также приложение на Forge без внешних серверов и исходящих сетевых запросов. Оно не хранит данных; содержимое Confluence остаётся на сайте Confluence клиента, а после выгрузки — в zip-файле на устройстве пользователя, под контролем клиента.",
+  "t127": "ArtUp Reports — также приложение на Forge без внешних серверов и исходящих сетевых запросов. Его шаблоны хранятся в хранилище Forge на инфраструктуре Atlassian, в регионе размещения данных клиента, как это обеспечивает Atlassian. Данные задач остаются на сайте Jira клиента, а после выгрузки — в файле на устройстве пользователя, под контролем клиента. У ArtUp Labs нет копий ни того, ни другого.",
+  "t128": "9. Хранение и удаление",
+  "t129": "Данные Приложения хранятся, пока Приложение установлено, чтобы покрытие, подтверждения и базовые срезы оставались доступными.",
+  "t130": "Atlassian удаляет данные приложения, хранящиеся в Forge, после удаления приложения в соответствии со своей политикой хранения данных. Подробнее — в <a href=\"https://developer.atlassian.com/platform/forge/storage/\">документации Atlassian по хранилищу Forge<\/a>.",
+  "t131": "ArtUp Export не хранит данных, поэтому после его удаления нечего хранить или удалять. Zip-файлы, которые скачали пользователи, остаются на их устройствах под контролем клиента.",
+  "t132": "ArtUp Reports хранит каждый шаблон, пока пользователь с правом управлять им не удалит его в приложении; удаление шаблона удаляет его настройки, запись в индексе и все части его файла Word. Atlassian удаляет хранилище Forge приложения после удаления приложения в соответствии со своей политикой хранения данных. Файлы, которые скачали пользователи, остаются на их устройствах под контролем клиента.",
+  "t133": "Логи платформы Forge Atlassian хранит в соответствии со своими политиками.",
+  "t134": "Письма в поддержку хранятся столько, сколько нужно для обработки обращения и последующих вопросов, и удаляются по запросу, если закон не обязывает нас их хранить. Письма в поддержку удаляются не позднее чем через 24 месяца после последнего сообщения в переписке.",
+  "t135": "10. Субобработчики",
+  "t136": "Субобработчики данных Приложения",
+  "t137": "Субобработчик",
+  "t138": "Назначение",
+  "t139": "Местоположение",
+  "t141": "Размещение и работа Приложений (Forge), хранилище для ArtUp Trace (Forge SQL и хранилище Forge) и шаблонов ArtUp Reports (хранилище Forge), логи платформы, лицензирование и выставление счетов через Marketplace",
+  "t142": "Регион размещения данных клиента, как это обеспечивает Atlassian",
+  "t143": "Других субобработчиков данных Приложения мы не используем. Прежде чем добавить нового, мы обновим этот список.",
+  "t144": "11. Этот сайт",
+  "t145": "Сайт — это набор статических страниц. Он <strong>не устанавливает cookie<\/strong>, <strong>не использует аналитику<\/strong> и не загружает сторонние скрипты, шрифты или трекеры. Страницы отдаются через Cloudflare, который как наш хостинг- и DNS-провайдер может обрабатывать технические данные запросов (например, IP-адреса), чтобы доставлять и защищать сайт.",
+  "t146": "12. Когда вы пишете нам",
+  "t147": "Если вы пишете на <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a> или <a href=\"mailto:security@artuplabs.com\">security@artuplabs.com<\/a>, мы получаем ваш адрес электронной почты, имя (если вы его указали) и всё, что вы решите прислать, например снимки экрана. Пожалуйста, не присылайте содержимое Jira или Confluence сверх необходимого. Мы используем эти данные только для ответа вам. Почту обслуживает наш почтовый провайдер Zoho Mail (Zoho Corporation).",
+  "t148": "13. Платежи",
+  "t149": "Покупки, лицензирование и платежи обеспечивает Atlassian через Atlassian Marketplace. ArtUp Labs не получает и не хранит данные платёжных карт. Atlassian может передавать нам сведения о лицензиях и платёжные контакты для целей, описанных в условиях Atlassian Marketplace.",
+  "t150": "14. Безопасность",
+  "t151": "Архитектура Приложения, разрешения доступа и порядок работы с уязвимостями и инцидентами описаны на нашей <a href=\"security.html\">странице о безопасности<\/a>.",
+  "t152": "15. Ваши права",
+  "t153": "В зависимости от места вашего проживания у вас может быть право на доступ к своим персональным данным, их исправление, удаление, ограничение обработки или возражение против неё, на переносимость данных, а также право подать жалобу в орган по защите данных.",
+  "t154": "<strong>Данные Приложения:<\/strong> поскольку контролёром является клиент, сначала направляйте запросы администратору Jira или Confluence вашей организации. Мы поможем клиенту ответить. Администраторы могут удалить все данные Приложения, удалив Приложение.",
+  "t155": "<strong>Переписка с нами:<\/strong> пишите на <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a>. Мы ответим в течение одного месяца.",
+  "t156": "16. Дети",
+  "t157": "Приложение и Сайт — это инструменты для бизнеса, они не предназначены для детей.",
+  "t158": "17. Изменения политики",
+  "t159": "Мы можем обновлять эту политику, например когда в Приложении появляются новые функции или мы добавляем субобработчика. Мы изменим дату «Обновлено» выше, а о существенных изменениях уведомим клиентов через страницу на Marketplace или письмом техническому контакту до вступления изменений в силу.",
+  "t160": "18. Контакты",
+  "t161": "ArtUp Labs (ИП Карпец Артём), ул. Протозанова, 119, кв. 33, г. Усть-Каменогорск (Өскемен), Восточно-Казахстанская область, Республика Казахстан<br> Эл. почта: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a>",
+  "t162": "<strong>ArtUp Labs<\/strong> — торговое название ИП Карпец Артём, Республика Казахстан.",
+  "t163": "Связь: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a> · <span style=\"white-space:nowrap\"><svg class=\"wa-icon\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:-3px\"><path d=\"M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z\"/><path d=\"M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z\"/><\/svg> WhatsApp: <a href=\"https://wa.me/77778490070\" target=\"_blank\" rel=\"noopener\">+7 777 849 00 70<\/a><\/span> · Безопасность: <a href=\"mailto:security@artuplabs.com\">security@artuplabs.com<\/a>",
+  "t166": "<a href=\"docs.html\">Документация<\/a>",
+  "t167": "<a href=\"support.html\">Поддержка<\/a>",
+  "t168": "<a href=\"security.html\">Безопасность<\/a>",
+  "t169": "<a href=\"privacy.html\">Конфиденциальность<\/a>",
+  "t170": "<a href=\"terms.html\">Условия<\/a>",
+  "a1": "Основное меню",
+  "a2": "Нижнее меню",
+  "meta.title": "Политика конфиденциальности — ArtUp Labs",
+  "meta.description": "Политика конфиденциальности для ArtUp Trace для Jira Cloud, ArtUp Export для Confluence Cloud, ArtUp Reports для Jira Cloud и сайта artuplabs.com."
+} };</script>
+  <script src="/ar-xr/assets/lang.js"></script>
 </body>
 </html>

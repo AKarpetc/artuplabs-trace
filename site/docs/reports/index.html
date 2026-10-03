@@ -11,144 +11,145 @@
   <link rel="stylesheet" href="../../style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main" data-i18n-html="t1">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
       <a class="brand" href="../../index.html"><img class="brand-mark" src="../../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
-      <nav class="site-nav" aria-label="Main">
+      <nav class="site-nav" aria-label="Main" data-i18n-attr="aria-label:a1">
         <ul>
-          <li><a href="../../index.html">Home</a></li>
+          <li data-i18n-html="t3"><a href="../../index.html">Home</a></li>
           <li><a href="../../export/">ArtUp Export</a></li>
           <li><a href="../../reports/" aria-current="page">ArtUp Reports</a></li>
-          <li><a href="../../docs.html">Docs</a></li>
-          <li><a href="../../support.html">Support</a></li>
-          <li><a href="../../security.html">Security</a></li>
-          <li><a href="../../privacy.html">Privacy</a></li>
-          <li><a href="../../terms.html">Terms</a></li>
+          <li data-i18n-html="t6"><a href="../../docs.html">Docs</a></li>
+          <li data-i18n-html="t7"><a href="../../support.html">Support</a></li>
+          <li data-i18n-html="t8"><a href="../../security.html">Security</a></li>
+          <li data-i18n-html="t9"><a href="../../privacy.html">Privacy</a></li>
+          <li data-i18n-html="t10"><a href="../../terms.html">Terms</a></li>
         </ul>
       </nav>
+      <div class="lang-toggle" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.label"><button type="button" data-lang-set="ru" lang="ru" aria-pressed="false">RU</button><button type="button" data-lang-set="en" lang="en" aria-pressed="true">EN</button></div>
     </div>
   </header>
 
   <div class="doc-wide">
     <nav class="toc" aria-labelledby="toc-title">
-      <h2 id="toc-title">Contents</h2>
+      <h2 id="toc-title" data-i18n-html="t11">Contents</h2>
       <ol>
-        <li><a href="#install">Install</a></li>
-        <li><a href="#entry">Where to start an export</a></li>
-        <li><a href="#export">Export step by step</a></li>
-        <li><a href="#formats">Formats</a></li>
-        <li><a href="#templates">Templates</a></li>
-        <li><a href="#word">Word templates and placeholders</a></li>
-        <li><a href="#file-name">File names</a></li>
-        <li><a href="#result">Result, warnings and partial files</a></li>
-        <li><a href="#limits">Limits and known limitations</a></li>
-        <li><a href="#data">Data handling</a></li>
-        <li><a href="#support">Languages and support</a></li>
+        <li data-i18n-html="t12"><a href="#install">Install</a></li>
+        <li data-i18n-html="t13"><a href="#entry">Where to start an export</a></li>
+        <li data-i18n-html="t14"><a href="#export">Export step by step</a></li>
+        <li data-i18n-html="t15"><a href="#formats">Formats</a></li>
+        <li data-i18n-html="t16"><a href="#templates">Templates</a></li>
+        <li data-i18n-html="t17"><a href="#word">Word templates and placeholders</a></li>
+        <li data-i18n-html="t18"><a href="#file-name">File names</a></li>
+        <li data-i18n-html="t19"><a href="#result">Result, warnings and partial files</a></li>
+        <li data-i18n-html="t20"><a href="#limits">Limits and known limitations</a></li>
+        <li data-i18n-html="t21"><a href="#data">Data handling</a></li>
+        <li data-i18n-html="t22"><a href="#support">Languages and support</a></li>
       </ol>
     </nav>
 
     <main id="main" class="doc">
-      <h1>ArtUp Reports documentation</h1>
-      <p class="meta">ArtUp Reports for Jira Cloud · Last updated: 2026-09-30</p>
+      <h1 data-i18n-html="t23">ArtUp Reports documentation</h1>
+      <p class="meta" data-i18n-html="t24">ArtUp Reports for Jira Cloud · Last updated: 2026-09-30</p>
 
       <div class="notice">
-        <p><strong>In short:</strong> open <strong>Export to Excel, Word or PDF</strong> from the issue search, a board, a sprint or an issue, choose the issues, a format and a template, and click <strong>Export</strong>. The file is built in your browser and downloaded to your computer. Save the columns or Word layouts you reuse as templates.</p>
+        <p data-i18n-html="t25"><strong>In short:</strong> open <strong>Export to Excel, Word or PDF</strong> from the issue search, a board, a sprint or an issue, choose the issues, a format and a template, and click <strong>Export</strong>. The file is built in your browser and downloaded to your computer. Save the columns or Word layouts you reuse as templates.</p>
       </div>
 
-      <h2 id="install">1. Install</h2>
+      <h2 id="install" data-i18n-html="t26">1. Install</h2>
       <ol>
-        <li>A Jira administrator installs <strong>ArtUp Reports</strong> from the Atlassian Marketplace (<em>Apps</em> → <em>Explore more apps</em>).</li>
-        <li>Sites with up to 10 users use it free; larger sites start a trial or a subscription in <em>Manage apps</em>.</li>
-        <li>No configuration is needed. Every user can export the issues they can see in Jira.</li>
+        <li data-i18n-html="t27">A Jira administrator installs <strong>ArtUp Reports</strong> from the Atlassian Marketplace (<em>Apps</em> → <em>Explore more apps</em>).</li>
+        <li data-i18n-html="t28">Sites with up to 10 users use it free; larger sites start a trial or a subscription in <em>Manage apps</em>.</li>
+        <li data-i18n-html="t29">No configuration is needed. Every user can export the issues they can see in Jira.</li>
       </ol>
 
-      <h2 id="entry">2. Where to start an export</h2>
+      <h2 id="entry" data-i18n-html="t30">2. Where to start an export</h2>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Where</th><th>Menu item</th><th>What is exported</th></tr></thead>
+          <thead><tr><th data-i18n-html="t31">Where</th><th data-i18n-html="t32">Menu item</th><th data-i18n-html="t33">What is exported</th></tr></thead>
           <tbody>
-            <tr><td>Issue search</td><td><em>Apps</em> → <strong>Export to Excel, Word or PDF</strong></td><td>The current search (its JQL or saved filter). See the <a href="#limits">known limitation</a> about ticked issues.</td></tr>
-            <tr><td>Board</td><td><strong>Export board issues</strong></td><td>The issues of the board, through the filter behind it.</td></tr>
-            <tr><td>Backlog</td><td><strong>Export backlog issues</strong></td><td>The issues of the backlog.</td></tr>
-            <tr><td>Sprint</td><td><strong>Export sprint issues</strong></td><td>The issues of the sprint.</td></tr>
-            <tr><td>An issue</td><td>••• → <strong>Export to Word or PDF</strong></td><td>That one issue.</td></tr>
-            <tr><td>Apps menu</td><td><strong>ArtUp Reports</strong></td><td>Any saved filter or JQL you choose. This page also holds the <strong>Templates</strong> tab.</td></tr>
+            <tr><td data-i18n-html="t34">Issue search</td><td><em>Apps</em> → <strong>Export to Excel, Word or PDF</strong></td><td data-i18n-html="t36">The current search (its JQL or saved filter). See the <a href="#limits">known limitation</a> about ticked issues.</td></tr>
+            <tr><td data-i18n-html="t37">Board</td><td><strong>Export board issues</strong></td><td data-i18n-html="t39">The issues of the board, through the filter behind it.</td></tr>
+            <tr><td data-i18n-html="t40">Backlog</td><td><strong>Export backlog issues</strong></td><td data-i18n-html="t42">The issues of the backlog.</td></tr>
+            <tr><td data-i18n-html="t43">Sprint</td><td><strong>Export sprint issues</strong></td><td data-i18n-html="t45">The issues of the sprint.</td></tr>
+            <tr><td data-i18n-html="t46">An issue</td><td>••• → <strong>Export to Word or PDF</strong></td><td data-i18n-html="t48">That one issue.</td></tr>
+            <tr><td data-i18n-html="t49">Apps menu</td><td><strong>ArtUp Reports</strong></td><td data-i18n-html="t51">Any saved filter or JQL you choose. This page also holds the <strong>Templates</strong> tab.</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h2 id="export">3. Export step by step</h2>
+      <h2 id="export" data-i18n-html="t52">3. Export step by step</h2>
       <ol>
-        <li><strong>Issues:</strong> the source from where you opened the export is filled in. On the ArtUp Reports page, choose a <em>Saved filter</em> or type a <em>JQL query</em>. If Jira cannot run the JQL, its error is shown under the field.</li>
-        <li><strong>Format:</strong> Excel, Word or PDF; for PDF also the paper size, A4 or Letter.</li>
-        <li><strong>Template:</strong> a built-in layout or one of your templates (<em>My templates</em>, <em>Project templates</em>, <em>Site templates</em>).</li>
-        <li>For Excel, adjust the <strong>Columns</strong> and check the <strong>Preview</strong> of the first issues.</li>
-        <li>Check the <strong>File name</strong> — see <a href="#file-name">File names</a>.</li>
-        <li>Click <strong>Export to …</strong>. Progress goes through reading issues, images and building the file. <strong>Keep the tab open</strong> until the file is ready — the export runs in your browser. <em>Cancel</em> stops it and nothing is downloaded.</li>
+        <li data-i18n-html="t53"><strong>Issues:</strong> the source from where you opened the export is filled in. On the ArtUp Reports page, choose a <em>Saved filter</em> or type a <em>JQL query</em>. If Jira cannot run the JQL, its error is shown under the field.</li>
+        <li data-i18n-html="t54"><strong>Format:</strong> Excel, Word or PDF; for PDF also the paper size, A4 or Letter.</li>
+        <li data-i18n-html="t55"><strong>Template:</strong> a built-in layout or one of your templates (<em>My templates</em>, <em>Project templates</em>, <em>Site templates</em>).</li>
+        <li data-i18n-html="t56">For Excel, adjust the <strong>Columns</strong> and check the <strong>Preview</strong> of the first issues.</li>
+        <li data-i18n-html="t57">Check the <strong>File name</strong> — see <a href="#file-name">File names</a>.</li>
+        <li data-i18n-html="t58">Click <strong>Export to …</strong>. Progress goes through reading issues, images and building the file. <strong>Keep the tab open</strong> until the file is ready — the export runs in your browser. <em>Cancel</em> stops it and nothing is downloaded.</li>
       </ol>
       <figure>
         <div class="frame">
           <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
           <picture>
             <source srcset="../../reports/wizard-dark.webp" media="(prefers-color-scheme: dark)">
-            <img src="../../reports/wizard-light.webp" width="1280" height="800" loading="lazy" alt="The export form: issues by filter or JQL, format, and a built-in layout or your own template.">
+            <img src="../../reports/wizard-light.webp" width="1280" height="800" loading="lazy" alt="The export form: issues by filter or JQL, format, and a built-in layout or your own template." data-i18n-attr="alt:a2">
           </picture>
         </div>
-        <figcaption>The export form: issues, format and template.</figcaption>
+        <figcaption data-i18n-html="t59">The export form: issues, format and template.</figcaption>
       </figure>
 
-      <h2 id="formats">4. Formats</h2>
+      <h2 id="formats" data-i18n-html="t60">4. Formats</h2>
       <h3>Excel (.xlsx)</h3>
       <ul>
-        <li>Built-in column sets: <em>Issue list</em>, <em>Work logs</em>, <em>Comments</em>, <em>Sprint summary</em>. Add any Jira field as a column with <em>Add a column</em>, remove columns and drag them to reorder (or focus a column and press Alt + ↑ / Alt + ↓).</li>
-        <li><strong>One row per</strong> issue, work log or comment; <strong>Split into sheets by</strong> a field; an optional <strong>Summary sheet</strong> with counts by status, assignee and priority, the JQL, the export time and who exported it.</li>
-        <li>Dates are dates, numbers are numbers, issue keys are links. The header row is frozen and has filters.</li>
-        <li>A column for a field that does not exist on your site is marked <em>Not on this site</em>.</li>
+        <li data-i18n-html="t62">Built-in column sets: <em>Issue list</em>, <em>Work logs</em>, <em>Comments</em>, <em>Sprint summary</em>. Add any Jira field as a column with <em>Add a column</em>, remove columns and drag them to reorder (or focus a column and press Alt + ↑ / Alt + ↓).</li>
+        <li data-i18n-html="t63"><strong>One row per</strong> issue, work log or comment; <strong>Split into sheets by</strong> a field; an optional <strong>Summary sheet</strong> with counts by status, assignee and priority, the JQL, the export time and who exported it.</li>
+        <li data-i18n-html="t64">Dates are dates, numbers are numbers, issue keys are links. The header row is frozen and has filters.</li>
+        <li data-i18n-html="t65">A column for a field that does not exist on your site is marked <em>Not on this site</em>.</li>
       </ul>
       <h3>Word (.docx)</h3>
       <ul>
-        <li>Built-in layouts: <em>Single issue</em> (every field, the description, comments and images, one issue per page), <em>Issue list</em>, <em>Sprint report</em>, <em>Release notes</em>.</li>
-        <li>Or your own Word template — see <a href="#word">Word templates</a>.</li>
-        <li>Images from descriptions and attachments are placed in the document; headings, lists, tables and code in descriptions are kept.</li>
+        <li data-i18n-html="t67">Built-in layouts: <em>Single issue</em> (every field, the description, comments and images, one issue per page), <em>Issue list</em>, <em>Sprint report</em>, <em>Release notes</em>.</li>
+        <li data-i18n-html="t68">Or your own Word template — see <a href="#word">Word templates</a>.</li>
+        <li data-i18n-html="t69">Images from descriptions and attachments are placed in the document; headings, lists, tables and code in descriptions are kept.</li>
       </ul>
       <h3>PDF</h3>
       <ul>
-        <li>The same four layouts as Word, on A4 or Letter. Fonts for Latin, Cyrillic and CJK text are bundled with the app.</li>
-        <li>Emoji are left out of the PDF and listed as a warning.</li>
+        <li data-i18n-html="t71">The same four layouts as Word, on A4 or Letter. Fonts for Latin, Cyrillic and CJK text are bundled with the app.</li>
+        <li data-i18n-html="t72">Emoji are left out of the PDF and listed as a warning.</li>
       </ul>
 
-      <h2 id="templates">5. Templates</h2>
-      <p>Open <strong>ArtUp Reports</strong> in the Apps menu → <strong>Templates</strong> → <strong>Create template</strong>.</p>
+      <h2 id="templates" data-i18n-html="t73">5. Templates</h2>
+      <p data-i18n-html="t74">Open <strong>ArtUp Reports</strong> in the Apps menu → <strong>Templates</strong> → <strong>Create template</strong>.</p>
       <ul>
-        <li><strong>Excel columns</strong> saves the columns, row mode, grouping and summary sheet of an Excel export.</li>
-        <li><strong>Word template</strong> stores a .docx file you made in Word (up to 2 MB).</li>
+        <li data-i18n-html="t75"><strong>Excel columns</strong> saves the columns, row mode, grouping and summary sheet of an Excel export.</li>
+        <li data-i18n-html="t76"><strong>Word template</strong> stores a .docx file you made in Word (up to 2 MB).</li>
       </ul>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Who can use it</th><th>Visible to</th><th>Who can create, edit and delete it</th></tr></thead>
+          <thead><tr><th data-i18n-html="t77">Who can use it</th><th data-i18n-html="t78">Visible to</th><th data-i18n-html="t79">Who can create, edit and delete it</th></tr></thead>
           <tbody>
-            <tr><td>Only me (Personal)</td><td>You</td><td>You</td></tr>
-            <tr><td>Everyone in a project</td><td>People who can browse the project</td><td>Project administrators</td></tr>
-            <tr><td>Everyone on this site</td><td>Everyone who uses the app</td><td>Jira administrators</td></tr>
+            <tr><td data-i18n-html="t80">Only me (Personal)</td><td data-i18n-html="t81">You</td><td data-i18n-html="t82">You</td></tr>
+            <tr><td data-i18n-html="t83">Everyone in a project</td><td data-i18n-html="t84">People who can browse the project</td><td data-i18n-html="t85">Project administrators</td></tr>
+            <tr><td data-i18n-html="t86">Everyone on this site</td><td data-i18n-html="t87">Everyone who uses the app</td><td data-i18n-html="t88">Jira administrators</td></tr>
           </tbody>
         </table>
       </div>
-      <p>Deleting a template deletes it for everyone who can use it; this cannot be undone.</p>
+      <p data-i18n-html="t89">Deleting a template deletes it for everyone who can use it; this cannot be undone.</p>
       <figure>
         <div class="frame">
           <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
           <picture>
             <source srcset="../../reports/templates-dark.webp" media="(prefers-color-scheme: dark)">
-            <img src="../../reports/templates-light.webp" width="1280" height="700" loading="lazy" alt="The Templates tab: personal, project and site templates with their format, scope, update time and author.">
+            <img src="../../reports/templates-light.webp" width="1280" height="700" loading="lazy" alt="The Templates tab: personal, project and site templates with their format, scope, update time and author." data-i18n-attr="alt:a3">
           </picture>
         </div>
-        <figcaption>The Templates tab.</figcaption>
+        <figcaption data-i18n-html="t90">The Templates tab.</figcaption>
       </figure>
 
-      <h2 id="word">6. Word templates and placeholders</h2>
-      <p>Write your document in Word and put placeholders in double braces where Jira data should go. <em>Download example template</em> in the upload form gives you a working starting point, and <em>Available tags</em> lists every placeholder.</p>
+      <h2 id="word" data-i18n-html="t91">6. Word templates and placeholders</h2>
+      <p data-i18n-html="t92">Write your document in Word and put placeholders in double braces where Jira data should go. <em>Download example template</em> in the upload form gives you a working starting point, and <em>Available tags</em> lists every placeholder.</p>
 <pre class="code"><code>Report: {{title}}   Exported {{exportedAt}} by {{exportedBy}}
 JQL: {{jql}} ({{count}} issues)
 
@@ -161,102 +162,249 @@ Story points: {{field "Story Points"}}
 {{/issues}}</code></pre>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Kind</th><th>Placeholders</th></tr></thead>
+          <thead><tr><th data-i18n-html="t93">Kind</th><th data-i18n-html="t94">Placeholders</th></tr></thead>
           <tbody>
-            <tr><td>About the export</td><td><code>jql</code>, <code>exportedBy</code>, <code>exportedAt</code>, <code>count</code>, <code>title</code>, <code>siteUrl</code>, <code>partial</code>, <code>partialBanner</code></td></tr>
-            <tr><td>Inside <code>{{#issues}}</code> … <code>{{/issues}}</code></td><td><code>key</code>, <code>url</code>, <code>summary</code>, <code>status</code>, <code>assignee</code>, <code>reporter</code>, <code>priority</code>, <code>type</code>, <code>due</code>, <code>created</code>, <code>updated</code>, <code>resolved</code>, <code>resolution</code>, <code>labels</code>, <code>components</code>, <code>fixVersions</code>, <code>project</code>, <code>parent</code>, <code>description</code>, <code>environment</code>, <code>timeSpent</code>, <code>estimate</code></td></tr>
-            <tr><td>Inside <code>{{#comments}}</code></td><td><code>author</code>, <code>created</code>, <code>body</code></td></tr>
-            <tr><td>Inside <code>{{#worklogs}}</code></td><td><code>author</code>, <code>started</code>, <code>timeSpent</code>, <code>hours</code>, <code>comment</code></td></tr>
-            <tr><td>Inside <code>{{#subtasks}}</code></td><td><code>key</code>, <code>summary</code>, <code>status</code>, <code>type</code>, <code>url</code></td></tr>
-            <tr><td>Inside <code>{{#links}}</code></td><td><code>type</code>, <code>direction</code>, <code>key</code>, <code>summary</code>, <code>status</code>, <code>url</code></td></tr>
-            <tr><td>Custom field</td><td><code>{{field "Field name"}}</code>, with the field name as it appears in Jira</td></tr>
-            <tr><td>Formatted text</td><td><code>{{@description}}</code>, <code>{{@environment}}</code>, and <code>{{@body}}</code> / <code>{{@comment}}</code> in comment and work log loops — write it alone in its paragraph to keep headings, lists, tables and images</td></tr>
+            <tr><td data-i18n-html="t95">About the export</td><td><code>jql</code>, <code>exportedBy</code>, <code>exportedAt</code>, <code>count</code>, <code>title</code>, <code>siteUrl</code>, <code>partial</code>, <code>partialBanner</code></td></tr>
+            <tr><td data-i18n-html="t104">Inside <code>{{#issues}}</code> … <code>{{/issues}}</code></td><td><code>key</code>, <code>url</code>, <code>summary</code>, <code>status</code>, <code>assignee</code>, <code>reporter</code>, <code>priority</code>, <code>type</code>, <code>due</code>, <code>created</code>, <code>updated</code>, <code>resolved</code>, <code>resolution</code>, <code>labels</code>, <code>components</code>, <code>fixVersions</code>, <code>project</code>, <code>parent</code>, <code>description</code>, <code>environment</code>, <code>timeSpent</code>, <code>estimate</code></td></tr>
+            <tr><td data-i18n-html="t127">Inside <code>{{#comments}}</code></td><td><code>author</code>, <code>created</code>, <code>body</code></td></tr>
+            <tr><td data-i18n-html="t131">Inside <code>{{#worklogs}}</code></td><td><code>author</code>, <code>started</code>, <code>timeSpent</code>, <code>hours</code>, <code>comment</code></td></tr>
+            <tr><td data-i18n-html="t137">Inside <code>{{#subtasks}}</code></td><td><code>key</code>, <code>summary</code>, <code>status</code>, <code>type</code>, <code>url</code></td></tr>
+            <tr><td data-i18n-html="t143">Inside <code>{{#links}}</code></td><td><code>type</code>, <code>direction</code>, <code>key</code>, <code>summary</code>, <code>status</code>, <code>url</code></td></tr>
+            <tr><td data-i18n-html="t150">Custom field</td><td data-i18n-html="t151"><code>{{field "Field name"}}</code>, with the field name as it appears in Jira</td></tr>
+            <tr><td data-i18n-html="t152">Formatted text</td><td data-i18n-html="t153"><code>{{@description}}</code>, <code>{{@environment}}</code>, and <code>{{@body}}</code> / <code>{{@comment}}</code> in comment and work log loops — write it alone in its paragraph to keep headings, lists, tables and images</td></tr>
           </tbody>
         </table>
       </div>
-      <p><strong>Placeholders are checked when you upload the file.</strong> A mistyped name, a custom field that does not exist on your site or a syntax problem is listed with a suggestion — for example <em>Unknown tag {{summry}}. Did you mean {{summary}}?</em> — and the template cannot be saved until it is fixed. When the file is valid, the form says how many tags it found.</p>
+      <p data-i18n-html="t154"><strong>Placeholders are checked when you upload the file.</strong> A mistyped name, a custom field that does not exist on your site or a syntax problem is listed with a suggestion — for example <em>Unknown tag {{summry}}. Did you mean {{summary}}?</em> — and the template cannot be saved until it is fixed. When the file is valid, the form says how many tags it found.</p>
 
-      <h2 id="file-name">7. File names</h2>
-      <p>The file name follows a pattern; the default is <code>{project}-{date}-{filter}</code>. You can use these tokens:</p>
+      <h2 id="file-name" data-i18n-html="t155">7. File names</h2>
+      <p data-i18n-html="t156">The file name follows a pattern; the default is <code>{project}-{date}-{filter}</code>. You can use these tokens:</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Token</th><th>Replaced by</th></tr></thead>
+          <thead><tr><th data-i18n-html="t157">Token</th><th data-i18n-html="t158">Replaced by</th></tr></thead>
           <tbody>
-            <tr><td><code>{project}</code></td><td>The project of the first exported issue.</td></tr>
-            <tr><td><code>{date}</code></td><td>Today's date as YYYY-MM-DD.</td></tr>
-            <tr><td><code>{filter}</code></td><td>The source: the saved filter's name, the issue key, <code>board-&lt;id&gt;</code> or <code>sprint-&lt;id&gt;</code>; empty for a typed JQL query.</td></tr>
-            <tr><td><code>{format}</code></td><td>The format of the file.</td></tr>
-            <tr><td><code>{count}</code></td><td>The number of exported issues.</td></tr>
+            <tr><td><code>{project}</code></td><td data-i18n-html="t160">The project of the first exported issue.</td></tr>
+            <tr><td><code>{date}</code></td><td data-i18n-html="t162">Today's date as YYYY-MM-DD.</td></tr>
+            <tr><td><code>{filter}</code></td><td data-i18n-html="t164">The source: the saved filter's name, the issue key, <code>board-&lt;id&gt;</code> or <code>sprint-&lt;id&gt;</code>; empty for a typed JQL query.</td></tr>
+            <tr><td><code>{format}</code></td><td data-i18n-html="t166">The format of the file.</td></tr>
+            <tr><td><code>{count}</code></td><td data-i18n-html="t168">The number of exported issues.</td></tr>
           </tbody>
         </table>
       </div>
-      <p>Characters that are not allowed in file names, and spaces, become <code>-</code>. Names are cut to 120 characters. A partial file gets <code>-PARTIAL</code> before the extension.</p>
+      <p data-i18n-html="t169">Characters that are not allowed in file names, and spaces, become <code>-</code>. Names are cut to 120 characters. A partial file gets <code>-PARTIAL</code> before the extension.</p>
 
-      <h2 id="result">8. Result, warnings and partial files</h2>
-      <p>When the file is ready it downloads, and the result screen shows the number of issues, the time, skipped issues, missing images and every warning. <em>Download again</em> saves the same file once more.</p>
+      <h2 id="result" data-i18n-html="t170">8. Result, warnings and partial files</h2>
+      <p data-i18n-html="t171">When the file is ready it downloads, and the result screen shows the number of issues, the time, skipped issues, missing images and every warning. <em>Download again</em> saves the same file once more.</p>
       <ul>
-        <li><strong>Warnings</strong> never stop an export. They include content shown as text, images that could not be found or downloaded, external images left out, columns not on this site, incomplete comments or work logs, issues left out and emoji left out of a PDF.</li>
-        <li><strong>Some issues could not be read:</strong> <em>Retry missing</em> reads only the missing issues. <em>Download partial file</em> saves what was read; the file gets <code>-PARTIAL</code> in its name and states inside how many issues it holds.</li>
-        <li>Requests that Jira answered with an error or a rate limit are repeated automatically; the result screen says how many.</li>
+        <li data-i18n-html="t172"><strong>Warnings</strong> never stop an export. They include content shown as text, images that could not be found or downloaded, external images left out, columns not on this site, incomplete comments or work logs, issues left out and emoji left out of a PDF.</li>
+        <li data-i18n-html="t173"><strong>Some issues could not be read:</strong> <em>Retry missing</em> reads only the missing issues. <em>Download partial file</em> saves what was read; the file gets <code>-PARTIAL</code> in its name and states inside how many issues it holds.</li>
+        <li data-i18n-html="t174">Requests that Jira answered with an error or a rate limit are repeated automatically; the result screen says how many.</li>
       </ul>
       <figure>
         <div class="frame">
           <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
           <picture>
             <source srcset="../../reports/result-dark.webp" media="(prefers-color-scheme: dark)">
-            <img src="../../reports/result-light.webp" width="1280" height="700" loading="lazy" alt="The result screen after an export: the file name, the number of issues, time, skipped issues, missing images and a list of warnings.">
+            <img src="../../reports/result-light.webp" width="1280" height="700" loading="lazy" alt="The result screen after an export: the file name, the number of issues, time, skipped issues, missing images and a list of warnings." data-i18n-attr="alt:a4">
           </picture>
         </div>
-        <figcaption>The result screen with the list of warnings.</figcaption>
+        <figcaption data-i18n-html="t175">The result screen with the list of warnings.</figcaption>
       </figure>
 
-      <h2 id="limits">9. Limits and known limitations</h2>
+      <h2 id="limits" data-i18n-html="t176">9. Limits and known limitations</h2>
       <ul>
-        <li><strong>Word and PDF: up to 2,000 issues per file.</strong> For a larger query the app asks you to narrow the JQL and offers <strong>Switch to Excel</strong>.</li>
-        <li><strong>Excel: no fixed issue limit.</strong> In our test, 10,003 issues exported in 11.8 seconds, and the file was read back with 10,003 rows. Time depends on your site, network and attachment sizes.</li>
-        <li><strong>Ticked issues in the new issue search.</strong> In Jira's new issue search (<em>All work</em>), Jira does not pass the issues you ticked to apps, so the export takes the <strong>whole search</strong>. The source card shows <em>Issues from the current search</em> with its JQL — that is what will be exported. To export a subset, narrow the JQL, for example <code>key in (ABC-1, ABC-2)</code>.</li>
-        <li><strong>Word templates:</strong> up to 2 MB, and no more than 20 MB once unpacked.</li>
-        <li><strong>Keep the tab open.</strong> The file is built in your browser; closing the tab cancels the export.</li>
-        <li><strong>Issues you cannot see</strong> in Jira are not exported.</li>
-        <li><strong>One-way.</strong> ArtUp Reports does not import spreadsheets into Jira and does not schedule or email exports.</li>
-        <li><strong>Jira Cloud only</strong>; Data Center is not supported.</li>
+        <li data-i18n-html="t177"><strong>Word and PDF: up to 2,000 issues per file.</strong> For a larger query the app asks you to narrow the JQL and offers <strong>Switch to Excel</strong>.</li>
+        <li data-i18n-html="t178"><strong>Excel: no fixed issue limit.</strong> In our test, 10,003 issues exported in 11.8 seconds, and the file was read back with 10,003 rows. Time depends on your site, network and attachment sizes.</li>
+        <li data-i18n-html="t179"><strong>Ticked issues in the new issue search.</strong> In Jira's new issue search (<em>All work</em>), Jira does not pass the issues you ticked to apps, so the export takes the <strong>whole search</strong>. The source card shows <em>Issues from the current search</em> with its JQL — that is what will be exported. To export a subset, narrow the JQL, for example <code>key in (ABC-1, ABC-2)</code>.</li>
+        <li data-i18n-html="t180"><strong>Word templates:</strong> up to 2 MB, and no more than 20 MB once unpacked.</li>
+        <li data-i18n-html="t181"><strong>Keep the tab open.</strong> The file is built in your browser; closing the tab cancels the export.</li>
+        <li data-i18n-html="t182"><strong>Issues you cannot see</strong> in Jira are not exported.</li>
+        <li data-i18n-html="t183"><strong>One-way.</strong> ArtUp Reports does not import spreadsheets into Jira and does not schedule or email exports.</li>
+        <li data-i18n-html="t184"><strong>Jira Cloud only</strong>; Data Center is not supported.</li>
       </ul>
 
-      <h2 id="data">10. Data handling</h2>
+      <h2 id="data" data-i18n-html="t185">10. Data handling</h2>
       <ul>
-        <li>Issues are read with the permissions of the user who runs the export, through Jira's API in that user's browser.</li>
-        <li>The file is built in the browser and downloaded to the user's device. Issue content is not sent to the app's backend and is not stored or logged. The app has no external egress and runs on Atlassian (Forge).</li>
-        <li>The app stores only templates in Forge storage: names, settings, Excel column sets, uploaded .docx files and the Atlassian account id of each template's author.</li>
-        <li>Scopes are read-only, plus app storage for templates. The app never writes to Jira.</li>
+        <li data-i18n-html="t186">Issues are read with the permissions of the user who runs the export, through Jira's API in that user's browser.</li>
+        <li data-i18n-html="t187">The file is built in the browser and downloaded to the user's device. Issue content is not sent to the app's backend and is not stored or logged. The app has no external egress and runs on Atlassian (Forge).</li>
+        <li data-i18n-html="t188">The app stores only templates in Forge storage: names, settings, Excel column sets, uploaded .docx files and the Atlassian account id of each template's author.</li>
+        <li data-i18n-html="t189">Scopes are read-only, plus app storage for templates. The app never writes to Jira.</li>
       </ul>
-      <p>See also <a href="../../security.html#reports-architecture">Security</a> and the <a href="../../privacy.html#reports">Privacy Policy</a>.</p>
+      <p data-i18n-html="t190">See also <a href="../../security.html#reports-architecture">Security</a> and the <a href="../../privacy.html#reports">Privacy Policy</a>.</p>
 
-      <h2 id="support">11. Languages and support</h2>
-      <p>The app follows each user's Jira language (26 languages) and the light or dark theme.</p>
-      <p>Questions, bug reports and feature requests: <a href="mailto:hello@artuplabs.com?subject=ArtUp%20Reports">hello@artuplabs.com</a>. Please include your site URL, where you started the export, the format and template, and for a warning or error its text from the result screen. Do not send issue content beyond what is needed. Response times are on the <a href="../../support.html">Support</a> page.</p>
+      <h2 id="support" data-i18n-html="t191">11. Languages and support</h2>
+      <p data-i18n-html="t192">The app follows each user's Jira language (26 languages) and the light or dark theme.</p>
+      <p data-i18n-html="t193">Questions, bug reports and feature requests: <a href="mailto:hello@artuplabs.com?subject=ArtUp%20Reports">hello@artuplabs.com</a>. Please include your site URL, where you started the export, the format and template, and for a warning or error its text from the result screen. Do not send issue content beyond what is needed. Response times are on the <a href="../../support.html">Support</a> page.</p>
     </main>
   </div>
 
   <footer class="site-footer">
     <div class="container">
       <div>
-        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
-        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+        <p data-i18n-html="t194"><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p data-i18n-html="t195">Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · <span style="white-space:nowrap"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: <a href="https://wa.me/77778490070" target="_blank" rel="noopener">+7 777 849 00 70</a></span> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
       </div>
-      <nav aria-label="Footer">
+      <nav aria-label="Footer" data-i18n-attr="aria-label:a5">
         <ul>
           <li><a href="../../export/">ArtUp Export</a></li>
           <li><a href="../../reports/">ArtUp Reports</a></li>
-          <li><a href="../export/">Export docs</a></li>
-          <li><a href="./">Reports docs</a></li>
-          <li><a href="../../docs.html">Trace docs</a></li>
-          <li><a href="../../support.html">Support</a></li>
-          <li><a href="../../security.html">Security</a></li>
-          <li><a href="../../privacy.html">Privacy</a></li>
-          <li><a href="../../terms.html">Terms</a></li>
+          <li data-i18n-html="t198"><a href="../export/">Export docs</a></li>
+          <li data-i18n-html="t199"><a href="./">Reports docs</a></li>
+          <li data-i18n-html="t200"><a href="../../docs.html">Trace docs</a></li>
+          <li data-i18n-html="t201"><a href="../../support.html">Support</a></li>
+          <li data-i18n-html="t202"><a href="../../security.html">Security</a></li>
+          <li data-i18n-html="t203"><a href="../../privacy.html">Privacy</a></li>
+          <li data-i18n-html="t204"><a href="../../terms.html">Terms</a></li>
         </ul>
       </nav>
     </div>
   </footer>
+  <script>window.ARTUP_I18N = { en: {}, ru: {
+  "lang.label": "Язык",
+  "t1": "Перейти к содержимому",
+  "t3": "<a href=\"../../index.html\">Главная<\/a>",
+  "t6": "<a href=\"../../docs.html\">Документация<\/a>",
+  "t7": "<a href=\"../../support.html\">Поддержка<\/a>",
+  "t8": "<a href=\"../../security.html\">Безопасность<\/a>",
+  "t9": "<a href=\"../../privacy.html\">Конфиденциальность<\/a>",
+  "t10": "<a href=\"../../terms.html\">Условия<\/a>",
+  "t11": "Содержание",
+  "t12": "<a href=\"#install\">Установка<\/a>",
+  "t13": "<a href=\"#entry\">Где начать выгрузку<\/a>",
+  "t14": "<a href=\"#export\">Выгрузка по шагам<\/a>",
+  "t15": "<a href=\"#formats\">Форматы<\/a>",
+  "t16": "<a href=\"#templates\">Шаблоны<\/a>",
+  "t17": "<a href=\"#word\">Шаблоны Word и заполнители<\/a>",
+  "t18": "<a href=\"#file-name\">Имена файлов<\/a>",
+  "t19": "<a href=\"#result\">Результат, предупреждения и частичные файлы<\/a>",
+  "t20": "<a href=\"#limits\">Ограничения и известные особенности<\/a>",
+  "t21": "<a href=\"#data\">Обработка данных<\/a>",
+  "t22": "<a href=\"#support\">Языки и поддержка<\/a>",
+  "t23": "Документация ArtUp Reports",
+  "t24": "ArtUp Reports для Jira Cloud · Обновлено: 2026-09-30",
+  "t25": "<strong>Коротко:<\/strong> откройте <strong>Export to Excel, Word or PDF<\/strong> из поиска задач, доски, спринта или задачи, выберите задачи, формат и шаблон и нажмите <strong>Export<\/strong>. Файл собирается в вашем браузере и скачивается на ваш компьютер. Столбцы и макеты Word, которые вы используете повторно, сохраняйте как шаблоны.",
+  "t26": "1. Установка",
+  "t27": "Администратор Jira устанавливает <strong>ArtUp Reports<\/strong> из Atlassian Marketplace (<em>Apps<\/em> → <em>Explore more apps<\/em>).",
+  "t28": "Сайты до 10 пользователей пользуются приложением бесплатно; на больших сайтах можно начать пробный период или оформить подписку в <em>Manage apps<\/em>.",
+  "t29": "Настройка не нужна. Каждый пользователь может выгрузить задачи, которые он видит в Jira.",
+  "t30": "2. Где начать выгрузку",
+  "t31": "Где",
+  "t32": "Пункт меню",
+  "t33": "Что выгружается",
+  "t34": "Поиск задач",
+  "t36": "Текущий поиск (его JQL или сохранённый фильтр). См. <a href=\"#limits\">известную особенность<\/a> с отмеченными задачами.",
+  "t37": "Доска",
+  "t39": "Задачи доски — через фильтр, на котором она основана.",
+  "t40": "Бэклог",
+  "t42": "Задачи бэклога.",
+  "t43": "Спринт",
+  "t45": "Задачи спринта.",
+  "t46": "Задача",
+  "t48": "Эта одна задача.",
+  "t49": "Меню Apps",
+  "t51": "Любой выбранный вами сохранённый фильтр или JQL. На этой же странице находится вкладка <strong>Templates<\/strong>.",
+  "t52": "3. Выгрузка по шагам",
+  "t53": "<strong>Задачи:<\/strong> источник, из которого вы открыли выгрузку, уже подставлен. На странице ArtUp Reports выберите <em>Saved filter<\/em> (сохранённый фильтр) или введите <em>JQL query<\/em>. Если Jira не может выполнить JQL, ошибка показывается под полем.",
+  "t54": "<strong>Формат:<\/strong> Excel, Word или PDF; для PDF — также формат бумаги, A4 или Letter.",
+  "t55": "<strong>Шаблон:<\/strong> встроенный макет или один из ваших шаблонов (<em>My templates<\/em>, <em>Project templates<\/em>, <em>Site templates<\/em>).",
+  "t56": "Для Excel настройте <strong>Columns<\/strong> (столбцы) и проверьте <strong>Preview<\/strong> первых задач.",
+  "t57": "Проверьте <strong>File name<\/strong> — см. <a href=\"#file-name\">Имена файлов<\/a>.",
+  "t58": "Нажмите <strong>Export to …<\/strong>. Выгрузка проходит этапы чтения задач, изображений и сборки файла. <strong>Не закрывайте вкладку<\/strong>, пока файл не будет готов, — выгрузка выполняется в вашем браузере. <em>Cancel<\/em> останавливает её, и ничего не скачивается.",
+  "t59": "Форма выгрузки: задачи, формат и шаблон.",
+  "t60": "4. Форматы",
+  "t62": "Встроенные наборы столбцов: <em>Issue list<\/em> (список задач), <em>Work logs<\/em> (журналы работ), <em>Comments<\/em> (комментарии), <em>Sprint summary<\/em> (сводка спринта). Добавьте любое поле Jira как столбец через <em>Add a column<\/em>, удаляйте столбцы и перетаскивайте их, меняя порядок (или выделите столбец и нажмите Alt + ↑ / Alt + ↓).",
+  "t63": "<strong>Одна строка на<\/strong> задачу, запись журнала работ или комментарий; <strong>разбивка на листы по<\/strong> полю; необязательный <strong>лист Summary<\/strong> с количеством задач по статусу, исполнителю и приоритету, JQL, временем выгрузки и тем, кто её выполнил.",
+  "t64": "Даты остаются датами, числа — числами, ключи задач — ссылками. Строка заголовков закреплена и имеет фильтры.",
+  "t65": "Столбец для поля, которого нет на вашем сайте, помечается <em>Not on this site<\/em>.",
+  "t67": "Встроенные макеты: <em>Single issue<\/em> (все поля, описание, комментарии и изображения, одна задача на страницу), <em>Issue list<\/em>, <em>Sprint report<\/em>, <em>Release notes<\/em>.",
+  "t68": "Или ваш собственный шаблон Word — см. <a href=\"#word\">Шаблоны Word<\/a>.",
+  "t69": "Изображения из описаний и вложений размещаются в документе; заголовки, списки, таблицы и код в описаниях сохраняются.",
+  "t71": "Те же четыре макета, что и для Word, на A4 или Letter. Шрифты для латиницы, кириллицы и CJK входят в состав приложения.",
+  "t72": "Эмодзи не попадают в PDF и перечисляются в предупреждениях.",
+  "t73": "5. Шаблоны",
+  "t74": "Откройте <strong>ArtUp Reports<\/strong> в меню Apps → <strong>Templates<\/strong> → <strong>Create template<\/strong>.",
+  "t75": "<strong>Excel columns<\/strong> сохраняет столбцы, режим строк, группировку и лист Summary выгрузки в Excel.",
+  "t76": "<strong>Word template<\/strong> хранит файл .docx, сделанный в Word (до 2 МБ).",
+  "t77": "Кто может пользоваться",
+  "t78": "Кому виден",
+  "t79": "Кто может создавать, изменять и удалять",
+  "t80": "Только я (личный)",
+  "t81": "Вы",
+  "t82": "Вы",
+  "t83": "Все в проекте",
+  "t84": "Те, кто может просматривать проект",
+  "t85": "Администраторы проекта",
+  "t86": "Все на этом сайте",
+  "t87": "Все, кто пользуется приложением",
+  "t88": "Администраторы Jira",
+  "t89": "Удаление шаблона удаляет его для всех, кто может им пользоваться; отменить это нельзя.",
+  "t90": "Вкладка Templates.",
+  "t91": "6. Шаблоны Word и заполнители",
+  "t92": "Напишите документ в Word и поставьте заполнители в двойных фигурных скобках там, где должны быть данные Jira. <em>Download example template<\/em> в форме загрузки даёт готовую отправную точку, а <em>Available tags<\/em> перечисляет все заполнители.",
+  "t93": "Вид",
+  "t94": "Заполнители",
+  "t95": "О выгрузке",
+  "t104": "Внутри <code>{{#issues}}<\/code> … <code>{{/issues}}<\/code>",
+  "t127": "Внутри <code>{{#comments}}<\/code>",
+  "t131": "Внутри <code>{{#worklogs}}<\/code>",
+  "t137": "Внутри <code>{{#subtasks}}<\/code>",
+  "t143": "Внутри <code>{{#links}}<\/code>",
+  "t150": "Настраиваемое поле",
+  "t151": "<code>{{field \"Field name\"}}<\/code>, с именем поля, как оно показано в Jira",
+  "t152": "Форматированный текст",
+  "t153": "<code>{{@description}}<\/code>, <code>{{@environment}}<\/code>, а также <code>{{@body}}<\/code> / <code>{{@comment}}<\/code> в циклах по комментариям и журналам работ — пишите его отдельным абзацем, чтобы сохранить заголовки, списки, таблицы и изображения",
+  "t154": "<strong>Заполнители проверяются при загрузке файла.<\/strong> Опечатка в имени, настраиваемое поле, которого нет на вашем сайте, или синтаксическая ошибка выводятся в списке с подсказкой — например, <em>Unknown tag {{summry}}. Did you mean {{summary}}?<\/em> — и шаблон нельзя сохранить, пока ошибка не исправлена. Если файл корректен, форма сообщает, сколько тегов в нём найдено.",
+  "t155": "7. Имена файлов",
+  "t156": "Имя файла строится по шаблону; по умолчанию это <code>{project}-{date}-{filter}<\/code>. Можно использовать такие токены:",
+  "t157": "Токен",
+  "t158": "Чем заменяется",
+  "t160": "Проект первой выгруженной задачи.",
+  "t162": "Сегодняшняя дата в виде YYYY-MM-DD.",
+  "t164": "Источник: имя сохранённого фильтра, ключ задачи, <code>board-&lt;id&gt;<\/code> или <code>sprint-&lt;id&gt;<\/code>; пусто для введённого вручную JQL-запроса.",
+  "t166": "Формат файла.",
+  "t168": "Число выгруженных задач.",
+  "t169": "Символы, недопустимые в именах файлов, и пробелы заменяются на <code>-<\/code>. Имена обрезаются до 120 символов. Частичный файл получает <code>-PARTIAL<\/code> перед расширением.",
+  "t170": "8. Результат, предупреждения и частичные файлы",
+  "t171": "Когда файл готов, он скачивается, а экран результата показывает число задач, время, пропущенные задачи, отсутствующие изображения и все предупреждения. <em>Download again<\/em> сохраняет тот же файл ещё раз.",
+  "t172": "<strong>Предупреждения<\/strong> никогда не останавливают выгрузку. Среди них: контент, показанный как текст, изображения, которые не удалось найти или скачать, пропущенные внешние изображения, столбцы, которых нет на сайте, неполные комментарии или журналы работ, пропущенные задачи и эмодзи, не попавшие в PDF.",
+  "t173": "<strong>Некоторые задачи не удалось прочитать:<\/strong> <em>Retry missing<\/em> перечитывает только недостающие задачи. <em>Download partial file<\/em> сохраняет то, что удалось прочитать; файл получает <code>-PARTIAL<\/code> в имени, а внутри указано, сколько задач в нём.",
+  "t174": "Запросы, на которые Jira ответила ошибкой или ограничением частоты, повторяются автоматически; экран результата сообщает, сколько их было.",
+  "t175": "Экран результата со списком предупреждений.",
+  "t176": "9. Ограничения и известные особенности",
+  "t177": "<strong>Word и PDF: до 2000 задач в файле.<\/strong> Для большего запроса приложение предложит сузить JQL и переключиться на Excel (<strong>Switch to Excel<\/strong>).",
+  "t178": "<strong>Excel: фиксированного лимита задач нет.<\/strong> В нашем тесте 10 003 задачи выгрузились за 11,8 секунды, и файл был перечитан — 10 003 строки. Время зависит от вашего сайта, сети и размера вложений.",
+  "t179": "<strong>Отмеченные задачи в новом поиске задач.<\/strong> В новом поиске задач Jira (<em>All work<\/em>) Jira не передаёт приложениям отмеченные вами задачи, поэтому выгружается <strong>весь поиск<\/strong>. Карточка источника показывает <em>Issues from the current search<\/em> с его JQL — именно это и будет выгружено. Чтобы выгрузить часть задач, сузьте JQL, например <code>key in (ABC-1, ABC-2)<\/code>.",
+  "t180": "<strong>Шаблоны Word:<\/strong> до 2 МБ и не более 20 МБ в распакованном виде.",
+  "t181": "<strong>Не закрывайте вкладку.<\/strong> Файл собирается в вашем браузере; закрытие вкладки отменяет выгрузку.",
+  "t182": "<strong>Задачи, которые вы не видите<\/strong> в Jira, не выгружаются.",
+  "t183": "<strong>Только в одну сторону.<\/strong> ArtUp Reports не импортирует таблицы в Jira и не запускает выгрузки по расписанию и не рассылает их по почте.",
+  "t184": "<strong>Только Jira Cloud<\/strong>; Data Center не поддерживается.",
+  "t185": "10. Обработка данных",
+  "t186": "Задачи читаются с правами пользователя, запустившего выгрузку, через API Jira в браузере этого пользователя.",
+  "t187": "Файл собирается в браузере и скачивается на устройство пользователя. Содержимое задач не передаётся в серверную часть приложения, не хранится и не записывается в логи. У приложения нет внешнего egress, оно работает на инфраструктуре Atlassian (Forge).",
+  "t188": "Приложение хранит в хранилище Forge только шаблоны: названия, настройки, наборы столбцов Excel, загруженные файлы .docx и идентификатор аккаунта Atlassian автора каждого шаблона.",
+  "t189": "Разрешения только на чтение, плюс хранилище приложения для шаблонов. Приложение никогда не изменяет Jira.",
+  "t190": "См. также <a href=\"../../security.html#reports-architecture\">Безопасность<\/a> и <a href=\"../../privacy.html#reports\">Политику конфиденциальности<\/a>.",
+  "t191": "11. Языки и поддержка",
+  "t192": "Приложение следует языку Jira каждого пользователя (26 языков) и светлой или тёмной теме.",
+  "t193": "Вопросы, сообщения об ошибках и пожелания: <a href=\"mailto:hello@artuplabs.com?subject=ArtUp%20Reports\">hello@artuplabs.com<\/a>. Укажите URL сайта, откуда вы начали выгрузку, формат и шаблон, а для предупреждения или ошибки — их текст с экрана результата. Не присылайте содержимое задач сверх необходимого. Сроки ответа указаны на странице <a href=\"../../support.html\">Поддержка<\/a>.",
+  "t194": "<strong>ArtUp Labs<\/strong> — торговое название ИП Карпец Артём, Республика Казахстан.",
+  "t195": "Связь: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a> · <span style=\"white-space:nowrap\"><svg class=\"wa-icon\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:-3px\"><path d=\"M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z\"/><path d=\"M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z\"/><\/svg> WhatsApp: <a href=\"https://wa.me/77778490070\" target=\"_blank\" rel=\"noopener\">+7 777 849 00 70<\/a><\/span> · Безопасность: <a href=\"mailto:security@artuplabs.com\">security@artuplabs.com<\/a>",
+  "t198": "<a href=\"../export/\">Документация Export<\/a>",
+  "t199": "<a href=\"./\">Документация Reports<\/a>",
+  "t200": "<a href=\"../../docs.html\">Документация Trace<\/a>",
+  "t201": "<a href=\"../../support.html\">Поддержка<\/a>",
+  "t202": "<a href=\"../../security.html\">Безопасность<\/a>",
+  "t203": "<a href=\"../../privacy.html\">Конфиденциальность<\/a>",
+  "t204": "<a href=\"../../terms.html\">Условия<\/a>",
+  "a1": "Основное меню",
+  "a2": "Форма выгрузки: задачи по фильтру или JQL, формат и встроенный макет или свой шаблон.",
+  "a3": "Вкладка Templates: личные шаблоны, шаблоны проекта и сайта с форматом, областью, временем обновления и автором.",
+  "a4": "Экран результата после выгрузки: имя файла, число задач, время, пропущенные задачи, отсутствующие изображения и список предупреждений.",
+  "a5": "Нижнее меню",
+  "meta.title": "Документация — ArtUp Reports",
+  "meta.description": "Как пользоваться ArtUp Reports для Jira Cloud: выгрузка задач в Excel, Word и PDF из поиска, доски, спринта или задачи, столбцы Excel, шаблоны Word и заполнители, имена файлов, ограничения и обработка данных."
+} };</script>
+  <script src="/ar-xr/assets/lang.js"></script>
 </body>
 </html>

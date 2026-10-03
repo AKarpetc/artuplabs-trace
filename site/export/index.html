@@ -11,22 +11,23 @@
   <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main" data-i18n-html="t1">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
       <a class="brand" href="../index.html"><img class="brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
-      <nav class="site-nav" aria-label="Main">
+      <nav class="site-nav" aria-label="Main" data-i18n-attr="aria-label:a1">
         <ul>
-          <li><a href="../index.html">Home</a></li>
+          <li data-i18n-html="t3"><a href="../index.html">Home</a></li>
           <li><a href="./" aria-current="page">ArtUp Export</a></li>
-          <li><a href="../docs.html">Docs</a></li>
-          <li><a href="../support.html">Support</a></li>
-          <li><a href="../security.html">Security</a></li>
-          <li><a href="../privacy.html">Privacy</a></li>
-          <li><a href="../terms.html">Terms</a></li>
+          <li data-i18n-html="t5"><a href="../docs.html">Docs</a></li>
+          <li data-i18n-html="t6"><a href="../support.html">Support</a></li>
+          <li data-i18n-html="t7"><a href="../security.html">Security</a></li>
+          <li data-i18n-html="t8"><a href="../privacy.html">Privacy</a></li>
+          <li data-i18n-html="t9"><a href="../terms.html">Terms</a></li>
         </ul>
       </nav>
+      <div class="lang-toggle" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.label"><button type="button" data-lang-set="ru" lang="ru" aria-pressed="false">RU</button><button type="button" data-lang-set="en" lang="en" aria-pressed="true">EN</button></div>
     </div>
   </header>
 
@@ -36,18 +37,18 @@
         <div class="hero-head">
           <img class="app-icon" src="icon.svg" alt="" width="56" height="56">
           <div>
-            <p class="eyebrow">ArtUp Export for Confluence Cloud</p>
-            <h1 id="hero-title">Confluence to git-ready Markdown</h1>
-            <p class="lead">Export a page, a branch or a whole space as Markdown you can commit: the full page tree in Confluence order, file names that stay the same between exports, YAML front-matter on every page, attachments next to their pages — and update exports that contain only what changed.</p>
-            <div class="actions">
+            <p class="eyebrow" data-i18n-html="t10">ArtUp Export for Confluence Cloud</p>
+            <h1 id="hero-title" data-i18n-html="t11">Confluence to git-ready Markdown</h1>
+            <p class="lead" data-i18n-html="t12">Export a page, a branch or a whole space as Markdown you can commit: the full page tree in Confluence order, file names that stay the same between exports, YAML front-matter on every page, attachments next to their pages — and update exports that contain only what changed.</p>
+            <div class="actions" data-i18n-html="t13">
               <a class="btn btn-primary" href="https://marketplace.atlassian.com/">Get it on the Atlassian Marketplace</a>
               <a class="btn btn-secondary" href="../docs/export/">Read the docs</a>
             </div>
-            <ul class="pills" aria-label="Highlights">
-              <li>Runs on Atlassian</li>
-              <li>Free for up to 10 users</li>
+            <ul class="pills" aria-label="Highlights" data-i18n-attr="aria-label:a2">
+              <li data-i18n-html="t14">Runs on Atlassian</li>
+              <li data-i18n-html="t15">Free for up to 10 users</li>
               <li>Hugo · Docusaurus · MkDocs</li>
-              <li>26 languages, light and dark</li>
+              <li data-i18n-html="t17">26 languages, light and dark</li>
             </ul>
           </div>
         </div>
@@ -56,7 +57,7 @@
             <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
             <picture>
               <source srcset="studio-dark.webp" media="(prefers-color-scheme: dark)">
-              <img src="studio-light.webp" width="1600" height="1000" alt="ArtUp Export in a Confluence space: choose what to export, the output format and the mode, with a preview of the files and the front-matter of the first page.">
+              <img src="studio-light.webp" width="1600" height="1000" alt="ArtUp Export in a Confluence space: choose what to export, the output format and the mode, with a preview of the files and the front-matter of the first page." data-i18n-attr="alt:a3">
             </picture>
           </div>
         </div>
@@ -65,37 +66,37 @@
 
     <section class="section" aria-labelledby="features-title">
       <div class="container">
-        <h2 id="features-title">Built for docs that live in git</h2>
-        <p class="section-lead">Confluence's own Markdown export covers one page at a time. ArtUp Export gives you the whole tree, in a shape a repository and a static site generator can use.</p>
+        <h2 id="features-title" data-i18n-html="t18">Built for docs that live in git</h2>
+        <p class="section-lead" data-i18n-html="t19">Confluence's own Markdown export covers one page at a time. ArtUp Export gives you the whole tree, in a shape a repository and a static site generator can use.</p>
 
         <div class="feature-rows">
           <div class="feature-row">
             <div>
-              <span class="kicker">Full depth</span>
-              <h3>The whole tree, in Confluence order</h3>
-              <p>Every level of the page tree becomes folders: a page with children is a folder with an index file, a page without children is one <code>.md</code> file.</p>
+              <span class="kicker" data-i18n-html="t20">Full depth</span>
+              <h3 data-i18n-html="t21">The whole tree, in Confluence order</h3>
+              <p data-i18n-html="t22">Every level of the page tree becomes folders: a page with children is a folder with an index file, a page without children is one <code>.md</code> file.</p>
               <ul>
-                <li>Order kept as in the Confluence sidebar — in front-matter or as numeric prefixes.</li>
-                <li>ASCII file names from the titles, including accented, Cyrillic and other scripts; clashes get the page id.</li>
-                <li>Links between pages and images become relative paths.</li>
-                <li>Start from the space, or from any page: <strong>•••</strong> → <strong>Export to Markdown</strong>.</li>
+                <li data-i18n-html="t23">Order kept as in the Confluence sidebar — in front-matter or as numeric prefixes.</li>
+                <li data-i18n-html="t24">ASCII file names from the titles, including accented, Cyrillic and other scripts; clashes get the page id.</li>
+                <li data-i18n-html="t25">Links between pages and images become relative paths.</li>
+                <li data-i18n-html="t26">Start from the space, or from any page: <strong>•••</strong> → <strong>Export to Markdown</strong>.</li>
               </ul>
             </div>
             <div class="frame">
               <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
               <picture>
                 <source srcset="action-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="action-light.webp" width="1200" height="800" loading="lazy" alt="The Export to Markdown dialog opened from a page menu, with “This page and 10 subpages” selected and the four output formats.">
+                <img src="action-light.webp" width="1200" height="800" loading="lazy" alt="The Export to Markdown dialog opened from a page menu, with “This page and 10 subpages” selected and the four output formats." data-i18n-attr="alt:a4">
               </picture>
             </div>
           </div>
 
           <div class="feature-row reverse">
             <div>
-              <span class="kicker">Stable paths</span>
-              <h3>Front-matter your site generator understands</h3>
-              <p>Each page starts with YAML front-matter: Confluence id, title, space, parent, version, last author, update time, labels and the page URL (<code>confluence_url</code>). There is no export timestamp, so exporting an unchanged space gives byte-identical files.</p>
-              <p>A page keeps its file name on later exports; renamed and moved pages are handled by the update's delete list.</p>
+              <span class="kicker" data-i18n-html="t27">Stable paths</span>
+              <h3 data-i18n-html="t28">Front-matter your site generator understands</h3>
+              <p data-i18n-html="t29">Each page starts with YAML front-matter: Confluence id, title, space, parent, version, last author, update time, labels and the page URL (<code>confluence_url</code>). There is no export timestamp, so exporting an unchanged space gives byte-identical files.</p>
+              <p data-i18n-html="t30">A page keeps its file name on later exports; renamed and moved pages are handled by the update's delete list.</p>
             </div>
             <div class="frame">
               <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -117,16 +118,16 @@
 
           <div class="feature-row">
             <div>
-              <span class="kicker">Incremental</span>
-              <h3>Updates that git can diff</h3>
-              <p>Every zip carries <code>export-manifest.json</code> — page ids, versions and paths, no content. Drop the previous zip into <strong>Update previous export</strong> and the new zip holds only new and changed pages, their attachments and <code>export-deleted.txt</code> for renamed, moved and deleted pages.</p>
-              <p>One command applies it, and <code>git status</code> shows exactly what changed in Confluence.</p>
+              <span class="kicker" data-i18n-html="t31">Incremental</span>
+              <h3 data-i18n-html="t32">Updates that git can diff</h3>
+              <p data-i18n-html="t33">Every zip carries <code>export-manifest.json</code> — page ids, versions and paths, no content. Drop the previous zip into <strong>Update previous export</strong> and the new zip holds only new and changed pages, their attachments and <code>export-deleted.txt</code> for renamed, moved and deleted pages.</p>
+              <p data-i18n-html="t34">One command applies it, and <code>git status</code> shows exactly what changed in Confluence.</p>
             </div>
             <div class="frame">
               <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
               <picture>
                 <source srcset="update-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="update-light.webp" width="1400" height="806" loading="lazy" alt="Result of an update export: 7 changed, 34 unchanged, 2 deleted pages, and the command that applies the update to the docs folder.">
+                <img src="update-light.webp" width="1400" height="806" loading="lazy" alt="Result of an update export: 7 changed, 34 unchanged, 2 deleted pages, and the command that applies the update to the docs folder." data-i18n-attr="alt:a5">
               </picture>
             </div>
           </div>
@@ -136,25 +137,25 @@
 
     <section class="section band" aria-labelledby="presets-title">
       <div class="container">
-        <h2 id="presets-title">Presets for the tools you publish with</h2>
-        <p class="section-lead">Pick a preset and the export writes the index files, ordering and navigation files that generator expects, and panels in its own admonition syntax.</p>
+        <h2 id="presets-title" data-i18n-html="t35">Presets for the tools you publish with</h2>
+        <p class="section-lead" data-i18n-html="t36">Pick a preset and the export writes the index files, ordering and navigation files that generator expects, and panels in its own admonition syntax.</p>
         <ul class="badges">
-          <li><strong>Generic Markdown</strong><span><code>index.md</code>, <code>weight</code> in front-matter, GitHub alerts for panels. For any repository.</span></li>
-          <li><strong>Hugo</strong><span><code>_index.md</code> section folders and <code>weight</code>.</span></li>
-          <li><strong>Docusaurus</strong><span><code>sidebar_position</code>, <code>_category_.json</code> per folder, MDX-safe output, <code>:::note</code> admonitions.</span></li>
-          <li><strong>MkDocs</strong><span><code>.pages</code> per folder for the awesome-pages plugin, <code>!!! note</code> admonitions.</span></li>
+          <li data-i18n-html="t37"><strong>Generic Markdown</strong><span><code>index.md</code>, <code>weight</code> in front-matter, GitHub alerts for panels. For any repository.</span></li>
+          <li data-i18n-html="t38"><strong>Hugo</strong><span><code>_index.md</code> section folders and <code>weight</code>.</span></li>
+          <li data-i18n-html="t39"><strong>Docusaurus</strong><span><code>sidebar_position</code>, <code>_category_.json</code> per folder, MDX-safe output, <code>:::note</code> admonitions.</span></li>
+          <li data-i18n-html="t40"><strong>MkDocs</strong><span><code>.pages</code> per folder for the awesome-pages plugin, <code>!!! note</code> admonitions.</span></li>
         </ul>
       </div>
     </section>
 
     <section class="section" aria-labelledby="updates-title">
       <div class="container">
-        <h2 id="updates-title">How updates work</h2>
-        <p class="section-lead">Keep a Confluence space and a docs folder in git in step, without re-reviewing hundreds of unchanged files.</p>
+        <h2 id="updates-title" data-i18n-html="t41">How updates work</h2>
+        <p class="section-lead" data-i18n-html="t42">Keep a Confluence space and a docs folder in git in step, without re-reviewing hundreds of unchanged files.</p>
         <ol class="steps">
-          <li><strong>Export once and commit.</strong><p>Run a full export and commit the unzipped tree, for example into <code>docs/</code>.</p></li>
-          <li><strong>Export an update.</strong><p>Later, choose <em>Update previous export</em> and drop in the previous zip or its <code>export-manifest.json</code>.</p></li>
-          <li><strong>Apply it and review.</strong><p>Run the command below next to your <code>docs/</code> folder, then review with <code>git status</code> and commit.</p>
+          <li><strong data-i18n-html="t43">Export once and commit.</strong><p data-i18n-html="t44">Run a full export and commit the unzipped tree, for example into <code>docs/</code>.</p></li>
+          <li><strong data-i18n-html="t45">Export an update.</strong><p data-i18n-html="t46">Later, choose <em>Update previous export</em> and drop in the previous zip or its <code>export-manifest.json</code>.</p></li>
+          <li><strong data-i18n-html="t47">Apply it and review.</strong><p data-i18n-html="t48">Run the command below next to your <code>docs/</code> folder, then review with <code>git status</code> and commit.</p>
 <pre class="code wrap"><code>unzip -o &lt;zip&gt; -d docs &amp;&amp; cd docs &amp;&amp; if [ -f export-deleted.txt ]; then while IFS= read -r f; do rm -f -- "$f"; done &lt; export-deleted.txt; rm -f export-deleted.txt; fi</code></pre>
           </li>
         </ol>
@@ -165,15 +166,15 @@
       <div class="container">
         <div class="stack">
           <div>
-            <span class="kicker">No silent losses</span>
-            <h2 id="honest-title">Every gap is on the list</h2>
-            <p class="section-lead">Panels, code, tables, expands, task lists, status and Jira links convert to Markdown. When something has no Markdown equivalent — a dynamic macro, a merged-cell table, a missing attachment — the page gets a placeholder and the result screen lists it with its page. The same list is saved in the manifest. <a href="../docs/export/#warnings">All warning kinds explained →</a></p>
+            <span class="kicker" data-i18n-html="t49">No silent losses</span>
+            <h2 id="honest-title" data-i18n-html="t50">Every gap is on the list</h2>
+            <p class="section-lead" data-i18n-html="t51">Panels, code, tables, expands, task lists, status and Jira links convert to Markdown. When something has no Markdown equivalent — a dynamic macro, a merged-cell table, a missing attachment — the page gets a placeholder and the result screen lists it with its page. The same list is saved in the manifest. <a href="../docs/export/#warnings">All warning kinds explained →</a></p>
           </div>
           <div class="frame">
             <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
             <picture>
               <source srcset="warnings-dark.webp" media="(prefers-color-scheme: dark)">
-              <img src="warnings-light.webp" width="1400" height="523" loading="lazy" alt="Warnings table after an export: unknown macro, unknown user, missing attachment, editor extension, dynamic macro and complex table, each with its page.">
+              <img src="warnings-light.webp" width="1400" height="523" loading="lazy" alt="Warnings table after an export: unknown macro, unknown user, missing attachment, editor extension, dynamic macro and complex table, each with its page." data-i18n-attr="alt:a6">
             </picture>
           </div>
         </div>
@@ -182,16 +183,16 @@
 
     <section class="section" aria-labelledby="trust-title">
       <div class="container">
-        <h2 id="trust-title">Your content never leaves Atlassian and your browser</h2>
-        <p class="section-lead">ArtUp Export reads Confluence with your permissions and builds the zip in your browser. There are no ArtUp Labs servers in the path.</p>
+        <h2 id="trust-title" data-i18n-html="t52">Your content never leaves Atlassian and your browser</h2>
+        <p class="section-lead" data-i18n-html="t53">ArtUp Export reads Confluence with your permissions and builds the zip in your browser. There are no ArtUp Labs servers in the path.</p>
         <ul class="facts">
-          <li><strong>Runs on Atlassian</strong>No external servers and no egress.</li>
-          <li><strong>Nothing stored</strong>Page content is not sent to the app's backend and not stored by the app.</li>
-          <li><strong>Your permissions</strong>Pages you cannot see in Confluence are not exported.</li>
-          <li><strong>Read-only</strong>The app never writes to Confluence.</li>
-          <li><strong>Tested at 1,000 pages</strong>1,001 pages and 200 attachments in about 4 minutes; an unchanged re-export is byte-identical.<sup><a href="#note-load">1</a></sup></li>
+          <li data-i18n-html="t54"><strong>Runs on Atlassian</strong>No external servers and no egress.</li>
+          <li data-i18n-html="t55"><strong>Nothing stored</strong>Page content is not sent to the app's backend and not stored by the app.</li>
+          <li data-i18n-html="t56"><strong>Your permissions</strong>Pages you cannot see in Confluence are not exported.</li>
+          <li data-i18n-html="t57"><strong>Read-only</strong>The app never writes to Confluence.</li>
+          <li data-i18n-html="t58"><strong>Tested at 1,000 pages</strong>1,001 pages and 200 attachments in about 4 minutes; an unchanged re-export is byte-identical.<sup><a href="#note-load">1</a></sup></li>
         </ul>
-        <p class="meta" id="note-load" style="margin-top:1.5rem"><sup>1</sup> Measured on 2026-09-29 on a test space (tree depth 6, 201 MB zip) with the app's own export pipeline, 6 requests in parallel. Time depends on your site, network and attachment sizes.</p>
+        <p class="meta" id="note-load" style="margin-top:1.5rem" data-i18n-html="t59"><sup>1</sup> Measured on 2026-09-29 on a test space (tree depth 6, 201 MB zip) with the app's own export pipeline, 6 requests in parallel. Time depends on your site, network and attachment sizes.</p>
       </div>
     </section>
 
@@ -199,10 +200,10 @@
       <div class="container">
         <div class="price-card">
           <div>
-            <h2 id="price-title">Free for up to 10 users</h2>
-            <p>Larger sites subscribe per user through the Atlassian Marketplace, billed by Atlassian with your other apps. Start a free trial from Confluence's <em>Apps</em> menu.</p>
+            <h2 id="price-title" data-i18n-html="t60">Free for up to 10 users</h2>
+            <p data-i18n-html="t61">Larger sites subscribe per user through the Atlassian Marketplace, billed by Atlassian with your other apps. Start a free trial from Confluence's <em>Apps</em> menu.</p>
           </div>
-          <div class="actions">
+          <div class="actions" data-i18n-html="t62">
             <a class="btn btn-primary" href="https://marketplace.atlassian.com/">Pricing on the Marketplace</a>
             <a class="btn btn-secondary" href="../docs/export/">Documentation</a>
           </div>
@@ -214,21 +215,101 @@
   <footer class="site-footer">
     <div class="container">
       <div>
-        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
-        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+        <p data-i18n-html="t63"><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p data-i18n-html="t64">Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · <span style="white-space:nowrap"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: <a href="https://wa.me/77778490070" target="_blank" rel="noopener">+7 777 849 00 70</a></span> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
       </div>
-      <nav aria-label="Footer">
+      <nav aria-label="Footer" data-i18n-attr="aria-label:a7">
         <ul>
           <li><a href="./">ArtUp Export</a></li>
-          <li><a href="../docs/export/">Export docs</a></li>
-          <li><a href="../docs.html">Trace docs</a></li>
-          <li><a href="../support.html">Support</a></li>
-          <li><a href="../security.html">Security</a></li>
-          <li><a href="../privacy.html">Privacy</a></li>
-          <li><a href="../terms.html">Terms</a></li>
+          <li data-i18n-html="t66"><a href="../docs/export/">Export docs</a></li>
+          <li data-i18n-html="t67"><a href="../docs.html">Trace docs</a></li>
+          <li data-i18n-html="t68"><a href="../support.html">Support</a></li>
+          <li data-i18n-html="t69"><a href="../security.html">Security</a></li>
+          <li data-i18n-html="t70"><a href="../privacy.html">Privacy</a></li>
+          <li data-i18n-html="t71"><a href="../terms.html">Terms</a></li>
         </ul>
       </nav>
     </div>
   </footer>
+  <script>window.ARTUP_I18N = { en: {}, ru: {
+  "lang.label": "Язык",
+  "t1": "Перейти к содержимому",
+  "t3": "<a href=\"../index.html\">Главная<\/a>",
+  "t5": "<a href=\"../docs.html\">Документация<\/a>",
+  "t6": "<a href=\"../support.html\">Поддержка<\/a>",
+  "t7": "<a href=\"../security.html\">Безопасность<\/a>",
+  "t8": "<a href=\"../privacy.html\">Конфиденциальность<\/a>",
+  "t9": "<a href=\"../terms.html\">Условия<\/a>",
+  "t10": "ArtUp Export для Confluence Cloud",
+  "t11": "Из Confluence в Markdown, готовый для git",
+  "t12": "Выгрузите страницу, ветку или целое пространство в Markdown, который можно сразу закоммитить: всё дерево страниц в порядке Confluence, имена файлов, которые не меняются между выгрузками, YAML front-matter на каждой странице, вложения рядом со своими страницами — и обновляющие выгрузки только с тем, что изменилось.",
+  "t13": "<a class=\"btn btn-primary\" href=\"https://marketplace.atlassian.com/\">Установить с Atlassian Marketplace<\/a> <a class=\"btn btn-secondary\" href=\"../docs/export/\">Читать документацию<\/a>",
+  "t14": "Работает на Atlassian",
+  "t15": "Бесплатно до 10 пользователей",
+  "t17": "26 языков, светлая и тёмная темы",
+  "t18": "Для документации, которая живёт в git",
+  "t19": "Встроенная выгрузка Confluence в Markdown работает с одной страницей за раз. ArtUp Export выгружает всё дерево — в виде, который подходит для репозитория и генератора статических сайтов.",
+  "t20": "На всю глубину",
+  "t21": "Всё дерево, в порядке Confluence",
+  "t22": "Каждый уровень дерева страниц становится папкой: страница с дочерними страницами — папка с индексным файлом, страница без дочерних — один файл <code>.md<\/code>.",
+  "t23": "Порядок сохраняется как в боковой панели Confluence — в front-matter или в виде числовых префиксов.",
+  "t24": "Имена файлов в ASCII из заголовков, включая буквы с диакритикой, кириллицу и другие алфавиты; при совпадении добавляется id страницы.",
+  "t25": "Ссылки между страницами и изображения становятся относительными путями.",
+  "t26": "Начните с пространства или с любой страницы: <strong>•••<\/strong> → <strong>Export to Markdown<\/strong>.",
+  "t27": "Стабильные пути",
+  "t28": "Front-matter, понятный вашему генератору сайтов",
+  "t29": "Каждая страница начинается с YAML front-matter: id в Confluence, заголовок, пространство, родитель, версия, последний автор, время обновления, метки и URL страницы (<code>confluence_url<\/code>). Отметки времени выгрузки нет, поэтому выгрузка неизменённого пространства даёт побайтно идентичные файлы.",
+  "t30": "Страница сохраняет имя файла при следующих выгрузках; переименованные и перемещённые страницы попадают в список удалений обновления.",
+  "t31": "Инкрементально",
+  "t32": "Обновления, которые понимает git diff",
+  "t33": "В каждом zip-архиве есть <code>export-manifest.json<\/code> — id страниц, версии и пути, без содержимого. Перетащите предыдущий zip в <strong>Update previous export<\/strong>, и новый архив будет содержать только новые и изменённые страницы, их вложения и <code>export-deleted.txt<\/code> для переименованных, перемещённых и удалённых страниц.",
+  "t34": "Обновление применяется одной командой, а <code>git status<\/code> показывает ровно то, что изменилось в Confluence.",
+  "t35": "Пресеты для инструментов публикации",
+  "t36": "Выберите пресет, и выгрузка создаст индексные файлы, порядок и файлы навигации, которые ожидает генератор, а панели — в его собственном синтаксисе admonition.",
+  "t37": "<strong>Generic Markdown<\/strong><span><code>index.md<\/code>, <code>weight<\/code> в front-matter, GitHub alerts для панелей. Для любого репозитория.<\/span>",
+  "t38": "<strong>Hugo<\/strong><span>Папки разделов с <code>_index.md<\/code> и <code>weight<\/code>.<\/span>",
+  "t39": "<strong>Docusaurus<\/strong><span><code>sidebar_position<\/code>, <code>_category_.json<\/code> в каждой папке, вывод, безопасный для MDX, admonition <code>:::note<\/code>.<\/span>",
+  "t40": "<strong>MkDocs<\/strong><span><code>.pages<\/code> в каждой папке для плагина awesome-pages, admonition <code>!!! note<\/code>.<\/span>",
+  "t41": "Как работают обновления",
+  "t42": "Держите пространство Confluence и папку документации в git в синхронном состоянии, не пересматривая сотни неизменённых файлов.",
+  "t43": "Выгрузите один раз и закоммитьте.",
+  "t44": "Выполните полную выгрузку и закоммитьте распакованное дерево, например в <code>docs/<\/code>.",
+  "t45": "Выгрузите обновление.",
+  "t46": "Позже выберите <em>Update previous export<\/em> и перетащите предыдущий zip или его <code>export-manifest.json<\/code>.",
+  "t47": "Примените и проверьте.",
+  "t48": "Выполните команду ниже рядом с папкой <code>docs/<\/code>, затем проверьте изменения через <code>git status<\/code> и закоммитьте.",
+  "t49": "Ничего не теряется молча",
+  "t50": "Каждый пробел — в списке",
+  "t51": "Панели, код, таблицы, раскрывающиеся блоки, списки задач, статусы и ссылки на Jira преобразуются в Markdown. Если у чего-то нет аналога в Markdown — динамический макрос, таблица с объединёнными ячейками, отсутствующее вложение, — на странице появляется заглушка, а экран результата показывает её вместе со страницей. Тот же список сохраняется в манифесте. <a href=\"../docs/export/#warnings\">Все виды предупреждений →<\/a>",
+  "t52": "Ваш контент не покидает Atlassian и ваш браузер",
+  "t53": "ArtUp Export читает Confluence с вашими правами и собирает zip в вашем браузере. Серверов ArtUp Labs на пути данных нет.",
+  "t54": "<strong>Работает на Atlassian<\/strong>Без внешних серверов и без egress.",
+  "t55": "<strong>Ничего не хранится<\/strong>Содержимое страниц не передаётся в серверную часть приложения и не хранится им.",
+  "t56": "<strong>Ваши права<\/strong>Страницы, которые вы не видите в Confluence, не выгружаются.",
+  "t57": "<strong>Только чтение<\/strong>Приложение никогда не изменяет Confluence.",
+  "t58": "<strong>Проверено на 1000 страниц<\/strong>1001 страница и 200 вложений примерно за 4 минуты; повторная выгрузка без изменений побайтно идентична.<sup><a href=\"#note-load\">1<\/a><\/sup>",
+  "t59": "<sup>1<\/sup> Замер 2026-09-29 на тестовом пространстве (глубина дерева 6, zip 201 МБ) собственным конвейером выгрузки приложения, 6 параллельных запросов. Время зависит от вашего сайта, сети и размера вложений.",
+  "t60": "Бесплатно до 10 пользователей",
+  "t61": "Для больших сайтов — подписка за пользователя через Atlassian Marketplace; счёт выставляет Atlassian вместе с другими вашими приложениями. Бесплатный пробный период запускается из меню <em>Apps<\/em> в Confluence.",
+  "t62": "<a class=\"btn btn-primary\" href=\"https://marketplace.atlassian.com/\">Цены на Marketplace<\/a> <a class=\"btn btn-secondary\" href=\"../docs/export/\">Документация<\/a>",
+  "t63": "<strong>ArtUp Labs<\/strong> — торговое название ИП Карпец Артём, Республика Казахстан.",
+  "t64": "Связь: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a> · <span style=\"white-space:nowrap\"><svg class=\"wa-icon\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:-3px\"><path d=\"M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z\"/><path d=\"M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z\"/><\/svg> WhatsApp: <a href=\"https://wa.me/77778490070\" target=\"_blank\" rel=\"noopener\">+7 777 849 00 70<\/a><\/span> · Безопасность: <a href=\"mailto:security@artuplabs.com\">security@artuplabs.com<\/a>",
+  "t66": "<a href=\"../docs/export/\">Документация Export<\/a>",
+  "t67": "<a href=\"../docs.html\">Документация Trace<\/a>",
+  "t68": "<a href=\"../support.html\">Поддержка<\/a>",
+  "t69": "<a href=\"../security.html\">Безопасность<\/a>",
+  "t70": "<a href=\"../privacy.html\">Конфиденциальность<\/a>",
+  "t71": "<a href=\"../terms.html\">Условия<\/a>",
+  "a1": "Основное меню",
+  "a2": "Главное",
+  "a3": "ArtUp Export в пространстве Confluence: выбор того, что выгружать, формата и режима, с предпросмотром файлов и front-matter первой страницы.",
+  "a4": "Диалог Export to Markdown, открытый из меню страницы: выбрано «Эта страница и 10 дочерних» и показаны четыре формата вывода.",
+  "a5": "Результат обновляющей выгрузки: 7 изменённых, 34 без изменений, 2 удалённые страницы и команда, которая применяет обновление к папке документации.",
+  "a6": "Таблица предупреждений после выгрузки: неизвестный макрос, неизвестный пользователь, отсутствующее вложение, расширение редактора, динамический макрос и сложная таблица — у каждого указана страница.",
+  "a7": "Нижнее меню",
+  "meta.title": "ArtUp Export — из Confluence в Markdown для git",
+  "meta.description": "ArtUp Export для Confluence Cloud: выгрузка страницы, ветки или целого пространства в Markdown для git — на всю глубину, в порядке Confluence, со стабильными путями, YAML front-matter, вложениями и обновляющими выгрузками. Работает на инфраструктуре Atlassian."
+} };</script>
+  <script src="/ar-xr/assets/lang.js"></script>
 </body>
 </html>

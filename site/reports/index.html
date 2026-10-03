@@ -11,23 +11,24 @@
   <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main" data-i18n-html="t1">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
       <a class="brand" href="../index.html"><img class="brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
-      <nav class="site-nav" aria-label="Main">
+      <nav class="site-nav" aria-label="Main" data-i18n-attr="aria-label:a1">
         <ul>
-          <li><a href="../index.html">Home</a></li>
+          <li data-i18n-html="t3"><a href="../index.html">Home</a></li>
           <li><a href="../export/">ArtUp Export</a></li>
           <li><a href="./" aria-current="page">ArtUp Reports</a></li>
-          <li><a href="../docs.html">Docs</a></li>
-          <li><a href="../support.html">Support</a></li>
-          <li><a href="../security.html">Security</a></li>
-          <li><a href="../privacy.html">Privacy</a></li>
-          <li><a href="../terms.html">Terms</a></li>
+          <li data-i18n-html="t6"><a href="../docs.html">Docs</a></li>
+          <li data-i18n-html="t7"><a href="../support.html">Support</a></li>
+          <li data-i18n-html="t8"><a href="../security.html">Security</a></li>
+          <li data-i18n-html="t9"><a href="../privacy.html">Privacy</a></li>
+          <li data-i18n-html="t10"><a href="../terms.html">Terms</a></li>
         </ul>
       </nav>
+      <div class="lang-toggle" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.label"><button type="button" data-lang-set="ru" lang="ru" aria-pressed="false">RU</button><button type="button" data-lang-set="en" lang="en" aria-pressed="true">EN</button></div>
     </div>
   </header>
 
@@ -37,19 +38,19 @@
         <div class="hero-head">
           <img class="app-icon" src="icon.svg" alt="" width="56" height="56">
           <div>
-            <p class="eyebrow">ArtUp Reports for Jira Cloud</p>
-            <h1 id="hero-title">Jira issues to Excel, Word and PDF</h1>
-            <p class="lead">Export issues from a search, a board, a sprint or a single issue as a real .xlsx, .docx or PDF file. Choose Excel columns with the mouse, or fill a Word template you made in Word — no code. The file is built in your browser, so your issue data stays with Atlassian.</p>
-            <div class="actions">
+            <p class="eyebrow" data-i18n-html="t11">ArtUp Reports for Jira Cloud</p>
+            <h1 id="hero-title" data-i18n-html="t12">Jira issues to Excel, Word and PDF</h1>
+            <p class="lead" data-i18n-html="t13">Export issues from a search, a board, a sprint or a single issue as a real .xlsx, .docx or PDF file. Choose Excel columns with the mouse, or fill a Word template you made in Word — no code. The file is built in your browser, so your issue data stays with Atlassian.</p>
+            <div class="actions" data-i18n-html="t14">
               <a class="btn btn-primary" href="https://marketplace.atlassian.com/">Get it on the Atlassian Marketplace</a>
               <a class="btn btn-secondary" href="#how-title">How it works</a>
               <a class="btn btn-secondary" href="../docs/reports/">Documentation</a>
             </div>
-            <ul class="pills" aria-label="Highlights">
-              <li>Runs on Atlassian</li>
-              <li>Free for up to 10 users</li>
+            <ul class="pills" aria-label="Highlights" data-i18n-attr="aria-label:a2">
+              <li data-i18n-html="t15">Runs on Atlassian</li>
+              <li data-i18n-html="t16">Free for up to 10 users</li>
               <li>Excel · Word · PDF</li>
-              <li>26 languages, light and dark</li>
+              <li data-i18n-html="t18">26 languages, light and dark</li>
             </ul>
           </div>
         </div>
@@ -58,7 +59,7 @@
               <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
               <picture>
                 <source srcset="wizard-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="wizard-light.webp" width="1280" height="800" alt="ArtUp Reports in Jira: choose issues by filter or JQL, pick Excel, Word or PDF, and choose a built-in layout or your own template, with a preview of the layout.">
+                <img src="wizard-light.webp" width="1280" height="800" alt="ArtUp Reports in Jira: choose issues by filter or JQL, pick Excel, Word or PDF, and choose a built-in layout or your own template, with a preview of the layout." data-i18n-attr="alt:a3">
               </picture>
             </div>
         </div>
@@ -67,60 +68,60 @@
 
     <section class="section" aria-labelledby="features-title">
       <div class="container">
-        <h2 id="features-title">Built for reports people actually send</h2>
-        <p class="section-lead">Jira's own export is CSV. ArtUp Reports gives you the formatted files that go into an inbox, a review or a customer folder.</p>
+        <h2 id="features-title" data-i18n-html="t19">Built for reports people actually send</h2>
+        <p class="section-lead" data-i18n-html="t20">Jira's own export is CSV. ArtUp Reports gives you the formatted files that go into an inbox, a review or a customer folder.</p>
 
         <div class="feature-rows">
           <div class="feature-row">
             <div>
               <span class="kicker">Excel</span>
-              <h3>Real spreadsheets, not text in cells</h3>
-              <p>Choose any fields as columns and reorder them with the mouse. Dates are dates, numbers are numbers and issue keys are links.</p>
+              <h3 data-i18n-html="t22">Real spreadsheets, not text in cells</h3>
+              <p data-i18n-html="t23">Choose any fields as columns and reorder them with the mouse. Dates are dates, numbers are numbers and issue keys are links.</p>
               <ul>
-                <li>Frozen header, header filters and column widths that fit the data.</li>
-                <li>One row per issue, work log or comment; sheets split by a field.</li>
-                <li>A Summary sheet with counts by status, assignee and priority, and the JQL, time, author and issue count.</li>
-                <li>A preview of the first issues before you export.</li>
+                <li data-i18n-html="t24">Frozen header, header filters and column widths that fit the data.</li>
+                <li data-i18n-html="t25">One row per issue, work log or comment; sheets split by a field.</li>
+                <li data-i18n-html="t26">A Summary sheet with counts by status, assignee and priority, and the JQL, time, author and issue count.</li>
+                <li data-i18n-html="t27">A preview of the first issues before you export.</li>
               </ul>
             </div>
             <div class="frame">
               <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
               <picture>
                 <source srcset="excel-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="excel-light.webp" width="1280" height="641" loading="lazy" alt="The Excel preview in ArtUp Reports: the first five issues as they will look in the file, with keys, summaries in Latin, Cyrillic and Chinese, status, priority, assignee and dates.">
+                <img src="excel-light.webp" width="1280" height="641" loading="lazy" alt="The Excel preview in ArtUp Reports: the first five issues as they will look in the file, with keys, summaries in Latin, Cyrillic and Chinese, status, priority, assignee and dates." data-i18n-attr="alt:a4">
               </picture>
             </div>
           </div>
 
           <div class="feature-row reverse">
             <div>
-              <span class="kicker">Word and PDF</span>
-              <h3>Layouts, and templates you make in Word</h3>
-              <p>Four built-in layouts — single issue, issue list, sprint report and release notes — for Word and PDF, on A4 or Letter. Or upload your own .docx and write <code>{{summary}}</code> where the summary should go.</p>
+              <span class="kicker" data-i18n-html="t28">Word and PDF</span>
+              <h3 data-i18n-html="t29">Layouts, and templates you make in Word</h3>
+              <p data-i18n-html="t30">Four built-in layouts — single issue, issue list, sprint report and release notes — for Word and PDF, on A4 or Letter. Or upload your own .docx and write <code>{{summary}}</code> where the summary should go.</p>
               <ul>
-                <li>No scripting language. A mistyped placeholder is caught when you upload the template.</li>
-                <li>Images from descriptions and attachments sit inside the document.</li>
-                <li>Table headers repeat on every page; page numbers in the footer; JQL, time, author and issue count at the top.</li>
-                <li>PDF fonts for Latin, Cyrillic and CJK text are bundled.</li>
+                <li data-i18n-html="t31">No scripting language. A mistyped placeholder is caught when you upload the template.</li>
+                <li data-i18n-html="t32">Images from descriptions and attachments sit inside the document.</li>
+                <li data-i18n-html="t33">Table headers repeat on every page; page numbers in the footer; JQL, time, author and issue count at the top.</li>
+                <li data-i18n-html="t34">PDF fonts for Latin, Cyrillic and CJK text are bundled.</li>
               </ul>
             </div>
             <div class="frame">
               <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
-              <img src="pdf.webp" width="910" height="797" loading="lazy" alt="Page 1 of a PDF sprint report: JQL, export time and author above the title, a status table and a table of issues with linked keys, inside the page margins.">
+              <img src="pdf.webp" width="910" height="797" loading="lazy" alt="Page 1 of a PDF sprint report: JQL, export time and author above the title, a status table and a table of issues with linked keys, inside the page margins." data-i18n-attr="alt:a5">
             </div>
           </div>
 
           <div class="feature-row">
             <div>
-              <span class="kicker">Templates</span>
-              <h3>Save it once, reuse it everywhere</h3>
-              <p>Save Excel column sets and Word templates as personal, project or site templates. Project templates are visible to the people who can use that project. File names follow a pattern you set, such as <code>{project}-{date}-{filter}</code>.</p>
+              <span class="kicker" data-i18n-html="t35">Templates</span>
+              <h3 data-i18n-html="t36">Save it once, reuse it everywhere</h3>
+              <p data-i18n-html="t37">Save Excel column sets and Word templates as personal, project or site templates. Project templates are visible to the people who can use that project. File names follow a pattern you set, such as <code>{project}-{date}-{filter}</code>.</p>
             </div>
             <div class="frame">
               <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
               <picture>
                 <source srcset="templates-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="templates-light.webp" width="1280" height="700" loading="lazy" alt="The Templates tab: personal, project and site templates with their format, scope, update time and author.">
+                <img src="templates-light.webp" width="1280" height="700" loading="lazy" alt="The Templates tab: personal, project and site templates with their format, scope, update time and author." data-i18n-attr="alt:a6">
               </picture>
             </div>
           </div>
@@ -130,12 +131,12 @@
 
     <section class="section band" aria-labelledby="how-title">
       <div class="container">
-        <h2 id="how-title">How it works</h2>
-        <p class="section-lead">Start from where you already work in Jira.</p>
+        <h2 id="how-title" data-i18n-html="t38">How it works</h2>
+        <p class="section-lead" data-i18n-html="t39">Start from where you already work in Jira.</p>
         <ol class="steps">
-          <li><strong>Open an export.</strong><p>From the issue search (<em>Apps</em> menu), a board, backlog or sprint, an issue, or the <strong>ArtUp Reports</strong> page in the Apps menu.</p></li>
-          <li><strong>Choose issues, format and template.</strong><p>A saved filter or JQL; Excel, Word or PDF; a built-in layout or one of your templates.</p></li>
-          <li><strong>Download.</strong><p>The file is built in your browser. The result screen shows the number of issues, the time, skipped issues and missing images, and lists every warning.</p></li>
+          <li><strong data-i18n-html="t40">Open an export.</strong><p data-i18n-html="t41">From the issue search (<em>Apps</em> menu), a board, backlog or sprint, an issue, or the <strong>ArtUp Reports</strong> page in the Apps menu.</p></li>
+          <li><strong data-i18n-html="t42">Choose issues, format and template.</strong><p data-i18n-html="t43">A saved filter or JQL; Excel, Word or PDF; a built-in layout or one of your templates.</p></li>
+          <li><strong data-i18n-html="t44">Download.</strong><p data-i18n-html="t45">The file is built in your browser. The result screen shows the number of issues, the time, skipped issues and missing images, and lists every warning.</p></li>
         </ol>
       </div>
     </section>
@@ -144,15 +145,15 @@
       <div class="container">
         <div class="stack">
           <div>
-            <span class="kicker">No silent losses</span>
-            <h2 id="honest-title">Every gap is on the list</h2>
-            <p class="section-lead">If a column does not exist on your site, an image cannot be read or Jira does not answer, the result screen says so. A file built from an incomplete read is marked as partial in its name and with a banner; it is never presented as complete.</p>
+            <span class="kicker" data-i18n-html="t46">No silent losses</span>
+            <h2 id="honest-title" data-i18n-html="t47">Every gap is on the list</h2>
+            <p class="section-lead" data-i18n-html="t48">If a column does not exist on your site, an image cannot be read or Jira does not answer, the result screen says so. A file built from an incomplete read is marked as partial in its name and with a banner; it is never presented as complete.</p>
           </div>
           <div class="frame">
               <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
               <picture>
                 <source srcset="result-dark.webp" media="(prefers-color-scheme: dark)">
-                <img src="result-light.webp" width="1280" height="700" loading="lazy" alt="The result screen after an export: the file name, the number of issues, time, skipped issues, missing images and a list of warnings.">
+                <img src="result-light.webp" width="1280" height="700" loading="lazy" alt="The result screen after an export: the file name, the number of issues, time, skipped issues, missing images and a list of warnings." data-i18n-attr="alt:a7">
               </picture>
             </div>
         </div>
@@ -161,17 +162,17 @@
 
     <section class="section band" aria-labelledby="trust-title">
       <div class="container">
-        <h2 id="trust-title">Your issues never leave Atlassian and your browser</h2>
-        <p class="section-lead">ArtUp Reports reads Jira with your permissions and builds the file in your browser. There are no ArtUp Labs servers in the path.</p>
+        <h2 id="trust-title" data-i18n-html="t49">Your issues never leave Atlassian and your browser</h2>
+        <p class="section-lead" data-i18n-html="t50">ArtUp Reports reads Jira with your permissions and builds the file in your browser. There are no ArtUp Labs servers in the path.</p>
         <ul class="facts">
-          <li><strong>Runs on Atlassian</strong>No external servers and no egress.</li>
-          <li><strong>No issue content stored</strong>The app's storage holds only your templates: names, settings and the .docx files you upload.</li>
-          <li><strong>Your permissions</strong>Issues you cannot see in Jira are not exported.</li>
-          <li><strong>Read-only</strong>The app never writes to Jira.</li>
-          <li><strong>10,003 issues in 11.8 seconds</strong>An Excel export on a test site, read back to confirm 10,003 rows and 10,003 links.<sup><a href="#note-load">1</a></sup></li>
-          <li><strong>500 issues with images in one to one and a half minutes</strong>Word 58–80 seconds, PDF 57–72 seconds across runs; no image lost.<sup><a href="#note-load">1</a></sup></li>
+          <li data-i18n-html="t51"><strong>Runs on Atlassian</strong>No external servers and no egress.</li>
+          <li data-i18n-html="t52"><strong>No issue content stored</strong>The app's storage holds only your templates: names, settings and the .docx files you upload.</li>
+          <li data-i18n-html="t53"><strong>Your permissions</strong>Issues you cannot see in Jira are not exported.</li>
+          <li data-i18n-html="t54"><strong>Read-only</strong>The app never writes to Jira.</li>
+          <li data-i18n-html="t55"><strong>10,003 issues in 11.8 seconds</strong>An Excel export on a test site, read back to confirm 10,003 rows and 10,003 links.<sup><a href="#note-load">1</a></sup></li>
+          <li data-i18n-html="t56"><strong>500 issues with images in one to one and a half minutes</strong>Word 58–80 seconds, PDF 57–72 seconds across runs; no image lost.<sup><a href="#note-load">1</a></sup></li>
         </ul>
-        <p class="meta" id="note-load" style="margin-top:1.5rem"><sup>1</sup> Measured on 2026-09-30 with the app's own export pipeline against a Jira Cloud test site (Excel: 10,003 issues; Word and PDF: 500 issues with 500 images each; Word two runs, PDF at least three runs, all listed here as a range). Time depends on your site, network and attachment sizes.</p>
+        <p class="meta" id="note-load" style="margin-top:1.5rem" data-i18n-html="t57"><sup>1</sup> Measured on 2026-09-30 with the app's own export pipeline against a Jira Cloud test site (Excel: 10,003 issues; Word and PDF: 500 issues with 500 images each; Word two runs, PDF at least three runs, all listed here as a range). Time depends on your site, network and attachment sizes.</p>
       </div>
     </section>
 
@@ -179,10 +180,10 @@
       <div class="container">
         <div class="price-card">
           <div>
-            <h2 id="price-title">Free for up to 10 users</h2>
-            <p>Larger sites subscribe per user through the Atlassian Marketplace, billed by Atlassian with your other apps. Start a free trial from Jira's <em>Apps</em> menu.</p>
+            <h2 id="price-title" data-i18n-html="t58">Free for up to 10 users</h2>
+            <p data-i18n-html="t59">Larger sites subscribe per user through the Atlassian Marketplace, billed by Atlassian with your other apps. Start a free trial from Jira's <em>Apps</em> menu.</p>
           </div>
-          <div class="actions">
+          <div class="actions" data-i18n-html="t60">
             <a class="btn btn-primary" href="https://marketplace.atlassian.com/">Pricing on the Marketplace</a>
             <a class="btn btn-secondary" href="../docs/reports/">Documentation</a>
             <a class="btn btn-secondary" href="../support.html">Support</a>
@@ -195,23 +196,101 @@
   <footer class="site-footer">
     <div class="container">
       <div>
-        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
-        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+        <p data-i18n-html="t61"><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p data-i18n-html="t62">Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · <span style="white-space:nowrap"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: <a href="https://wa.me/77778490070" target="_blank" rel="noopener">+7 777 849 00 70</a></span> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
       </div>
-      <nav aria-label="Footer">
+      <nav aria-label="Footer" data-i18n-attr="aria-label:a8">
         <ul>
           <li><a href="../export/">ArtUp Export</a></li>
           <li><a href="./">ArtUp Reports</a></li>
-          <li><a href="../docs/export/">Export docs</a></li>
-          <li><a href="../docs/reports/">Reports docs</a></li>
-          <li><a href="../docs.html">Trace docs</a></li>
-          <li><a href="../support.html">Support</a></li>
-          <li><a href="../security.html">Security</a></li>
-          <li><a href="../privacy.html">Privacy</a></li>
-          <li><a href="../terms.html">Terms</a></li>
+          <li data-i18n-html="t65"><a href="../docs/export/">Export docs</a></li>
+          <li data-i18n-html="t66"><a href="../docs/reports/">Reports docs</a></li>
+          <li data-i18n-html="t67"><a href="../docs.html">Trace docs</a></li>
+          <li data-i18n-html="t68"><a href="../support.html">Support</a></li>
+          <li data-i18n-html="t69"><a href="../security.html">Security</a></li>
+          <li data-i18n-html="t70"><a href="../privacy.html">Privacy</a></li>
+          <li data-i18n-html="t71"><a href="../terms.html">Terms</a></li>
         </ul>
       </nav>
     </div>
   </footer>
+  <script>window.ARTUP_I18N = { en: {}, ru: {
+  "lang.label": "Язык",
+  "t1": "Перейти к содержимому",
+  "t3": "<a href=\"../index.html\">Главная<\/a>",
+  "t6": "<a href=\"../docs.html\">Документация<\/a>",
+  "t7": "<a href=\"../support.html\">Поддержка<\/a>",
+  "t8": "<a href=\"../security.html\">Безопасность<\/a>",
+  "t9": "<a href=\"../privacy.html\">Конфиденциальность<\/a>",
+  "t10": "<a href=\"../terms.html\">Условия<\/a>",
+  "t11": "ArtUp Reports для Jira Cloud",
+  "t12": "Задачи Jira в Excel, Word и PDF",
+  "t13": "Выгружайте задачи из поиска, доски, спринта или отдельной задачи в настоящий файл .xlsx, .docx или PDF. Выбирайте столбцы Excel мышью или заполняйте шаблон Word, сделанный в Word, — без кода. Файл собирается в вашем браузере, поэтому данные задач остаются в Atlassian.",
+  "t14": "<a class=\"btn btn-primary\" href=\"https://marketplace.atlassian.com/\">Установить с Atlassian Marketplace<\/a> <a class=\"btn btn-secondary\" href=\"#how-title\">Как это работает<\/a> <a class=\"btn btn-secondary\" href=\"../docs/reports/\">Документация<\/a>",
+  "t15": "Работает на Atlassian",
+  "t16": "Бесплатно до 10 пользователей",
+  "t18": "26 языков, светлая и тёмная темы",
+  "t19": "Для отчётов, которые действительно отправляют людям",
+  "t20": "Встроенная выгрузка Jira — это CSV. ArtUp Reports даёт оформленные файлы, которые можно отправить по почте, принести на ревью или положить в папку клиента.",
+  "t22": "Настоящие таблицы, а не текст в ячейках",
+  "t23": "Выбирайте любые поля как столбцы и меняйте их порядок мышью. Даты остаются датами, числа — числами, а ключи задач — ссылками.",
+  "t24": "Закреплённая шапка, фильтры в заголовках и ширина столбцов по содержимому.",
+  "t25": "Одна строка на задачу, запись в журнале работ или комментарий; листы с разбивкой по полю.",
+  "t26": "Лист Summary с количеством задач по статусу, исполнителю и приоритету, а также JQL, время, автор и число задач.",
+  "t27": "Предпросмотр первых задач до выгрузки.",
+  "t28": "Word и PDF",
+  "t29": "Макеты и шаблоны, которые вы делаете в Word",
+  "t30": "Четыре встроенных макета — одна задача, список задач, отчёт по спринту и примечания к выпуску — для Word и PDF, на A4 или Letter. Или загрузите свой .docx и напишите <code>{{summary}}<\/code> там, где должно стоять краткое описание.",
+  "t31": "Никакого языка сценариев. Опечатку в заполнителе приложение найдёт уже при загрузке шаблона.",
+  "t32": "Изображения из описаний и вложений встраиваются в документ.",
+  "t33": "Заголовки таблиц повторяются на каждой странице; номера страниц — в нижнем колонтитуле; JQL, время, автор и число задач — вверху.",
+  "t34": "Шрифты PDF для латиницы, кириллицы и CJK встроены.",
+  "t35": "Шаблоны",
+  "t36": "Сохраните один раз — используйте везде",
+  "t37": "Сохраняйте наборы столбцов Excel и шаблоны Word как личные шаблоны, шаблоны проекта или сайта. Шаблоны проекта видны тем, кто может работать с этим проектом. Имена файлов строятся по заданному вами шаблону, например <code>{project}-{date}-{filter}<\/code>.",
+  "t38": "Как это работает",
+  "t39": "Начинайте там, где вы уже работаете в Jira.",
+  "t40": "Откройте выгрузку.",
+  "t41": "Из поиска задач (меню <em>Apps<\/em>), с доски, бэклога или спринта, из задачи или со страницы <strong>ArtUp Reports<\/strong> в меню Apps.",
+  "t42": "Выберите задачи, формат и шаблон.",
+  "t43": "Сохранённый фильтр или JQL; Excel, Word или PDF; встроенный макет или один из ваших шаблонов.",
+  "t44": "Скачайте.",
+  "t45": "Файл собирается в вашем браузере. Экран результата показывает число задач, время, пропущенные задачи и отсутствующие изображения и перечисляет все предупреждения.",
+  "t46": "Ничего не теряется молча",
+  "t47": "Каждый пробел — в списке",
+  "t48": "Если столбца нет на вашем сайте, изображение не читается или Jira не отвечает, экран результата сообщит об этом. Файл, собранный по неполным данным, помечается как частичный в имени и баннером; он никогда не выдаётся за полный.",
+  "t49": "Ваши задачи не покидают Atlassian и ваш браузер",
+  "t50": "ArtUp Reports читает Jira с вашими правами и собирает файл в вашем браузере. Серверов ArtUp Labs на пути данных нет.",
+  "t51": "<strong>Работает на Atlassian<\/strong>Без внешних серверов и без egress.",
+  "t52": "<strong>Содержимое задач не хранится<\/strong>В хранилище приложения — только ваши шаблоны: названия, настройки и загруженные файлы .docx.",
+  "t53": "<strong>Ваши права<\/strong>Задачи, которые вы не видите в Jira, не выгружаются.",
+  "t54": "<strong>Только чтение<\/strong>Приложение никогда не изменяет Jira.",
+  "t55": "<strong>10 003 задачи за 11,8 секунды<\/strong>Выгрузка в Excel на тестовом сайте; файл перечитан, чтобы подтвердить 10 003 строки и 10 003 ссылки.<sup><a href=\"#note-load\">1<\/a><\/sup>",
+  "t56": "<strong>500 задач с изображениями за полторы минуты или быстрее<\/strong>Word — 58–80 секунд, PDF — 57–72 секунды в разных прогонах; ни одно изображение не потеряно.<sup><a href=\"#note-load\">1<\/a><\/sup>",
+  "t57": "<sup>1<\/sup> Замер 2026-09-30 собственным конвейером выгрузки приложения на тестовом сайте Jira Cloud (Excel: 10 003 задачи; Word и PDF: 500 задач по 500 изображений; Word — два прогона, PDF — не менее трёх, здесь указан диапазон). Время зависит от вашего сайта, сети и размера вложений.",
+  "t58": "Бесплатно до 10 пользователей",
+  "t59": "Для больших сайтов — подписка за пользователя через Atlassian Marketplace; счёт выставляет Atlassian вместе с другими вашими приложениями. Бесплатный пробный период запускается из меню <em>Apps<\/em> в Jira.",
+  "t60": "<a class=\"btn btn-primary\" href=\"https://marketplace.atlassian.com/\">Цены на Marketplace<\/a> <a class=\"btn btn-secondary\" href=\"../docs/reports/\">Документация<\/a> <a class=\"btn btn-secondary\" href=\"../support.html\">Поддержка<\/a>",
+  "t61": "<strong>ArtUp Labs<\/strong> — торговое название ИП Карпец Артём, Республика Казахстан.",
+  "t62": "Связь: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a> · <span style=\"white-space:nowrap\"><svg class=\"wa-icon\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:-3px\"><path d=\"M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z\"/><path d=\"M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z\"/><\/svg> WhatsApp: <a href=\"https://wa.me/77778490070\" target=\"_blank\" rel=\"noopener\">+7 777 849 00 70<\/a><\/span> · Безопасность: <a href=\"mailto:security@artuplabs.com\">security@artuplabs.com<\/a>",
+  "t65": "<a href=\"../docs/export/\">Документация Export<\/a>",
+  "t66": "<a href=\"../docs/reports/\">Документация Reports<\/a>",
+  "t67": "<a href=\"../docs.html\">Документация Trace<\/a>",
+  "t68": "<a href=\"../support.html\">Поддержка<\/a>",
+  "t69": "<a href=\"../security.html\">Безопасность<\/a>",
+  "t70": "<a href=\"../privacy.html\">Конфиденциальность<\/a>",
+  "t71": "<a href=\"../terms.html\">Условия<\/a>",
+  "a1": "Основное меню",
+  "a2": "Главное",
+  "a3": "ArtUp Reports в Jira: выбор задач по фильтру или JQL, формата Excel, Word или PDF и встроенного макета или своего шаблона, с предпросмотром макета.",
+  "a4": "Предпросмотр Excel в ArtUp Reports: первые пять задач так, как они будут выглядеть в файле, — ключи, краткие описания на латинице, кириллице и китайском, статус, приоритет, исполнитель и даты.",
+  "a5": "Первая страница PDF-отчёта по спринту: JQL, время выгрузки и автор над заголовком, таблица статусов и таблица задач со ссылками на ключи, в пределах полей страницы.",
+  "a6": "Вкладка Templates: личные шаблоны, шаблоны проекта и сайта с форматом, областью, временем обновления и автором.",
+  "a7": "Экран результата после выгрузки: имя файла, число задач, время, пропущенные задачи, отсутствующие изображения и список предупреждений.",
+  "a8": "Нижнее меню",
+  "meta.title": "ArtUp Reports — Excel, Word и PDF из Jira",
+  "meta.description": "ArtUp Reports для Jira Cloud: выгрузка задач из поиска, доски, спринта или одной задачи в настоящие файлы Excel, Word и PDF. Столбцы выбираются мышью, шаблон Word делается в самом Word. Файл собирается в вашем браузере; работает на инфраструктуре Atlassian."
+} };</script>
+  <script src="/ar-xr/assets/lang.js"></script>
 </body>
 </html>

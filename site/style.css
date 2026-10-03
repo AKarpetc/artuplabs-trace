@@ -575,3 +575,43 @@ pre.code.wrap, .frame pre.code { white-space: pre-wrap; overflow-wrap: anywhere;
   .product-feature { grid-template-columns: minmax(0, 1fr); padding: 1.25rem; }
   .product-feature img { width: 3.25rem; height: 3.25rem; }
 }
+
+/* RU | EN switch (/ar-xr/assets/lang.js) — same look as the AR XR header switch */
+.lang-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  margin-left: auto;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.lang-toggle button {
+  min-width: 2.35rem;
+  padding: 0.28rem 0.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 600 0.8rem/1.2 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+.lang-toggle button:hover { color: var(--text); }
+.lang-toggle button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(9, 30, 66, 0.12), 0 1px 3px rgba(9, 30, 66, 0.08);
+}
+.lang-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Russian-only notes (the legal pages' translation disclaimer); hidden in English and without JS */
+html:not([lang="ru"]) [data-lang="ru"] { display: none !important; }
+.i18n-note {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+}

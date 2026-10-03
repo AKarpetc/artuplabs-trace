@@ -9,26 +9,40 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* AR XR demo QR in the product card: desktop only (phones open the demo directly). */
+    .product-qr { display: none; }
+    @media (pointer: fine) and (hover: hover) {
+      .product-feature { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+      .product-qr { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; width: 6.5rem; }
+    }
+    @media (max-width: 40rem) { .product-qr { display: none; } }
+    .product-qr-tile { display: block; width: 5.5rem; height: 5.5rem; background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px var(--border); }
+    .product-qr-code { display: block; width: 100%; height: 100%; }
+    .product-qr-code path { fill: #172b4d; }
+    .product-qr-caption { font-size: 0.75rem; line-height: 1.3; text-align: center; color: var(--text-muted); }
+  </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main" data-i18n-html="t1">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
       <a class="brand" href="index.html"><img class="brand-mark" src="../../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
-      <nav class="site-nav" aria-label="Main">
+      <nav class="site-nav" aria-label="Main" data-i18n-attr="aria-label:a1">
         <ul>
-          <li><a href="index.html" aria-current="page">Home</a></li>
+          <li data-i18n-html="t3"><a href="index.html" aria-current="page">Home</a></li>
           <li><a href="ar-xr/">AR XR</a></li>
           <li><a href="export/">ArtUp Export</a></li>
           <li><a href="reports/">ArtUp Reports</a></li>
-          <li><a href="docs.html">Docs</a></li>
-          <li><a href="support.html">Support</a></li>
-          <li><a href="security.html">Security</a></li>
-          <li><a href="privacy.html">Privacy</a></li>
-          <li><a href="terms.html">Terms</a></li>
+          <li data-i18n-html="t7"><a href="docs.html">Docs</a></li>
+          <li data-i18n-html="t8"><a href="support.html">Support</a></li>
+          <li data-i18n-html="t9"><a href="security.html">Security</a></li>
+          <li data-i18n-html="t10"><a href="privacy.html">Privacy</a></li>
+          <li data-i18n-html="t11"><a href="terms.html">Terms</a></li>
         </ul>
       </nav>
+      <div class="lang-toggle" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.label"><button type="button" data-lang-set="ru" lang="ru" aria-pressed="false">RU</button><button type="button" data-lang-set="en" lang="en" aria-pressed="true">EN</button></div>
     </div>
   </header>
 
@@ -36,51 +50,55 @@
     <section class="hero hero-product" style="padding-bottom:3.5rem" aria-labelledby="hero-title">
       <div class="container">
         <div class="hero-brand"><img src="assets/artuplabs-logo.svg" alt="ArtUp Labs" width="248" height="64"></div>
-        <p class="eyebrow">ArtUp Labs · Software products</p>
-        <h1 id="hero-title">Small, focused software products</h1>
-        <p class="lead"><strong>ArtUp Trace</strong> brings requirements traceability to Jira: coverage, suspect links and baselines on the issue links you already have. <strong>ArtUp Export</strong> turns Confluence pages and spaces into git-ready Markdown. Both are Forge apps with no external servers and no data egress. <strong>ArtUp AR XR</strong> lets furniture and interior retailers show products in 3D, AR and XR rooms right in the browser.</p>
-        <div class="actions">
+        <p class="eyebrow" data-i18n-html="t12">ArtUp Labs · Software products</p>
+        <h1 id="hero-title" data-i18n-html="t13">Small, focused software products</h1>
+        <p class="lead" data-i18n-html="t14"><strong>ArtUp Trace</strong> brings requirements traceability to Jira: coverage, suspect links and baselines on the issue links you already have. <strong>ArtUp Export</strong> turns Confluence pages and spaces into git-ready Markdown. Both are Forge apps with no external servers and no data egress. <strong>ArtUp AR XR</strong> lets furniture and interior retailers show products in 3D, AR and XR rooms right in the browser.</p>
+        <div class="actions" data-i18n-html="t15">
           <a class="btn btn-primary" href="#products-title">Our products</a>
           <a class="btn btn-secondary" href="export/">Explore ArtUp Export</a>
           <a class="btn btn-secondary" href="docs.html">ArtUp Trace docs</a>
         </div>
-        <p class="meta" style="margin-top:1rem">Coming soon to the Atlassian Marketplace. Questions: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.</p>
+        <p class="meta" style="margin-top:1rem" data-i18n-html="t16">Coming soon to the Atlassian Marketplace. Questions: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.</p>
       </div>
     </section>
 
     <section class="section" aria-labelledby="apps-title">
       <div class="container">
-        <h2 id="products-title">Our products</h2>
-        <p class="section-lead">Each product does one job well. Pick the one you need.</p>
+        <h2 id="products-title" data-i18n-html="t17">Our products</h2>
+        <p class="section-lead" data-i18n-html="t18">Each product does one job well. Pick the one you need.</p>
         <a class="product-feature" href="ar-xr/">
           <img src="ar-xr/assets/ar-xr-icon.svg" alt="" width="64" height="64">
-          <span class="product-feature-body">
+          <span class="product-feature-body" data-i18n-html="t19">
             <span class="tag">Web · iOS · Android</span>
             <strong>ArtUp AR XR</strong>
             <span>3D, AR and XR rooms for furniture and interior retailers, in the browser. Shoppers view a product from every side, place it in their own room, or furnish a whole room and get the total price. No app to install.</span>
           </span>
-          <span class="more" aria-hidden="true">Explore AR XR</span>
+          <span class="more" aria-hidden="true" data-i18n-html="t20">Explore AR XR</span>
+          <span class="product-qr" aria-hidden="true">
+            <span class="product-qr-tile"><svg class="product-qr-code" viewBox="0 0 33 33" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><path d="M2 2h7v1h-7zM11 2h1v1h-1zM14 2h2v1h-2zM18 2h1v1h-1zM20 2h3v1h-3zM24 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h3v1h-3zM15 3h4v1h-4zM20 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM30 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h2v1h-2zM17 4h1v1h-1zM21 4h2v1h-2zM24 4h1v1h-1zM26 4h3v1h-3zM30 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h1v1h-1zM13 5h5v1h-5zM19 5h1v1h-1zM21 5h1v1h-1zM24 5h1v1h-1zM26 5h3v1h-3zM30 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h5v1h-5zM18 6h1v1h-1zM21 6h1v1h-1zM24 6h1v1h-1zM26 6h3v1h-3zM30 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h6v1h-6zM19 7h2v1h-2zM22 7h1v1h-1zM24 7h1v1h-1zM30 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h7v1h-7zM10 9h2v1h-2zM14 9h1v1h-1zM16 9h3v1h-3zM20 9h1v1h-1zM22 9h1v1h-1zM2 10h1v1h-1zM4 10h5v1h-5zM12 10h4v1h-4zM19 10h3v1h-3zM24 10h5v1h-5zM3 11h2v1h-2zM7 11h1v1h-1zM11 11h1v1h-1zM13 11h1v1h-1zM15 11h2v1h-2zM18 11h5v1h-5zM24 11h3v1h-3zM30 11h1v1h-1zM2 12h1v1h-1zM4 12h3v1h-3zM8 12h2v1h-2zM14 12h1v1h-1zM16 12h3v1h-3zM22 12h2v1h-2zM25 12h2v1h-2zM2 13h4v1h-4zM7 13h1v1h-1zM10 13h1v1h-1zM16 13h1v1h-1zM18 13h1v1h-1zM21 13h3v1h-3zM25 13h3v1h-3zM29 13h1v1h-1zM2 14h1v1h-1zM7 14h3v1h-3zM13 14h1v1h-1zM15 14h2v1h-2zM18 14h2v1h-2zM21 14h1v1h-1zM25 14h1v1h-1zM27 14h2v1h-2zM2 15h2v1h-2zM7 15h1v1h-1zM11 15h1v1h-1zM14 15h1v1h-1zM19 15h1v1h-1zM21 15h6v1h-6zM30 15h1v1h-1zM2 16h7v1h-7zM12 16h2v1h-2zM16 16h3v1h-3zM20 16h1v1h-1zM22 16h1v1h-1zM24 16h1v1h-1zM26 16h3v1h-3zM2 17h1v1h-1zM5 17h3v1h-3zM10 17h2v1h-2zM13 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h2v1h-2zM23 17h1v1h-1zM25 17h2v1h-2zM29 17h1v1h-1zM2 18h2v1h-2zM6 18h1v1h-1zM8 18h4v1h-4zM13 18h4v1h-4zM19 18h1v1h-1zM25 18h1v1h-1zM27 18h2v1h-2zM2 19h1v1h-1zM6 19h1v1h-1zM9 19h1v1h-1zM12 19h4v1h-4zM21 19h6v1h-6zM28 19h1v1h-1zM30 19h1v1h-1zM2 20h1v1h-1zM4 20h3v1h-3zM8 20h1v1h-1zM10 20h1v1h-1zM12 20h1v1h-1zM15 20h6v1h-6zM23 20h1v1h-1zM28 20h1v1h-1zM2 21h1v1h-1zM4 21h2v1h-2zM7 21h1v1h-1zM9 21h3v1h-3zM18 21h1v1h-1zM20 21h3v1h-3zM26 21h1v1h-1zM29 21h1v1h-1zM2 22h1v1h-1zM4 22h5v1h-5zM11 22h2v1h-2zM19 22h8v1h-8zM28 22h3v1h-3zM10 23h1v1h-1zM14 23h2v1h-2zM18 23h3v1h-3zM22 23h1v1h-1zM26 23h5v1h-5zM2 24h7v1h-7zM12 24h1v1h-1zM14 24h6v1h-6zM21 24h2v1h-2zM24 24h1v1h-1zM26 24h3v1h-3zM2 25h1v1h-1zM8 25h1v1h-1zM10 25h2v1h-2zM15 25h1v1h-1zM17 25h2v1h-2zM22 25h1v1h-1zM26 25h1v1h-1zM2 26h1v1h-1zM4 26h3v1h-3zM8 26h1v1h-1zM10 26h1v1h-1zM12 26h3v1h-3zM16 26h1v1h-1zM19 26h1v1h-1zM22 26h5v1h-5zM28 26h3v1h-3zM2 27h1v1h-1zM4 27h3v1h-3zM8 27h1v1h-1zM10 27h1v1h-1zM12 27h2v1h-2zM18 27h1v1h-1zM20 27h3v1h-3zM25 27h1v1h-1zM27 27h4v1h-4zM2 28h1v1h-1zM4 28h3v1h-3zM8 28h1v1h-1zM10 28h2v1h-2zM15 28h4v1h-4zM23 28h7v1h-7zM2 29h1v1h-1zM8 29h1v1h-1zM15 29h4v1h-4zM20 29h4v1h-4zM25 29h3v1h-3zM29 29h1v1h-1zM2 30h7v1h-7zM10 30h4v1h-4zM17 30h1v1h-1zM19 30h1v1h-1zM21 30h1v1h-1zM23 30h2v1h-2zM26 30h1v1h-1zM28 30h1v1h-1z"/></svg></span>
+            <span class="product-qr-caption" data-i18n-html="t21">Scan to try on your phone</span>
+          </span>
         </a>
-        <h3 id="apps-title" class="sub-title">Apps for Jira and Confluence Cloud</h3>
-        <p class="section-lead">Atlassian Forge apps that run on Atlassian: no external servers, no data egress.</p>
+        <h3 id="apps-title" class="sub-title" data-i18n-html="t22">Apps for Jira and Confluence Cloud</h3>
+        <p class="section-lead" data-i18n-html="t23">Atlassian Forge apps that run on Atlassian: no external servers, no data egress.</p>
         <ul class="products">
           <li class="product">
             <span class="tag">Jira Cloud</span>
             <h3><img src="trace-icon.png" alt="" width="30" height="30">ArtUp Trace</h3>
-            <p>Requirements traceability on the issue links you already have: coverage, suspect links after a requirement changes, and baselines you can compare.</p>
-            <a class="more" href="docs.html">Trace documentation</a>
+            <p data-i18n-html="t26">Requirements traceability on the issue links you already have: coverage, suspect links after a requirement changes, and baselines you can compare.</p>
+            <a class="more" href="docs.html" data-i18n-html="t27">Trace documentation</a>
           </li>
           <li class="product">
             <span class="tag">Confluence Cloud</span>
             <h3><img src="export/icon.svg" alt="" width="30" height="30">ArtUp Export</h3>
-            <p>Export a page, a branch or a whole space to git-ready Markdown: full depth, Confluence order, stable paths, YAML front-matter, attachments and update exports. Presets for Hugo, Docusaurus and MkDocs.</p>
-            <a class="more" href="export/">Explore ArtUp Export</a>
+            <p data-i18n-html="t30">Export a page, a branch or a whole space to git-ready Markdown: full depth, Confluence order, stable paths, YAML front-matter, attachments and update exports. Presets for Hugo, Docusaurus and MkDocs.</p>
+            <a class="more" href="export/" data-i18n-html="t31">Explore ArtUp Export</a>
           </li>
           <li class="product">
             <span class="tag">Jira Cloud</span>
             <h3><img src="reports/icon.svg" alt="" width="30" height="30">ArtUp Reports</h3>
-            <p>Export issues from a search, board, sprint or single issue to real Excel, Word and PDF files. Pick columns with the mouse or use Word templates made in Word. Built in your browser.</p>
-            <a class="more" href="reports/">Explore ArtUp Reports</a>
+            <p data-i18n-html="t34">Export issues from a search, board, sprint or single issue to real Excel, Word and PDF files. Pick columns with the mouse or use Word templates made in Word. Built in your browser.</p>
+            <a class="more" href="reports/" data-i18n-html="t35">Explore ArtUp Reports</a>
           </li>
         </ul>
       </div>
@@ -88,24 +106,24 @@
 
     <section class="section" style="padding-top:0" aria-labelledby="features-title">
       <div class="container">
-        <h2 id="features-title">What ArtUp Trace does</h2>
-        <p class="section-lead">Built for teams who have to show that every requirement was verified, without leaving Jira.</p>
+        <h2 id="features-title" data-i18n-html="t36">What ArtUp Trace does</h2>
+        <p class="section-lead" data-i18n-html="t37">Built for teams who have to show that every requirement was verified, without leaving Jira.</p>
         <ul class="features">
           <li class="card">
-            <h3>Coverage</h3>
-            <p>See which requirements are covered by verification issues (tests or tasks) through native Jira issue links. You choose which issue types and link types count.</p>
+            <h3 data-i18n-html="t38">Coverage</h3>
+            <p data-i18n-html="t39">See which requirements are covered by verification issues (tests or tasks) through native Jira issue links. You choose which issue types and link types count.</p>
           </li>
           <li class="card">
-            <h3>Suspect links</h3>
-            <p>When a requirement's summary or description changes after its link was confirmed, the link is marked suspect. Review and confirm one link or a selection at once.</p>
+            <h3 data-i18n-html="t40">Suspect links</h3>
+            <p data-i18n-html="t41">When a requirement's summary or description changes after its link was confirmed, the link is marked suspect. Review and confirm one link or a selection at once.</p>
           </li>
           <li class="card">
-            <h3>Baselines</h3>
-            <p>Freeze a snapshot of your requirements and their links, then compare any two baselines to see what was added, removed or changed.</p>
+            <h3 data-i18n-html="t42">Baselines</h3>
+            <p data-i18n-html="t43">Freeze a snapshot of your requirements and their links, then compare any two baselines to see what was added, removed or changed.</p>
           </li>
           <li class="card">
-            <h3>Export and issue panel</h3>
-            <p>Download a CSV export as a file for audits and reviews. The issue panel shows traceability right on the requirement.</p>
+            <h3 data-i18n-html="t44">Export and issue panel</h3>
+            <p data-i18n-html="t45">Download a CSV export as a file for audits and reviews. The issue panel shows traceability right on the requirement.</p>
           </li>
         </ul>
       </div>
@@ -113,26 +131,26 @@
 
     <section class="section" style="background:var(--bg-soft);border-top:1px solid var(--border);border-bottom:1px solid var(--border)" aria-labelledby="trust-title">
       <div class="container">
-        <h2 id="trust-title">Your data stays on Atlassian</h2>
-        <p class="section-lead">ArtUp Trace is an Atlassian Forge app that runs on Atlassian. There are no ArtUp Labs servers in the path.</p>
+        <h2 id="trust-title" data-i18n-html="t46">Your data stays on Atlassian</h2>
+        <p class="section-lead" data-i18n-html="t47">ArtUp Trace is an Atlassian Forge app that runs on Atlassian. There are no ArtUp Labs servers in the path.</p>
         <ul class="facts">
-          <li><strong>Runs on Atlassian</strong>No external servers, no data egress.</li>
-          <li><strong>Read-only in Jira</strong>Reads Jira as the current user and never writes to your issues.</li>
-          <li><strong>Least privilege</strong>Scopes: <code>read:jira-work</code>, <code>read:jira-user</code>, <code>storage:app</code>.</li>
-          <li><strong>No trackers</strong>No third-party analytics in the app or on this site.</li>
-          <li><strong>26 languages</strong>Follows your Jira language, with light and dark themes.</li>
+          <li data-i18n-html="t48"><strong>Runs on Atlassian</strong>No external servers, no data egress.</li>
+          <li data-i18n-html="t49"><strong>Read-only in Jira</strong>Reads Jira as the current user and never writes to your issues.</li>
+          <li data-i18n-html="t50"><strong>Least privilege</strong>Scopes: <code>read:jira-work</code>, <code>read:jira-user</code>, <code>storage:app</code>.</li>
+          <li data-i18n-html="t51"><strong>No trackers</strong>No third-party analytics in the app or on this site.</li>
+          <li data-i18n-html="t52"><strong>26 languages</strong>Follows your Jira language, with light and dark themes.</li>
         </ul>
       </div>
     </section>
 
     <section class="section" aria-labelledby="links-title">
       <div class="container">
-        <h2 id="links-title">Resources</h2>
+        <h2 id="links-title" data-i18n-html="t53">Resources</h2>
         <ul class="link-grid">
-          <li><a href="support.html">Support<span>How to get help and response times</span></a></li>
-          <li><a href="security.html">Security<span>Architecture and vulnerability reporting</span></a></li>
-          <li><a href="privacy.html">Privacy Policy<span>What data is stored and where</span></a></li>
-          <li><a href="terms.html">Terms<span>End User License Agreement</span></a></li>
+          <li data-i18n-html="t54"><a href="support.html">Support<span>How to get help and response times</span></a></li>
+          <li data-i18n-html="t55"><a href="security.html">Security<span>Architecture and vulnerability reporting</span></a></li>
+          <li data-i18n-html="t56"><a href="privacy.html">Privacy Policy<span>What data is stored and where</span></a></li>
+          <li data-i18n-html="t57"><a href="terms.html">Terms<span>End User License Agreement</span></a></li>
         </ul>
       </div>
     </section>
@@ -141,22 +159,84 @@
   <footer class="site-footer">
     <div class="container">
       <div>
-        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
-        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+        <p data-i18n-html="t58"><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p data-i18n-html="t59">Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · <span style="white-space:nowrap"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: <a href="https://wa.me/77778490070" target="_blank" rel="noopener">+7 777 849 00 70</a></span> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
       </div>
-      <nav aria-label="Footer">
+      <nav aria-label="Footer" data-i18n-attr="aria-label:a3">
         <ul>
           <li><a href="ar-xr/">ArtUp AR XR</a></li>
           <li><a href="export/">ArtUp Export</a></li>
           <li><a href="reports/">ArtUp Reports</a></li>
-          <li><a href="docs.html">Docs</a></li>
-          <li><a href="support.html">Support</a></li>
-          <li><a href="security.html">Security</a></li>
-          <li><a href="privacy.html">Privacy</a></li>
-          <li><a href="terms.html">Terms</a></li>
+          <li data-i18n-html="t63"><a href="docs.html">Docs</a></li>
+          <li data-i18n-html="t64"><a href="support.html">Support</a></li>
+          <li data-i18n-html="t65"><a href="security.html">Security</a></li>
+          <li data-i18n-html="t66"><a href="privacy.html">Privacy</a></li>
+          <li data-i18n-html="t67"><a href="terms.html">Terms</a></li>
         </ul>
       </nav>
     </div>
   </footer>
+  <script>window.ARTUP_I18N = { en: {}, ru: {
+  "lang.label": "Язык",
+  "t1": "Перейти к содержимому",
+  "t3": "<a href=\"index.html\" aria-current=\"page\">Главная<\/a>",
+  "t7": "<a href=\"docs.html\">Документация<\/a>",
+  "t8": "<a href=\"support.html\">Поддержка<\/a>",
+  "t9": "<a href=\"security.html\">Безопасность<\/a>",
+  "t10": "<a href=\"privacy.html\">Конфиденциальность<\/a>",
+  "t11": "<a href=\"terms.html\">Условия<\/a>",
+  "t12": "ArtUp Labs · Программные продукты",
+  "t13": "Небольшие продукты, которые хорошо делают своё дело",
+  "t14": "<strong>ArtUp Trace<\/strong> добавляет в Jira трассировку требований: покрытие, подозрительные связи и базовые срезы на тех связях задач, которые у вас уже есть. <strong>ArtUp Export<\/strong> превращает страницы и пространства Confluence в Markdown, готовый для git. Оба — приложения на Forge без внешних серверов и без передачи данных за пределы Atlassian. <strong>ArtUp AR XR<\/strong> помогает продавцам мебели и интерьера показывать товары в 3D, AR и XR прямо в браузере.",
+  "t15": "<a class=\"btn btn-primary\" href=\"#products-title\">Наши продукты<\/a> <a class=\"btn btn-secondary\" href=\"export/\">Подробнее об ArtUp Export<\/a> <a class=\"btn btn-secondary\" href=\"docs.html\">Документация ArtUp Trace<\/a>",
+  "t16": "Скоро на Atlassian Marketplace. Вопросы: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a>.",
+  "t17": "Наши продукты",
+  "t18": "Каждый продукт решает одну задачу, и решает её хорошо. Выберите тот, что вам нужен.",
+  "t19": "<span class=\"tag\">Web · iOS · Android<\/span> <strong>ArtUp AR XR<\/strong> <span>3D-, AR- и XR-комнаты для продавцов мебели и интерьера прямо в браузере. Покупатель осматривает товар со всех сторон, ставит его в свою комнату или обставляет комнату целиком и сразу видит итоговую цену. Ничего не нужно устанавливать.<\/span>",
+  "t20": "Подробнее об AR XR",
+  "t21": "Наведите камеру телефона, чтобы попробовать",
+  "t22": "Приложения для Jira и Confluence Cloud",
+  "t23": "Приложения на Atlassian Forge работают на инфраструктуре Atlassian: без внешних серверов и без передачи данных наружу.",
+  "t26": "Трассировка требований на связях задач, которые у вас уже есть: покрытие, подозрительные связи после изменения требования и базовые срезы, которые можно сравнивать.",
+  "t27": "Документация Trace",
+  "t30": "Выгрузка страницы, ветки или целого пространства в Markdown, готовый для git: на всю глубину, в порядке Confluence, со стабильными путями, YAML front-matter, вложениями и обновляющими выгрузками. Пресеты для Hugo, Docusaurus и MkDocs.",
+  "t31": "Подробнее об ArtUp Export",
+  "t34": "Выгрузка задач из поиска, доски, спринта или отдельной задачи в настоящие файлы Excel, Word и PDF. Столбцы выбираются мышью, а шаблоны Word делаются в самом Word. Файлы собираются в вашем браузере.",
+  "t35": "Подробнее об ArtUp Reports",
+  "t36": "Что умеет ArtUp Trace",
+  "t37": "Для команд, которым нужно показать, что каждое требование проверено, — не выходя из Jira.",
+  "t38": "Покрытие",
+  "t39": "Видно, какие требования покрыты проверочными задачами (тестами или задачами) через стандартные связи Jira. Вы сами выбираете, какие типы задач и типы связей учитываются.",
+  "t40": "Подозрительные связи",
+  "t41": "Если краткое описание или описание требования изменилось после подтверждения связи, связь помечается как подозрительная. Проверяйте и подтверждайте связи по одной или сразу несколько.",
+  "t42": "Базовые срезы",
+  "t43": "Зафиксируйте снимок требований и их связей, а затем сравните любые два среза: что добавлено, удалено или изменено.",
+  "t44": "Выгрузка и панель задачи",
+  "t45": "Выгрузка в CSV скачивается файлом — для аудитов и ревью. Панель задачи показывает трассировку прямо на требовании.",
+  "t46": "Ваши данные остаются в Atlassian",
+  "t47": "ArtUp Trace — приложение на Atlassian Forge, которое работает на инфраструктуре Atlassian. Серверов ArtUp Labs на пути данных нет.",
+  "t48": "<strong>Работает на Atlassian<\/strong>Без внешних серверов и без передачи данных наружу.",
+  "t49": "<strong>Только чтение в Jira<\/strong>Читает Jira от имени текущего пользователя и никогда не изменяет ваши задачи.",
+  "t50": "<strong>Минимальные права<\/strong>Разрешения: <code>read:jira-work<\/code>, <code>read:jira-user<\/code>, <code>storage:app<\/code>.",
+  "t51": "<strong>Без трекеров<\/strong>Никакой сторонней аналитики ни в приложении, ни на этом сайте.",
+  "t52": "<strong>26 языков<\/strong>Следует языку вашей Jira, поддерживает светлую и тёмную темы.",
+  "t53": "Ресурсы",
+  "t54": "<a href=\"support.html\">Поддержка<span>Как получить помощь и сроки ответа<\/span><\/a>",
+  "t55": "<a href=\"security.html\">Безопасность<span>Архитектура и сообщения об уязвимостях<\/span><\/a>",
+  "t56": "<a href=\"privacy.html\">Политика конфиденциальности<span>Какие данные хранятся и где<\/span><\/a>",
+  "t57": "<a href=\"terms.html\">Условия<span>Лицензионное соглашение с конечным пользователем<\/span><\/a>",
+  "t58": "<strong>ArtUp Labs<\/strong> — торговое название ИП Карпец Артём, Республика Казахстан.",
+  "t59": "Связь: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a> · <span style=\"white-space:nowrap\"><svg class=\"wa-icon\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:-3px\"><path d=\"M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z\"/><path d=\"M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z\"/><\/svg> WhatsApp: <a href=\"https://wa.me/77778490070\" target=\"_blank\" rel=\"noopener\">+7 777 849 00 70<\/a><\/span> · Безопасность: <a href=\"mailto:security@artuplabs.com\">security@artuplabs.com<\/a>",
+  "t63": "<a href=\"docs.html\">Документация<\/a>",
+  "t64": "<a href=\"support.html\">Поддержка<\/a>",
+  "t65": "<a href=\"security.html\">Безопасность<\/a>",
+  "t66": "<a href=\"privacy.html\">Конфиденциальность<\/a>",
+  "t67": "<a href=\"terms.html\">Условия<\/a>",
+  "a1": "Основное меню",
+  "a3": "Нижнее меню",
+  "meta.title": "ArtUp Labs — программные продукты: AR XR, приложения для Jira и Confluence",
+  "meta.description": "ArtUp Labs создаёт программные продукты: ArtUp AR XR — 3D-, AR- и XR-комнаты для продавцов мебели и интерьера прямо в браузере — и приложения на Atlassian Forge: ArtUp Trace для трассировки требований в Jira Cloud, ArtUp Export для выгрузки Confluence Cloud в Markdown для git и ArtUp Reports для выгрузки задач Jira Cloud в Excel, Word и PDF. Все приложения работают на инфраструктуре Atlassian."
+} };</script>
+  <script src="/ar-xr/assets/lang.js"></script>
 </body>
 </html>
