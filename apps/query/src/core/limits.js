@@ -40,3 +40,5 @@ export const ERROR_LOG_SIZE = 20;
 export const COUNT_MAX = 10000;
 /** Zero-padded digits of the timestamp in a journal key, so keys sort by time. */
 export const JOURNAL_TS_DIGITS = 15;
+/** Background job keys read per KVS query page (the KVS page maximum). */
+export const JOB_PAGE = 100;

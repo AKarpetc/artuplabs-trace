@@ -1,15 +1,18 @@
-import { ERROR_LOG_SIZE, PAGE_CACHE_MS } from '../core/limits.js';
+import { ERROR_LOG_SIZE, JOB_PAGE, PAGE_CACHE_MS } from '../core/limits.js';
+
+const JOB_PREFIX = 'q:job:';
 
 const INDEX_PARTS = ['sprint', 'comments'];
 
-/** KVS records of the refresh machinery, the error log, index progress and settings. */
-export function createState({ kvs }) {
+/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`. */
+export function createState({ kvs, hash, beginsWith }) {
   const record = (key) => ({
     get: async () => (await kvs.get(key)) ?? null,
     set: (value) => kvs.set(key, value),
     clear: () => kvs.delete(key),
   });
   const progressKey = (part) => `idx:progress:${part}`;
+  const jobKey = (group) => `${JOB_PREFIX}${hash(group)}`;
   return {
     pending: record('q:pending'),
     lease: record('q:running'),
@@ -32,15 +35,22 @@ export function createState({ kvs }) {
       await kvs.set('log:errors', [{ at, functionName, message }, ...list].slice(0, ERROR_LOG_SIZE));
     },
     errors: async () => (await kvs.get('log:errors')) ?? [],
-    async addJob(job) {
-      const list = (await kvs.get('q:jobs')) ?? [];
-      await kvs.set('q:jobs', [job, ...list.filter((j) => j.key !== job.key)]);
-    },
+    addJob: (job) => kvs.set(jobKey(job.key), job),
     async jobs(now) {
-      const list = (await kvs.get('q:jobs')) ?? [];
-      const live = list.filter((j) => now - j.at < PAGE_CACHE_MS);
-      if (live.length !== list.length) await kvs.set('q:jobs', live);
-      return live;
+      const rows = [];
+      let cursor;
+      do {
+        const query = kvs.query().where('key', beginsWith(JOB_PREFIX)).limit(JOB_PAGE);
+        const page = await (cursor ? query.cursor(cursor) : query).getMany();
+        rows.push(...(page.results ?? []));
+        cursor = page.nextCursor;
+      } while (cursor);
+      const isLive = (job) => now - job.at < PAGE_CACHE_MS;
+      for (const row of rows.filter((r) => !isLive(r.value))) {
+        const current = await kvs.get(row.key);
+        if (current && !isLive(current)) await kvs.delete(row.key);
+      }
+      return rows.map((r) => r.value).filter(isLive);
     },
   };
 }
