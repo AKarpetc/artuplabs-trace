@@ -501,8 +501,10 @@
     font-size: 16px;
 }
 
-.session-button[data-model-loaded="true"] {
-    border-color: rgba(var(--avt-tint-accent), 0.8);
+/* Подсвечена одна плитка — выбранная последней (index.js markPickedTile), а не все уже загруженные. */
+.session-button--picked {
+    border-color: rgba(var(--avt-tint-accent), 0.9);
+    box-shadow: 0 0 0 2px rgba(var(--avt-tint-accent), 0.6);
 }
 
 .session-button:disabled {
