@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111418">
+  <title>ArtUp AR XR — мои планы</title>
+  <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
+  <link type="text/css" href="./styles/demo.css" rel="stylesheet" />
+  <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); страница работает и без них. -->
+  <link type="text/css" href="../assets/ar-xr.css" rel="stylesheet" />
+  <link type="text/css" href="./styles/artuplabs-demo.css" rel="stylesheet" />
+</head>
+
+<body>
+  <header class="ax-header demo-head">
+    <div class="ax-container ax-header-row">
+      <a class="ax-product" href="../" aria-label="ArtUp AR XR — о продукте">
+        <img src="../assets/ar-xr-icon.svg" alt="" width="26" height="26"><span>ArtUp AR XR</span>
+      </a>
+      <nav class="ax-nav" aria-label="Разделы демо">
+        <ul>
+          <li><a href="./demo.html#catalog">Каталог</a></li>
+          <li><a aria-current="page" href="./plans.html">Мои планы</a></li>
+          <li><a class="nav-small" href="./admin.html">Админка</a></li>
+        </ul>
+      </nav>
+      <div class="ax-header-actions"><div id="accountSlot" class="account-slot" hidden></div></div>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <h1>Мои планы</h1>
+    <p class="muted">Комнаты с расстановкой мебели, сохранённые в XR. Итог — по ориентировочным ценам IKEA US.</p>
+    <div class="page-toolbar">
+      <div id="currency-switch" hidden></div>
+      <a class="ax-btn ax-btn-secondary ax-btn-sm" href="./xrviewer.html">Новая расстановка в XR</a>
+    </div>
+    <p id="plans-status" class="page-status" role="status" hidden></p>
+    <div id="plans-list" class="plans-list" aria-live="polite"></div>
+  </main>
+
+  <script type="module" src="./dist/plans.bandle.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <title>ArtUp AR XR — просмотр модели</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <!-- app-clip-banner:start -->
+    <!-- app-clip-banner:end -->
+    <meta name="theme-color" content="#0d121c">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Шрифт не блокирует первую отрисовку: без Google Fonts страница остаётся на системном. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap" media="print" onload="this.media='all'">
+    <link type="text/css" href="./styles/theme.css" rel="stylesheet" />
+    <link type="text/css" href="./styles/styles.css" rel="stylesheet" />
+    <link type="text/css" href="./styles/viewer.css" rel="stylesheet" />
+    <link type="text/css" href="./styles/loading.css" rel="stylesheet" />
+    <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
+</head>
+
+<body class="viewer-body">
+    <div id="loader" class="loader-wrapper">
+        <div class="loader"></div>
+    </div>
+
+    <div id="qrcode-wrapper" class="qr-code-wrapper hidden" onclick="closeQR()">
+        <div class="qr-code-border">
+            <div id="qr-code" class="qr-code">
+            </div>
+        </div>
+        <span class="qr-code__text">Отсканируйте этот QR-код с помощью мобильного устройства, чтобы увидеть эту модель в дополненной реальности.</span>
+    </div>
+
+
+    <div class="viewer-wrapper">
+        <div class="viewer" id="container">
+            <a class="back_button hidden" id="back" onclick="backOnClick()">&laquo; Назад</a>
+            <!-- <model-viewer> — скрытая пусковая площадка AR: единственный режим и артефакт под платформу
+                 задаёт src/viewer/render.js; reveal="manual" — сам он ничего не скачивает. -->
+            <model-viewer id="model-viewer" class="hidden" ar reveal="manual" loading="lazy" camera-controls
+                tone-mapping="commerce" shadow-intensity="1">
+                <div class="progress-bar hidden" slot="progress-bar">
+                    <div class="update-bar"></div>
+                </div>
+                <div id="ar-prompt">
+                    <img src="./img/ar_hand_prompt.png">
+                </div>
+                <button slot="ar-button" id="ar-button" class="ar-button">
+                    Просмотр в пространстве
+                </button>
+            </model-viewer>
+            <!-- Скрыта, пока пусковая площадка не подтвердила, что выбранный AR consumer здесь доступен. -->
+            <button onclick="aRShow()" id="ar-button-repiter" class="ar-button hidden">
+                <span class="view-span">
+                    Просмотр в пространстве
+                </span>
+            </button>
+            <div class="model-title">
+                <img id="titleIcon" class="title-icon hidden" width="50px" height="50px" />
+                <label id="modelTitle"></label>
+            </div>
+            <div id="zoomButtons" class="zoom-buttons">
+                <a class="zoom zoom_in" onclick="zoomIn()"> <img src="./img/zoom_in.png"></a>
+                <a class="zoom zoom_out" onclick="zoomOut()"><img src="./img/zoom_out.png"> </a>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="./src/common/loading.js"></script>
+    <script src="./src/common/qrcode.min.js"></script>
+
+    <!-- Loads <model-viewer> for browsers: -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js?v=1.0.0"></script>
+    <script>
+        self.ModelViewerElement = self.ModelViewerElement || {};
+        self.ModelViewerElement.meshoptDecoderLocation = 'https://cdn.jsdelivr.net/npm/meshoptimizer/meshopt_decoder.js';
+        </script>
+    <script type="module" src="./dist/viewer.bandle.js"></script>
+</body>
+
+</html>

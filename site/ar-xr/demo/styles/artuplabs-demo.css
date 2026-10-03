@@ -1,0 +1,164 @@
+/*
+ * Демо ArtUp AR XR (artuplabs.com/ar-xr/demo/): бренд поверх демо-стилей и стили новых частей —
+ * цены, выбор для XR, «Мои планы», аккаунт, демо-админка, итог в XR.
+ *
+ * Общие токены и компоненты (.ax-*) — в ../assets/ar-xr.css (владелец — лендинг). Здесь для них
+ * только запасные правила через :where() (нулевая специфичность): если общий файл не загрузился,
+ * окна, листы и кнопки остаются рабочими, а когда он есть — его правила важнее независимо от порядка.
+ */
+
+/* ─── Бренд поверх Material-токенов витрины (тёмная тема демо) ─────────────── */
+:root {
+  --md-primary: #6ea8ff;
+  --md-on-primary: #0b1320;
+  --md-primary-container: #1b2a42;
+  --md-on-primary-container: #d6e6ff;
+  --md-surface: #111418;
+  --md-surface-container-low: #161a1f;
+  --md-surface-container: #1d2229;
+  --md-surface-container-high: #222831;
+  --md-surface-container-highest: #2a313b;
+  --md-on-surface: #e3e8ef;
+  --md-on-surface-variant: #a3adbb;
+  --md-outline-variant: #2f3640;
+  --demo-accent: var(--ax-accent, #6ea8ff);
+  --demo-surface: var(--ax-surface, #1d2229);
+  --demo-border: var(--ax-border, #2f3640);
+  --demo-text: var(--ax-text, #e3e8ef);
+  --demo-muted: var(--ax-muted, #a3adbb);
+}
+
+/* ─── Запасные правила общих компонентов (без ../assets/ar-xr.css) ────────── */
+:where(.ax-overlay) { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .6); }
+:where(.ax-overlay[hidden]) { display: none; }
+:where(.ax-modal, .ax-sheet) { width: 100%; max-width: 32rem; max-height: calc(100vh - 32px); overflow: auto; background: #1d2229; color: #e3e8ef; border-radius: 16px; }
+:where(.ax-modal-head) { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 20px 8px; }
+:where(.ax-modal-head h2) { margin: 0; font-size: 1.2rem; }
+:where(.ax-modal-body) { padding: 8px 20px 16px; }
+:where(.ax-modal-foot) { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 20px; }
+:where(.ax-btn) { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 16px; border: 1px solid #2f3640; border-radius: 10px; background: #222831; color: inherit; font: 600 15px/1.2 system-ui, sans-serif; cursor: pointer; text-decoration: none; }
+:where(.ax-btn-primary) { background: #3d7fe6; border-color: transparent; color: #fff; }
+:where(.ax-btn-danger) { color: #fd9891; }
+:where(.ax-input) { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid #2f3640; border-radius: 10px; background: #111418; color: inherit; font: 16px system-ui, sans-serif; }
+:where(.ax-field) { display: flex; flex-direction: column; gap: 6px; margin: 0 0 16px; }
+:where(.ax-segmented) { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid #2f3640; border-radius: 999px; }
+:where(.ax-segmented button) { min-width: 40px; padding: 6px 12px; border: 0; border-radius: 999px; background: transparent; color: inherit; cursor: pointer; }
+:where(.ax-segmented button[aria-pressed="true"]) { background: #2a313b; }
+:where(.ax-card) { padding: 20px; border: 1px solid #2f3640; border-radius: 16px; background: #1d2229; }
+:where(.ax-hint, .ax-muted) { color: #a3adbb; font-size: .9em; }
+:where(.ax-error) { color: #fd9891; }
+:where(.ax-icon-btn) { width: 40px; height: 40px; border: 0; border-radius: 8px; background: transparent; color: inherit; font-size: 22px; cursor: pointer; }
+:where(.ax-actions) { display: flex; flex-wrap: wrap; gap: 8px; }
+:where(.ax-header) { position: sticky; top: 0; z-index: 30; background: #111418; border-bottom: 1px solid #2f3640; }
+:where(.ax-header-row) { display: flex; align-items: center; gap: 12px 20px; min-height: 60px; max-width: 72rem; margin: 0 auto; padding: 0 16px; }
+:where(.ax-product) { display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; font-weight: 650; }
+:where(.ax-nav ul) { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; overflow-x: auto; }
+:where(.ax-nav a) { display: block; padding: 6px 10px; color: #a3adbb; text-decoration: none; }
+:where(.ax-header-actions) { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+/* ─── Шапка демо ─────────────────────────────────────────────────────────── */
+.demo-head { padding-top: env(safe-area-inset-top, 0px); }
+.demo-head .ax-product img { border-radius: 6px; }
+.demo-head .ax-nav a.nav-small { font-size: .85rem; opacity: .8; }
+.account-slot { display: flex; align-items: center; gap: 8px; }
+.account-slot[hidden] { display: none; }
+.account-email { max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--demo-muted); font-size: .9rem; }
+.account-tabs { margin: 0 0 16px; }
+.account-modal .ax-error:empty { display: none; }
+
+@media (max-width: 600px) {
+  .demo-head .ax-header-row { flex-wrap: wrap; gap: 4px 12px; padding-bottom: 6px; }
+  .demo-head .ax-nav { order: 3; flex-basis: 100%; }
+  .account-email { display: none; }
+  .search-bar { top: calc(100px + var(--safe-top, 0px)); }
+}
+
+/* ─── Цены в каталоге ────────────────────────────────────────────────────── */
+.catalog__prices { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+.currency-switch[hidden] { display: none; }
+.price-note { font-size: 13px; }
+.model-card__price { margin: 4px 0 0; font: 600 17px/1.3 var(--font-brand, system-ui); color: var(--demo-text); }
+
+/* ─── Выбор для XR ───────────────────────────────────────────────────────── */
+.pick-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--demo-muted); cursor: pointer; user-select: none; }
+.pick-toggle input { width: 18px; height: 18px; accent-color: var(--demo-accent); }
+.pick-toggle input:disabled { opacity: .7; }
+.model-card__pick { margin-top: 8px; }
+.style-section__pick { margin-left: auto; }
+.selection-bar {
+  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+  width: max-content; max-width: calc(100vw - 24px); padding: 10px 14px;
+  border: 1px solid var(--demo-border); border-radius: 16px;
+  background: var(--demo-surface); color: var(--demo-text);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+}
+.selection-bar #xr-selection-count { font-weight: 600; }
+
+/* ─── Лист стоимости ─────────────────────────────────────────────────────── */
+.quote-overlay { z-index: 2000; }
+.quote-table { width: 100%; border-collapse: collapse; margin: 0 0 12px; font-size: 15px; }
+.quote-table th, .quote-table td { padding: 6px 4px; border-bottom: 1px solid var(--demo-border); text-align: left; vertical-align: top; }
+.quote-table th:nth-child(n+2), .quote-table td:nth-child(n+2) { text-align: right; white-space: nowrap; }
+.quote-totals { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 12px 0; }
+.quote-totals dt { color: var(--demo-muted); }
+.quote-totals dd { margin: 0; text-align: right; font-weight: 600; }
+.quote-totals dd.ax-price { font-size: 1.3rem; }
+
+/* ─── Итог в XR ──────────────────────────────────────────────────────────── */
+.xr-total {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px) + 52px);
+  left: calc(12px + env(safe-area-inset-left, 0px));
+  z-index: 920;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  max-width: 60vw; padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, .18); border-radius: 14px;
+  background: rgba(13, 18, 28, .72); color: #f8fafc;
+  font: 600 14px/1.3 system-ui, sans-serif;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.xr-total.hidden { display: none; }
+.xr-total__button {
+  min-height: 36px; padding: 6px 12px; border: 0; border-radius: 999px;
+  background: linear-gradient(135deg, #3d7fe6 0%, #8a63ff 100%); color: #fff;
+  font: 600 13px/1.2 system-ui, sans-serif; cursor: pointer;
+}
+.xr-hero__brand { display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
+.xr-hero__brand .xr-hero__logo { padding: 0; background: none; }
+.xr-pick__links { margin: 0; font-size: 14px; }
+.xr-pick__links a { color: #93bfff; }
+.xr-pick__currency { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.xr-pick__currency #xrCurrency[hidden] { display: none; }
+.xr-pick__currency:has(#xrCurrency[hidden]) { display: none; }
+
+/* ─── Мои планы и демо-админка ───────────────────────────────────────────── */
+.page-main { max-width: 72rem; margin: 0 auto; padding: 24px 16px 96px; }
+.page-main h1 { margin: 0 0 8px; font: 600 clamp(26px, 3vw, 34px)/1.2 var(--font-brand, system-ui); }
+.page-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 20px; }
+.page-status { margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; background: var(--demo-surface); }
+.page-status[hidden] { display: none; }
+.plans-list { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); }
+.plan-card h3 { margin: 0; }
+.plan-card__meta { margin: 0; }
+.plan-card__total { margin: 0; font-weight: 600; font-size: 1.1rem; }
+.plans-empty { max-width: 40rem; }
+.plans-empty p { margin: 0 0 16px; }
+
+.admin-login { max-width: 26rem; }
+.admin-login[hidden], .admin-workspace[hidden], #admin-more[hidden] { display: none; }
+.admin-list { display: grid; gap: 12px; margin: 16px 0; }
+.admin-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px 16px; align-items: start; padding: 14px; }
+.admin-row img { width: 96px; height: 96px; object-fit: contain; border-radius: 10px; background: #fff; }
+.admin-row__info h3 { margin: 0; font-size: 1.05rem; }
+.admin-row__info p { margin: 2px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.admin-row--custom { border-color: var(--demo-accent); }
+.admin-row__form { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: end; gap: 8px 12px; }
+.admin-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--demo-muted); }
+.admin-field .ax-input { min-width: 9rem; width: auto; }
+.admin-row__result { flex-basis: 100%; }
+@media (min-width: 760px) {
+  .admin-row { grid-template-columns: 96px minmax(0, 1fr) auto; }
+  .admin-row__form { grid-column: 2 / -1; }
+}

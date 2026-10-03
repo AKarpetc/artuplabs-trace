@@ -1,0 +1,1055 @@
+/*
+ * XR Room: стартовый экран и оверлей внутри сессии.
+ *
+ * Фон рисует только стартовый экран (`.main`). Внутри immersive-ar корнем dom-overlay
+ * становится `body`, и непрозрачный фон страницы закрыл бы камеру, поэтому ни `html`,
+ * ни `body` фона здесь не получают.
+ */
+
+.xr-body {
+    font-family: var(--avt-font);
+    color: var(--avt-ink-inverse);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Стартовый экран ─────────────────────────────────────────────────────── */
+
+.main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--avt-space-5);
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding:
+        calc(var(--avt-space-6) + var(--avt-safe-top))
+        calc(var(--avt-space-4) + var(--avt-safe-right))
+        calc(var(--avt-space-6) + var(--avt-safe-bottom))
+        calc(var(--avt-space-4) + var(--avt-safe-left));
+    background: var(--avt-backdrop-night);
+}
+
+.main > * {
+    width: 100%;
+    max-width: 560px;
+    margin-inline: auto;
+}
+
+.xr-hero {
+    display: flex;
+    flex-direction: column;
+    gap: var(--avt-space-3);
+}
+
+.xr-hero__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--avt-accent);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.xr-hero__logo {
+    height: 24px;
+    width: auto;
+    padding: 2px;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.xr-hero__eyebrow-tail {
+    color: var(--avt-ink-inverse-muted);
+}
+
+.xr-hero__title {
+    margin: 0;
+    font-size: clamp(26px, 7vw, 38px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.xr-hero__lead {
+    margin: 0;
+    color: var(--avt-ink-inverse-muted);
+    font-size: 16px;
+    line-height: 24px;
+}
+
+.xr-hero__link {
+    align-self: flex-start;
+    color: var(--avt-accent);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.xr-hero__link:hover {
+    text-decoration: underline;
+}
+
+.xr-steps {
+    display: grid;
+    gap: var(--avt-space-2);
+    margin: var(--avt-space-2) 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: xr-step;
+}
+
+.xr-steps__item {
+    display: flex;
+    align-items: center;
+    gap: var(--avt-space-3);
+    padding: var(--avt-space-3);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius);
+    background: rgba(var(--avt-tint-light), 0.06);
+    font-size: 15px;
+    line-height: 20px;
+}
+
+.xr-steps__icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--avt-radius-sm);
+    background: linear-gradient(135deg, var(--avt-brand-bright), var(--avt-brand));
+    color: #ffffff;
+    font-size: 17px;
+}
+
+.xr-steps__text {
+    color: var(--avt-ink-inverse-muted);
+}
+
+.xr-steps__text b {
+    color: var(--avt-ink-inverse);
+}
+
+.xr-guide {
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius);
+    background: rgba(var(--avt-tint-light), 0.04);
+}
+
+.xr-guide__summary {
+    padding: var(--avt-space-3) var(--avt-space-4);
+    color: var(--avt-ink-inverse);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.xr-guide__summary::-webkit-details-marker {
+    display: none;
+}
+
+.xr-guide__summary::after {
+    content: "▾";
+    float: right;
+    color: var(--avt-ink-inverse-muted);
+}
+
+.xr-guide[open] .xr-guide__summary::after {
+    content: "▴";
+}
+
+.xr-guide__body {
+    padding: 0 var(--avt-space-4) var(--avt-space-3);
+    color: var(--avt-ink-inverse-muted);
+    font-size: 14px;
+    line-height: 21px;
+}
+
+.xr-guide__body p {
+    margin: 0 0 var(--avt-space-2);
+}
+
+.xr-guide__body b {
+    color: var(--avt-ink-inverse);
+}
+
+/* ─── Панель комнат ───────────────────────────────────────────────────────── */
+
+.room-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--avt-space-3);
+    padding: var(--avt-space-4);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-lg);
+    background: rgba(var(--avt-tint-light), 0.06);
+    box-sizing: border-box;
+}
+
+.room-panel__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--avt-space-3);
+}
+
+.room-panel__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.room-panel__active {
+    color: var(--avt-accent);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.room-panel__hint {
+    margin: 0;
+    color: var(--avt-ink-inverse-muted);
+    font-size: 13px;
+    line-height: 19px;
+}
+
+.room-panel__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--avt-space-2);
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+.room-panel__list:empty {
+    display: none;
+}
+
+.room-panel__room {
+    display: flex;
+    align-items: center;
+    gap: var(--avt-space-2);
+    min-height: 44px;
+    padding: var(--avt-space-2) var(--avt-space-3);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-sm);
+    background: rgba(var(--avt-tint-light), 0.06);
+    color: var(--avt-ink-inverse);
+    font-family: inherit;
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.room-panel__room:hover {
+    background: rgba(var(--avt-tint-light), 0.12);
+}
+
+.room-panel__room__selected {
+    border-color: var(--avt-accent);
+    background: rgba(var(--avt-tint-accent), 0.16);
+    font-weight: 600;
+}
+
+.room-panel__button.avt-btn--ghost {
+    border-color: var(--avt-glass-border);
+    color: var(--avt-ink-inverse);
+}
+
+.room-panel__button.avt-btn--ghost:hover {
+    background: rgba(var(--avt-tint-light), 0.1);
+}
+
+/* ─── Запуск сессии ───────────────────────────────────────────────────────── */
+
+.xr-launch {
+    display: flex;
+    flex-direction: column;
+    gap: var(--avt-space-3);
+    margin-top: auto;
+}
+
+/*
+ * `.ar-button` из styles.css позиционирует кнопку внутри model-viewer абсолютно и
+ * рисует собственный фон — на стартовом экране это снимается.
+ */
+.xr-start {
+    position: static;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    min-height: 52px;
+    padding: 0 var(--avt-space-5);
+    background-image: none;
+    font-size: 17px;
+}
+
+.xr-start:active {
+    background-color: transparent;
+}
+
+.xr-start-status {
+    box-sizing: border-box;
+    padding: var(--avt-space-3) var(--avt-space-4);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-sm);
+    background: rgba(var(--avt-tint-light), 0.08);
+    color: var(--avt-ink-inverse);
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+}
+
+/* Устройство без WebXR — обычное состояние десктопа, а не ошибка. */
+.xr-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--avt-space-3);
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding:
+        calc(var(--avt-space-6) + var(--avt-safe-top))
+        calc(var(--avt-space-4) + var(--avt-safe-right))
+        calc(var(--avt-space-6) + var(--avt-safe-bottom))
+        calc(var(--avt-space-4) + var(--avt-safe-left));
+    background: var(--avt-backdrop-night);
+    text-align: center;
+}
+
+.xr-fallback > * {
+    width: 100%;
+    max-width: 440px;
+}
+
+.xr-fallback__title {
+    margin: 0;
+    font-size: clamp(22px, 6vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.xr-fallback__hint {
+    margin: 0;
+    color: var(--avt-ink-inverse-muted);
+    font-size: 15px;
+    line-height: 22px;
+}
+
+.xr-fallback__note {
+    margin: 0;
+    color: var(--avt-ink-inverse-muted);
+    font-size: 13px;
+    line-height: 19px;
+}
+
+.xr-fallback__note a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.xr-fallback__url {
+    display: block;
+    margin-top: 8px;
+    user-select: all;
+    -webkit-user-select: all;
+    word-break: break-all;
+    font-family: ui-monospace, monospace;
+}
+
+.qr-code {
+    display: block;
+    /* styles.css задаёт этому блоку фиксированные 400x400 — здесь размер определяет картинка. */
+    width: fit-content;
+    max-width: 100%;
+    height: auto;
+    margin: var(--avt-space-2) auto;
+    padding: var(--avt-space-3);
+    border-radius: var(--avt-radius-lg);
+    background: #ffffff;
+    box-shadow: var(--avt-shadow-lg);
+}
+
+.qr-code canvas {
+    display: none;
+}
+
+.qr-code img {
+    display: block;
+    width: min(260px, 62vw);
+    height: auto;
+}
+
+/* ─── Оверлей внутри сессии ───────────────────────────────────────────────── */
+
+.ar-main {
+    width: 100%;
+    touch-action: none;
+}
+
+/* Каталог: горизонтальная лента карточек у нижнего края экрана. */
+.session-buttons {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 900;
+    display: flex;
+    align-items: flex-end;
+    gap: var(--avt-space-2);
+    box-sizing: border-box;
+    padding:
+        var(--avt-space-3)
+        calc(var(--avt-space-3) + var(--avt-safe-right))
+        calc(var(--avt-space-3) + var(--avt-safe-bottom))
+        calc(var(--avt-space-3) + var(--avt-safe-left));
+    background: linear-gradient(180deg, rgba(8, 13, 22, 0) 0%, rgba(8, 13, 22, 0.75) 55%);
+}
+
+.option-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: var(--avt-space-2);
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* `.ar-main` запрещает жесты всей сцене; ленте нужен горизонтальный свайп. */
+    touch-action: pan-x;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.option-buttons::-webkit-scrollbar {
+    display: none;
+}
+
+.session-button {
+    position: relative;
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    width: 84px;
+    padding: 0 0 6px;
+    overflow: hidden;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius);
+    background: var(--avt-glass);
+    color: var(--avt-ink-inverse);
+    font-family: var(--avt-font);
+    font-size: 12px;
+    line-height: 15px;
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--avt-shadow-lg);
+}
+
+.session-button:active {
+    border-color: var(--avt-accent);
+}
+
+.session-button__image {
+    width: 84px;
+    height: 68px;
+    object-fit: cover;
+    background: rgba(var(--avt-tint-light), 0.08);
+}
+
+/* Категория или модель без превью: монограмма вместо битой картинки. */
+.session-button__icon {
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 68px;
+    background: linear-gradient(135deg, rgba(var(--avt-tint-brand), 0.55), rgba(var(--avt-tint-accent), 0.35));
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.session-button__label {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 6px;
+    overflow: hidden;
+    color: var(--avt-ink-inverse);
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.session-button--back {
+    width: 64px;
+}
+
+.session-button--back .session-button__icon {
+    width: 64px;
+    height: 44px;
+    background: rgba(var(--avt-tint-light), 0.12);
+    font-size: 16px;
+}
+
+.session-button[data-model-loaded="true"] {
+    border-color: rgba(var(--avt-tint-accent), 0.8);
+}
+
+.session-button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+/* ─── Инструменты ─────────────────────────────────────────────────────────── */
+
+.toolbar {
+    position: fixed;
+    top: calc(var(--avt-space-6) + var(--avt-safe-top) + 34px);
+    right: calc(var(--avt-space-3) + var(--avt-safe-right));
+    bottom: calc(150px + var(--avt-safe-bottom));
+    z-index: 910;
+    display: flex;
+    flex-direction: column;
+    width: 56px;
+}
+
+.toolbar__buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: var(--avt-space-2);
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+.toolbar__buttons::-webkit-scrollbar {
+    display: none;
+}
+
+.toolbar_button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-pill);
+    background: var(--avt-glass);
+    color: var(--avt-ink-inverse);
+    font-family: var(--avt-font);
+    font-size: 19px;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 4px 12px rgba(8, 15, 31, 0.28);
+}
+
+.toolbar_button:active {
+    background: var(--avt-glass-strong);
+    border-color: var(--avt-accent);
+}
+
+/* Недоступное для выбранной модели действие (масштаб модели с фиксированным размером):
+   нажатие остаётся — оно объясняет, почему действие недоступно. */
+.toolbar_button.disabled {
+    opacity: 0.45;
+}
+
+.toolbar_button__selected__put {
+    background: linear-gradient(135deg, var(--avt-brand-bright), var(--avt-brand));
+    border-color: transparent;
+}
+
+.slider-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: var(--avt-space-3);
+}
+
+input[type=range][orient=vertical] {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    appearance: slider-vertical;
+    width: 16px;
+    height: 200px;
+    vertical-align: bottom;
+    accent-color: var(--avt-accent);
+}
+
+.loading-model {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffffff;
+    font-size: 22px;
+}
+
+/* ─── Статусы поверх камеры ───────────────────────────────────────────────── */
+
+.log {
+    position: fixed;
+    top: calc(var(--avt-space-3) + var(--avt-safe-top));
+    left: 50%;
+    z-index: 920;
+    transform: translateX(-50%);
+    max-width: min(62vw, 420px);
+    box-sizing: border-box;
+    padding: var(--avt-space-2) var(--avt-space-4);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-pill);
+    background: var(--avt-glass-strong);
+    color: var(--avt-ink-inverse);
+    font-family: var(--avt-font);
+    font-size: 13px;
+    line-height: 18px;
+    text-align: center;
+    white-space: pre-line;
+    pointer-events: none;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.log:empty {
+    display: none;
+}
+
+.room-badge {
+    position: fixed;
+    /* Под строкой состояния: на узком экране они иначе наезжают друг на друга. */
+    top: calc(var(--avt-space-3) + var(--avt-safe-top) + 46px);
+    right: calc(var(--avt-space-3) + var(--avt-safe-right));
+    z-index: 920;
+    max-width: 48vw;
+    padding: 6px 12px;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-pill);
+    background: var(--avt-glass-strong);
+    color: var(--avt-ink-inverse);
+    font-family: var(--avt-font);
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.calibration-ui {
+    position: fixed;
+    top: calc(72px + var(--avt-safe-top));
+    right: var(--avt-space-4);
+    left: var(--avt-space-4);
+    z-index: 920;
+    padding: var(--avt-space-3) var(--avt-space-4);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius);
+    background: var(--avt-glass-strong);
+    color: var(--avt-ink-inverse);
+    text-align: center;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.calibration-ui__text {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 21px;
+}
+
+.session-close {
+    position: fixed;
+    top: calc(var(--avt-space-3) + var(--avt-safe-top));
+    left: calc(var(--avt-space-3) + var(--avt-safe-left));
+    z-index: 920;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-pill);
+    background: var(--avt-glass-strong);
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.session-close:before,
+.session-close:after {
+    position: absolute;
+    content: ' ';
+    width: 16px;
+    height: 2px;
+    background-color: #ffffff;
+}
+
+.session-close:before {
+    transform: rotate(45deg);
+}
+
+.session-close:after {
+    transform: rotate(-45deg);
+}
+
+/* ─── Прицел и подсказка руки ─────────────────────────────────────────────── */
+
+@keyframes moveInFigureEight {
+    0% { transform: translate(150px, 150px); }
+    12.5% { transform: translate(200px, 100px); }
+    25% { transform: translate(225px, 75px); }
+    37.5% { transform: translate(200px, 50px); }
+    50% { transform: translate(150px, 0px); }
+    62.5% { transform: translate(100px, 50px); }
+    75% { transform: translate(75px, 75px); }
+    87.5% { transform: translate(100px, 100px); }
+    100% { transform: translate(150px, 150px); }
+}
+
+.place-finder-hands {
+    background-image: url("../img/ar_hand_prompt.png");
+    animation: moveInFigureEight 4s linear infinite;
+    width: 50px;
+    height: 50px;
+}
+
+.place-finder {
+    position: absolute;
+    background-image: url("../img/51470-200.png");
+    background-repeat: no-repeat;
+    background-position: 0% 0%;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 200px;
+    top: 40%;
+    left: 20%;
+}
+
+/* ─── Джойстик перемещения ────────────────────────────────────────────────── */
+
+#joystick-container {
+    position: fixed;
+    bottom: calc(150px + var(--avt-safe-bottom));
+    left: calc(var(--avt-space-4) + var(--avt-safe-left));
+    z-index: 910;
+    width: 100px;
+    height: 100px;
+    background: var(--avt-glass);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: 50%;
+    touch-action: none;
+    user-select: none;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+#joystick {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    width: 50px;
+    height: 50px;
+    background: rgba(var(--avt-tint-light), 0.45);
+    border-radius: 50%;
+    transition: top 0.1s, left 0.1s;
+}
+
+.arrow-h {
+    position: absolute;
+    color: var(--avt-ink-inverse);
+}
+
+.arrow-h__left { top: 35px; left: 6px; }
+.arrow-h__up { top: -4px; left: 45px; }
+.arrow-h__down { top: 78px; left: 45px; }
+.arrow-h__right { top: 35px; right: 6px; }
+
+/* ─── Модальное окно «Что такое XR» ───────────────────────────────────────── */
+
+.xr-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: var(--avt-space-4);
+    overflow: auto;
+    background: rgba(8, 13, 22, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.xr-modal__content {
+    position: relative;
+    width: min(100%, 520px);
+    padding: var(--avt-space-5);
+    color: var(--avt-ink);
+    font-size: 15px;
+    line-height: 22px;
+}
+
+.xr-modal__title {
+    margin: 0 0 var(--avt-space-3);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.xr-modal__list {
+    margin: 0 0 var(--avt-space-3);
+    padding-left: 20px;
+}
+
+.xr-modal__close {
+    position: absolute;
+    top: var(--avt-space-3);
+    right: var(--avt-space-3);
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: var(--avt-radius-pill);
+    background: var(--avt-surface-sunken);
+    color: var(--avt-ink-muted);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* ─── Широкие экраны ──────────────────────────────────────────────────────── */
+
+@media (min-width: 900px) {
+    .main {
+        justify-content: center;
+    }
+
+    .session-buttons {
+        padding-bottom: calc(var(--avt-space-5) + var(--avt-safe-bottom));
+    }
+
+    .session-button {
+        width: 104px;
+    }
+
+    .session-button__image,
+    .session-button__icon {
+        width: 104px;
+        height: 82px;
+    }
+}
+
+/* Низкий экран в ландшафте: лента ниже, инструменты компактнее. */
+@media (orientation: landscape) and (max-height: 520px) {
+    .toolbar {
+        top: calc(var(--avt-space-2) + var(--avt-safe-top) + 44px);
+        bottom: calc(110px + var(--avt-safe-bottom));
+        width: 48px;
+    }
+
+    .toolbar_button {
+        width: 48px;
+        height: 48px;
+        font-size: 17px;
+    }
+
+    .session-button {
+        width: 72px;
+    }
+
+    .session-button__image,
+    .session-button__icon {
+        width: 72px;
+        height: 52px;
+    }
+}
+
+/* ─── Раскладка ленты моделей ─────────────────────────────────────────────── */
+
+/*
+ * У `fieldset` свои поля по умолчанию; снимаются только вертикальные, чтобы горизонтальное
+ * центрирование из `.main > *` (та же специфичность, правило выше в файле) не перебивалось.
+ */
+.xr-ribbon {
+    display: flex;
+    flex-direction: column;
+    gap: var(--avt-space-2);
+    margin-block: 0;
+    padding: var(--avt-space-4);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-lg);
+    background: rgba(var(--avt-tint-light), 0.06);
+    box-sizing: border-box;
+}
+
+.xr-ribbon legend {
+    float: left;
+    width: 100%;
+    margin-bottom: var(--avt-space-2);
+    padding: 0;
+}
+
+.xr-ribbon__options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--avt-space-2);
+}
+
+.xr-ribbon__option {
+    position: relative;
+    display: block;
+    cursor: pointer;
+}
+
+.xr-ribbon__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.xr-ribbon__text {
+    display: grid;
+    place-items: center;
+    min-height: 48px;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius);
+    background: rgba(var(--avt-tint-light), 0.08);
+    color: var(--avt-ink-inverse);
+    font: 500 16px var(--avt-font);
+}
+
+.xr-ribbon__input:checked + .xr-ribbon__text {
+    border-color: var(--avt-accent);
+    background: rgba(var(--avt-tint-accent), 0.22);
+    font-weight: 600;
+}
+
+.xr-ribbon__input:focus-visible + .xr-ribbon__text {
+    outline: 2px solid var(--avt-accent);
+    outline-offset: 2px;
+}
+
+/*
+ * Лента слева: вертикальная колонка под кнопкой выхода, листается вертикально. Инструменты
+ * остаются справа и больше не уступают низ экрана ленте.
+ */
+.ar-main--ribbon-left .session-buttons {
+    top: calc(var(--avt-space-3) + var(--avt-safe-top) + 44px + var(--avt-space-2));
+    right: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    padding:
+        var(--avt-space-2)
+        var(--avt-space-3)
+        calc(var(--avt-space-3) + var(--avt-safe-bottom))
+        calc(var(--avt-space-3) + var(--avt-safe-left));
+    background: linear-gradient(90deg, rgba(8, 13, 22, 0.75) 55%, rgba(8, 13, 22, 0) 100%);
+}
+
+.ar-main--ribbon-left .option-buttons {
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    touch-action: pan-y;
+    padding: 0 2px 0 0;
+}
+
+.ar-main--ribbon-left .toolbar {
+    bottom: calc(var(--avt-space-5) + var(--avt-safe-bottom));
+}
+
+/*
+ * Утилита сокрытия объявлена последней намеренно: у неё та же специфичность, что у
+ * компонентных правил, задающих `display`, и выигрывает та, что ниже в файле.
+ */
+.hidden {
+    display: none;
+}
+
+/* «Что расставляем»: стиль и комната выбираются до старта XR. */
+.xr-pick {
+    display: flex;
+    flex-direction: column;
+    gap: var(--avt-space-3);
+    padding: var(--avt-space-4);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-lg);
+    background: rgba(var(--avt-tint-light), 0.06);
+    box-sizing: border-box;
+}
+
+.xr-pick__title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--avt-ink-inverse);
+}
+
+.xr-pick__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--avt-space-1);
+}
+
+.xr-pick__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--avt-ink-inverse-muted);
+}
+
+.xr-pick__select {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 var(--avt-space-4);
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius);
+    background: rgba(var(--avt-tint-light), 0.08);
+    color: var(--avt-ink-inverse);
+    font: 500 16px var(--avt-font);
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--avt-ink-inverse-muted) 50%),
+        linear-gradient(135deg, var(--avt-ink-inverse-muted) 50%, transparent 50%);
+    background-position: calc(100% - 22px) 50%, calc(100% - 16px) 50%;
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+}
+
+.xr-pick__select option {
+    background: var(--avt-canvas-night);
+    color: var(--avt-ink-inverse);
+}
+
+.xr-pick__count {
+    margin: 0;
+    font-size: 14px;
+    color: var(--avt-ink-inverse-muted);
+}
+
+.xr-start-hint {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--avt-ink-inverse-muted);
+}
+
+/* `.hidden` выше объявлен раньше этих панелей и проигрывал им по порядку. */
+.xr-pick.hidden,
+.xr-pick__field.hidden {
+    display: none;
+}

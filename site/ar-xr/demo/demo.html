@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description"
+    content="ArtUp AR XR: 3D, AR и XR-расстановка мебели и товаров прямо в браузере — без установки приложения.">
+  <meta name="theme-color" content="#0f1115">
+
+  <title>ArtUp AR XR — демо: 3D, AR и XR для вашего каталога</title>
+
+  <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Roboto:wght@400;500&display=swap">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block">
+  <link type="text/css" href="./styles/loading.css" rel="stylesheet" />
+  <link type="text/css" href="./styles/demo.css" rel="stylesheet" />
+  <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); демо-стили ниже работают и без них. -->
+  <link type="text/css" href="../assets/ar-xr.css" rel="stylesheet" />
+  <link type="text/css" href="./styles/artuplabs-demo.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="loader" class="loader-wrapper">
+    <div class="loader"></div>
+  </div>
+
+  <header class="ax-header demo-head">
+    <div class="ax-container ax-header-row">
+      <a class="ax-product" href="../" aria-label="ArtUp AR XR — о продукте">
+        <img src="../assets/ar-xr-icon.svg" alt="" width="26" height="26"><span>ArtUp AR XR</span>
+      </a>
+      <nav class="ax-nav" aria-label="Разделы демо">
+        <ul>
+          <li><a href="./demo.html#catalog" aria-current="page">Каталог</a></li>
+          <li><a href="./plans.html">Мои планы</a></li>
+          <li><a class="nav-small" href="./admin.html">Админка</a></li>
+        </ul>
+      </nav>
+      <div class="ax-header-actions"><div id="accountSlot" class="account-slot" hidden></div></div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero__text">
+        <p class="eyebrow">3D · AR · XR прямо в браузере</p>
+        <h1 class="display">Покажите товар <span class="accent">в комнате клиента</span> — ещё до покупки</h1>
+        <p class="lead">
+          Интерактивный 3D-просмотр, примерка в дополненной реальности на iPhone и Android и
+          расстановка нескольких предметов в одной комнате. Без установки приложения — по ссылке или QR-коду.
+        </p>
+        <div class="hero__actions">
+          <a class="btn btn--filled btn--large" href="#catalog">
+            <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>Смотреть каталог
+          </a>
+          <a class="btn btn--tonal btn--large" href="./xrviewer.html">
+            <span class="material-symbols-rounded" aria-hidden="true">chair</span>Расставить в XR
+          </a>
+        </div>
+        <ul class="stats" aria-label="Демо-каталог в цифрах">
+          <li><b id="stat-models">—</b><span>моделей</span></li>
+          <li><b id="stat-rooms">—</b><span>комнат и зон</span></li>
+          <li><b id="stat-styles">—</b><span>стилей</span></li>
+        </ul>
+      </div>
+      <div class="hero__visual" aria-hidden="true">
+        <div id="hero-mosaic" class="mosaic"></div>
+      </div>
+    </section>
+
+    <section class="features" aria-label="Возможности">
+      <article class="feature">
+        <span class="feature__icon material-symbols-rounded" aria-hidden="true">3d_rotation</span>
+        <h2>3D-просмотр</h2>
+        <p>Покупатель вращает и приближает товар на любой странице: сайт, маркетплейс, соцсети, QR на ценнике.</p>
+      </article>
+      <article class="feature">
+        <span class="feature__icon material-symbols-rounded" aria-hidden="true">view_in_ar</span>
+        <h2>AR без приложения</h2>
+        <p>Одно касание — и диван стоит в гостиной в реальном размере. iPhone (Quick Look) и Android (Scene Viewer, WebXR).</p>
+      </article>
+      <article class="feature">
+        <span class="feature__icon material-symbols-rounded" aria-hidden="true">weekend</span>
+        <h2>XR-комната</h2>
+        <p>Выберите коллекцию и комнату, расставьте несколько предметов, двигайте, поворачивайте и масштабируйте их.</p>
+      </article>
+    </section>
+
+    <section class="audience" aria-labelledby="audience-title">
+      <h2 id="audience-title" class="headline">Для кого</h2>
+      <div class="chips-wrap">
+        <span class="chip chip--static"><span class="material-symbols-rounded" aria-hidden="true">storefront</span>Мебельные магазины</span>
+        <span class="chip chip--static"><span class="material-symbols-rounded" aria-hidden="true">factory</span>Производители мебели</span>
+        <span class="chip chip--static"><span class="material-symbols-rounded" aria-hidden="true">park</span>Сад и ландшафт</span>
+        <span class="chip chip--static"><span class="material-symbols-rounded" aria-hidden="true">toys</span>Детские площадки</span>
+        <span class="chip chip--static"><span class="material-symbols-rounded" aria-hidden="true">apartment</span>Девелоперы и дизайнеры интерьеров</span>
+      </div>
+    </section>
+
+    <section id="catalog" class="catalog" aria-labelledby="catalog-title">
+      <div class="catalog__head">
+        <h2 id="catalog-title" class="headline">Демо-каталог</h2>
+        <p class="muted">Нажмите на превью, чтобы покрутить модель, или «3D и AR», чтобы поставить её в своей комнате.
+          Отметьте разделы или модели — и откройте их вместе в XR-комнате.</p>
+        <div class="catalog__prices">
+          <div id="currency-switch" hidden></div>
+          <span class="muted price-note">Цены ориентировочные: IKEA US, пересчёт по курсу дня.</span>
+        </div>
+      </div>
+
+      <div id="xr-presets" class="filter-row d-none" aria-label="Наборы для XR">
+        <span class="filter-row__label">Наборы для XR</span>
+      </div>
+
+      <div id="catalog-switch" class="segmented d-none" role="radiogroup" aria-label="Каталог"></div>
+
+      <div id="search" class="search-bar">
+        <span class="material-symbols-rounded" aria-hidden="true">search</span>
+        <input oninput="searchModelsSoon()" id="search-input" type="search" placeholder="Поиск по названию"
+          aria-label="Поиск по названию">
+        <button onclick="clearSearchResult()" type="button" class="icon-btn" aria-label="Очистить поиск">
+          <span class="material-symbols-rounded" aria-hidden="true">close</span>
+        </button>
+      </div>
+
+      <div id="categories-filter" class="filter-row d-none" aria-label="Категории"></div>
+      <div id="room-filter" class="filter-row d-none" aria-label="Комнаты"></div>
+      <div id="style-filter" class="filter-row d-none" aria-label="Стили"></div>
+      <p id="results-count" class="muted results-count" aria-live="polite"></p>
+
+      <div id="cards-row" class="card-grid"></div>
+    </section>
+
+    <section id="contact" class="contact" aria-labelledby="contact-title">
+      <div class="contact__card">
+        <div class="contact__text">
+          <h2 id="contact-title" class="headline">Хотите так же для своего каталога?</h2>
+          <p class="lead">Подключим 3D, AR и XR-комнату к вашему сайту и подготовим модели товаров. Напишите — покажем демо на ваших товарах.</p>
+        </div>
+        <div class="contact__links">
+          <a class="btn btn--filled btn--large" href="mailto:hello@artuplabs.com">
+            <span class="material-symbols-rounded" aria-hidden="true">mail</span>hello@artuplabs.com
+          </a>
+          <a class="btn btn--tonal btn--large" href="../">
+            <span class="material-symbols-rounded" aria-hidden="true">info</span>О продукте и цены
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <span id="copyright-year"></span> ArtUp Labs · <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+    <p id="attribution" class="muted d-none">Демо-модели — из открытых библиотек (CC0, CC-BY, royalty-free)
+      и модели товаров IKEA с ikea.com, только для демонстрации: <a id="attribution-link" href="#">авторы и лицензии</a>.</p>
+  </footer>
+
+  <div id="xr-selection-bar" class="selection-bar d-none" role="region" aria-label="Выбор для XR">
+    <span id="xr-selection-count" aria-live="polite"></span>
+    <a id="xr-selection-open" class="btn btn--filled" href="./xrviewer.html">
+      <span class="material-symbols-rounded" aria-hidden="true">view_in_ar</span>Открыть в XR
+    </a>
+    <button type="button" class="btn btn--text" onclick="clearXrSelection()">Сбросить</button>
+  </div>
+
+  <button id="scrollTopButton" type="button" class="fab" aria-label="Наверх" hidden>
+    <span class="material-symbols-rounded" aria-hidden="true">arrow_upward</span>
+  </button>
+
+  <script src="./src/common/loading.js"></script>
+  <script src="./dist/demo.bandle.js?v=2"></script>
+  <script>
+    document.getElementById('copyright-year').textContent = new Date().getFullYear();
+    const scrollTopButton = document.getElementById('scrollTopButton');
+    window.addEventListener('scroll', () => { scrollTopButton.hidden = window.scrollY < 600; }, { passive: true });
+    scrollTopButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  </script>
+</body>
+
+</html>
