@@ -38,3 +38,5 @@ export const CHANGELOG_PAGE = 10000;
 export const REFRESH_CONCURRENCY = 4;
 export const ERROR_LOG_SIZE = 20;
 export const COUNT_MAX = 10000;
+/** Zero-padded digits of the timestamp in a journal key, so keys sort by time. */
+export const JOURNAL_TS_DIGITS = 15;
