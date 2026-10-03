@@ -1,0 +1,31 @@
+{
+  "eventType": "avi:jira:updated:issue",
+  "selfGenerated": false,
+  "atlassianId": "5c37e3bdb393bf4ce95658d5",
+  "issue": {
+    "id": "10102",
+    "key": "JQLG-102",
+    "fields": {
+      "project": {
+        "id": "10000",
+        "key": "JQLG"
+      },
+      "issuetype": {
+        "id": "10001",
+        "name": "Task"
+      }
+    }
+  },
+  "changelog": {
+    "id": "20002",
+    "items": [
+      {
+        "field": "Sprint",
+        "fieldId": "customfield_10020",
+        "from": "",
+        "to": "34"
+      }
+    ]
+  },
+  "timestamp": 1790584137824
+}

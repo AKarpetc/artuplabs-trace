@@ -1,0 +1,20 @@
+{
+  "eventType": "avi:jira:created:issuelink",
+  "selfGenerated": false,
+  "id": "30001",
+  "sourceIssueId": "10101",
+  "destinationIssueId": "10102",
+  "sourceProjectId": "10000",
+  "destinationProjectId": "10000",
+  "issueLinkType": {
+    "id": "10000",
+    "name": "Blocks",
+    "outwardName": "blocks",
+    "inwardName": "is blocked by"
+  },
+  "issueLink": {
+    "sourceIssueId": "10101",
+    "destinationIssueId": "10102"
+  },
+  "timestamp": 1790584137824
+}

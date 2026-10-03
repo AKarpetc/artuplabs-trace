@@ -1,0 +1,32 @@
+{
+  "eventType": "avi:jira:commented:issue",
+  "selfGenerated": false,
+  "atlassianId": "5c37e3bdb393bf4ce95658d5",
+  "issue": {
+    "id": "10102",
+    "key": "JQLG-102",
+    "fields": {
+      "project": {
+        "id": "10000",
+        "key": "JQLG"
+      },
+      "issuetype": {
+        "id": "10001",
+        "name": "Task"
+      }
+    }
+  },
+  "comment": {
+    "id": "40001",
+    "author": {
+      "accountId": "5c37e3bdb393bf4ce95658d5"
+    },
+    "created": "2026-10-03T12:00:00.000+0200",
+    "updated": "2026-10-03T12:00:00.000+0200",
+    "visibility": {
+      "type": "role",
+      "value": "Administrators"
+    }
+  },
+  "timestamp": 1790584137824
+}

@@ -1,0 +1,14 @@
+{
+  "eventType": "avi:jira-software:closed:sprint",
+  "sprint": {
+    "id": "34",
+    "originBoardId": "36",
+    "name": "BT sprint",
+    "state": "closed",
+    "createDate": "2026-09-30T14:29:35.720+0200",
+    "startDate": "2026-09-30T14:29:46.516+0200",
+    "endDate": "2026-10-14T14:29:46.516+0200",
+    "completeDate": "2026-10-14T16:00:00.000+0200"
+  },
+  "timestamp": 1790584137824
+}

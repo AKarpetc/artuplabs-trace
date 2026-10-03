@@ -1,0 +1,21 @@
+{
+  "eventType": "avi:jira:deleted:issue",
+  "selfGenerated": false,
+  "atlassianId": "5c37e3bdb393bf4ce95658d5",
+  "issue": {
+    "id": "10103",
+    "key": "JQLG-103",
+    "fields": {
+      "project": {
+        "id": "10000",
+        "key": "JQLG"
+      },
+      "issuetype": {
+        "id": "10001",
+        "name": "Task"
+      }
+    }
+  },
+  "associatedUsers": [],
+  "timestamp": 1790584137824
+}

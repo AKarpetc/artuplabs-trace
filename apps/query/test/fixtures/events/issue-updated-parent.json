@@ -1,0 +1,35 @@
+{
+  "eventType": "avi:jira:updated:issue",
+  "selfGenerated": false,
+  "atlassianId": "5c37e3bdb393bf4ce95658d5",
+  "issue": {
+    "id": "10102",
+    "key": "JQLG-102",
+    "fields": {
+      "project": {
+        "id": "10000",
+        "key": "JQLG"
+      },
+      "issuetype": {
+        "id": "10001",
+        "name": "Task"
+      },
+      "parent": {
+        "id": "10100",
+        "key": "JQLG-100"
+      }
+    }
+  },
+  "changelog": {
+    "id": "20001",
+    "items": [
+      {
+        "field": "Parent",
+        "fieldId": "parent",
+        "from": null,
+        "to": "10100"
+      }
+    ]
+  },
+  "timestamp": 1790584137824
+}
