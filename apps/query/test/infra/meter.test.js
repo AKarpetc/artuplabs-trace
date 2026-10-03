@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createFakeKvs } from '../fakeKvs.js';
-import { meterKvs, withWriteLog } from '../../src/infra/meter.js';
+import { keyFamily, meterKvs, withWriteLog } from '../../src/infra/meter.js';
 
 describe('meterKvs', () => {
   it('counts sets with their key and JSON bytes, and deletes, and passes every call through', async () => {
@@ -11,13 +11,23 @@ describe('meterKvs', () => {
     await meter.kvs.set('c', [1, 2]);
     expect(await meter.kvs.get('c')).toEqual([1, 2]);
     expect((await meter.kvs.query().where('key', { values: ['c'] }).limit(5).getMany()).results).toHaveLength(1);
-    expect(meter.take()).toEqual({ sets: 2, bytes: 2 + 10 + 1 + 5, deletes: 1 });
-    expect(meter.take()).toEqual({ sets: 0, bytes: 0, deletes: 0 });
+    expect(meter.take()).toEqual({ sets: 2, bytes: 2 + 10 + 1 + 5, deletes: 1, families: { ab: { sets: 1, bytes: 12 }, c: { sets: 1, bytes: 6 } } });
+    expect(meter.take()).toEqual({ sets: 0, bytes: 0, deletes: 0, families: {} });
+  });
+});
+
+describe('keyFamily', () => {
+  it('names the record a key belongs to without its hashes, timestamps or tags', () => {
+    const h = 'a'.repeat(40);
+    expect([
+      keyFamily(`v:${h}:m`), keyFamily(`v:${h}:k${'b'.repeat(40)}`), keyFamily('t:000001759500000:k3j9x'),
+      keyFamily(`q:job:${h}`), keyFamily(`q:hq:${h}`), keyFamily(`q:gw:${h}`), keyFamily('q:running'), keyFamily('log:errors'),
+    ]).toEqual(['cache-meta', 'cache-chunk', 'journal', 'job', 'heavy', 'group-write', 'q:running', 'log:errors']);
   });
 });
 
 describe('withWriteLog', () => {
-  it('logs the writes of one invocation without keys or values', async () => {
+  it('logs the writes of one invocation by record family, never values', async () => {
     const meter = meterKvs(createFakeKvs());
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     await meter.kvs.set('before', 1);
@@ -26,7 +36,7 @@ describe('withWriteLog', () => {
       return x + 1;
     });
     expect(await handler(1)).toBe(2);
-    expect(log.mock.calls).toEqual([['kvs writes on-event: 1 sets, 24 bytes, 0 deletes']]);
+    expect(log.mock.calls).toEqual([['kvs writes on-event: 1 sets, 24 bytes, 0 deletes [secret-key 1/24]']]);
     log.mockRestore();
   });
   it('takes its label from the handler arguments when given a function', async () => {
