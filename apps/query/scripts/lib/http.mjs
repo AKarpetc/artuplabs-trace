@@ -89,6 +89,23 @@ export async function ids(jql) {
   return { ids: out };
 }
 
+/**
+ * All ids of a JQL once the answer is settled. Jira's REST search answers a function error, the Computing answer included, with
+ * no issues (measured on the dev site), so an answer slow enough to include a deferral (a function answers Computing after 10 s)
+ * is searched again after a minute, up to six times.
+ */
+export async function settledIds(jql, { search = ids, sleep: wait = sleep, now = Date.now, slowS = 9, attempts = 6, log = () => {} } = {}) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const t0 = now();
+    const r = await search(jql);
+    const seconds = (now() - t0) / 1000;
+    if (r.error || seconds < slowS) return { ...r, seconds, attempts: attempt };
+    log(`slow answer (${seconds} s) may be Computing, searching again in 60 s: ${jql.slice(0, 80)}`);
+    await wait(60000);
+  }
+  return { error: `still slow after ${attempts} attempts` };
+}
+
 /** Issues with the given fields via bulkfetch, 100 per call, 8 in parallel. */
 export async function bulk(idList, fields) {
   const chunks = [];

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { api, pool, stats, UnsafeRetryError, write } from '../../scripts/lib/http.mjs';
+import { api, pool, settledIds, stats, UnsafeRetryError, write } from '../../scripts/lib/http.mjs';
 
 const ok = (body, status = 200) => ({ ok: status < 300, status, headers: new Headers(), text: async () => JSON.stringify(body) });
 const timeout = () => Object.assign(new Error('timed out'), { name: 'TimeoutError' });
@@ -90,5 +90,30 @@ describe('pool', () => {
       return x * 10;
     });
     expect([out, peak]).toEqual([[30, 10, 20, 40], 2]);
+  });
+});
+
+describe('settledIds', () => {
+  const clockOf = (steps) => {
+    let t = 0;
+    let i = 0;
+    return { now: () => t, search: async () => { t += steps[i] * 1000; i += 1; return { ids: i === steps.length ? ['1'] : [] }; } };
+  };
+  it('accepts a quick answer at once', async () => {
+    const { now, search } = clockOf([2]);
+    expect(await settledIds('j', { now, search, sleep: async () => {} })).toEqual({ ids: ['1'], seconds: 2, attempts: 1 });
+  });
+  it('searches again after a minute while answers are slow enough to be the Computing answer Jira returns as no issues', async () => {
+    const { now, search } = clockOf([12, 11, 1]);
+    const slept = [];
+    expect(await settledIds('j', { now, search, sleep: async (ms) => { slept.push(ms); } })).toEqual({ ids: ['1'], seconds: 1, attempts: 3 });
+    expect(slept).toEqual([60000, 60000]);
+  });
+  it('passes an error through at once', async () => {
+    expect(await settledIds('j', { now: () => 0, search: async () => ({ error: '400 x' }), sleep: async () => {} })).toEqual({ error: '400 x', seconds: 0, attempts: 1 });
+  });
+  it('gives up after six slow answers', async () => {
+    const { now, search } = clockOf([20, 20, 20, 20, 20, 20, 20]);
+    expect(await settledIds('j', { now, search, sleep: async () => {} })).toEqual({ error: 'still slow after 6 attempts' });
   });
 });

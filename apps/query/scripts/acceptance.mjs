@@ -13,7 +13,7 @@
  *   node apps/query/scripts/acceptance.mjs fresh [--group query|board] [--n 30] [--board "RPT board"] [--tag t]
  *   node apps/query/scripts/acceptance.mjs seed-tm
  */
-import { api, ids, sleep, stats, write } from './lib/http.mjs';
+import { api, ids, settledIds, sleep, stats, write } from './lib/http.mjs';
 import { latency, latencyResult, waitFor } from './lib/latency.mjs';
 import { boardId, myAccountId, REFERENCES, sprintsOf } from './lib/reference.mjs';
 import { compare, save } from './lib/report.mjs';
@@ -67,17 +67,6 @@ async function ensureFilter() {
   await write('POST', '/rest/api/3/filter', { name: 'JQLG mid', jql: 'project = JQLG AND labels = jg-mid', sharePermissions: [{ type: 'authenticated' }] }, () => filterNamed('JQLG mid'));
 }
 
-async function evaluate(jql) {
-  for (let attempt = 1; attempt <= 6; attempt += 1) {
-    const t0 = Date.now();
-    const r = await ids(jql);
-    if (!r.error?.includes('Computing, retry in a minute')) return { ...r, seconds: (Date.now() - t0) / 1000, attempts: attempt };
-    log(`computing, waiting 60 s: ${jql.slice(0, 80)}`);
-    await sleep(60000);
-  }
-  return { error: 'still computing after 6 attempts' };
-}
-
 async function complete() {
   await ensureFilter();
   const list = CASES[args.cases ?? 'm1'];
@@ -86,7 +75,7 @@ async function complete() {
     const userArgs = [];
     for (const a of raw) userArgs.push(a === '@board' ? args.board : a.includes('@me') ? a.replace('@me', await myAccountId()) : a);
     const jql = and ? `${clause(fn, userArgs)} AND (${and})` : clause(fn, userArgs);
-    const got = await evaluate(jql);
+    const got = await settledIds(jql, { log });
     const row = { fn, userArgs, note, and: and ?? null, seconds: got.seconds, attempts: got.attempts, error: got.error };
     if (got.ids) Object.assign(row, compare(got.ids, await REFERENCES[fn](userArgs, args)));
     log(`${fn} ${note}: ${JSON.stringify(row)}`);
