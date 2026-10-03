@@ -15,5 +15,7 @@ export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-f29eee344264b6bfda9241478
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 rsync -a --exclude README.md --exclude .DS_Store site/ "$STAGE/"
+# Кэш-бастинг: ссылки на локальные CSS/JS в HTML получают ?v=<хэш содержимого> (только в копии для выкладки).
+node scripts/stamp-assets.mjs "$STAGE"
 
 npx --yes wrangler@4 pages deploy "$STAGE" --project-name artuplabs --branch main --commit-dirty=true
