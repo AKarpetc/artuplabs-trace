@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ArtUp AR XR — приложение для iPhone</title>
+  <meta name="description" content="ArtUp AR XR для iPhone: товары в вашей комнате в натуральную величину в AR. Каталог без регистрации, сканирование QR-кодов, App Clip. Поддержка: hello@artuplabs.com.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="../assets/ar-xr.css">
+  <link rel="stylesheet" href="../assets/site.css">
+  <style>
+    .app-hero { padding: 3rem 0 2.5rem; background: var(--ax-bg-soft); border-bottom: 1px solid var(--ax-border); }
+    .app-hero-row { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+    .app-hero-icon { width: 96px; height: 96px; border-radius: 22px; box-shadow: var(--ax-shadow); flex: none; }
+    .app-hero h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); margin: 0 0 0.35rem; }
+    .app-hero-sub { margin: 0; color: var(--ax-muted); font-size: 1.1rem; max-width: 36rem; }
+    .app-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 1.5rem; }
+    .app-store-btn { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.55rem 1.1rem; border-radius: 12px; background: #000; color: #fff !important; text-decoration: none; border: 1px solid rgba(255,255,255,0.25); line-height: 1.1; }
+    .app-store-btn:hover { filter: brightness(1.2); }
+    .app-store-btn svg { width: 1.6rem; height: 1.6rem; flex: none; }
+    .app-store-btn small { display: block; font-size: 0.72rem; opacity: 0.85; }
+    .app-store-btn strong { display: block; font-size: 1.15rem; }
+    .app-note { margin: 0.75rem 0 0; font-size: 0.92rem; color: var(--ax-muted); }
+    .app-shots { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0.25rem 0 1rem; margin: 0; list-style: none; -webkit-overflow-scrolling: touch; }
+    .app-shots li { flex: none; scroll-snap-align: start; margin: 0 !important; }
+    .app-shots img { display: block; width: 208px; height: auto; aspect-ratio: 416 / 900; border-radius: 18px; border: 1px solid var(--ax-border); box-shadow: var(--ax-shadow); background: var(--ax-bg-soft); }
+    .app-steps { padding-left: 1.3rem; }
+    .lx-doc .ax-grid { margin-top: 0.5rem; }
+    .lx-doc .ax-card h3 { margin-top: 0; font-size: 1.05rem; }
+    .lx-doc .ax-card p { margin-bottom: 0; color: var(--ax-muted); }
+    .app-models h2 { margin-top: 2.25rem; }
+    .app-counts { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; margin: 0 0 1.25rem; }
+    .app-counts li { margin: 0 !important; padding: 0.3rem 0.75rem; border: 1px solid var(--ax-border); border-radius: 999px; background: var(--ax-bg-soft); font-size: 0.9rem; }
+    .app-counts b { margin-right: 0.3rem; }
+    .app-gen { background: var(--ax-accent-soft); border: 1px solid var(--ax-border); border-left: 4px solid var(--ax-accent); border-radius: var(--ax-radius); padding: 1rem; margin: 0 0 1.25rem; }
+    .app-gen h3 { margin: 0 0 0.75rem; font-size: 1.05rem; }
+    .app-model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap: 0.75rem; list-style: none; padding: 0; margin: 0 0 1rem; }
+    .app-model-grid li { margin: 0 !important; background: var(--ax-surface); border: 1px solid var(--ax-border); border-radius: var(--ax-radius); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+    .app-model-img { aspect-ratio: 1; background: var(--ax-bg-soft); display: flex; align-items: center; justify-content: center; }
+    .app-model-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .app-model-img img.is-missing { width: 40%; height: 40%; opacity: 0.35; }
+    .app-model-body { padding: 0.5rem 0.6rem 0.65rem; font-size: 0.82rem; line-height: 1.35; }
+    .app-model-body strong { display: block; font-size: 0.88rem; margin-bottom: 0.2rem; overflow-wrap: anywhere; }
+    .app-model-body span { display: block; color: var(--ax-muted); overflow-wrap: anywhere; }
+  </style>
+</head>
+<body class="ax-page">
+  <a class="ax-skip" href="#main" data-i18n="skip">Перейти к содержанию</a>
+
+  <header class="ax-header">
+    <div class="ax-container ax-header-row">
+      <a class="ax-brand" href="../../" title="ArtUp Labs"><img class="ax-brand-mark" src="../../assets/artuplabs-mark.svg" alt="" width="28" height="28"><span class="ax-brand-name">ArtUp Labs</span></a>
+      <span class="ax-brand-sep" aria-hidden="true"></span>
+      <a class="ax-product" href="../"><img src="../assets/ar-xr-icon.svg" alt="" width="26" height="26">AR XR</a>
+      <nav class="ax-nav" aria-label="AR XR">
+        <ul>
+          <li><a href="../">AR XR</a></li>
+          <li><a href="../demo/" data-i18n="nav.demo">Демо</a></li>
+          <li><a href="./" aria-current="page" data-i18n="nav.iphone">iPhone</a></li>
+          <li><a href="../support.html" data-i18n="nav.support">Поддержка</a></li>
+          <li><a href="../app-privacy.html" data-i18n="nav.appPrivacy">Конфиденциальность</a></li>
+        </ul>
+      </nav>
+      <div class="ax-header-actions">
+        <div class="ax-segmented ax-lang" role="group" aria-label="Язык / Language" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang-set="ru" lang="ru" aria-pressed="true">RU</button>
+          <button type="button" data-lang-set="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="ax-btn ax-btn-primary ax-btn-sm" href="../demo/" data-i18n="cta.demo">Открыть демо</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="app-hero">
+    <div class="ax-container">
+      <div class="app-hero-row">
+        <img class="app-hero-icon" src="../assets/ar-xr-icon.svg" alt="Иконка ArtUp AR XR" width="96" height="96" data-i18n-attr="alt:hero.iconAlt">
+        <div>
+          <h1>ArtUp AR XR</h1>
+          <p class="app-hero-sub" data-i18n="hero.sub">Товары в вашей комнате в натуральную величину — AR на iPhone</p>
+        </div>
+      </div>
+      <div class="app-actions">
+        <a class="app-store-btn" href="https://apps.apple.com/app/id6817393132" target="_blank" rel="noopener" aria-label="ArtUp AR XR в App Store" data-i18n-attr="aria-label:hero.storeAria">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M16.37 12.6c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.48.83-.72 0-1.83-.81-3-.79-1.55.02-2.97.9-3.77 2.28-1.6 2.78-.41 6.9 1.15 9.16.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.23-.02 2.01-1.12 2.76-2.23.87-1.28 1.23-2.51 1.25-2.58-.03-.01-2.4-.92-2.42-3.65zM14.1 5.85c.63-.77 1.06-1.83.94-2.89-.91.04-2.01.61-2.66 1.37-.58.67-1.09 1.75-.96 2.79 1.02.08 2.05-.52 2.68-1.27z"/></svg>
+          <span><small data-i18n="hero.storeSmall">Загрузите в</small><strong>App Store</strong></span>
+        </a>
+        <a class="ax-btn ax-btn-secondary" href="../demo/" data-i18n="hero.web">Открыть веб-демо</a>
+      </div>
+      <p class="app-note" data-i18n="hero.note">Скоро в App Store — приложение сейчас на проверке.</p>
+    </div>
+  </section>
+
+  <main id="main" class="ax-container lx-doc-layout lx-doc-single">
+    <article class="lx-doc">
+      <h2 id="what" data-i18n="what.title">Что умеет приложение</h2>
+      <div class="ax-grid ax-grid-2">
+        <div class="ax-card">
+          <h3 data-i18n="what.ar.title">3D-модели в AR</h3>
+          <p data-i18n="what.ar.text">Поставьте 3D-модель товара на пол или на стену. Обойдите её, проверьте размер и как она впишется — до покупки.</p>
+        </div>
+        <div class="ax-card">
+          <h3 data-i18n="what.catalog.title">Каталог без регистрации</h3>
+          <p data-i18n="what.catalog.text">Каталог открывается сразу — без аккаунта и входа.</p>
+        </div>
+        <div class="ax-card">
+          <h3 data-i18n="what.qr.title">«Сканировать QR»</h3>
+          <p data-i18n="what.qr.text">Наведите камеру на QR-код магазина или каталога — откроются нужные модели.</p>
+        </div>
+        <div class="ax-card">
+          <h3>App Clip</h3>
+          <p data-i18n="what.clip.text">Открывает модели по ссылке или QR-коду без установки полного приложения.</p>
+        </div>
+      </div>
+      <p data-i18n-html="what.xr">На сайте в <a href="../demo/">веб-демо</a> есть XR-комната: несколько товаров в одном пространстве и ориентировочная общая стоимость.</p>
+
+      <h2 id="how" data-i18n="how.title">Как пользоваться</h2>
+      <ol class="app-steps">
+        <li data-i18n="how.s1">Откройте приложение или App Clip и разрешите доступ к камере.</li>
+        <li data-i18n="how.s2">Наведите камеру на пол или стену.</li>
+        <li data-i18n="how.s3">Выберите модель и коснитесь экрана, чтобы поставить её.</li>
+        <li data-i18n="how.s4">Передвигайте и поворачивайте модель, сравнивайте варианты.</li>
+      </ol>
+
+      <h2 id="screens" data-i18n="screens.title">Скриншоты</h2>
+      <ul class="app-shots" aria-label="Скриншоты приложения" data-i18n-attr="aria-label:screens.label">
+        <li><img src="shot-01.jpg" width="416" height="900" loading="lazy" alt="Диван, поставленный в AR в гостиной, с кнопками поворота, масштаба и удаления" data-i18n-attr="alt:screens.a1"></li>
+        <li><img src="shot-02.jpg" width="416" height="900" loading="lazy" alt="Выбор ковра в боковой панели каталога и ковёр на полу в AR" data-i18n-attr="alt:screens.a2"></li>
+        <li><img src="shot-03.jpg" width="416" height="900" loading="lazy" alt="Деревянный стул в натуральную величину на полу у стола" data-i18n-attr="alt:screens.a3"></li>
+        <li><img src="shot-04.jpg" width="416" height="900" loading="lazy" alt="Категории каталога в боковой панели и прицел размещения на полу" data-i18n-attr="alt:screens.a4"></li>
+        <li><img src="shot-05.jpg" width="416" height="900" loading="lazy" alt="Подсказка: наведите прицел на угол стены и коснитесь экрана" data-i18n-attr="alt:screens.a5"></li>
+        <li><img src="shot-06.jpg" width="416" height="900" loading="lazy" alt="Стартовый экран XR-комнаты с короткой инструкцией" data-i18n-attr="alt:screens.a6"></li>
+      </ul>
+
+      <section id="models" class="app-models" hidden aria-labelledby="models-title">
+        <h2 id="models-title" data-i18n="models.title">Модели в приложении</h2>
+        <p data-i18n="models.lead">В приложении — модели со свободными лицензиями и наши собственные модели, созданные по фотографии.</p>
+        <ul class="app-counts" id="models-counts"></ul>
+        <div class="app-gen" id="models-gen" hidden>
+          <h3 data-i18n="models.genTitle">Создано по одной фотографии</h3>
+          <ul class="app-model-grid" id="models-gen-grid"></ul>
+        </div>
+        <ul class="app-model-grid" id="models-grid"></ul>
+        <p class="app-note" data-i18n="models.note">Сторонние модели используются по их свободным лицензиям (CC0, CC BY 4.0); авторство указано у каждой модели.</p>
+        <div class="app-actions">
+          <a class="ax-btn ax-btn-primary" href="../demo/demo.html?set=app" data-i18n="models.openAll">Открыть все в демо</a>
+          <a class="ax-btn ax-btn-secondary" href="../demo/xrviewer.html?set=app" data-i18n="models.xr">Попробовать в XR</a>
+        </div>
+      </section>
+
+      <h2 id="req" data-i18n="req.title">Требования</h2>
+      <ul>
+        <li data-i18n="req.ios">iPhone с iOS 15 или новее.</li>
+        <li data-i18n="req.camera">Доступ к камере — для AR и сканирования QR-кодов.</li>
+        <li data-i18n="req.none">Без аккаунта, без рекламы, без отслеживания.</li>
+      </ul>
+
+      <h2 id="privacy" data-i18n="privacy.title">Конфиденциальность</h2>
+      <p data-i18n-html="privacy.text">Приложение не собирает персональные данные; изображение с камеры обрабатывается на устройстве. Подробнее — в <a href="../app-privacy.html">политике конфиденциальности приложения</a>.</p>
+
+      <h2 id="support" data-i18n="support.title">Поддержка</h2>
+      <div class="lx-summary">
+        <p data-i18n-html="support.lead">Есть вопрос или что-то не работает? Напишите — отвечаем в течение 1–2 рабочих дней.</p>
+      </div>
+      <ul>
+        <li><span data-i18n="support.email">Почта:</span> <a href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%20iOS">hello@artuplabs.com</a></li>
+        <li><a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></li>
+        <li data-i18n-html="support.page">Советы и ответы на частые вопросы — на <a href="../support.html">странице поддержки</a>.</li>
+      </ul>
+    </article>
+  </main>
+
+  <footer class="ax-footer">
+    <div class="ax-container ax-footer-row">
+      <div>
+        <a class="ax-brand" href="../../"><img class="ax-brand-mark" src="../../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
+        <p data-i18n="footer.legal">ArtUp AR XR — продукт ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).</p>
+        <p data-i18n-html="footer.mail">Почта: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p><a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
+        <p>© 2026 ArtUp Labs</p>
+      </div>
+      <nav aria-label="Ссылки в подвале" data-i18n-attr="aria-label:footer.nav">
+        <ul>
+          <li><a href="../">ArtUp AR XR</a></li>
+          <li><a href="../demo/" data-i18n="nav.demo">Демо</a></li>
+          <li><a href="../support.html" data-i18n="nav.support">Поддержка</a></li>
+          <li><a href="../privacy.html" data-i18n="footer.privacy">Политика конфиденциальности</a></li>
+          <li><a href="../app-privacy.html" data-i18n="footer.appPrivacy">Конфиденциальность приложения</a></li>
+          <li><a href="../../">ArtUp Labs</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+  <script>
+    window.ARTUP_I18N = {
+      ru: {},
+      en: {
+        "meta.title": "ArtUp AR XR — iPhone app",
+        "meta.description": "ArtUp AR XR for iPhone: see products in your room at true scale in AR. Catalog with no sign-up, QR code scanning, App Clip. Support: hello@artuplabs.com.",
+        "skip": "Skip to content",
+        "lang.label": "Language",
+        "nav.demo": "Demo",
+        "nav.iphone": "iPhone",
+        "nav.support": "Support",
+        "nav.appPrivacy": "Privacy",
+        "cta.demo": "Open demo",
+        "hero.iconAlt": "ArtUp AR XR icon",
+        "hero.sub": "See products in your room at true scale — AR on iPhone",
+        "hero.storeAria": "ArtUp AR XR on the App Store",
+        "hero.storeSmall": "Download on the",
+        "hero.web": "Open the web demo",
+        "hero.note": "Coming soon to the App Store — the app is in review.",
+        "what.title": "What the app does",
+        "what.ar.title": "3D models in AR",
+        "what.ar.text": "Place a 3D model of a product on the floor or on a wall. Walk around it, check its size and how it fits — before you buy.",
+        "what.catalog.title": "Catalog with no sign-up",
+        "what.catalog.text": "The catalog opens instantly — no account, no login.",
+        "what.qr.title": "Scan QR",
+        "what.qr.text": "Point the camera at a store or catalog QR code to open its models.",
+        "what.clip.text": "Opens models from a link or QR code without installing the full app.",
+        "what.xr": "The <a href=\"../demo/\">web demo</a> on our website has an XR room: several products in one space with an estimated total price.",
+        "how.title": "How to use",
+        "how.s1": "Open the app or the App Clip and allow camera access.",
+        "how.s2": "Aim the camera at the floor or a wall.",
+        "how.s3": "Pick a model and tap the screen to place it.",
+        "how.s4": "Move and rotate the model, compare options.",
+        "screens.title": "Screenshots",
+        "screens.label": "App screenshots",
+        "screens.a1": "A sofa placed in AR in a living room, with rotate, scale and delete buttons",
+        "screens.a2": "Choosing a rug in the catalog side panel, with the rug on the floor in AR",
+        "screens.a3": "A wooden chair at true scale on the floor next to a table",
+        "screens.a4": "Catalog categories in the side panel and the placement reticle on the floor",
+        "screens.a5": "A hint: aim the reticle at the corner of the wall and tap the screen",
+        "screens.a6": "The XR room start screen with short instructions",
+        "models.title": "Models in the app",
+        "models.lead": "The app includes free-license models and our own models generated from a photo.",
+        "models.genTitle": "Generated from one photo",
+        "models.note": "Third-party models are used under their free licenses (CC0, CC BY 4.0); attribution is shown with each model.",
+        "models.openAll": "Open all in the demo",
+        "models.xr": "Try in XR",
+        "req.title": "Requirements",
+        "req.ios": "iPhone with iOS 15 or later.",
+        "req.camera": "Camera access — for AR and QR code scanning.",
+        "req.none": "No account, no ads, no tracking.",
+        "privacy.title": "Privacy",
+        "privacy.text": "The app does not collect personal data; the camera image is processed on the device. Details are in the <a href=\"../app-privacy.html\">App Privacy Policy</a>.",
+        "support.title": "Support",
+        "support.lead": "Have a question or something doesn't work? Write to us — we reply within 1–2 business days.",
+        "support.email": "Email:",
+        "support.page": "Tips and answers to common questions are on the <a href=\"../support.html\">support page</a>.",
+        "footer.legal": "ArtUp AR XR is a product of ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).",
+        "footer.mail": "Email: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com</a>",
+        "footer.nav": "Footer links",
+        "footer.privacy": "Privacy Policy",
+        "footer.appPrivacy": "App privacy"
+      }
+    };
+  </script>
+  <script src="../assets/lang.js"></script>
+  <script>
+    /* lang.js tags only links that start with "demo/"; from this folder they start with "../demo/". */
+    (function () {
+      function tag(lang) {
+        var links = document.querySelectorAll('a[href^="../demo/"]');
+        for (var i = 0; i < links.length; i++) {
+          var parts = links[i].getAttribute("href").split("?");
+          var params = (parts[1] || "").split("&").filter(function (p) { return p && p.indexOf("lang=") !== 0; });
+          params.push("lang=" + lang);
+          links[i].setAttribute("href", parts[0] + "?" + params.join("&"));
+        }
+      }
+      if (window.ArtupLang) { tag(window.ArtupLang.get()); window.ArtupLang.onChange(tag); }
+    })();
+  </script>
+  <script>
+    /* «Модели в приложении»: free-license and photo-generated models from ../data/app-manifest.json.
+       Missing or broken manifest -> the section stays hidden. */
+    (function () {
+      var section = document.getElementById("models");
+      if (!section || !window.fetch) return;
+      var MAX = 24;
+      var T = {
+        ru: { gen: "Сгенерировано ArtUp Labs", models: "моделей", by: "Автор: ", source: "Источник" },
+        en: { gen: "Generated by ArtUp Labs", models: "models", by: "By ", source: "Source" }
+      };
+      var data = null;
+
+      function kind(m) {
+        var lic = String(m.license || "");
+        if (/ikea/i.test(lic) || /ikea/i.test(String(m.catalog || "")) || /ikea/i.test(String(m.source || ""))) return null;
+        if (String(m.collection || "").indexOf("generated") === 0 || String(m.path || "").indexOf("generated/") === 0) return "gen";
+        if (/cc0|public.?domain/i.test(lic)) return "cc0";
+        if (/cc.?by/i.test(lic)) return "ccby";
+        return null;
+      }
+      function label(k, lang) { return k === "cc0" ? "CC0" : k === "ccby" ? "CC BY 4.0" : T[lang].gen; }
+      function safeUrl(u) { return /^https?:\/\//i.test(String(u || "")) ? String(u) : null; }
+      function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+      function card(m, lang) {
+        var li = el("li");
+        var box = el("div", "app-model-img");
+        var img = el("img");
+        img.loading = "lazy"; img.decoding = "async"; img.width = 300; img.height = 300;
+        img.alt = String(m.name || "");
+        img.onerror = function () { img.onerror = null; img.className = "is-missing"; img.alt = ""; img.src = "../assets/ar-xr-icon.svg"; };
+        img.src = "../library/" + String(m.path).split("/").map(encodeURIComponent).join("/") + "/preview.png";
+        box.appendChild(img); li.appendChild(box);
+        var body = el("div", "app-model-body");
+        body.appendChild(el("strong", null, String(m.name || m.path)));
+        var c = data.collections && data.collections[m.collection];
+        if (c) body.appendChild(el("span", null, lang === "en" ? (c.titleEn || c.title) : (c.title || c.titleEn)));
+        body.appendChild(el("span", null, label(m._k, lang)));
+        var authors = Array.isArray(m.authors) ? m.authors.join(", ") : String(m.authors || "");
+        if (m._k !== "gen" && authors) body.appendChild(el("span", null, T[lang].by + authors));
+        var url = safeUrl(m.sourceUrl);
+        if (m._k !== "gen" && url) {
+          var s = el("span"); var a = el("a", null, (m.source ? String(m.source) : T[lang].source));
+          a.href = url; a.target = "_blank"; a.rel = "noopener nofollow";
+          s.appendChild(a); body.appendChild(s);
+        }
+        li.appendChild(body);
+        return li;
+      }
+
+      function render(lang) {
+        if (!data) return;
+        lang = lang === "ru" ? "ru" : "en";
+        var counts = { cc0: 0, ccby: 0, gen: 0 }, gen = [], other = [];
+        data.models.forEach(function (m) { var k = m._k; counts[k]++; (k === "gen" ? gen : other).push(m); });
+        var ul = document.getElementById("models-counts"); ul.textContent = "";
+        ["cc0", "ccby", "gen"].forEach(function (k) {
+          if (!counts[k]) return;
+          var li = el("li"); li.appendChild(el("b", null, String(counts[k]))); li.appendChild(document.createTextNode(label(k, lang)));
+          ul.appendChild(li);
+        });
+        var genBox = document.getElementById("models-gen"), genGrid = document.getElementById("models-gen-grid");
+        genGrid.textContent = "";
+        gen.slice(0, 12).forEach(function (m) { genGrid.appendChild(card(m, lang)); });
+        genBox.hidden = gen.length === 0;
+        var grid = document.getElementById("models-grid"); grid.textContent = "";
+        other.slice(0, MAX).forEach(function (m) { grid.appendChild(card(m, lang)); });
+      }
+
+      fetch("../data/app-manifest.json", { cache: "no-cache" })
+        .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+        .then(function (json) {
+          var models = (json && Array.isArray(json.models) ? json.models : []).filter(function (m) {
+            if (!m || !m.path) return false; m._k = kind(m); return m._k !== null;
+          });
+          if (!models.length) return;
+          data = { models: models, collections: (json && json.collections) || {} };
+          render(window.ArtupLang ? window.ArtupLang.get() : "en");
+          section.hidden = false;
+          if (window.ArtupLang) window.ArtupLang.onChange(render);
+        })
+        .catch(function () { section.hidden = true; });
+    })();
+  </script>
+</body>
+</html>

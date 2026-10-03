@@ -14,8 +14,8 @@
     (function () {
       var q = new URLSearchParams(location.search).get("lang");
       var saved = null;
-      try { saved = localStorage.getItem("privacy-lang"); } catch (e) {}
-      var nav = (navigator.language || "ru").toLowerCase().indexOf("ru") === 0 ? "ru" : "en";
+      try { saved = localStorage.getItem("artup-lang") || localStorage.getItem("privacy-lang"); } catch (e) {}
+      var nav = "en"; // English by default; Russian only after a switch or ?lang=ru
       var lang = [q, saved, nav].filter(function (v) { return v === "ru" || v === "en"; })[0];
       document.documentElement.lang = lang;
     })();
@@ -32,10 +32,10 @@
       <nav class="ax-nav" aria-label="AR XR">
         <ul>
           <li><a href="./">AR XR</a></li>
-          <li><a href="demo/">Демо</a></li>
-          <li><a href="support.html">Поддержка</a></li>
-          <li><a href="privacy.html">Конфиденциальность</a></li>
-          <li><a href="app-privacy.html" aria-current="page">Приложение</a></li>
+          <li><a href="demo/"><span data-lang="ru">Демо</span><span data-lang="en">Demo</span></a></li>
+          <li><a href="support.html"><span data-lang="ru">Поддержка</span><span data-lang="en">Support</span></a></li>
+          <li><a href="privacy.html"><span data-lang="ru">Конфиденциальность</span><span data-lang="en">Privacy</span></a></li>
+          <li><a href="app-privacy.html" aria-current="page"><span data-lang="ru">Приложение</span><span data-lang="en">App</span></a></li>
         </ul>
       </nav>
       <div class="ax-header-actions">
@@ -47,7 +47,7 @@
   <section class="lx-doc-hero">
     <div class="ax-container">
       <div class="lx-doc-top">
-        <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24">ArtUp AR XR · iOS и App Clip</p>
+        <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24">ArtUp AR XR · <span data-lang="ru">iOS и App Clip</span><span data-lang="en">iOS and App Clip</span></p>
         <div class="ax-segmented" role="group" aria-label="Язык / Language">
           <button type="button" data-set="ru" lang="ru" aria-pressed="true">RU</button>
           <button type="button" data-set="en" lang="en" aria-pressed="false">EN</button>
@@ -94,7 +94,7 @@
     <p>Приложение не предназначено специально для детей и не собирает данные о них.</p>
 
     <h2>Контакты</h2>
-    <p>Вопросы о конфиденциальности: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.
+    <p>Вопросы о конфиденциальности: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>, <a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a>.
     Об изменениях политики мы сообщим на этой странице.</p>
     <p>Данные демо на сайте (планы комнат, аккаунт) описаны в <a href="privacy.html">политике конфиденциальности сайта</a>. Персональные данные обрабатываются в соответствии с Законом Республики Казахстан от 21 мая 2013 года № 94-V «О персональных данных и их защите»; права субъекта данных (доступ, уточнение, блокирование, удаление, отзыв согласия) вы можете реализовать, написав на hello@artuplabs.com — мы ответим в сроки, установленные законодательством РК.</p>
   </article>
@@ -127,7 +127,7 @@
     <p>The app is not directed to children and collects no data about them.</p>
 
     <h2>Contact</h2>
-    <p>Privacy questions: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>. Changes to
+    <p>Privacy questions: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>, <a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a>. Changes to
     this policy will be posted on this page.</p>
     <p>Website demo data (room plans, account) is covered by the <a href="privacy.html">website Privacy Policy</a>. Personal data is processed in accordance with the Law of the Republic of Kazakhstan No. 94-V of 21 May 2013 "On Personal Data and Their Protection"; you can exercise your data subject rights (access, rectification, blocking, deletion, withdrawal of consent) by emailing hello@artuplabs.com — we will respond within the time limits set by Kazakhstan law.</p>
   </article>
@@ -141,6 +141,7 @@
         <a class="ax-brand" href="../"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
         <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
         <p>Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p><a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
       </div>
       <nav aria-label="Footer">
         <ul>
@@ -165,7 +166,7 @@
       }
       function apply(lang) {
         document.documentElement.lang = lang;
-        try { localStorage.setItem("privacy-lang", lang); } catch (e) {}
+        try { localStorage.setItem("privacy-lang", lang); localStorage.setItem("artup-lang", lang); } catch (e) {}
         var url = new URL(location.href);
         url.searchParams.set("lang", lang);
         url.hash = "";

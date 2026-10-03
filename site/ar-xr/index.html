@@ -10,26 +10,32 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="assets/ar-xr.css">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="photo-to-3d/p3d.css">
 </head>
 <body class="ax-page">
-  <a class="ax-skip" href="#main">Перейти к содержанию</a>
+  <a class="ax-skip" href="#main" data-i18n="skip">Перейти к содержанию</a>
 
   <header class="ax-header">
     <div class="ax-container ax-header-row">
       <a class="ax-brand" href="../" title="ArtUp Labs"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28"><span class="ax-brand-name">ArtUp Labs</span></a>
       <span class="ax-brand-sep" aria-hidden="true"></span>
       <a class="ax-product" href="./" aria-current="page"><img src="assets/ar-xr-icon.svg" alt="" width="26" height="26">AR XR</a>
-      <nav class="ax-nav" aria-label="Разделы">
+      <nav class="ax-nav" aria-label="Разделы" data-i18n-attr="aria-label:nav.label">
         <ul>
-          <li><a href="#features">Возможности</a></li>
-          <li><a href="#demo">Демо</a></li>
-          <li><a href="#pricing">Тарифы</a></li>
-          <li><a href="#faq">Вопросы</a></li>
-          <li><a href="#contacts">Контакты</a></li>
+          <li><a href="#features" data-i18n="nav.features">Возможности</a></li>
+          <li><a href="#demo" data-i18n="nav.demo">Демо</a></li>
+          <li><a href="#photo-to-3d" data-i18n="nav.photo3d">Фото → 3D</a></li>
+          <li><a href="#pricing" data-i18n="nav.pricing">Тарифы</a></li>
+          <li><a href="#faq" data-i18n="nav.faq">Вопросы</a></li>
+          <li><a href="#contacts" data-i18n="nav.contacts">Контакты</a></li>
         </ul>
       </nav>
       <div class="ax-header-actions">
-        <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/">Открыть демо</a>
+        <div class="ax-segmented ax-lang" role="group" aria-label="Язык / Language" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang-set="ru" lang="ru" aria-pressed="true">RU</button>
+          <button type="button" data-lang-set="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/" data-i18n="cta.demo">Открыть демо</a>
       </div>
     </div>
   </header>
@@ -38,19 +44,29 @@
     <section class="lx-hero" aria-labelledby="hero-title">
       <div class="ax-container lx-hero-grid">
         <div>
-          <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24">3D-просмотр + AR без приложения</p>
-          <h1 id="hero-title">Дайте покупателю <span class="lx-grad-text">увидеть товар</span> до покупки</h1>
-          <p class="ax-lead">Покажите товар со всех сторон и позвольте сразу примерить его в реальном окружении — в комнате, офисе или на улице, прямо через ваш сайт. А в XR-комнате покупатель соберёт расстановку из нескольких товаров и сразу увидит сумму.</p>
+          <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24"><span data-i18n="hero.eyebrow">3D-просмотр + AR без приложения</span></p>
+          <h1 id="hero-title" data-i18n-html="hero.title">Дайте покупателю <span class="lx-grad-text">увидеть товар</span> до покупки</h1>
+          <p class="ax-lead" data-i18n="hero.lead">Покажите товар со всех сторон и позвольте сразу примерить его в реальном окружении — в комнате, офисе или на улице, прямо через ваш сайт. А в XR-комнате покупатель соберёт расстановку из нескольких товаров и сразу увидит сумму.</p>
           <div class="ax-actions lx-actions-stack">
-            <a class="ax-btn ax-btn-primary ax-btn-lg" href="demo/">Открыть демо</a>
-            <a class="ax-btn ax-btn-secondary ax-btn-lg" href="demo/xrviewer.html?collections=dining-kitchen/ikea-modular-kitchens,dining-kitchen/ikea-tables,dining-kitchen/ikea-chairs">XR-демо: ресторан</a>
-            <a class="ax-btn ax-btn-ghost ax-btn-lg" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR">Связаться</a>
+            <a class="ax-btn ax-btn-primary ax-btn-lg" href="demo/" data-i18n="cta.demo">Открыть демо</a>
+            <a class="ax-btn ax-btn-secondary ax-btn-lg" href="demo/xrviewer.html" data-i18n="hero.xrDemo">XR-демо</a>
+            <a class="ax-btn ax-btn-ghost ax-btn-lg" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR" data-i18n="cta.contact">Связаться</a>
           </div>
           <ul class="lx-hero-notes">
-            <li>Без установки приложения</li>
-            <li>С телефона или компьютера</li>
-            <li>По ссылке, QR-коду или на вашем сайте</li>
+            <li data-i18n="hero.note1">Без установки приложения</li>
+            <li data-i18n="hero.note2">С телефона или компьютера</li>
+            <li data-i18n="hero.note3">По ссылке или QR-коду</li>
           </ul>
+          <div class="lx-qr">
+            <span class="lx-qr-tile">
+              <svg class="lx-qr-code" data-lang="ru" viewBox="0 0 33 33" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="QR-код демо: https://artuplabs.com/ar-xr/demo/?lang=ru"><path d="M2 2h7v1h-7zM11 2h3v1h-3zM15 2h3v1h-3zM20 2h2v1h-2zM24 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM12 3h6v1h-6zM19 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM30 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM12 4h1v1h-1zM18 4h2v1h-2zM21 4h2v1h-2zM24 4h1v1h-1zM26 4h3v1h-3zM30 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM11 5h2v1h-2zM16 5h2v1h-2zM20 5h1v1h-1zM24 5h1v1h-1zM26 5h3v1h-3zM30 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM11 6h8v1h-8zM22 6h1v1h-1zM24 6h1v1h-1zM26 6h3v1h-3zM30 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM13 7h2v1h-2zM17 7h1v1h-1zM19 7h1v1h-1zM21 7h1v1h-1zM24 7h1v1h-1zM30 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h7v1h-7zM11 9h1v1h-1zM16 9h2v1h-2zM19 9h1v1h-1zM22 9h1v1h-1zM2 10h1v1h-1zM5 10h1v1h-1zM7 10h2v1h-2zM10 10h4v1h-4zM15 10h1v1h-1zM17 10h2v1h-2zM20 10h2v1h-2zM23 10h1v1h-1zM25 10h1v1h-1zM5 11h3v1h-3zM9 11h4v1h-4zM16 11h1v1h-1zM18 11h1v1h-1zM22 11h1v1h-1zM24 11h1v1h-1zM27 11h1v1h-1zM30 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM7 12h4v1h-4zM12 12h1v1h-1zM15 12h1v1h-1zM18 12h1v1h-1zM21 12h1v1h-1zM25 12h5v1h-5zM2 13h1v1h-1zM5 13h1v1h-1zM9 13h1v1h-1zM12 13h4v1h-4zM18 13h1v1h-1zM20 13h1v1h-1zM23 13h1v1h-1zM25 13h1v1h-1zM28 13h2v1h-2zM3 14h1v1h-1zM5 14h1v1h-1zM8 14h8v1h-8zM17 14h1v1h-1zM19 14h1v1h-1zM21 14h5v1h-5zM27 14h1v1h-1zM29 14h2v1h-2zM4 15h2v1h-2zM9 15h3v1h-3zM16 15h1v1h-1zM18 15h1v1h-1zM20 15h4v1h-4zM4 16h3v1h-3zM8 16h1v1h-1zM11 16h2v1h-2zM14 16h2v1h-2zM19 16h2v1h-2zM22 16h2v1h-2zM25 16h6v1h-6zM4 17h1v1h-1zM7 17h1v1h-1zM9 17h2v1h-2zM14 17h2v1h-2zM18 17h2v1h-2zM23 17h1v1h-1zM27 17h1v1h-1zM29 17h1v1h-1zM3 18h1v1h-1zM6 18h4v1h-4zM12 18h2v1h-2zM17 18h1v1h-1zM19 18h1v1h-1zM21 18h3v1h-3zM25 18h1v1h-1zM29 18h1v1h-1zM3 19h1v1h-1zM6 19h2v1h-2zM10 19h3v1h-3zM14 19h2v1h-2zM20 19h1v1h-1zM23 19h3v1h-3zM27 19h1v1h-1zM30 19h1v1h-1zM2 20h1v1h-1zM5 20h1v1h-1zM8 20h4v1h-4zM19 20h2v1h-2zM22 20h1v1h-1zM24 20h1v1h-1zM29 20h2v1h-2zM6 21h2v1h-2zM11 21h1v1h-1zM14 21h1v1h-1zM16 21h1v1h-1zM19 21h1v1h-1zM21 21h2v1h-2zM24 21h2v1h-2zM29 21h2v1h-2zM2 22h1v1h-1zM4 22h2v1h-2zM7 22h3v1h-3zM13 22h2v1h-2zM17 22h2v1h-2zM20 22h7v1h-7zM28 22h1v1h-1zM10 23h1v1h-1zM18 23h1v1h-1zM21 23h2v1h-2zM26 23h1v1h-1zM28 23h3v1h-3zM2 24h7v1h-7zM13 24h2v1h-2zM18 24h2v1h-2zM22 24h1v1h-1zM24 24h1v1h-1zM26 24h1v1h-1zM29 24h1v1h-1zM2 25h1v1h-1zM8 25h1v1h-1zM10 25h2v1h-2zM13 25h2v1h-2zM16 25h3v1h-3zM20 25h3v1h-3zM26 25h3v1h-3zM2 26h1v1h-1zM4 26h3v1h-3zM8 26h1v1h-1zM17 26h3v1h-3zM22 26h5v1h-5zM2 27h1v1h-1zM4 27h3v1h-3zM8 27h1v1h-1zM10 27h1v1h-1zM12 27h1v1h-1zM14 27h1v1h-1zM19 27h1v1h-1zM21 27h2v1h-2zM24 27h1v1h-1zM26 27h4v1h-4zM2 28h1v1h-1zM4 28h3v1h-3zM8 28h1v1h-1zM11 28h1v1h-1zM14 28h3v1h-3zM19 28h1v1h-1zM26 28h3v1h-3zM30 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM11 29h2v1h-2zM17 29h3v1h-3zM22 29h2v1h-2zM29 29h1v1h-1zM2 30h7v1h-7zM10 30h3v1h-3zM14 30h2v1h-2zM19 30h1v1h-1zM22 30h1v1h-1zM24 30h1v1h-1zM26 30h2v1h-2zM29 30h1v1h-1z"/></svg>
+              <svg class="lx-qr-code" data-lang="en" viewBox="0 0 33 33" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Demo QR code: https://artuplabs.com/ar-xr/demo/?lang=en"><path d="M2 2h7v1h-7zM11 2h1v1h-1zM14 2h2v1h-2zM18 2h1v1h-1zM20 2h3v1h-3zM24 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h3v1h-3zM15 3h4v1h-4zM20 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM30 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h2v1h-2zM17 4h1v1h-1zM21 4h2v1h-2zM24 4h1v1h-1zM26 4h3v1h-3zM30 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h1v1h-1zM13 5h5v1h-5zM19 5h1v1h-1zM21 5h1v1h-1zM24 5h1v1h-1zM26 5h3v1h-3zM30 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h5v1h-5zM18 6h1v1h-1zM21 6h1v1h-1zM24 6h1v1h-1zM26 6h3v1h-3zM30 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h6v1h-6zM19 7h2v1h-2zM22 7h1v1h-1zM24 7h1v1h-1zM30 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h7v1h-7zM10 9h2v1h-2zM14 9h1v1h-1zM16 9h3v1h-3zM20 9h1v1h-1zM22 9h1v1h-1zM2 10h1v1h-1zM4 10h5v1h-5zM12 10h4v1h-4zM19 10h3v1h-3zM24 10h5v1h-5zM3 11h2v1h-2zM7 11h1v1h-1zM11 11h1v1h-1zM13 11h1v1h-1zM15 11h2v1h-2zM18 11h5v1h-5zM24 11h3v1h-3zM30 11h1v1h-1zM2 12h1v1h-1zM4 12h3v1h-3zM8 12h2v1h-2zM14 12h1v1h-1zM16 12h3v1h-3zM22 12h2v1h-2zM25 12h2v1h-2zM2 13h4v1h-4zM7 13h1v1h-1zM10 13h1v1h-1zM16 13h1v1h-1zM18 13h1v1h-1zM21 13h3v1h-3zM25 13h3v1h-3zM29 13h1v1h-1zM2 14h1v1h-1zM7 14h3v1h-3zM13 14h1v1h-1zM15 14h2v1h-2zM18 14h2v1h-2zM21 14h1v1h-1zM25 14h1v1h-1zM27 14h2v1h-2zM2 15h2v1h-2zM7 15h1v1h-1zM11 15h1v1h-1zM14 15h1v1h-1zM19 15h1v1h-1zM21 15h6v1h-6zM30 15h1v1h-1zM2 16h7v1h-7zM12 16h2v1h-2zM16 16h3v1h-3zM20 16h1v1h-1zM22 16h1v1h-1zM24 16h1v1h-1zM26 16h3v1h-3zM2 17h1v1h-1zM5 17h3v1h-3zM10 17h2v1h-2zM13 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM20 17h2v1h-2zM23 17h1v1h-1zM25 17h2v1h-2zM29 17h1v1h-1zM2 18h2v1h-2zM6 18h1v1h-1zM8 18h4v1h-4zM13 18h4v1h-4zM19 18h1v1h-1zM25 18h1v1h-1zM27 18h2v1h-2zM2 19h1v1h-1zM6 19h1v1h-1zM9 19h1v1h-1zM12 19h4v1h-4zM21 19h6v1h-6zM28 19h1v1h-1zM30 19h1v1h-1zM2 20h1v1h-1zM4 20h3v1h-3zM8 20h1v1h-1zM10 20h1v1h-1zM12 20h1v1h-1zM15 20h6v1h-6zM23 20h1v1h-1zM28 20h1v1h-1zM2 21h1v1h-1zM4 21h2v1h-2zM7 21h1v1h-1zM9 21h3v1h-3zM18 21h1v1h-1zM20 21h3v1h-3zM26 21h1v1h-1zM29 21h1v1h-1zM2 22h1v1h-1zM4 22h5v1h-5zM11 22h2v1h-2zM19 22h8v1h-8zM28 22h3v1h-3zM10 23h1v1h-1zM14 23h2v1h-2zM18 23h3v1h-3zM22 23h1v1h-1zM26 23h5v1h-5zM2 24h7v1h-7zM12 24h1v1h-1zM14 24h6v1h-6zM21 24h2v1h-2zM24 24h1v1h-1zM26 24h3v1h-3zM2 25h1v1h-1zM8 25h1v1h-1zM10 25h2v1h-2zM15 25h1v1h-1zM17 25h2v1h-2zM22 25h1v1h-1zM26 25h1v1h-1zM2 26h1v1h-1zM4 26h3v1h-3zM8 26h1v1h-1zM10 26h1v1h-1zM12 26h3v1h-3zM16 26h1v1h-1zM19 26h1v1h-1zM22 26h5v1h-5zM28 26h3v1h-3zM2 27h1v1h-1zM4 27h3v1h-3zM8 27h1v1h-1zM10 27h1v1h-1zM12 27h2v1h-2zM18 27h1v1h-1zM20 27h3v1h-3zM25 27h1v1h-1zM27 27h4v1h-4zM2 28h1v1h-1zM4 28h3v1h-3zM8 28h1v1h-1zM10 28h2v1h-2zM15 28h4v1h-4zM23 28h7v1h-7zM2 29h1v1h-1zM8 29h1v1h-1zM15 29h4v1h-4zM20 29h4v1h-4zM25 29h3v1h-3zM29 29h1v1h-1zM2 30h7v1h-7zM10 30h4v1h-4zM17 30h1v1h-1zM19 30h1v1h-1zM21 30h1v1h-1zM23 30h2v1h-2zM26 30h1v1h-1zM28 30h1v1h-1z"/></svg>
+            </span>
+            <div>
+              <p class="lx-qr-title" data-i18n="qr.title">Наведите камеру телефона — откроется демо</p>
+              <p class="lx-qr-caption" data-i18n="qr.caption">AR и XR работают на телефоне</p>
+            </div>
+          </div>
         </div>
 
         <div class="lx-hero-art" aria-hidden="true">
@@ -104,7 +120,7 @@
               <!-- top bar -->
               <rect x="128" y="44" width="122" height="30" rx="15" fill="#fff" opacity="0.92"/>
               <circle cx="146" cy="59" r="7" fill="url(#hx-g)"/>
-              <text x="160" y="64" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="700" fill="#172b4d">AR · в комнате</text>
+              <text x="160" y="64" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="700" fill="#172b4d" data-i18n="art.ar">AR · в комнате</text>
             </g>
             <rect x="200" y="20" width="80" height="8" rx="4" fill="#0f1d33"/>
             <!-- floating XR card -->
@@ -114,20 +130,20 @@
               <path d="M31 322 L40 327 L31 332 L22 327 Z" fill="#fff"/>
               <path d="M22 327 L31 332 V341 L22 336 Z" fill="#fff" opacity="0.6"/>
               <path d="M40 327 L31 332 V341 L40 336 Z" fill="#fff" opacity="0.35"/>
-              <text x="56" y="330" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" font-weight="700" fill="#172b4d">XR-комната</text>
-              <text x="56" y="347" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#505f79">диван · стол · 4 стула</text>
+              <text x="56" y="330" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14" font-weight="700" fill="#172b4d" data-i18n="art.xr">XR-комната</text>
+              <text x="56" y="347" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#505f79" data-i18n="art.items">3 товара в одной сцене</text>
               <line x1="16" y1="362" x2="198" y2="362" stroke="#dfe1e6"/>
-              <text x="16" y="386" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#505f79">Расчёт стоимости</text>
+              <text x="16" y="386" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#505f79" data-i18n="art.total">Расчёт стоимости</text>
               <rect x="128" y="372" width="70" height="26" rx="13" fill="url(#hx-g)"/>
               <text x="163" y="389" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" font-weight="700" fill="#fff">₸ ₽ $</text>
-              <text x="16" y="404" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#7a869a">сохранено в «Мои планы»</text>
+              <text x="16" y="404" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#7a869a" data-i18n="art.saved">сохранено в «Мои планы»</text>
             </g>
             <!-- floating chip -->
             <g>
               <rect x="318" y="160" width="160" height="40" rx="20" fill="#fff" stroke="#dfe1e6"/>
               <circle cx="340" cy="180" r="9" fill="#dcfff1"/>
               <path d="M335.5 180.5 L339 184 L345 177" fill="none" stroke="#1f845a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <text x="356" y="185" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="600" fill="#172b4d">без приложения</text>
+              <text x="356" y="185" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="600" fill="#172b4d" data-i18n="art.noApp">без приложения</text>
             </g>
           </svg>
         </div>
@@ -137,29 +153,29 @@
     <section class="ax-section" id="features" aria-labelledby="features-title">
       <div class="ax-container">
         <div class="ax-section-head">
-          <h2 id="features-title">Что умеет ArtUp AR XR</h2>
-          <p>Покупатель рассматривает товар в 3D, примеряет его в своём пространстве и собирает целую комнату — с телефона или компьютера, без установки приложения.</p>
+          <h2 id="features-title" data-i18n="features.title">Что умеет ArtUp AR XR</h2>
+          <p data-i18n="features.lead">Покупатель рассматривает товар в 3D, примеряет его в своём пространстве и собирает целую комнату — с телефона или компьютера, без установки приложения.</p>
         </div>
         <ul class="ax-grid ax-grid-4">
           <li class="ax-card">
             <span class="ax-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M12 7l4.5 2.5v5L12 17l-4.5-2.5v-5z"/></svg></span>
-            <h3>Интерактивная примерка</h3>
-            <p>AR-просмотр показывает товар в реальном размере в комнате, офисе или на улице — поверх изображения с камеры.</p>
+            <h3 data-i18n="f1.title">Интерактивная примерка</h3>
+            <p data-i18n="f1.text">AR-просмотр показывает товар в реальном размере в комнате, офисе или на улице — поверх изображения с камеры.</p>
           </li>
           <li class="ax-card">
             <span class="ax-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.2-4.2M11 8v6M8 11h6"/></svg></span>
-            <h3>Полная детализация</h3>
-            <p>3D-модель можно вращать, приближать и рассматривать со всех сторон: материалы, фактуры, мелкие детали.</p>
+            <h3 data-i18n="f2.title">Полная детализация</h3>
+            <p data-i18n="f2.text">3D-модель можно вращать, приближать и рассматривать со всех сторон: материалы, фактуры, мелкие детали.</p>
           </li>
           <li class="ax-card">
             <span class="ax-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
-            <h3>Уверенность перед покупкой</h3>
-            <p>Покупатель заранее видит, подойдёт ли товар по размеру и стилю, — меньше сомнений и возвратов.</p>
+            <h3 data-i18n="f3.title">Уверенность перед покупкой</h3>
+            <p data-i18n="f3.text">Покупатель заранее видит, подойдёт ли товар по размеру и стилю, — меньше сомнений и возвратов.</p>
           </li>
           <li class="ax-card">
             <span class="ax-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM18 14h2M14 20h2"/></svg></span>
-            <h3>Простота использования</h3>
-            <p>Открывается по ссылке, QR-коду или прямо внутри вашего сайта. Без установки приложения.</p>
+            <h3 data-i18n="f4.title">Простота использования</h3>
+            <p data-i18n="f4.text">Открывается по ссылке или QR-коду. Без установки приложения.</p>
           </li>
         </ul>
       </div>
@@ -168,26 +184,25 @@
     <section class="ax-section ax-section-soft" aria-labelledby="modes-title">
       <div class="ax-container">
         <div class="ax-section-head">
-          <h2 id="modes-title">AR для одного товара, XR — для целой комнаты</h2>
-          <p>Два режима для разных задач: быстро примерить конкретную вещь или спланировать пространство целиком.</p>
+          <h2 id="modes-title" data-i18n="modes.title">AR для одного товара, XR — для целой комнаты</h2>
+          <p data-i18n="modes.lead">Два режима для разных задач: быстро примерить конкретную вещь или спланировать пространство целиком.</p>
         </div>
         <div class="ax-grid ax-grid-2 lx-modes">
           <article class="ax-card">
-            <div class="lx-mode-head"><span class="ax-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8l3 1.7v3.6L12 15l-3-1.7V9.7z"/></svg></span><h3>AR-примерка</h3><span class="ax-badge">1 товар</span></div>
-            <p>В AR можно разместить один выбранный товар в реальном пространстве и посмотреть, как он впишется в интерьер.</p>
+            <div class="lx-mode-head"><span class="ax-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8l3 1.7v3.6L12 15l-3-1.7V9.7z"/></svg></span><h3 data-i18n="ar.title">AR-примерка</h3><span class="ax-badge" data-i18n="ar.badge">1 товар</span></div>
+            <p data-i18n="ar.text">В AR можно разместить один выбранный товар в реальном пространстве и посмотреть, как он впишется в интерьер.</p>
             <ul class="ax-list-check">
-              <li>Android — прямо в Chrome (WebXR)</li>
-              <li>iPhone — через App Clip или Variant Launch, без установки из App Store</li>
-              <li>На компьютере — QR-код для перехода на телефон</li>
+              <li data-i18n="ar.li1">Android — прямо в Chrome (WebXR)</li>
+              <li data-i18n="ar.li2">iPhone — через App Clip или Variant Launch, без установки из App Store</li>
+              <li data-i18n="ar.li3">На компьютере — QR-код для перехода на телефон</li>
             </ul>
           </article>
           <article class="ax-card ax-card-featured">
-            <div class="lx-mode-head"><span class="ax-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5z"/><path d="M3 9v6l9 5 9-5V9"/><path d="M12 14v6"/></svg></span><h3>XR-комната</h3><span class="ax-badge ax-badge-accent">несколько товаров</span></div>
-            <p>В XR можно работать сразу с несколькими 3D-моделями: добавлять товары в одну сцену, перемещать и масштабировать их, собирать расстановку и сохранять пространство.</p>
+            <div class="lx-mode-head"><span class="ax-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5z"/><path d="M3 9v6l9 5 9-5V9"/><path d="M12 14v6"/></svg></span><h3 data-i18n="xr.title">XR-комната</h3><span class="ax-badge ax-badge-accent" data-i18n="xr.badge">несколько товаров</span></div>
+            <p data-i18n="xr.text">В XR можно работать сразу с несколькими 3D-моделями: добавлять товары в одну сцену, перемещать и масштабировать их, собирать расстановку и сохранять пространство.</p>
             <ul class="ax-list-check">
-              <li>Планы комнат и расчёт стоимости расстановки в ₸, ₽ и $</li>
-              <li>Сохранение по устройству — без регистрации</li>
-              <li>С аккаунтом планы доступны на любом устройстве</li>
+              <li data-i18n="xr.li1">Планы комнат и расчёт стоимости расстановки в ₸, ₽ и $</li>
+              <li data-i18n="xr.li2">Планы сохраняются на этом устройстве — без регистрации</li>
             </ul>
           </article>
         </div>
@@ -197,22 +212,19 @@
     <section class="ax-section" id="demo" aria-labelledby="demo-title">
       <div class="ax-container">
         <div class="ax-section-head">
-          <h2 id="demo-title">Как работает демо</h2>
-          <p>Демо собрано на каталоге 3D-моделей IKEA с ориентировочными ценами. Так же будет работать ваш каталог.</p>
+          <h2 id="demo-title" data-i18n="demo.title">Как работает демо</h2>
+          <p data-i18n="demo.lead">Демо собрано на каталоге 3D-моделей IKEA с ориентировочными ценами. Так же будет работать ваш каталог.</p>
         </div>
         <ol class="lx-steps">
-          <li><strong>Каталог</strong><p>Откройте каталог 3D-моделей IKEA: любую модель можно посмотреть в 3D и в AR.</p></li>
-          <li><strong>Выбор для XR</strong><p>Отметьте целые разделы — кухня, столы, стулья — или отдельные модели и откройте их в XR.</p></li>
-          <li><strong>Расстановка</strong><p>Добавляйте товары в сцену, перемещайте, поворачивайте и масштабируйте их.</p></li>
-          <li><strong>Сумма</strong><p>Расчёт стоимости показывает итог по расставленным товарам в тенге, рублях и долларах.</p></li>
-          <li><strong>«Мои планы»</strong><p>План сохраняется: откройте, переименуйте или удалите его позже. Войдите — и планы будут на всех устройствах.</p></li>
+          <li><strong data-i18n="s1.title">Каталог</strong><p data-i18n="s1.text">Откройте каталог 3D-моделей IKEA: любую модель можно посмотреть в 3D и в AR.</p></li>
+          <li><strong data-i18n="s2.title">Выбор для XR</strong><p data-i18n="s2.text">Отметьте целые разделы — кухня, столы, стулья — или отдельные модели и откройте их в XR.</p></li>
+          <li><strong data-i18n="s3.title">Расстановка</strong><p data-i18n="s3.text">Добавляйте товары в сцену, перемещайте, поворачивайте и масштабируйте их.</p></li>
+          <li><strong data-i18n="s4.title">Сумма</strong><p data-i18n="s4.text">Расчёт стоимости показывает итог по расставленным товарам в тенге, рублях и долларах.</p></li>
+          <li><strong data-i18n="s5.title">«Мои планы»</strong><p data-i18n="s5.text">План сохраняется: откройте, переименуйте или удалите его позже. Планы сохраняются на этом устройстве — без регистрации.</p></li>
         </ol>
         <div class="lx-presets">
-          <span>Готовые XR-сцены:</span>
-          <a class="ax-chip" href="demo/xrviewer.html?collections=dining-kitchen/ikea-modular-kitchens,dining-kitchen/ikea-tables,dining-kitchen/ikea-chairs">Ресторан: кухня, столы, стулья</a>
-          <a class="ax-chip" href="demo/xrviewer.html?collections=living-room/ikea-sofas,living-room/ikea-coffee-tables,living-room/ikea-armchairs,living-room/ikea-rugs">Гостиная</a>
-          <a class="ax-chip" href="demo/xrviewer.html?collections=home-office/ikea-desks,home-office/ikea-desk-chairs,home-office/ikea-conference">Офис</a>
-          <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/">Весь каталог</a>
+          <span data-i18n="presets.text">В каталоге отметьте нужные разделы или отдельные модели — например, кухню, столы и стулья — и откройте в XR только их.</span>
+          <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/" data-i18n="presets.open">Открыть каталог</a>
         </div>
       </div>
     </section>
@@ -221,10 +233,58 @@
       <div class="ax-container">
         <div class="lx-try">
           <div>
-            <h2 id="try-title">Попробуйте 3D и AR со своей моделью бесплатно</h2>
-            <p>Пришлите 3D-модель вашего товара — мы проверим её и вернём ссылку, QR-код и код для встраивания на сайт.</p>
+            <h2 id="try-title" data-i18n="try.title">Попробуйте 3D и AR со своей моделью бесплатно</h2>
+            <p data-i18n="try.text">Пришлите 3D-модель вашего товара — мы проверим её, подключим и вернём ссылку и QR-код.</p>
           </div>
-          <a class="ax-btn ax-btn-primary ax-btn-lg" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20%D0%BF%D1%80%D0%BE%D0%B1%D0%BD%D0%B0%D1%8F%20%D0%BC%D0%BE%D0%B4%D0%B5%D0%BB%D1%8C">Отправить модель</a>
+          <a class="ax-btn ax-btn-primary ax-btn-lg" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20%D0%BF%D1%80%D0%BE%D0%B1%D0%BD%D0%B0%D1%8F%20%D0%BC%D0%BE%D0%B4%D0%B5%D0%BB%D1%8C" data-i18n="try.cta" data-i18n-attr="href:try.href">Отправить модель</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="ax-section" id="photo-to-3d" aria-labelledby="p3d-title">
+      <div class="ax-container">
+        <div class="ax-section-head">
+          <p class="ax-eyebrow" data-i18n="p3d.eyebrow">Фото → 3D</p>
+          <h2 id="p3d-title" data-i18n="p3d.title">Нет 3D-моделей? Сделаем по одной фотографии</h2>
+          <p data-i18n="p3d.lead">Берём одну фотографию товара из вашего каталога — и через несколько минут покупатель ставит его у себя в комнате. Пример ниже: слева исходное фото, справа две модели, сгенерированные по нему без ручных правок.</p>
+        </div>
+        <div class="p3d-grid">
+          <figure class="p3d-tile">
+            <div class="p3d-stage"><img src="photo-to-3d/sofa.jpg" alt="Исходная фотография: мягкий диван" data-i18n-attr="alt:p3d.photoAlt" loading="lazy" decoding="async"></div>
+            <figcaption><b data-i18n="p3d.input">Исходник: одна фотография</b><span data-i18n-html="p3d.credit">Фото: <a href="https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg" target="_blank" rel="noopener">The Metropolitan Museum of Art</a>, CC0</span></figcaption>
+          </figure>
+          <figure class="p3d-tile">
+            <div class="p3d-stage">
+              <model-viewer data-src="photo-to-3d/m-sofa-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель дивана" data-i18n-attr="alt:p3d.altR"><button slot="ar-button" class="p3d-ar" data-i18n="p3d.ar">Посмотреть у себя в комнате</button></model-viewer>
+              <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="p3d.wait">Загружаем 3D-модель…</span><span class="p3d-ph-err" data-i18n="p3d.err">Не удалось загрузить модель</span></div>
+            </div>
+            <figcaption><b data-i18n="p3d.real">Реалистичная</b><span data-i18n="p3d.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+          </figure>
+          <figure class="p3d-tile">
+            <div class="p3d-stage">
+              <model-viewer data-src="photo-to-3d/m-sofa-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель дивана" data-i18n-attr="alt:p3d.altS"><button slot="ar-button" class="p3d-ar" data-i18n="p3d.ar">Посмотреть у себя в комнате</button></model-viewer>
+              <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="p3d.wait">Загружаем 3D-модель…</span><span class="p3d-ph-err" data-i18n="p3d.err">Не удалось загрузить модель</span></div>
+            </div>
+            <figcaption><b data-i18n="p3d.styl">Стилизованная</b><span data-i18n="p3d.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+          </figure>
+        </div>
+        <p class="p3d-hint" data-i18n="p3d.hint">Вращайте модели мышью или пальцем. На телефоне кнопка «Посмотреть у себя в комнате» ставит диван в AR в реальном размере.</p>
+        <div class="p3d-copy">
+          <ul class="ax-list-check">
+            <li data-i18n="p3d.li1">Одна готовая фотография из каталога — без 3D-сканирования и без 3D-художника</li>
+            <li data-i18n="p3d.li2">Модель готова примерно за 1–4 минуты</li>
+            <li data-i18n="p3d.li3">Работает в AR и в XR-комнате — рядом с другими вашими товарами</li>
+            <li data-i18n="p3d.li4">Два вида на выбор: реалистичные PBR-материалы или стилизованный «игровой» стиль</li>
+          </ul>
+          <div>
+            <p><strong data-i18n="p3d.ctaText">Генерируем модели для вашего каталога уже сегодня — напишите нам.</strong></p>
+            <div class="ax-actions">
+              <a class="ax-btn ax-btn-primary" href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg><span>WhatsApp</span></a>
+              <a class="ax-btn ax-btn-secondary" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20%D0%A4%D0%BE%D1%82%D0%BE%20%E2%86%92%203D" data-i18n-attr="href:p3d.mailHref">hello@artuplabs.com</a>
+              <a class="ax-btn ax-btn-secondary" href="photo-to-3d.html" data-i18n="p3d.all">Все примеры</a>
+            </div>
+            <p class="p3d-soon" style="margin-top:1rem"><span data-i18n="p3d.selfA">Самостоятельная генерация в личном кабинете:</span> <span class="ax-price-inline" data-price="photo3d">300 ₽</span> <span data-i18n="p3d.selfB">за модель; в Pro — 3 модели в месяц, в Business — 15.</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></p>
+          </div>
         </div>
       </div>
     </section>
@@ -233,10 +293,10 @@
       <div class="ax-container">
         <div class="lx-pricing-head">
           <div class="ax-section-head">
-            <h2 id="pricing-title">Тарифы</h2>
-            <p>Платите за использование платформы: абонентская плата и AR-сессии сверх лимита.</p>
+            <h2 id="pricing-title" data-i18n="pricing.title">Тарифы</h2>
+            <p data-i18n="pricing.lead">Абонентская плата с включёнными сессиями AR/XR; сверх лимита — оплата за сессию.</p>
           </div>
-          <div class="ax-segmented" role="group" aria-label="Валюта цен">
+          <div class="ax-segmented" role="group" aria-label="Валюта цен" data-i18n-attr="aria-label:pricing.currency">
             <button type="button" data-currency="KZT" aria-pressed="false">₸</button>
             <button type="button" data-currency="RUB" aria-pressed="true">₽</button>
             <button type="button" data-currency="USD" aria-pressed="false">$</button>
@@ -245,90 +305,117 @@
         <ul class="ax-grid ax-grid-4 lx-plans">
           <li class="ax-card lx-plan">
             <h3>Start</h3>
-            <div><span class="ax-price" data-price="startMonth">0 ₽</span> <span class="ax-price-unit">в месяц + <span class="ax-price-inline" data-price="startSession">0,30 ₽</span> за AR-сессию</span></div>
-            <ul class="ax-list-check">
-              <li>Без абонентской платы</li>
-              <li>Оплата только за AR-сессии</li>
-              <li>Ссылка, QR-код и код для встраивания</li>
+            <div><span class="ax-price" data-price="startMonth">1 490 ₽</span> <span class="ax-price-unit" data-i18n="plan.perMonth">в месяц</span></div>
+            <p class="lx-plan-desc" data-i18n="start.desc">Покажите товар в 3D и в комнате покупателя с телефона.</p>
+            <p class="lx-plan-meta"><strong data-i18n="start.sessions">3 000 сессий AR/XR в месяц</strong></p>
+            <p class="lx-plan-meta"><span data-i18n="plan.over">Сверх лимита —</span> <span class="ax-price-inline" data-price="startOver">0 ₽</span> <span data-i18n="plan.perSessionShort">за сессию</span></p>
+            <ul class="lx-feat">
+              <li><span data-i18n="feat.viewer">3D-просмотр</span><span class="lx-status lx-now" data-i18n="st.now">сейчас</span></li>
+              <li><span data-i18n="feat.ar">AR одного товара (Android, iPhone)</span><span class="lx-status lx-now" data-i18n="st.now">сейчас</span></li>
+              <li><span data-i18n="feat.link">Ссылка и QR-код</span><span class="lx-status lx-now" data-i18n="st.now">сейчас</span></li>
+              <li><span data-i18n="feat.upload">Свои 3D-модели (самостоятельная загрузка)</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
+              <li><span data-i18n="feat.embed">Код для встраивания на сайт</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
             </ul>
-            <a class="ax-btn ax-btn-secondary ax-btn-block" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Start">Подключить</a>
+            <a class="ax-btn ax-btn-secondary ax-btn-block" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Start" data-i18n="plan.trial">Попробовать 14 дней</a>
           </li>
           <li class="ax-card lx-plan ax-card-featured">
             <h3>Pro</h3>
-            <div><span class="ax-price" data-price="proMonth">2 490 ₽</span> <span class="ax-price-unit">в месяц</span></div>
-            <ul class="ax-list-check">
-              <li>10 000 AR-сессий в месяц</li>
-              <li>Сверх лимита — <span data-price="overSession">0,20 ₽</span> за сессию</li>
-              <li>Ссылка, QR-код и код для встраивания</li>
+            <div><span class="ax-price" data-price="proMonth">4 990 ₽</span> <span class="ax-price-unit" data-i18n="plan.perMonth">в месяц</span></div>
+            <p class="lx-plan-desc" data-i18n="pro.desc">Соберите комнату из нескольких товаров и сохраните её.</p>
+            <p class="lx-plan-meta"><strong data-i18n="pro.sessions">10 000 сессий AR/XR в месяц</strong></p>
+            <p class="lx-plan-meta"><span data-i18n="plan.over">Сверх лимита —</span> <span class="ax-price-inline" data-price="proOver">0 ₽</span> <span data-i18n="plan.perSessionShort">за сессию</span></p>
+            <p class="lx-plan-plus" data-i18n="pro.plus">Всё из Start, а также:</p>
+            <ul class="lx-feat">
+              <li><span data-i18n="feat.xrAndroid">XR-комната из нескольких товаров, Android</span><span class="lx-status lx-now" data-i18n="st.now">сейчас</span></li>
+              <li><span data-i18n="feat.xrIphone">XR-комната на iPhone (через Variant Launch)</span><span class="lx-status lx-now" data-i18n="st.now">сейчас</span></li>
+              <li><span data-i18n="feat.saved">Сохранение планов на устройстве и расчёт стоимости в ₸, ₽ и $</span><span class="lx-status lx-now" data-i18n="st.now">сейчас</span></li>
+              <li><span data-i18n="feat.sync">Синхронизация планов между устройствами (аккаунт)</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
+              <li><span data-i18n="feat.analytics">Аналитика взаимодействия</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
+              <li><span data-i18n="feat.photo3">Фото → 3D: 3 модели в месяц</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
             </ul>
-            <a class="ax-btn ax-btn-primary ax-btn-block" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Pro">Подключить</a>
+            <a class="ax-btn ax-btn-primary ax-btn-block" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Pro" data-i18n="plan.trial">Попробовать 14 дней</a>
           </li>
           <li class="ax-card lx-plan">
             <h3>Business</h3>
-            <div><span class="ax-price" data-price="bizMonth">9 990 ₽</span> <span class="ax-price-unit">в месяц</span></div>
-            <ul class="ax-list-check">
-              <li>50 000 AR-сессий в месяц</li>
-              <li>Сверх лимита — <span data-price="overSession">0,20 ₽</span> за сессию</li>
-              <li>JS/API-контракт для интеграции с магазином</li>
+            <div><span class="ax-price" data-price="bizMonth">14 990 ₽</span> <span class="ax-price-unit" data-i18n="plan.perMonth">в месяц</span></div>
+            <p class="lx-plan-desc" data-i18n="biz.desc">Передавайте комнату в корзину и измеряйте влияние на продажи.</p>
+            <p class="lx-plan-meta"><strong data-i18n="biz.sessions">50 000 сессий AR/XR в месяц</strong></p>
+            <p class="lx-plan-meta"><span data-i18n="plan.over">Сверх лимита —</span> <span class="ax-price-inline" data-price="bizOver">0 ₽</span> <span data-i18n="plan.perSessionShort">за сессию</span></p>
+            <p class="lx-plan-plus" data-i18n="biz.plus">Всё из Pro, а также:</p>
+            <ul class="lx-feat">
+              <li><span data-i18n="feat.cart">XR → корзина, коммерческая аналитика, воронка</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
+              <li><span data-i18n="feat.photo15">Фото → 3D: 15 моделей в месяц</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
             </ul>
-            <a class="ax-btn ax-btn-secondary ax-btn-block" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Business">Подключить</a>
+            <a class="ax-btn ax-btn-secondary ax-btn-block" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Business" data-i18n="plan.trial">Попробовать 14 дней</a>
           </li>
           <li class="ax-card lx-plan">
             <h3>Enterprise</h3>
-            <div><span class="ax-price">По запросу</span></div>
-            <ul class="ax-list-check">
-              <li>Объёмы сессий — под ваш трафик</li>
-              <li>Условия обсуждаются индивидуально</li>
+            <div><span class="ax-price" data-i18n="ent.price">По запросу</span></div>
+            <p class="lx-plan-desc" data-i18n="ent.desc">SLA, интеграции, приватный запуск.</p>
+            <p class="lx-plan-meta"><strong data-i18n="ent.sessions">Сессии — по договору</strong></p>
+            <p class="lx-plan-plus" data-i18n="ent.plus">Всё из Business, а также:</p>
+            <ul class="lx-feat">
+              <li><span data-i18n="feat.api">API / PIM / ERP / CRM</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
+              <li><span data-i18n="feat.whitelabel">White-label, SLA, приватное развёртывание</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
             </ul>
-            <a class="ax-btn ax-btn-secondary ax-btn-block" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Enterprise">Обсудить</a>
+            <a class="ax-btn ax-btn-secondary ax-btn-block" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Enterprise" data-i18n="plan.discuss">Обсудить</a>
           </li>
         </ul>
-        <p class="lx-note">Тарифы оплачивают использование платформы. Ручная работа с 3D-контентом и заказная разработка рассчитываются отдельно. Базовые цены — в рублях; суммы в тенге и долларах ориентировочные, пересчёт по курсу на 03.10.2026 (1 $ = 83,50 ₽ = 444,08 ₸, open.er-api.com).</p>
+        <ul class="lx-terms">
+          <li data-i18n="terms.trial">14 дней бесплатно: 500 сессий, без карты. Бесплатного тарифа нет.</li>
+          <li data-i18n="terms.cap">Счёт за месяц не больше трёх цен тарифа — дальше мы предложим перейти на следующий тариф.</li>
+          <li><span data-i18n="terms.photo">Фото → 3D сверх включённого:</span> <span class="ax-price-inline" data-price="photo3d">300 ₽</span> <span data-i18n="terms.photoUnit">за модель</span><span class="lx-status lx-soon" data-i18n="st.soon">скоро</span></li>
+        </ul>
+        <div class="lx-note">
+          <p data-i18n-html="note.status"><strong>«Сейчас»</strong> — функция работает на сайте сегодня. <strong>«Скоро»</strong> — функция появится в ближайших обновлениях и войдёт в тариф без доплаты. XR-комната на iPhone сейчас открывается через Variant Launch; собственный App Clip — скоро.</p>
+          <p data-i18n-html="note.sessions"><strong>Как считаются сессии.</strong> Сессия — один запуск AR или XR на устройстве покупателя. Просмотр в 3D, повторные загрузки страницы, неудачные загрузки модели, боты и повторы в течение одной сессии не считаются. Точное правило дедупликации — окно сессии — будет опубликовано до первого счёта.</p>
+          <p data-i18n="pricing.note">Тарифы оплачивают использование платформы. Ручная работа с 3D-контентом и заказная разработка рассчитываются отдельно. Расчёт ведётся в рублях; суммы в тенге и долларах ориентировочные: пересчёт по курсу 5,318 ₸ за ₽ и 83,50 ₽ за $ (open.er-api.com, 03.10.2026).</p>
+        </div>
       </div>
     </section>
 
     <section class="ax-section" id="faq" aria-labelledby="faq-title">
       <div class="ax-container">
         <div class="ax-section-head">
-          <h2 id="faq-title">Вопросы и ответы</h2>
-          <p>Что входит в тариф и что оплачивается отдельно.</p>
+          <h2 id="faq-title" data-i18n="faq.title">Вопросы и ответы</h2>
+          <p data-i18n="faq.lead">Что входит в тариф и что оплачивается отдельно.</p>
         </div>
         <div class="lx-faq">
           <details>
-            <summary>У меня уже есть готовая 3D-модель. Нужно платить за её создание?</summary>
+            <summary data-i18n="q1">У меня уже есть готовая 3D-модель. Нужно платить за её создание?</summary>
             <div>
-              <p>Нет. Если модель проходит техническую проверку, мы просто подключаем её. Техническая проверка — бесплатно. Автоматическая оптимизация входит в тариф.</p>
+              <p data-i18n="a1">Нет. Если модель проходит техническую проверку, мы просто подключаем её. Техническая проверка — бесплатно. Автоматическая оптимизация входит в тариф.</p>
             </div>
           </details>
           <details>
-            <summary>Что если модель требует ручной доработки?</summary>
+            <summary data-i18n="q2">Что если модель требует ручной доработки?</summary>
             <div>
-              <p>Ручная доработка готовой модели — от <span class="ax-price-inline" data-price="repair">5 000 ₽</span>.</p>
-              <p>Подготовка модели из CAD, STEP или FBX — от <span class="ax-price-inline" data-price="cad">7 500 ₽</span>.</p>
+              <p><span data-i18n="a2.repair">Ручная доработка готовой модели — от</span> <span class="ax-price-inline" data-price="repair">5 000 ₽</span>.</p>
+              <p><span data-i18n="a2.cad">Подготовка модели из CAD, STEP или FBX — от</span> <span class="ax-price-inline" data-price="cad">7 500 ₽</span>.</p>
             </div>
           </details>
           <details>
-            <summary>Что если 3D-модели нет?</summary>
+            <summary data-i18n="q3">Что если 3D-модели нет?</summary>
             <div>
-              <p>Создание новой 3D-модели — от <span class="ax-price-inline" data-price="model">10 000 ₽</span>.</p>
+              <p><span data-i18n="a3">Создание новой 3D-модели — от</span> <span class="ax-price-inline" data-price="model">10 000 ₽</span>.</p>
             </div>
           </details>
           <details>
-            <summary>Сколько стоит конфигуратор?</summary>
+            <summary data-i18n="q4">Сколько стоит конфигуратор?</summary>
             <div>
-              <p>Конфигуратор — от <span class="ax-price-inline" data-price="configurator">15 000 ₽</span>. Заказной конфигуратор — от <span class="ax-price-inline" data-price="custom">50 000 ₽</span>.</p>
+              <p><span data-i18n="a4.std">Конфигуратор — от</span> <span class="ax-price-inline" data-price="configurator">15 000 ₽</span>. <span data-i18n="a4.custom">Заказной конфигуратор — от</span> <span class="ax-price-inline" data-price="custom">50 000 ₽</span>.</p>
             </div>
           </details>
           <details>
-            <summary>Можно ли интегрировать с интернет-магазином?</summary>
+            <summary data-i18n="q5">Можно ли интегрировать с интернет-магазином?</summary>
             <div>
-              <p>Да. JS/API-контракт для интеграции входит в тариф Business. Интеграция нашими силами — от <span class="ax-price-inline" data-price="integration">15 000 ₽</span>.</p>
+              <p><span data-i18n="a5">Да. Интеграцию с магазином делаем нашими силами — от</span> <span class="ax-price-inline" data-price="integration">15 000 ₽</span>. <span data-i18n="a5b">Открытый API и коннекторы PIM/ERP/CRM — скоро.</span></p>
             </div>
           </details>
           <details>
-            <summary>На каких устройствах это работает?</summary>
+            <summary data-i18n="q6">На каких устройствах это работает?</summary>
             <div>
-              <p>3D-просмотр — в любом современном браузере. AR на Android — в Chrome через WebXR; на iPhone — через App Clip или Variant Launch, без установки приложения из App Store; на компьютере показываем QR-код, чтобы продолжить на телефоне. Подробнее — на странице <a href="support.html">поддержки</a>.</p>
+              <p data-i18n-html="a6">3D-просмотр — в любом современном браузере. AR на Android — в Chrome через WebXR; на iPhone — через App Clip или Variant Launch, без установки приложения из App Store; на компьютере показываем QR-код, чтобы продолжить на телефоне. Подробнее — на странице <a href="support.html">поддержки</a>.</p>
             </div>
           </details>
         </div>
@@ -338,11 +425,12 @@
     <section class="ax-section" id="contacts" style="padding-top:0" aria-labelledby="contacts-title">
       <div class="ax-container">
         <div class="lx-contact">
-          <h2 id="contacts-title">Обсудим ваш каталог?</h2>
-          <p>Напишите нам — пришлём доступ, подключим ваши модели и ответим на вопросы. Почта: <a class="lx-mail" href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+          <h2 id="contacts-title" data-i18n="contact.title">Обсудим ваш каталог?</h2>
+          <p data-i18n-html="contact.text">Напишите нам — пришлём доступ, подключим ваши модели и ответим на вопросы. Почта: <a class="lx-mail" href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>, <a class="lx-mail" href="https://wa.me/77778490070" target="_blank" rel="noopener">WhatsApp: +7 777 849 00 70</a></p>
           <div class="ax-actions">
-            <a class="ax-btn ax-btn-light ax-btn-lg" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR">Связаться</a>
-            <a class="ax-btn ax-btn-outline ax-btn-lg" href="demo/">Открыть демо</a>
+            <a class="ax-btn ax-btn-light ax-btn-lg" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR" data-i18n="cta.contact">Связаться</a>
+            <a class="ax-btn ax-btn-outline ax-btn-lg" href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg><span data-i18n="cta.whatsapp">Написать в WhatsApp</span></a>
+            <a class="ax-btn ax-btn-outline ax-btn-lg" href="demo/" data-i18n="cta.demo">Открыть демо</a>
           </div>
         </div>
       </div>
@@ -353,15 +441,18 @@
     <div class="ax-container ax-footer-row">
       <div>
         <a class="ax-brand" href="../"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
-        <p>ArtUp AR XR — продукт ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).</p>
-        <p>Почта: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p data-i18n="footer.legal">ArtUp AR XR — продукт ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).</p>
+        <p data-i18n-html="footer.mail">Почта: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p><a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
       </div>
-      <nav aria-label="Ссылки в подвале">
+      <nav aria-label="Ссылки в подвале" data-i18n-attr="aria-label:footer.nav">
         <ul>
-          <li><a href="demo/">Демо</a></li>
-          <li><a href="support.html">Поддержка</a></li>
-          <li><a href="privacy.html">Политика конфиденциальности</a></li>
-          <li><a href="app-privacy.html">Конфиденциальность приложения</a></li>
+          <li><a href="demo/" data-i18n="footer.demo">Демо</a></li>
+          <li><a href="photo-to-3d.html" data-i18n="footer.photo3d">Фото → 3D</a></li>
+          <li><a href="support.html" data-i18n="footer.support">Поддержка</a></li>
+          <li><a href="privacy.html" data-i18n="footer.privacy">Политика конфиденциальности</a></li>
+          <li><a href="app/" data-i18n="footer.iphone">Приложение для iPhone</a></li>
+          <li><a href="app-privacy.html" data-i18n="footer.appPrivacy">Конфиденциальность приложения</a></li>
           <li><a href="../">ArtUp Labs</a></li>
         </ul>
       </nav>
@@ -369,15 +460,193 @@
   </footer>
 
   <script>
+    window.ARTUP_I18N = {
+      ru: {},
+      en: {
+        "meta.title": "ArtUp AR XR — 3D, AR and XR rooms for furniture and interiors",
+        "meta.description": "ArtUp AR XR by ArtUp Labs: 3D viewing and AR try-on right in the browser, with no app to install, plus XR rooms that combine several products with a live cost total. Built for furniture and interior retailers and showrooms in Kazakhstan and Russia.",
+        "skip": "Skip to content",
+        "lang.label": "Language",
+        "nav.label": "Sections",
+        "nav.features": "Features",
+        "nav.demo": "Demo",
+        "nav.pricing": "Pricing",
+        "nav.faq": "FAQ",
+        "nav.contacts": "Contact",
+        "cta.demo": "Open demo",
+        "cta.contact": "Contact us",
+        "cta.whatsapp": "Message on WhatsApp",
+        "hero.eyebrow": "3D viewer + AR, no app required",
+        "hero.title": "Let shoppers <span class=\"lx-grad-text\">see the product</span> before they buy",
+        "hero.lead": "Show every angle of your product and let shoppers place it in their own space — a living room, an office or a patio — straight from your website. In the XR room they can furnish a whole space with several products and see the total instantly.",
+        "hero.xrDemo": "XR demo",
+        "hero.note1": "No app to install",
+        "hero.note2": "Works on phone or desktop",
+        "hero.note3": "Opens from a link or a QR code",
+        "art.ar": "AR · in your room",
+        "art.xr": "XR room",
+        "art.items": "3 products in one scene",
+        "art.total": "Room total",
+        "art.saved": "saved to My plans",
+        "art.noApp": "no app needed",
+        "features.title": "What ArtUp AR XR does",
+        "features.lead": "Shoppers explore products in 3D, try them in their own space and furnish an entire room — on a phone or a computer, with no app to install.",
+        "f1.title": "Interactive try-on",
+        "f1.text": "AR places the product at true scale in a room, an office or outdoors, right on top of the camera view.",
+        "f2.title": "Every detail up close",
+        "f2.text": "Rotate, zoom and inspect the 3D model from every side: materials, textures and the finest details.",
+        "f3.title": "Confidence before buying",
+        "f3.text": "Shoppers see upfront whether a piece fits in size and style — fewer second thoughts and fewer returns.",
+        "f4.title": "Effortless to use",
+        "f4.text": "Opens from a link or a QR code. No app to install.",
+        "modes.title": "AR for a single product, XR for the whole room",
+        "modes.lead": "Two modes for two jobs: quickly try one specific piece, or plan an entire space.",
+        "ar.title": "AR try-on",
+        "ar.badge": "1 product",
+        "ar.text": "AR places one selected product in the real space so shoppers can see how it fits the interior.",
+        "ar.li1": "Android — right in Chrome (WebXR)",
+        "ar.li2": "iPhone — via App Clip or Variant Launch, nothing to install from the App Store",
+        "ar.li3": "Desktop — a QR code hands off to the phone",
+        "xr.title": "XR room",
+        "xr.badge": "multiple products",
+        "xr.text": "XR works with several 3D models at once: add products to one scene, move and scale them, compose a layout and save the space.",
+        "xr.li1": "Room plans with a cost total for the layout in ₸, ₽ and $",
+        "xr.li2": "Plans are saved on this device — no sign-up",
+        "demo.title": "How the demo works",
+        "demo.lead": "The demo runs on a catalog of IKEA 3D models with approximate prices. Your catalog will work the same way.",
+        "s1.title": "Catalog",
+        "s1.text": "Open the catalog of IKEA 3D models: view any model in 3D and in AR.",
+        "s2.title": "Pick for XR",
+        "s2.text": "Select whole sections — kitchens, tables, chairs — or individual models and open them in XR.",
+        "s3.title": "Arrange",
+        "s3.text": "Add products to the scene, then move, rotate and scale them.",
+        "s4.title": "Total",
+        "s4.text": "The cost total adds up every placed product in tenge, rubles and dollars.",
+        "s5.title": "My plans",
+        "s5.text": "Your plan is saved: open, rename or delete it later. Plans are saved on this device — no sign-up.",
+        "presets.text": "In the catalog, tick the sections or individual models you need — say, kitchens, tables and chairs — and open just those in XR.",
+        "presets.open": "Open the catalog",
+        "qr.title": "Scan with your phone camera to open the demo",
+        "qr.caption": "AR and XR run on your phone",
+        "try.title": "Try 3D and AR with your own model, free",
+        "try.text": "Send us a 3D model of your product — we'll check it, connect it and send back a link and a QR code.",
+        "try.cta": "Send a model",
+        "try.href": "mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20trial%20model",
+        "pricing.title": "Pricing",
+        "pricing.lead": "A monthly plan with AR/XR sessions included; beyond the allowance you pay per session.",
+        "pricing.currency": "Price currency",
+        "plan.perMonth": "per month",
+        "plan.over": "Overage:",
+        "plan.perSessionShort": "per session",
+        "plan.trial": "Start 14-day trial",
+        "plan.discuss": "Let's talk",
+        "st.now": "now",
+        "st.soon": "soon",
+        "start.desc": "Show products in 3D and in the shopper's own room, from their phone.",
+        "start.sessions": "3,000 AR/XR sessions included per month",
+        "pro.desc": "Furnish a room with several products and save it.",
+        "pro.sessions": "10,000 AR/XR sessions included per month",
+        "pro.plus": "Everything in Start, plus:",
+        "biz.desc": "Send the room to the cart and measure the impact on sales.",
+        "biz.sessions": "50,000 AR/XR sessions included per month",
+        "biz.plus": "Everything in Pro, plus:",
+        "ent.price": "On request",
+        "ent.desc": "SLA, integrations, private deployment.",
+        "ent.sessions": "Sessions per contract",
+        "ent.plus": "Everything in Business, plus:",
+        "feat.viewer": "3D viewer",
+        "feat.ar": "Single-product AR (Android, iPhone)",
+        "feat.link": "Link and QR code",
+        "feat.upload": "Your own 3D models (self-service upload)",
+        "feat.embed": "Embed code for your site",
+        "feat.xrAndroid": "XR room with several products, Android",
+        "feat.xrIphone": "XR room on iPhone (via Variant Launch)",
+        "feat.saved": "Plans saved on the device, with a cost total in ₸, ₽ and $",
+        "feat.sync": "Sync plans across devices (account)",
+        "feat.analytics": "Interaction analytics",
+        "feat.photo3": "Photo → 3D: 3 models per month",
+        "feat.cart": "XR → cart, commerce analytics, funnel",
+        "feat.photo15": "Photo → 3D: 15 models per month",
+        "feat.api": "API / PIM / ERP / CRM",
+        "feat.whitelabel": "White-label, SLA, private deployment",
+        "terms.trial": "14-day trial: 500 sessions, no card required. There is no free plan.",
+        "terms.cap": "Your monthly bill is capped at 3× the plan price — past that, we'll suggest moving to the next plan.",
+        "terms.photo": "Photo → 3D beyond the included models:",
+        "terms.photoUnit": "per model",
+        "note.status": "<strong>“Now”</strong> means the feature works on the site today. <strong>“Soon”</strong> means it is coming in upcoming updates and is included in your plan at no extra cost. The XR room on iPhone currently opens via Variant Launch; our own App Clip is coming soon.",
+        "note.sessions": "<strong>How sessions are counted.</strong> A session is one AR or XR launch on a shopper's device. 3D viewing, page reloads, failed model loads, bots and repeats within the same session are not counted. The exact deduplication rule — the session window — will be published before the first invoice.",
+        "pricing.note": "Plans cover platform usage. Manual 3D content work and custom development are billed separately. Billing is in rubles; tenge and dollar amounts are approximate, converted at 5.318 ₸ per ₽ and 83.50 ₽ per $ (open.er-api.com, October 3, 2026).",
+        "faq.title": "Questions & answers",
+        "faq.lead": "What the plan includes and what is billed separately.",
+        "q1": "I already have a 3D model. Do I have to pay to have one made?",
+        "a1": "No. If the model passes our technical check, we simply connect it. The technical check is free, and automatic optimization is included in your plan.",
+        "q2": "What if the model needs manual work?",
+        "a2.repair": "Manual fixes to an existing model — from",
+        "a2.cad": "Preparing a model from CAD, STEP or FBX — from",
+        "q3": "What if I don't have a 3D model?",
+        "a3": "Creating a new 3D model — from",
+        "q4": "How much does a configurator cost?",
+        "a4.std": "A configurator — from",
+        "a4.custom": "A custom-built configurator — from",
+        "q5": "Can it integrate with my online store?",
+        "a5": "Yes. Our team can integrate it with your store — from",
+        "a5b": "A public API and PIM/ERP/CRM connectors are coming soon.",
+        "q6": "Which devices does it work on?",
+        "a6": "3D viewing works in any modern browser. AR on Android runs in Chrome via WebXR; on iPhone it runs via App Clip or Variant Launch, with nothing to install from the App Store; on a computer we show a QR code so you can continue on your phone. More on the <a href=\"support.html\">support</a> page.",
+        "contact.title": "Let's talk about your catalog",
+        "contact.text": "Write to us — we'll send you access, connect your models and answer your questions. Email: <a class=\"lx-mail\" href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com</a>, <a class=\"lx-mail\" href=\"https://wa.me/77778490070\" target=\"_blank\" rel=\"noopener\">WhatsApp: +7 777 849 00 70</a>",
+        "footer.legal": "ArtUp AR XR is a product of ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).",
+        "footer.mail": "Email: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com</a>",
+        "nav.photo3d": "Photo → 3D",
+        "footer.photo3d": "Photo → 3D",
+        "p3d.eyebrow": "Photo → 3D",
+        "p3d.title": "No 3D models? We make them from one photo",
+        "p3d.lead": "We take one product photo from your catalog — and minutes later a shopper places the product in their own room. The example below: the source photo on the left, two models generated from it with no manual edits on the right.",
+        "p3d.photoAlt": "Source photo: upholstered sofa",
+        "p3d.input": "Input: one photo",
+        "p3d.credit": "Photo: <a href=\"https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg\" target=\"_blank\" rel=\"noopener\">The Metropolitan Museum of Art</a>, CC0",
+        "p3d.altR": "Realistic 3D model of the sofa",
+        "p3d.altS": "Stylized 3D model of the sofa",
+        "p3d.ar": "View in your room",
+        "p3d.wait": "Loading 3D model…",
+        "p3d.err": "Couldn't load the model",
+        "p3d.real": "Realistic",
+        "p3d.realText": "Photoreal PBR materials — ready for a furniture store",
+        "p3d.styl": "Stylized",
+        "p3d.stylText": "Simpler, game-like shading",
+        "p3d.hint": "Rotate the models with your mouse or finger. On a phone, “View in your room” places the sofa in AR at real size.",
+        "p3d.li1": "One existing catalog photo — no 3D scanning, no 3D artist",
+        "p3d.li2": "A model is ready in about 1–4 minutes",
+        "p3d.li3": "Works in AR and in the XR room — next to your other products",
+        "p3d.li4": "Two looks: realistic PBR materials or a stylized, game-like style",
+        "p3d.ctaText": "We generate models for your catalog today — write to us.",
+        "p3d.mailHref": "mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Photo%20to%203D",
+        "p3d.all": "See all examples",
+        "p3d.selfA": "Self-serve generation in the dashboard:",
+        "p3d.selfB": "per model; Pro includes 3 models a month, Business 15.",
+        "footer.nav": "Footer links",
+        "footer.demo": "Demo",
+        "footer.support": "Support",
+        "footer.privacy": "Privacy Policy",
+        "footer.appPrivacy": "App privacy",
+        "footer.iphone": "iPhone app"
+      }
+    };
+  </script>
+  <script src="assets/lang.js"></script>
+  <script src="photo-to-3d/p3d.js"></script>
+  <script>
     (function () {
       // Ориентировочно, пересчёт по курсу на 03.10.2026: 1 USD = 83,50 RUB = 444,08 KZT (open.er-api.com).
       // KZT = RUB × 5,318; USD = RUB / 83,50; округлено до удобных значений. Базовые цены — RUB.
       var PRICES = {
-        startMonth:   { RUB: "0 ₽",      KZT: "0 ₸",       USD: "$0" },
-        startSession: { RUB: "0,30 ₽",   KZT: "1,6 ₸",     USD: "$0.004" },
-        proMonth:     { RUB: "2 490 ₽",  KZT: "13 240 ₸",  USD: "$29" },
-        bizMonth:     { RUB: "9 990 ₽",  KZT: "53 130 ₸",  USD: "$119" },
-        overSession:  { RUB: "0,20 ₽",   KZT: "1,1 ₸",     USD: "$0.0024" },
+        startMonth:   { RUB: "1 490 ₽",  KZT: "7 900 ₸",   USD: "$18" },
+        proMonth:     { RUB: "4 990 ₽",  KZT: "26 500 ₸",  USD: "$60" },
+        bizMonth:     { RUB: "14 990 ₽", KZT: "79 700 ₸",  USD: "$180" },
+        startOver:    { RUB: "0,50 ₽",   KZT: "2,7 ₸",     USD: "$0.006" },
+        proOver:      { RUB: "0,40 ₽",   KZT: "2,1 ₸",     USD: "$0.005" },
+        bizOver:      { RUB: "0,25 ₽",   KZT: "1,3 ₸",     USD: "$0.003" },
+        photo3d:      { RUB: "300 ₽",    KZT: "1 600 ₸",   USD: "$3.6" },
         repair:       { RUB: "5 000 ₽",  KZT: "26 590 ₸",  USD: "$60" },
         cad:          { RUB: "7 500 ₽",  KZT: "39 890 ₸",  USD: "$90" },
         model:        { RUB: "10 000 ₽", KZT: "53 180 ₸",  USD: "$120" },
@@ -399,11 +668,20 @@
         try { var v = localStorage.getItem(KEY); if (valid[v]) return v; } catch (e) {}
         return byLanguage();
       }
+      var current = null;
+
+      // English uses a decimal point and comma thousands ("2,490 ₽", "1.6 ₸"); spaces become non-breaking.
+      function format(value) {
+        var lang = window.ArtupLang ? window.ArtupLang.get() : "ru";
+        if (lang === "en") value = value.replace(/(\d),(\d)/g, "$1.$2").replace(/(\d)\s(\d)/g, "$1,$2");
+        return value.replace(/\s/g, "\u00a0");
+      }
       function apply(cur) {
+        current = cur;
         var nodes = document.querySelectorAll("[data-price]");
         for (var i = 0; i < nodes.length; i++) {
           var p = PRICES[nodes[i].getAttribute("data-price")];
-          if (p) nodes[i].textContent = p[cur].replace(/ /g, " ");
+          if (p) nodes[i].textContent = format(p[cur]);
         }
         var buttons = document.querySelectorAll("[data-currency]");
         for (var j = 0; j < buttons.length; j++) {
@@ -417,6 +695,8 @@
         try { localStorage.setItem(KEY, cur); } catch (err) {}
         apply(cur);
       });
+      // A language switch re-formats the prices but never changes the chosen currency.
+      if (window.ArtupLang) window.ArtupLang.onChange(function () { apply(current); });
       apply(load());
     })();
   </script>

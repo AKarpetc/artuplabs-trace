@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="assets/site.css">
 </head>
 <body class="ax-page">
-  <a class="ax-skip" href="#main">Перейти к содержанию</a>
+  <a class="ax-skip" href="#main" data-i18n="skip">Перейти к содержанию</a>
 
   <header class="ax-header">
     <div class="ax-container ax-header-row">
@@ -22,14 +22,19 @@
       <nav class="ax-nav" aria-label="AR XR">
         <ul>
           <li><a href="./">AR XR</a></li>
-          <li><a href="demo/">Демо</a></li>
-          <li><a href="support.html" aria-current="page">Поддержка</a></li>
-          <li><a href="privacy.html">Конфиденциальность</a></li>
-          <li><a href="app-privacy.html">Приложение</a></li>
+          <li><a href="demo/" data-i18n="nav.demo">Демо</a></li>
+          <li><a href="photo-to-3d.html" data-i18n="nav.photo3d">Фото → 3D</a></li>
+          <li><a href="support.html" aria-current="page" data-i18n="nav.support">Поддержка</a></li>
+          <li><a href="privacy.html" data-i18n="nav.privacy">Конфиденциальность</a></li>
+          <li><a href="app-privacy.html" data-i18n="nav.app">Приложение</a></li>
         </ul>
       </nav>
       <div class="ax-header-actions">
-        <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/">Открыть демо</a>
+        <div class="ax-segmented ax-lang" role="group" aria-label="Язык / Language" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang-set="ru" lang="ru" aria-pressed="true">RU</button>
+          <button type="button" data-lang-set="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/" data-i18n="cta.demo">Открыть демо</a>
       </div>
     </div>
   </header>
@@ -37,56 +42,56 @@
   <section class="lx-doc-hero">
     <div class="ax-container">
       <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24">ArtUp AR XR</p>
-      <h1>Поддержка</h1>
-      <p>Как получить помощь и на каких устройствах работают 3D, AR и XR.</p>
+      <h1 data-i18n="hero.title">Поддержка</h1>
+      <p data-i18n="hero.lead">Как получить помощь и на каких устройствах работают 3D, AR и XR.</p>
     </div>
   </section>
 
   <main id="main" class="ax-container lx-doc-layout lx-doc-single">
     <article class="lx-doc">
       <div class="lx-summary">
-        <p><strong>Напишите нам:</strong> <a href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B0">hello@artuplabs.com</a>. Опишите, что не получилось, приложите ссылку на страницу, модель телефона или компьютера и браузер — так мы ответим быстрее.</p>
+        <p data-i18n-html="summary"><strong>Напишите нам:</strong> <a href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B0">hello@artuplabs.com</a>. Опишите, что не получилось, приложите ссылку на страницу, модель телефона или компьютера и браузер — так мы ответим быстрее.</p>
       </div>
 
-      <h2 id="help">Как получить помощь</h2>
+      <h2 id="help" data-i18n="help.title">Как получить помощь</h2>
       <ul>
-        <li>Вопросы по демо, подключению, тарифам и 3D-моделям — на <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.</li>
-        <li>Удаление сохранённых планов или аккаунта демо — тоже на эту почту, с адресом, под которым вы входили.</li>
-        <li>Что и где хранится — в <a href="privacy.html">политике конфиденциальности</a>; про iOS-приложение и App Clip — в <a href="app-privacy.html">политике приложения</a>.</li>
+        <li><span data-i18n="help.wa">Быстрее всего — в WhatsApp:</span> <a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></li>
+        <li data-i18n-html="help.li1">Вопросы по демо, подключению, тарифам и 3D-моделям — на <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.</li>
+        <li data-i18n="help.li2">Планы сохраняются на этом устройстве — без регистрации; удалить их можно в «Мои планы». Если нужна помощь — пишите на эту же почту.</li>
+        <li data-i18n-html="help.li3">Что и где хранится — в <a href="privacy.html">политике конфиденциальности</a>; про iOS-приложение и App Clip — в <a href="app-privacy.html">политике приложения</a>.</li>
       </ul>
 
-      <h2 id="demo">Демо</h2>
+      <h2 id="demo" data-i18n="demo.title">Демо</h2>
       <ul>
-        <li><a href="demo/">Каталог 3D-моделей</a> — просмотр в 3D и AR, выбор разделов и моделей для XR, «Мои планы».</li>
-        <li><a href="demo/xrviewer.html?collections=dining-kitchen/ikea-modular-kitchens,dining-kitchen/ikea-tables,dining-kitchen/ikea-chairs">XR-сцена «Ресторан»</a> — кухня, столы и стулья.</li>
-        <li><a href="demo/xrviewer.html?collections=living-room/ikea-sofas,living-room/ikea-coffee-tables,living-room/ikea-armchairs,living-room/ikea-rugs">XR-сцена «Гостиная»</a> и <a href="demo/xrviewer.html?collections=home-office/ikea-desks,home-office/ikea-desk-chairs,home-office/ikea-conference">«Офис»</a>.</li>
+        <li data-i18n-html="demo.li1"><a href="demo/">Каталог 3D-моделей</a> — просмотр в 3D и AR, выбор разделов и моделей для XR, «Мои планы».</li>
+        <li data-i18n-html="demo.li2">В каталоге отметьте нужные разделы или модели (например, кухня, столы и стулья) и откройте в XR только их.</li>
       </ul>
-      <p>Цены в демо ориентировочные: розничные цены IKEA в США в долларах, пересчитанные в тенге и рубли по курсу на 03.10.2026.</p>
+      <p data-i18n="demo.prices">Цены в демо ориентировочные: розничные цены IKEA в США в долларах, пересчитанные в тенге и рубли по курсу на 03.10.2026.</p>
 
-      <h2 id="devices">Браузеры и устройства</h2>
+      <h2 id="devices" data-i18n="devices.title">Браузеры и устройства</h2>
       <div class="ax-grid ax-grid-3">
         <div class="ax-card">
           <span class="ax-badge ax-badge-ok">Android</span>
           <h3>Chrome + WebXR</h3>
-          <p>AR и XR работают прямо в Chrome на телефонах с поддержкой ARCore. Откройте ссылку и разрешите доступ к камере.</p>
+          <p data-i18n="android.text">AR и XR работают прямо в Chrome на телефонах с поддержкой ARCore. Откройте ссылку и разрешите доступ к камере.</p>
         </div>
         <div class="ax-card">
-          <span class="ax-badge ax-badge-accent">iPhone и iPad</span>
-          <h3>Variant Launch или App Clip</h3>
-          <p>Safari пока не поддерживает WebXR, поэтому XR открывается через Variant Launch App или App Clip ArtUp AR XR — без установки приложения из App Store.</p>
+          <span class="ax-badge ax-badge-accent" data-i18n="ios.badge">iPhone и iPad</span>
+          <h3 data-i18n="ios.title">Variant Launch или App Clip</h3>
+          <p data-i18n="ios.text">Safari пока не поддерживает WebXR, поэтому XR открывается через Variant Launch App или App Clip ArtUp AR XR — без установки приложения из App Store.</p>
         </div>
         <div class="ax-card">
-          <span class="ax-badge">Компьютер</span>
-          <h3>3D + QR-код</h3>
-          <p>На компьютере доступен 3D-просмотр в браузере. Для AR и XR страница показывает QR-код — отсканируйте его телефоном.</p>
+          <span class="ax-badge" data-i18n="desktop.badge">Компьютер</span>
+          <h3 data-i18n="desktop.title">3D + QR-код</h3>
+          <p data-i18n="desktop.text">На компьютере доступен 3D-просмотр в браузере. Для AR и XR страница показывает QR-код — отсканируйте его телефоном.</p>
         </div>
       </div>
 
-      <h2 id="tips">Если что-то не работает</h2>
+      <h2 id="tips" data-i18n="tips.title">Если что-то не работает</h2>
       <ul>
-        <li>Проверьте, что браузеру разрешён доступ к камере.</li>
-        <li>Для AR нужен хорошо освещённый пол или стол с заметной текстурой; медленно поводите телефоном, пока не появится метка размещения.</li>
-        <li>Обновите браузер до последней версии и откройте страницу заново.</li>
+        <li data-i18n="tips.li1">Проверьте, что браузеру разрешён доступ к камере.</li>
+        <li data-i18n="tips.li2">Для AR нужен хорошо освещённый пол или стол с заметной текстурой; медленно поводите телефоном, пока не появится метка размещения.</li>
+        <li data-i18n="tips.li3">Обновите браузер до последней версии и откройте страницу заново.</li>
       </ul>
     </article>
   </main>
@@ -95,19 +100,71 @@
     <div class="ax-container ax-footer-row">
       <div>
         <a class="ax-brand" href="../"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
-        <p>ArtUp AR XR — продукт ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).</p>
-        <p>Почта: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p data-i18n="footer.legal">ArtUp AR XR — продукт ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).</p>
+        <p data-i18n-html="footer.mail">Почта: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p><a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
       </div>
-      <nav aria-label="Ссылки в подвале">
+      <nav aria-label="Ссылки в подвале" data-i18n-attr="aria-label:footer.nav">
         <ul>
           <li><a href="./">ArtUp AR XR</a></li>
-          <li><a href="demo/">Демо</a></li>
-          <li><a href="privacy.html">Политика конфиденциальности</a></li>
-          <li><a href="app-privacy.html">Конфиденциальность приложения</a></li>
+          <li><a href="demo/" data-i18n="nav.demo">Демо</a></li>
+          <li><a href="photo-to-3d.html" data-i18n="footer.photo3d">Фото → 3D</a></li>
+          <li><a href="privacy.html" data-i18n="footer.privacy">Политика конфиденциальности</a></li>
+          <li><a href="app/" data-i18n="footer.iphone">Приложение для iPhone</a></li>
+          <li><a href="app-privacy.html" data-i18n="footer.appPrivacy">Конфиденциальность приложения</a></li>
           <li><a href="../">ArtUp Labs</a></li>
         </ul>
       </nav>
     </div>
   </footer>
+  <script>
+    window.ARTUP_I18N = {
+      ru: {},
+      en: {
+        "meta.title": "Support — ArtUp AR XR",
+        "meta.description": "ArtUp AR XR support: how to get help, demo links, and which browsers and devices support 3D, AR and XR.",
+        "skip": "Skip to content",
+        "lang.label": "Language",
+        "nav.demo": "Demo",
+        "nav.support": "Support",
+        "nav.photo3d": "Photo → 3D",
+        "footer.photo3d": "Photo → 3D",
+        "nav.privacy": "Privacy",
+        "nav.app": "App",
+        "cta.demo": "Open demo",
+        "hero.title": "Support",
+        "hero.lead": "How to get help, and which devices run 3D, AR and XR.",
+        "summary": "<strong>Write to us:</strong> <a href=\"mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20support\">hello@artuplabs.com</a>. Tell us what went wrong and include the page link, your phone or computer model and your browser — it helps us reply faster.",
+        "help.title": "How to get help",
+        "help.wa": "The fastest way is WhatsApp:",
+        "help.li1": "Questions about the demo, onboarding, pricing and 3D models — email <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com</a>.",
+        "help.li2": "Plans are saved on this device — no sign-up; you can delete them in My plans. If you need help, write to the same address.",
+        "help.li3": "What we store and where is described in the <a href=\"privacy.html\">Privacy Policy</a>; for the iOS app and App Clip, see the <a href=\"app-privacy.html\">App Privacy Policy</a>.",
+        "demo.title": "Demo",
+        "demo.li1": "<a href=\"demo/\">3D model catalog</a> — view in 3D and AR, pick sections and models for XR, My plans.",
+        "demo.li2": "In the catalog, tick the sections or models you need (for example kitchen, tables and chairs) and open only those in XR.",
+        "demo.prices": "Demo prices are approximate: IKEA US retail prices in dollars, converted to tenge and rubles at the October 3, 2026 rate.",
+        "devices.title": "Browsers and devices",
+        "android.text": "AR and XR run right in Chrome on ARCore-capable phones. Open the link and allow camera access.",
+        "ios.badge": "iPhone and iPad",
+        "ios.title": "Variant Launch or App Clip",
+        "ios.text": "Safari doesn't support WebXR yet, so XR opens through the Variant Launch app or the ArtUp AR XR App Clip — nothing to install from the App Store.",
+        "desktop.badge": "Desktop",
+        "desktop.title": "3D + QR code",
+        "desktop.text": "On a computer you get 3D viewing in the browser. For AR and XR the page shows a QR code — scan it with your phone.",
+        "tips.title": "If something doesn't work",
+        "tips.li1": "Make sure the browser is allowed to use the camera.",
+        "tips.li2": "AR needs a well-lit floor or table with visible texture; move your phone slowly until the placement marker appears.",
+        "tips.li3": "Update your browser to the latest version and reopen the page.",
+        "footer.legal": "ArtUp AR XR is a product of ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).",
+        "footer.mail": "Email: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com</a>",
+        "footer.nav": "Footer links",
+        "footer.privacy": "Privacy Policy",
+        "footer.appPrivacy": "App privacy",
+        "footer.iphone": "iPhone app"
+      }
+    };
+  </script>
+  <script src="assets/lang.js"></script>
 </body>
 </html>
