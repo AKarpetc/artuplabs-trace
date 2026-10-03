@@ -1,0 +1,34 @@
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+const rootDir = fileURLToPath(new URL('.', import.meta.url));
+
+const pageDirs = { 'global-page': 'global-page', 'admin-page': 'admin-page' };
+
+/**
+ * Builds each Custom UI page from its own Vite root so its bundled output is
+ * self-contained inside dist/<page>/, matching the Forge resource layout.
+ *
+ * `legacy.inconsistentCjsInterop`: Rolldown shares one interop wrapper per CommonJS module across
+ * importers; `@atlaskit/icon/core/*` imported in Node mode otherwise hands other Atlaskit packages
+ * the exports object instead of the icon, and React throws #130.
+ */
+export default defineConfig(({ mode }) => {
+  const page = pageDirs[mode];
+  return {
+    root: page ? resolve(rootDir, page) : rootDir,
+    base: './',
+    plugins: [react()],
+    legacy: { inconsistentCjsInterop: true },
+    build: page
+      ? { outDir: resolve(rootDir, 'dist', page), emptyOutDir: true }
+      : {},
+    test: {
+      environment: 'jsdom',
+      include: ['test/**/*.test.{js,jsx}'],
+      setupFiles: ['./test/setup.js'],
+    },
+  };
+});

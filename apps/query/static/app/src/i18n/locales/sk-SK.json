@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Funkcie JQL, ktoré zostávajú aktuálne: podúlohy, prepojenia, hierarchia, história šprintov, komentáre a výpočty polí",
+  "admin.title": "Nastavenia ArtUp Query",
+  "errors.generic": "Niečo sa pokazilo: {message}",
+  "errors.unlicensed": "ArtUp Query vyžaduje na tejto lokalite aktívnu licenciu.",
+  "errors.forbidden": "Na túto akciu nemáte oprávnenie.",
+  "errors.not-found": "Nenašlo sa.",
+  "errors.bad-request": "Požiadavka nebola platná.",
+  "errors.internal": "Na našej strane došlo k chybe. Skúste to o chvíľu znova.",
+  "errors.tryAgain": "Skúsiť znova",
+  "loading": "Načítava sa…",
+  "unlicensed.title": "ArtUp Query vyžaduje aktívnu licenciu",
+  "unlicensed.body": "Požiadajte administrátora Jira, aby spustil skúšobnú verziu alebo obnovil predplatné v časti Spravovať aplikácie."
+}

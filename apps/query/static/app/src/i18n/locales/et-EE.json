@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Alati ajakohased JQL-funktsioonid: alamülesanded, lingid, hierarhia, sprindiajalugu, kommentaarid ja väljaarvutused",
+  "admin.title": "ArtUp Query seaded",
+  "errors.generic": "Midagi läks valesti: {message}",
+  "errors.unlicensed": "ArtUp Query vajab sellel saidil kehtivat litsentsi.",
+  "errors.forbidden": "Teil pole selleks luba.",
+  "errors.not-found": "Ei leitud.",
+  "errors.bad-request": "Päring oli kehtetu.",
+  "errors.internal": "Meie poolel läks midagi valesti. Proovige hetke pärast uuesti.",
+  "errors.tryAgain": "Proovi uuesti",
+  "loading": "Laadimine…",
+  "unlicensed.title": "ArtUp Query vajab aktiivset litsentsi",
+  "unlicensed.body": "Paluge oma Jira administraatoril alustada prooviperioodi või uuendada tellimust jaotises Rakenduste haldamine."
+}

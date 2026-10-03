@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Zawsze aktualne funkcje JQL: podzadania, powiązania, hierarchia, historia sprintów, komentarze i obliczenia na polach",
+  "admin.title": "Ustawienia ArtUp Query",
+  "errors.generic": "Coś poszło nie tak: {message}",
+  "errors.unlicensed": "ArtUp Query wymaga aktywnej licencji w tej witrynie.",
+  "errors.forbidden": "Nie masz uprawnień do wykonania tej czynności.",
+  "errors.not-found": "Nie znaleziono.",
+  "errors.bad-request": "Żądanie było nieprawidłowe.",
+  "errors.internal": "Po naszej stronie wystąpił błąd. Spróbuj ponownie za chwilę.",
+  "errors.tryAgain": "Spróbuj ponownie",
+  "loading": "Wczytywanie…",
+  "unlicensed.title": "ArtUp Query wymaga aktywnej licencji",
+  "unlicensed.body": "Poproś administratora Jira o rozpoczęcie okresu próbnego lub odnowienie subskrypcji w sekcji Zarządzaj aplikacjami."
+}

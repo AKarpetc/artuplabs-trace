@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Funcții JQL mereu actuale: subactivități, legături, ierarhie, istoricul sprinturilor, comentarii și calcule pe câmpuri",
+  "admin.title": "Setări ArtUp Query",
+  "errors.generic": "Ceva nu a funcționat: {message}",
+  "errors.unlicensed": "ArtUp Query necesită o licență activă pe acest site.",
+  "errors.forbidden": "Nu aveți permisiunea de a face acest lucru.",
+  "errors.not-found": "Nu a fost găsit.",
+  "errors.bad-request": "Solicitarea nu a fost validă.",
+  "errors.internal": "A apărut o eroare din partea noastră. Încercați din nou peste puțin timp.",
+  "errors.tryAgain": "Încercați din nou",
+  "loading": "Se încarcă…",
+  "unlicensed.title": "ArtUp Query are nevoie de o licență activă",
+  "unlicensed.body": "Cereți administratorului Jira să înceapă o perioadă de probă sau să reînnoiască abonamentul în Gestionare aplicații."
+}

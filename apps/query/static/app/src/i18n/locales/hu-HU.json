@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Mindig friss JQL-függvények: részfeladatok, hivatkozások, hierarchia, sprintelőzmények, megjegyzések és mezőszámítások",
+  "admin.title": "ArtUp Query beállításai",
+  "errors.generic": "Valami hiba történt: {message}",
+  "errors.unlicensed": "Az ArtUp Query aktív licencet igényel ezen a webhelyen.",
+  "errors.forbidden": "Ehhez nincs jogosultsága.",
+  "errors.not-found": "Nem található.",
+  "errors.bad-request": "A kérés érvénytelen volt.",
+  "errors.internal": "Hiba történt a mi oldalunkon. Próbálja újra egy perc múlva.",
+  "errors.tryAgain": "Újrapróbálás",
+  "loading": "Betöltés…",
+  "unlicensed.title": "Az ArtUp Query aktív licencet igényel",
+  "unlicensed.body": "Kérje meg a Jira rendszergazdáját, hogy indítson próbaidőszakot, vagy újítsa meg az előfizetést az Alkalmazások kezelése menüben."
+}

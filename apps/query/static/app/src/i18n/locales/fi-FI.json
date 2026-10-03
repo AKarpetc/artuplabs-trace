@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Ajan tasalla pysyvät JQL-funktiot: alitehtävät, linkit, hierarkia, sprinttihistoria, kommentit ja kenttälaskenta",
+  "admin.title": "ArtUp Queryn asetukset",
+  "errors.generic": "Jokin meni pieleen: {message}",
+  "errors.unlicensed": "ArtUp Query tarvitsee tälle sivustolle aktiivisen lisenssin.",
+  "errors.forbidden": "Sinulla ei ole oikeutta tähän toimintoon.",
+  "errors.not-found": "Ei löytynyt.",
+  "errors.bad-request": "Pyyntö ei ollut kelvollinen.",
+  "errors.internal": "Meidän päässämme tapahtui virhe. Yritä hetken kuluttua uudelleen.",
+  "errors.tryAgain": "Yritä uudelleen",
+  "loading": "Ladataan…",
+  "unlicensed.title": "ArtUp Query vaatii aktiivisen lisenssin",
+  "unlicensed.body": "Pyydä Jira-pääkäyttäjää aloittamaan kokeilujakso tai uusimaan tilaus kohdassa Hallinnoi sovelluksia."
+}

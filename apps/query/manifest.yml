@@ -1,0 +1,106 @@
+modules:
+  jira:globalPage:
+    - key: query-global-page
+      resource: global-page
+      resolver:
+        function: resolver
+      title:
+        i18n: module.globalPage.title
+      icon: resource:icons;icon.svg
+      layout: basic
+  jira:adminPage:
+    - key: query-admin-page
+      resource: admin-page
+      resolver:
+        function: resolver
+      title:
+        i18n: module.adminPage.title
+  function:
+    - key: resolver
+      handler: index.resolverHandler
+resources:
+  - key: global-page
+    path: static/app/dist/global-page
+  - key: admin-page
+    path: static/app/dist/admin-page
+  - key: icons
+    path: resources
+translations:
+  resources:
+    - key: zh-CN
+      path: locales/zh-CN.json
+    - key: zh-TW
+      path: locales/zh-TW.json
+    - key: cs-CZ
+      path: locales/cs-CZ.json
+    - key: da-DK
+      path: locales/da-DK.json
+    - key: nl-NL
+      path: locales/nl-NL.json
+    - key: en-US
+      path: locales/en-US.json
+    - key: en-GB
+      path: locales/en-GB.json
+    - key: et-EE
+      path: locales/et-EE.json
+    - key: fi-FI
+      path: locales/fi-FI.json
+    - key: fr-FR
+      path: locales/fr-FR.json
+    - key: de-DE
+      path: locales/de-DE.json
+    - key: hu-HU
+      path: locales/hu-HU.json
+    - key: is-IS
+      path: locales/is-IS.json
+    - key: it-IT
+      path: locales/it-IT.json
+    - key: ja-JP
+      path: locales/ja-JP.json
+    - key: ko-KR
+      path: locales/ko-KR.json
+    - key: no-NO
+      path: locales/no-NO.json
+    - key: pl-PL
+      path: locales/pl-PL.json
+    - key: pt-BR
+      path: locales/pt-BR.json
+    - key: pt-PT
+      path: locales/pt-PT.json
+    - key: ro-RO
+      path: locales/ro-RO.json
+    - key: ru-RU
+      path: locales/ru-RU.json
+    - key: sk-SK
+      path: locales/sk-SK.json
+    - key: tr-TR
+      path: locales/tr-TR.json
+    - key: es-ES
+      path: locales/es-ES.json
+    - key: sv-SE
+      path: locales/sv-SE.json
+  fallback:
+    default: en-US
+permissions:
+  scopes:
+    - read:jira-work
+    - read:jira-user
+    - read:board-scope:jira-software
+    - read:sprint:jira-software
+    - read:project:jira
+    - read:group:jira
+    - read:user:jira
+    - read:app-data:jira
+    - write:app-data:jira
+    - storage:app
+  content:
+    styles:
+      - 'unsafe-inline'
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/826ce7d1-f42b-471e-90a6-082bc3cad9a9
+  licensing:
+    enabled: true

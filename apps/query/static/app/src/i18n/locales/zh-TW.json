@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "保持最新的 JQL 函式：子任務、連結、階層、衝刺歷程、留言與欄位計算",
+  "admin.title": "ArtUp Query 設定",
+  "errors.generic": "發生錯誤：{message}",
+  "errors.unlicensed": "ArtUp Query 需要此網站擁有有效的授權。",
+  "errors.forbidden": "您沒有執行此操作的權限。",
+  "errors.not-found": "找不到。",
+  "errors.bad-request": "要求無效。",
+  "errors.internal": "我們這邊發生問題，請稍後再試。",
+  "errors.tryAgain": "重試",
+  "loading": "載入中…",
+  "unlicensed.title": "ArtUp Query 需要有效授權",
+  "unlicensed.body": "請聯絡您的 Jira 管理員，在「管理應用程式」中開始試用或續訂。"
+}

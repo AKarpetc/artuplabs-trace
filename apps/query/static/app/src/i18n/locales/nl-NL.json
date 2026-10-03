@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "JQL-functies die actueel blijven: subtaken, koppelingen, hiërarchie, sprintgeschiedenis, opmerkingen en veldberekeningen",
+  "admin.title": "Instellingen van ArtUp Query",
+  "errors.generic": "Er is iets misgegaan: {message}",
+  "errors.unlicensed": "ArtUp Query heeft een actieve licentie nodig op deze site.",
+  "errors.forbidden": "Je hebt hiervoor geen toestemming.",
+  "errors.not-found": "Niet gevonden.",
+  "errors.bad-request": "Het verzoek was ongeldig.",
+  "errors.internal": "Er ging iets mis aan onze kant. Probeer het zo opnieuw.",
+  "errors.tryAgain": "Opnieuw proberen",
+  "loading": "Laden…",
+  "unlicensed.title": "ArtUp Query heeft een actieve licentie nodig",
+  "unlicensed.body": "Vraag je Jira-beheerder om een proefperiode te starten of het abonnement te verlengen bij Apps beheren."
+}

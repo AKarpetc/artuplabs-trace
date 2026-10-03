@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Funkce JQL, které zůstávají aktuální: dílčí úkoly, odkazy, hierarchie, historie sprintů, komentáře a výpočty polí",
+  "admin.title": "Nastavení ArtUp Query",
+  "errors.generic": "Něco se pokazilo: {message}",
+  "errors.unlicensed": "ArtUp Query vyžaduje na tomto webu aktivní licenci.",
+  "errors.forbidden": "K této akci nemáte oprávnění.",
+  "errors.not-found": "Nenalezeno.",
+  "errors.bad-request": "Požadavek nebyl platný.",
+  "errors.internal": "Na naší straně došlo k chybě. Zkuste to za chvíli znovu.",
+  "errors.tryAgain": "Zkusit znovu",
+  "loading": "Načítání…",
+  "unlicensed.title": "ArtUp Query vyžaduje aktivní licenci",
+  "unlicensed.body": "Požádejte správce Jira, aby spustil zkušební verzi nebo obnovil předplatné v části Spravovat aplikace."
+}

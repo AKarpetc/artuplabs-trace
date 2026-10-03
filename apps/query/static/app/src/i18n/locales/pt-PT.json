@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Funções JQL sempre atualizadas: subtarefas, ligações, hierarquia, histórico de sprints, comentários e cálculos de campos",
+  "admin.title": "Definições do ArtUp Query",
+  "errors.generic": "Algo correu mal: {message}",
+  "errors.unlicensed": "O ArtUp Query precisa de uma licença ativa neste site.",
+  "errors.forbidden": "Não tem permissão para fazer isto.",
+  "errors.not-found": "Não encontrado.",
+  "errors.bad-request": "O pedido não era válido.",
+  "errors.internal": "Algo correu mal do nosso lado. Tente novamente dentro de instantes.",
+  "errors.tryAgain": "Tentar novamente",
+  "loading": "A carregar…",
+  "unlicensed.title": "O ArtUp Query precisa de uma licença ativa",
+  "unlicensed.body": "Peça ao administrador do Jira para iniciar um período experimental ou renovar a subscrição em Gerir aplicações."
+}

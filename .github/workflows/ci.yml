@@ -21,6 +21,8 @@ jobs:
             apps/export/static/app/package-lock.json
             apps/reports/package-lock.json
             apps/reports/static/app/package-lock.json
+            apps/query/package-lock.json
+            apps/query/static/app/package-lock.json
 
       - name: "Trace: install"
         working-directory: apps/trace
@@ -87,6 +89,29 @@ jobs:
         run: npm run build:ui
       - name: "Reports: audit"
         working-directory: apps/reports
+        run: |
+          npm audit --omit=dev --audit-level=high
+          npm audit --omit=dev --audit-level=high --prefix static/app
+
+      - name: "Query: install"
+        working-directory: apps/query
+        run: |
+          npm ci
+          npm ci --prefix static/app
+      - name: "Query: lint"
+        working-directory: apps/query
+        run: npm run lint
+      - name: "Query: test"
+        working-directory: apps/query
+        run: npm test
+      - name: "Query: UI test"
+        working-directory: apps/query
+        run: npm run test:ui
+      - name: "Query: UI build"
+        working-directory: apps/query
+        run: npm run build:ui
+      - name: "Query: audit"
+        working-directory: apps/query
         run: |
           npm audit --omit=dev --audit-level=high
           npm audit --omit=dev --audit-level=high --prefix static/app

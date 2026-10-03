@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "JQL-föll sem haldast uppfærð: undirverk, tenglar, stigveldi, sprettasaga, athugasemdir og reikningar á reitum",
+  "admin.title": "Stillingar ArtUp Query",
+  "errors.generic": "Eitthvað fór úrskeiðis: {message}",
+  "errors.unlicensed": "ArtUp Query þarf virkt leyfi á þessu vefsvæði.",
+  "errors.forbidden": "Þú hefur ekki heimild til þess.",
+  "errors.not-found": "Fannst ekki.",
+  "errors.bad-request": "Beiðnin var ógild.",
+  "errors.internal": "Eitthvað fór úrskeiðis hjá okkur. Reyndu aftur eftir smástund.",
+  "errors.tryAgain": "Reyna aftur",
+  "loading": "Hleð…",
+  "unlicensed.title": "ArtUp Query þarfnast virks leyfis",
+  "unlicensed.body": "Biddu Jira-stjórnandann þinn að hefja prufuáskrift eða endurnýja áskriftina undir Stjórna forritum."
+}

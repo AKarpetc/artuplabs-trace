@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "JQL functions that stay fresh: subtasks, links, hierarchy, sprint history, comments and field math",
+  "admin.title": "ArtUp Query settings",
+  "errors.generic": "Something went wrong: {message}",
+  "errors.unlicensed": "ArtUp Query needs an active licence on this site.",
+  "errors.forbidden": "You don't have permission to do that.",
+  "errors.not-found": "Not found.",
+  "errors.bad-request": "The request was not valid.",
+  "errors.internal": "Something went wrong on our side. Try again in a minute.",
+  "errors.tryAgain": "Try again",
+  "loading": "Loading…",
+  "unlicensed.title": "ArtUp Query needs an active licence",
+  "unlicensed.body": "Ask your Jira administrator to start a trial or renew the subscription in Manage apps."
+}

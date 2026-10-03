@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "Her zaman güncel JQL işlevleri: alt görevler, bağlantılar, hiyerarşi, sprint geçmişi, yorumlar ve alan hesaplamaları",
+  "admin.title": "ArtUp Query ayarları",
+  "errors.generic": "Bir sorun oluştu: {message}",
+  "errors.unlicensed": "ArtUp Query için bu sitede etkin bir lisans gerekir.",
+  "errors.forbidden": "Bunu yapmaya yetkiniz yok.",
+  "errors.not-found": "Bulunamadı.",
+  "errors.bad-request": "İstek geçerli değildi.",
+  "errors.internal": "Bizim tarafımızda bir sorun oluştu. Birazdan tekrar deneyin.",
+  "errors.tryAgain": "Yeniden dene",
+  "loading": "Yükleniyor…",
+  "unlicensed.title": "ArtUp Query etkin bir lisans gerektirir",
+  "unlicensed.body": "Jira yöneticinizden Uygulamaları Yönet bölümünde deneme sürümü başlatmasını veya aboneliği yenilemesini isteyin."
+}

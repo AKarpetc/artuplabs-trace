@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "JQL-funksjoner som holder seg oppdatert: deloppgaver, koblinger, hierarki, sprinthistorikk, kommentarer og feltberegninger",
+  "admin.title": "Innstillinger for ArtUp Query",
+  "errors.generic": "Noe gikk galt: {message}",
+  "errors.unlicensed": "ArtUp Query krever en aktiv lisens på dette nettstedet.",
+  "errors.forbidden": "Du har ikke tillatelse til å gjøre dette.",
+  "errors.not-found": "Ikke funnet.",
+  "errors.bad-request": "Forespørselen var ikke gyldig.",
+  "errors.internal": "Noe gikk galt hos oss. Prøv igjen om litt.",
+  "errors.tryAgain": "Prøv igjen",
+  "loading": "Laster…",
+  "unlicensed.title": "ArtUp Query krever en aktiv lisens",
+  "unlicensed.body": "Be Jira-administratoren starte en prøveperiode eller fornye abonnementet under Administrer apper."
+}

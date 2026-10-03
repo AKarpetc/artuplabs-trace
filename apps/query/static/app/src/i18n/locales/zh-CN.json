@@ -1,0 +1,15 @@
+{
+  "app.title": "ArtUp Query",
+  "app.tagline": "保持最新的 JQL 函数：子任务、链接、层级、冲刺历史、评论和字段计算",
+  "admin.title": "ArtUp Query 设置",
+  "errors.generic": "出错了：{message}",
+  "errors.unlicensed": "ArtUp Query 需要此站点拥有有效的许可证。",
+  "errors.forbidden": "您没有执行此操作的权限。",
+  "errors.not-found": "未找到。",
+  "errors.bad-request": "请求无效。",
+  "errors.internal": "我们这边出了点问题，请稍后再试。",
+  "errors.tryAgain": "重试",
+  "loading": "加载中…",
+  "unlicensed.title": "ArtUp Query 需要有效的许可证",
+  "unlicensed.body": "请联系您的 Jira 管理员在“管理应用”中开始试用或续订。"
+}
