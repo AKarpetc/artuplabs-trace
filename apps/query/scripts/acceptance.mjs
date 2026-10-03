@@ -46,6 +46,8 @@ export const CASES = {
     ['linkedIssuesOfRecursive', ['project = JQLG AND labels = jg-lnk'], 'closure'],
     ['linkedIssuesOfRecursiveLimited', ['project = JQLG AND labels = jg-lnk', '2'], 'closure, depth 2'],
     ['hasLinks', [], 'native issueLinkType'],
+    ['hasLinks', ['blocks'], 'one direction, not native both sides'],
+    ['hasLinks', ['is blocked by'], 'inward direction'],
     ['hasLinkType', ['Blocks'], 'native, both directions'],
     ['hasSubtasks', [], 'parents of all subtasks'],
     ['previousSprint', ['@board'], 'last closed sprint'],
@@ -116,6 +118,8 @@ async function boardLatency() {
   const DAY = 86400000;
   const board = await boardId(args.board);
   if ((await sprintsOf(board, 'active')).length) throw new Error(`board ${args.board} has an active sprint: close it first`);
+  const leftover = (await sprintsOf(board, 'future')).filter((s) => s.name.startsWith('AQ fresh '));
+  if (leftover.length) throw new Error(`board ${args.board} has future sprints of an earlier run (${leftover.map((s) => s.id).join(', ')}): delete them first`);
   const backlog = (await api('GET', `/rest/agile/1.0/board/${board}/backlog?fields=key&maxResults=${args.n}`)).issues.map((x) => String(x.id));
   const C_NEXT = clause('nextSprint', [args.board]);
   const C_PREV = clause('previousSprint', [args.board]);

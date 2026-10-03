@@ -34,7 +34,32 @@ describe('api', () => {
   });
 });
 
+describe('api after a gateway error', () => {
+  it('throws UnsafeRetryError instead of resending an unsafe write after a 503', async () => {
+    const fetch = vi.fn().mockResolvedValue(ok({}, 503));
+    vi.stubGlobal('fetch', fetch);
+    await expect(api('POST', '/x', {}, { unsafe: true })).rejects.toBeInstanceOf(UnsafeRetryError);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it('retries a read whose body broke off', async () => {
+    vi.useFakeTimers();
+    const broken = { ok: true, status: 200, headers: new Headers(), text: async () => { throw timeout(); } };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(broken).mockResolvedValueOnce(ok({ a: 3 })));
+    const pending = api('GET', '/x');
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(await pending).toEqual({ a: 3 });
+    expect(stats).toEqual({ requests: 2, retries: 1, timeouts: 1 });
+  });
+});
+
 describe('write', () => {
+  it('checks whether a write answered with a 502 was applied before sending again', async () => {
+    const fetch = vi.fn().mockResolvedValue(ok({}, 502));
+    vi.stubGlobal('fetch', fetch);
+    const applied = vi.fn(async () => ({ id: '9' }));
+    expect(await write('POST', '/x', {}, applied, { settleMs: 0 })).toEqual({ id: '9' });
+    expect([fetch.mock.calls.length, applied.mock.calls.length]).toEqual([1, 1]);
+  });
   it('returns what the check found when a broken write was already applied', async () => {
     const fetch = vi.fn().mockRejectedValue(timeout());
     vi.stubGlobal('fetch', fetch);

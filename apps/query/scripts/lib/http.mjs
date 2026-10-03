@@ -9,11 +9,12 @@ export const sleep = (ms) => new Promise((resolve) => {
   setTimeout(resolve, ms);
 });
 
-/** REST call with a request timeout and retries of network errors, 429 and 5xx; `raw` returns status and text. */
+/** REST call with a request timeout and retries of network errors, 429 and 5xx; `unsafe` throws on a network error or 5xx instead; `raw` returns status and text. */
 export async function api(method, path, body, { raw = false, attempts = 8, timeoutMs = 30000, unsafe = false } = {}) {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     stats.requests += 1;
     let res;
+    let text = '';
     try {
       res = await fetch(`${SITE}${path}`, {
         method,
@@ -21,6 +22,7 @@ export async function api(method, path, body, { raw = false, attempts = 8, timeo
         body: body ? JSON.stringify(body) : undefined,
         signal: AbortSignal.timeout(timeoutMs),
       });
+      if (res.status !== 429 && res.status < 500) text = await res.text();
     } catch (error) {
       stats.retries += 1;
       if (error?.name === 'TimeoutError') stats.timeouts += 1;
@@ -28,12 +30,15 @@ export async function api(method, path, body, { raw = false, attempts = 8, timeo
       await sleep(500 * 2 ** attempt);
       continue;
     }
+    if (unsafe && res.status >= 500) {
+      stats.retries += 1;
+      throw new UnsafeRetryError(`${method} ${path}: ${res.status}`);
+    }
     if (res.status === 429 || res.status >= 500) {
       stats.retries += 1;
       await sleep(Number(res.headers.get('retry-after')) * 1000 || 500 * 2 ** attempt);
       continue;
     }
-    const text = await res.text();
     if (raw) return { status: res.status, text };
     if (!res.ok) throw Object.assign(new Error(`${method} ${path} → ${res.status} ${text.slice(0, 300)}`), { status: res.status, text });
     return text ? JSON.parse(text) : null;
@@ -41,7 +46,7 @@ export async function api(method, path, body, { raw = false, attempts = 8, timeo
   throw new Error(`${method} ${path} → gave up after ${attempts} attempts`);
 }
 
-/** Non-idempotent write: after a timeout or a broken connection it asks `applied()` and sends again only when that finds nothing. */
+/** Non-idempotent write: after a timeout, a broken connection or a 5xx it asks `applied()` and sends again only when that finds nothing. */
 export async function write(method, path, body, applied, { attempts = 4, settleMs = 3000, raw = false } = {}) {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
