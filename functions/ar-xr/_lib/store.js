@@ -7,6 +7,9 @@ export const keys = {
     user: emailHash => `users/${emailHash}.json`,
     session: tokenHash => `sessions/${tokenHash}.json`,
     throttle: emailHash => `throttle/${emailHash}.json`,
+    handoff: codeHash => `handoff/${codeHash}.json`,
+    handoffIndex: owner => `handoff-index/${owner}.json`,
+    ipThrottle: ipHash => `throttle-ip/${ipHash}.json`,
     modelSettings: () => 'settings/models.json',
     library: path => `library/${path}`
 };

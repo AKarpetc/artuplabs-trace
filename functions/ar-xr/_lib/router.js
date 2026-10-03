@@ -8,6 +8,7 @@ import {
     requireProject, requireRoom, requireWriter, roomView, saveLayout
 } from './projects.js';
 import { login, logout, me, register } from './auth.js';
+import { createHandoff, redeemHandoff } from './handoff.js';
 import { getSettings, patchModel, removeModel, requireAdmin } from './settings.js';
 import { isModelPath, parseCredentials, parseLayout, parseModelSettingsPatch, parseQuoteItems, parseRoomName } from './validate.js';
 
@@ -160,6 +161,15 @@ async function route(request, env, url, raw, clock) {
             await logout(env, request);
             return noContent();
         }
+    }
+
+    if (a === 'auth' && b === 'handoff' && n === 2) {
+        allow(m, ['POST']);
+        return json(await createHandoff(env, request, await readJson(request), clock()), 201);
+    }
+    if (a === 'auth' && b === 'handoff' && c === 'redeem' && n === 3) {
+        allow(m, ['POST']);
+        return json(await redeemHandoff(env, request, await readJson(request), clock()));
     }
 
     if (a === 'model-settings') {

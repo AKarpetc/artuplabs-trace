@@ -11,14 +11,14 @@ export const THROTTLE_MAX_FAILURES = 10;
 
 const emailHashOf = email => sha256Hex(email);
 
-async function createSession(env, emailHash, now) {
+export async function createSession(env, emailHash, now) {
     const token = randomToken();
     await putJson(env.ARXR, keys.session(await sha256Hex(token)), { emailHash, exp: now + SESSION_TTL_MS });
     return token;
 }
 
 /** Проверяет `device` из тела: проект существует и токен совпадает. */
-async function validDevice(env, device) {
+export async function validDevice(env, device) {
     if (!device)
         return null;
     const record = await loadProject(env, device.projectId);
@@ -28,7 +28,7 @@ async function validDevice(env, device) {
 }
 
 /** Проект аккаунта; если он пропал из хранилища — создаётся новый и запоминается в записи пользователя. */
-async function ensureAccountProject(env, user, now) {
+export async function ensureAccountProject(env, user, now) {
     const record = await loadProject(env, user.projectId);
     if (record)
         return;
@@ -108,7 +108,7 @@ export async function login(env, { email, password, device }, now) {
     return accountView(user, token, { mergedRooms });
 }
 
-function bearer(request) {
+export function bearer(request) {
     const header = request.headers.get('Authorization') ?? '';
     const match = /^Bearer\s+([A-Za-z0-9_-]{20,200})$/.exec(header.trim());
     return match ? match[1] : null;
