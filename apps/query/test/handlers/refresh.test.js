@@ -93,11 +93,28 @@ describe('refreshOnce', () => {
     expect((await refreshOnce(deps)).recomputed).toBe(1);
     expect(deps.written).toEqual([{ id: 'root', value: 'id in (1)', error: null }]);
   });
+  it('checks 60 touched issues against a query group in searches of 50 and leaves it when none matter', async () => {
+    const pcs = [{ id: 'root', functionName: 'subtasksOf', arguments: ['key = A-1'], value: 'parent in (1)', used: RECENT }];
+    const compute = { subtasksOf: vi.fn() };
+    const deps = makeDeps({ pcs, compute });
+    await deps.cache.write('subtasksOf["key = A-1"]', { values: ['1'], watch: ['1'], field: 'parent', rootFilter: null, at: 1, source: 'refresh' });
+    await deps.journal.append({ ids: ids(60, 100), kinds: ['issue-updated'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ all: false, recomputed: 0 });
+    expect(compute.subtasksOf).not.toHaveBeenCalled();
+    expect(deps.searched).toEqual([[`(key = A-1) AND id in (${ids(50, 100).join(',')})`, ids(50, 100)], [`(key = A-1) AND id in (${ids(10, 150).join(',')})`, ids(10, 150)]]);
+  });
+  it('recomputes a query group when a later search of touched issues matches', async () => {
+    const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: RECENT }];
+    const deps = makeDeps({ pcs, searches: { [`(q) AND id in (${ids(10, 150).join(',')})`]: ['155'] }, compute: { parentsOf: async () => ({ ids: ['2'], field: 'id', watch: [] }) } });
+    await deps.cache.write('parentsOf["q"]', { values: ['1'], watch: [], field: 'id', rootFilter: null, at: 1, source: 'refresh' });
+    await deps.journal.append({ ids: ids(60, 100), kinds: ['issue-updated'] }, 999500);
+    expect((await refreshOnce(deps)).recomputed).toBe(1);
+  });
   it('recomputes every group when the journal page asks for everything', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: RECENT }];
     const seen = [];
     const deps = makeDeps({ pcs, compute: { parentsOf: async (args, ctx) => { seen.push(ctx.reconcile); return { ids: ['1'], field: 'id', watch: [] }; } } });
-    await deps.journal.append({ ids: ids(60), kinds: ['issue-updated'] }, 999500);
+    await deps.journal.append({ ids: ids(201), kinds: ['issue-updated'] }, 999500);
     const pass = await refreshOnce(deps);
     expect([pass.all, pass.recomputed, deps.searched]).toEqual([true, 1, []]);
     expect(seen).toEqual([ids(50)]);

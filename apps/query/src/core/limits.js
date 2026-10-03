@@ -22,7 +22,10 @@ export const HEAVY_QUEUED_STALE_MS = 30 * 60 * 1000;
 export const LEASE_MS = 90 * 1000;
 export const PENDING_STALE_MS = 6 * 60 * 1000;
 export const JOURNAL_PAGE = 100;
+/** Touched issues a pass reports and verifies again after VERIFY_DELAY_S. */
 export const MAX_TOUCHED = 50;
+/** Touched issues a pass checks against each query group (in searches of RECONCILE_MAX); more make it recompute every group. */
+export const TOUCHED_CHECK_MAX = 200;
 export const VERIFY_DELAY_S = 20;
 export const ACTIVE_MS = 7 * 24 * 60 * 60 * 1000;
 export const RECONCILE_USED_MS = 24 * 60 * 60 * 1000;

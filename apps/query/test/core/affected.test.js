@@ -21,8 +21,11 @@ describe('summarizeJournal', () => {
   it('reads a row without ids as touching nothing', () => {
     expect(summarizeJournal([{ key: 't:000000000000005:x', value: { kinds: ['sprint'] } }])).toEqual({ touched: [], kinds: ['sprint'], all: false, firstAt: 5 });
   });
-  it('recomputes everything when more than 50 issues are touched', () => {
-    expect(summarizeJournal([row(1, Array.from({ length: 51 }, (_, i) => String(i)), ['issue-updated'])]).all).toBe(true);
+  it('checks up to 200 touched issues group by group instead of recomputing everything', () => {
+    expect(summarizeJournal([row(1, Array.from({ length: 200 }, (_, i) => String(i)), ['issue-updated'])]).all).toBe(false);
+  });
+  it('recomputes everything when more than 200 issues are touched', () => {
+    expect(summarizeJournal([row(1, Array.from({ length: 201 }, (_, i) => String(i)), ['issue-updated'])]).all).toBe(true);
   });
 });
 

@@ -1,4 +1,4 @@
-import { JOURNAL_PAGE, MAX_TOUCHED } from './limits.js';
+import { JOURNAL_PAGE, TOUCHED_CHECK_MAX } from './limits.js';
 import { FUNCTION_BY_NAME } from './catalog.js';
 import { groupKey, splitPage } from './args.js';
 import { sortIds } from './ids.js';
@@ -15,7 +15,7 @@ const FAMILY_KINDS = {
 const RELATIVE = /(^|[\s"(])[-+]\d+[mhdw]\b|\b(start|end)Of(Day|Week|Month|Year)\s*\(/i;
 
 /** A journal page → touched ids, change kinds, the oldest event time and whether everything must be recomputed. */
-export function summarizeJournal(rows, { page = JOURNAL_PAGE, maxTouched = MAX_TOUCHED } = {}) {
+export function summarizeJournal(rows, { page = JOURNAL_PAGE, maxTouched = TOUCHED_CHECK_MAX } = {}) {
   const ids = new Set();
   const kinds = new Set();
   let firstAt = null;

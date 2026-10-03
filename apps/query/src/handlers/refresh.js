@@ -30,6 +30,7 @@ function jobGroups(jobs, groups) {
   return jobs.filter((j) => !known.has(j.key)).map((j) => ({ key: j.key, functionName: j.functionName, family: FUNCTION_BY_NAME.get(j.functionName)?.family ?? 'query', userArgs: j.userArgs, items: [] }));
 }
 
+/** Whether a group must be recomputed for this journal page: a query group when a touched issue is watched or now matches its subquery, checked in searches of RECONCILE_MAX. */
 async function isStale(deps, group, summary) {
   if (summary.all || group.items.some(needsRepair)) return true;
   if (group.family !== 'query') return familyWants(group.family, summary.kinds);
@@ -37,13 +38,18 @@ async function isStale(deps, group, summary) {
   const parsed = parseArgs(group.functionName, group.userArgs);
   if (parsed.error) return false;
   const watch = await deps.cache.watch(group.key);
+  if (watch && summary.touched.some((id) => watch.has(id))) return true;
   const touched = new Set(summary.touched);
-  let liveHits = null;
+  const liveHits = [];
   try {
-    const hits = await deps.jira.searchIds(`(${parsed.args.subquery}) AND id in (${summary.touched.join(',')})`, { reconcile: summary.touched.slice(0, RECONCILE_MAX) });
-    liveHits = hits.filter((id) => touched.has(String(id)));
+    for (let i = 0; i < summary.touched.length && !liveHits.length; i += RECONCILE_MAX) {
+      const part = summary.touched.slice(i, i + RECONCILE_MAX);
+      const hits = await deps.jira.searchIds(`(${parsed.args.subquery}) AND id in (${part.join(',')})`, { reconcile: part });
+      liveHits.push(...hits.filter((id) => touched.has(String(id))));
+    }
   } catch (error) {
     if (error?.name !== 'JiraError') throw error;
+    return true;
   }
   return queryOverlap({ touched: summary.touched, watch, liveHits });
 }
