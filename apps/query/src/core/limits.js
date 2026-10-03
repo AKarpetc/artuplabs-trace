@@ -28,6 +28,8 @@ export const REQUEST_ATTEMPTS = 6;
 export const RETRY_BASE_MS = 300;
 /** Longest single retry sleep: the retries of one request (attempts − 1 sleeps) stay inside the function budget. */
 export const RETRY_MAX_MS = 3000;
+/** Longest retry sleep of a queue worker: no cap, Retry-After is waited in full. */
+export const WORKER_RETRY_MAX_MS = Number.POSITIVE_INFINITY;
 /** Issue ids one search may pass as reconcileIssues (Jira's limit). */
 export const RECONCILE_MAX = 50;
 /** Reads of a cached group: the second one follows a generation switched during the first. */

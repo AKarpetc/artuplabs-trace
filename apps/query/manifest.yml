@@ -193,6 +193,30 @@ modules:
         - in
         - not in
       function: fn-nex-spr
+  trigger:
+    - key: query-events
+      function: on-event
+      events:
+        - avi:jira:created:issue
+        - avi:jira:updated:issue
+        - avi:jira:deleted:issue
+        - avi:jira:created:issuelink
+        - avi:jira:deleted:issuelink
+        - avi:jira-software:created:sprint
+        - avi:jira-software:started:sprint
+        - avi:jira-software:closed:sprint
+        - avi:jira-software:updated:sprint
+        - avi:jira-software:deleted:sprint
+      filter:
+        ignoreSelf: true
+  consumer:
+    - key: query-refresh-consumer
+      queue: query-refresh
+      function: on-refresh
+  scheduledTrigger:
+    - key: query-reconcile
+      function: on-reconcile
+      interval: hour
   function:
     - key: resolver
       handler: index.resolverHandler
@@ -222,6 +246,14 @@ modules:
       handler: index.previousSprint
     - key: fn-nex-spr
       handler: index.nextSprint
+    - key: on-event
+      handler: index.onEvent
+    - key: on-refresh
+      handler: index.onRefresh
+      timeoutSeconds: 300
+    - key: on-reconcile
+      handler: index.onReconcile
+      timeoutSeconds: 900
 resources:
   - key: global-page
     path: static/app/dist/global-page

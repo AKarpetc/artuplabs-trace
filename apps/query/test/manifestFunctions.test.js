@@ -34,4 +34,22 @@ describe('manifest JQL functions', () => {
     expect(manifest.permissions.scopes.filter((s) => s.startsWith('write:') && s !== 'write:app-data:jira')).toEqual([]);
     expect(manifest.permissions.external).toBeUndefined();
   });
+  it('subscribes the event trigger to sprint events for the board functions', () => {
+    const events = manifest.modules.trigger.find((t) => t.key === 'query-events').events;
+    expect(events.filter((e) => e.startsWith('avi:jira-software:') && e.endsWith(':sprint')).length).toBeGreaterThanOrEqual(2);
+  });
+  it('does not subscribe to comment mentions or to an edited-comment event', () => {
+    const events = manifest.modules.trigger.flatMap((t) => t.events);
+    expect(events.filter((e) => e === 'avi:jira:mentioned:comment' || e === 'avi:jira:updated:comment')).toEqual([]);
+  });
+  it('wires the event trigger, the refresh consumer and the hourly reconcile to exported handlers', () => {
+    const handlers = new Map(manifest.modules.function.map((x) => [x.key, x.handler]));
+    const wired = [
+      manifest.modules.trigger.find((t) => t.key === 'query-events').function,
+      manifest.modules.consumer.find((c) => c.queue === 'query-refresh').function,
+      manifest.modules.scheduledTrigger.find((t) => t.interval === 'hour').function,
+    ].map((key) => handlers.get(key));
+    expect(wired).toEqual(['index.onEvent', 'index.onRefresh', 'index.onReconcile']);
+    for (const name of ['onEvent', 'onRefresh', 'onReconcile']) expect(indexText).toMatch(new RegExp(`export const ${name}\\b`));
+  });
 });

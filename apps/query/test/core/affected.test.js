@@ -48,7 +48,9 @@ describe('familyWants', () => {
     expect(familyWants('subtasks', ['link'])).toBe(false);
     expect(familyWants('sprint', ['status'])).toBe(true);
     expect(familyWants('board', ['sprint'])).toBe(true);
-    expect(familyWants('links', ['link'])).toBe(false);
+    expect(familyWants('links', ['link'])).toBe(true);
+    expect(familyWants('links', ['issue-deleted'])).toBe(true);
+    expect(familyWants('links', ['issue-updated'])).toBe(false);
     expect(familyWants('comment', ['issue-deleted'])).toBe(true);
     expect(familyWants('attachment', ['comment'])).toBe(false);
   });

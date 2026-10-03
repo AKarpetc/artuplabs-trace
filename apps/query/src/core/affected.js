@@ -5,7 +5,7 @@ import { sortIds } from './ids.js';
 
 const FAMILY_KINDS = {
   query: [],
-  links: [],
+  links: ['link', 'issue-deleted'],
   subtasks: ['issue-created', 'issue-deleted', 'parent'],
   board: ['sprint'],
   sprint: ['sprint', 'sprint-field', 'status', 'issue-deleted'],

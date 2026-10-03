@@ -2,8 +2,13 @@ import Resolver from '@forge/resolver';
 import { createDeps } from './deps.js';
 import { createFunctionHandlers } from './handlers/functions.js';
 import { createResolverDefinitions } from './handlers/resolvers.js';
+import { onEvent as handleEvent } from './handlers/trigger.js';
+import { onRefresh as handleRefresh } from './handlers/refresh.js';
+import { onReconcile as handleReconcile } from './handlers/reconcile.js';
+import { WORKER_RETRY_MAX_MS } from './core/limits.js';
 
 const deps = createDeps();
+const workerDeps = createDeps({ retryMaxMs: WORKER_RETRY_MAX_MS });
 const resolver = new Resolver();
 for (const [key, fn] of Object.entries(createResolverDefinitions(deps))) resolver.define(key, fn);
 
@@ -36,3 +41,10 @@ export const fileAttached = handlers.fileAttached;
 export const hasAttachments = handlers.hasAttachments;
 export const dateCompare = handlers.dateCompare;
 export const expression = handlers.expression;
+
+/** Product event trigger. */
+export const onEvent = (event) => handleEvent(deps, event);
+/** Consumer of the query-refresh queue. */
+export const onRefresh = (event) => handleRefresh(workerDeps, event);
+/** Hourly reconcile. */
+export const onReconcile = () => handleReconcile(workerDeps);

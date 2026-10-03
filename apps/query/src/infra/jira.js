@@ -29,14 +29,14 @@ function messagesOf(raw) {
   }
 }
 
-/** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff, each sleep capped at RETRY_MAX_MS. */
-export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS } = {}) {
+/** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff, each sleep capped at `retryMaxMs`. */
+export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS } = {}) {
   async function call(method, path, body) {
     for (let attempt = 1; ; attempt += 1) {
       const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
       const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
       if ((res.status === 429 || res.status >= 500) && attempt < attempts) {
-        await sleep(Math.min(Number(res.headers.get('retry-after')) * 1000 || RETRY_BASE_MS * 2 ** attempt, RETRY_MAX_MS));
+        await sleep(Math.min(Number(res.headers.get('retry-after')) * 1000 || RETRY_BASE_MS * 2 ** attempt, retryMaxMs));
         continue;
       }
       const raw = await res.text();
@@ -146,4 +146,4 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS 
 }
 
 /** Client acting as the app, against the Jira of the installation only. */
-export const appJira = () => createJira((path, init) => api.asApp().requestJira(assumeTrustedRoute(path), init));
+export const appJira = (options = {}) => createJira((path, init) => api.asApp().requestJira(assumeTrustedRoute(path), init), options);
