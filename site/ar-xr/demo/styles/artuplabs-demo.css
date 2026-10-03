@@ -247,3 +247,17 @@ main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-
 .xr-hero__tools { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
 .xr-hero__tools .lang-switch { color: #f8fafc; }
 .xr-guide__contacts { margin-top: 8px; }
+
+/* ─── «Мои планы» с числом планов устройства ─────────────────────────────── */
+.plans-slot { display: flex; }
+.plans-slot[hidden] { display: none; }
+.plans-button { gap: 6px; white-space: nowrap; }
+.plans-button[aria-current="page"] { border-color: var(--demo-accent); }
+.plans-button__badge {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--demo-accent); color: #0b1320; font: 700 12px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums;
+}
+.plans-button__badge[hidden] { display: none; }
+.plans-slot--floating { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); z-index: 50; }
+.plans-slot--floating .plans-button { background: rgba(13, 18, 28, .78); color: #f8fafc; border: 1px solid rgba(255, 255, 255, .2); text-decoration: none; padding: 6px 12px; border-radius: 999px; font: 600 14px/1.2 system-ui, sans-serif; display: inline-flex; align-items: center; }
+.xr-hero__tools .plans-button { text-transform: none; letter-spacing: normal; }

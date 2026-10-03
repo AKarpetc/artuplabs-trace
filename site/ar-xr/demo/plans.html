@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111418">
-  <title data-i18n="designs.docTitle">ArtUp AR XR — мои дизайны</title>
+  <title data-i18n="designs.docTitle">ArtUp AR XR — мои планы</title>
   <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
   <link type="text/css" href="./styles/demo.css" rel="stylesheet" />
   <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); страница работает и без них. -->
@@ -22,11 +22,12 @@
       <nav class="ax-nav" aria-label="Разделы демо" data-i18n-attr="aria-label:nav.label">
         <ul>
           <li><a href="./demo.html#catalog" data-i18n="nav.catalog">Каталог</a></li>
-          <li><a aria-current="page" href="./plans.html" data-i18n="nav.designs">Мои дизайны</a></li>
+          <li><a aria-current="page" href="./plans.html" data-i18n="nav.plans">Мои планы</a></li>
           <li><a class="nav-small" href="./admin.html" data-i18n="nav.admin">Админка</a></li>
         </ul>
       </nav>
       <div class="ax-header-actions">
+        <div id="plansSlot" class="plans-slot" hidden></div>
         <div id="handoffSlot" class="handoff-slot" hidden></div>
         <div data-lang-switch hidden></div>
         <div id="accountSlot" class="account-slot" hidden></div>
@@ -35,8 +36,8 @@
   </header>
 
   <main class="page-main">
-    <h1 data-i18n="designs.title">Мои дизайны</h1>
-    <p class="muted" data-i18n="designs.lead">Расстановки мебели, сохранённые в XR кнопкой «Сохранить план». Итог — по ориентировочным ценам IKEA US.</p>
+    <h1 data-i18n="designs.title">Мои планы</h1>
+    <p class="muted" data-i18n="designs.lead">Расстановки мебели, сохранённые в XR кнопкой «Сохранить план». Планы сохраняются на этом устройстве — без регистрации. Итог — по ориентировочным ценам IKEA US.</p>
     <div class="page-toolbar">
       <div id="currency-switch" hidden></div>
       <a class="ax-btn ax-btn-secondary ax-btn-sm" href="./xrviewer.html" data-i18n="designs.newInXr">Новая расстановка в XR</a>

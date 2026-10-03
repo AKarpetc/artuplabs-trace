@@ -65,11 +65,11 @@
 
     <div id="main" class="main hidden">
         <header class="xr-hero">
-            <p class="xr-hero__eyebrow"><a class="xr-hero__brand" href="./demo.html"><img class="xr-hero__logo" src="../assets/ar-xr-icon.svg" alt="" width="24" height="24"><span>ArtUp AR XR</span></a><span class="xr-hero__eyebrow-tail" data-i18n="xr.roomLabel">XR-комната</span><span class="xr-hero__tools"><span id="handoffSlot" class="handoff-slot" hidden></span><span data-lang-switch hidden></span></span></p>
+            <p class="xr-hero__eyebrow"><a class="xr-hero__brand" href="./demo.html"><img class="xr-hero__logo" src="../assets/ar-xr-icon.svg" alt="" width="24" height="24"><span>ArtUp AR XR</span></a><span class="xr-hero__eyebrow-tail" data-i18n="xr.roomLabel">XR-комната</span><span class="xr-hero__tools"><span id="plansSlot" class="plans-slot" hidden></span><span id="handoffSlot" class="handoff-slot" hidden></span><span data-lang-switch hidden></span></span></p>
             <h1 class="xr-hero__title" data-i18n="xr.heroTitle">Расставьте товары в своей комнате</h1>
             <p class="xr-hero__lead">
                 <span data-i18n="xr.heroLead">Наведите камеру на пол, выберите модель из каталога и поставьте её на место.</span>
-                <span id="xrRoomPersistenceNote" data-i18n="xr.persistenceNote">Готовую расстановку сохраните кнопкой «Сохранить план»: план хранится на этом устройстве, а после входа — в аккаунте, и открывается в «Мои дизайны».</span>
+                <span id="xrRoomPersistenceNote" data-i18n="xr.persistenceNote">Готовую расстановку сохраните кнопкой «Сохранить план». Планы сохраняются на этом устройстве — без регистрации — и открываются в «Мои планы».</span>
             </p>
 
             <ol class="xr-steps">
@@ -97,7 +97,7 @@
                         поворачивать, масштабировать и удалять кнопками справа.</p>
                     <p data-i18n-html="xr.guideSaving"><b>Сохранение.</b> Кнопка «Сохранить план» вверху экрана сохраняет расстановку с названием
                         и итогом; если вы начали со свободной расстановки, она попросит отметить два угла стены.
-                        Сохранённые планы — в «Мои дизайны».</p>
+                        Сохранённые планы — в «Мои планы».</p>
                     <p class="xr-guide__contacts" data-contacts><span data-i18n="xr.guideHelp">Нужна помощь?</span> <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
                 </div>
             </details>
@@ -107,20 +107,20 @@
 
         <section id="roomPanel" class="room-panel" aria-labelledby="roomPanelTitle">
             <div class="room-panel__head">
-                <h2 id="roomPanelTitle" class="room-panel__title" data-i18n="xr.roomPanelTitle">Дизайн</h2>
-                <span id="roomActive" class="room-panel__active" data-i18n="xr.noRoom">Дизайн не выбран</span>
+                <h2 id="roomPanelTitle" class="room-panel__title" data-i18n="xr.roomPanelTitle">План</h2>
+                <span id="roomActive" class="room-panel__active" data-i18n="xr.noRoom">План не выбран</span>
             </div>
 
             <p class="room-panel__hint" data-i18n="xr.roomPanelHint">
-                Выберите дизайн, чтобы продолжить его, или начните новый — кнопка «Сохранить план» в XR сама
-                создаст дизайн с названием. Дизайны хранятся на этом устройстве, а после входа — в аккаунте.
-                Ссылка и QR-код открывают дизайн на другом устройстве только для просмотра.
+                Выберите план, чтобы продолжить его, или начните новый — кнопка «Сохранить план» в XR сама
+                создаст план с названием. Планы сохраняются на этом устройстве — без регистрации.
+                Ссылка и QR-код открывают план на другом устройстве только для просмотра.
             </p>
 
             <div id="roomList" class="room-panel__list"></div>
 
             <button id="roomCreate" type="button" class="avt-btn avt-btn--ghost avt-btn--block room-panel__button">
-                <i class="fa fa-plus" aria-hidden="true"></i> <span data-i18n="xr.newRoom">Новый дизайн</span>
+                <i class="fa fa-plus" aria-hidden="true"></i> <span data-i18n="xr.newRoom">Новый план</span>
             </button>
         </section>
 
@@ -141,7 +141,7 @@
                 <select id="xrPickStyle" class="xr-pick__select"></select>
             </label>
             <p id="xrPickCount" class="xr-pick__count" aria-live="polite"></p>
-            <p class="xr-pick__links"><a href="./demo.html#catalog" data-i18n="xr.pickInCatalog">Выбрать в каталоге</a> · <a href="./plans.html" data-i18n="nav.designs">Мои дизайны</a></p>
+            <p class="xr-pick__links"><a href="./demo.html#catalog" data-i18n="xr.pickInCatalog">Выбрать в каталоге</a> · <a href="./plans.html" data-i18n="nav.plans">Мои планы</a></p>
             <div class="xr-pick__currency"><span class="xr-pick__label" data-i18n="xr.priceCurrency">Валюта цен</span><div id="xrCurrency" hidden></div></div>
         </section>
         <!-- Появляется, когда immersive-ar подтверждён и сцена с каталогом готова;
@@ -181,13 +181,13 @@
         <span class="log" id="log"></span>
         <div id="roomBadge" class="room-badge hidden"></div>
         <!-- Итог расставленных моделей по ценам каталога (точный расчёт — на backend), «Сохранить план»
-             и «Мои дизайны». Сохранение видно, только если проект этого устройства можно менять. -->
+             и «Мои планы». Сохранение видно, только если проект этого устройства можно менять. -->
         <div id="xrTotal" class="xr-total hidden" data-xr-dom>
             <span id="xrTotalText" class="xr-total__text hidden" aria-live="polite"></span>
             <div class="xr-total__actions">
                 <button id="xrQuoteButton" type="button" class="xr-total__button hidden" onclick="showXrQuote()" data-i18n="xr.calcCost">Рассчитать стоимость</button>
                 <button id="xrSavePlan" type="button" class="xr-total__button xr-total__button--save hidden" onclick="openSavePlan()" data-i18n="xr.savePlan">Сохранить план</button>
-                <button id="xrDesigns" type="button" class="xr-total__button xr-total__button--ghost hidden" onclick="openXrDesigns()" data-i18n="nav.designs">Мои дизайны</button>
+                <button id="xrDesigns" type="button" class="xr-total__button xr-total__button--ghost hidden" onclick="openXrDesigns()" data-i18n="nav.plans">Мои планы</button>
             </div>
         </div>
 
