@@ -74,13 +74,13 @@
     <script src="./src/common/loading.js?v=662bf7395d"></script>
     <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
 
-    <!-- Loads <model-viewer> for browsers: -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js?v=1.0.0"></script>
+    <!-- <model-viewer> (со своей копией three.js) подгружает src/viewer/render.js и только там, где он
+         пусковая площадка AR (Quick Look, Android WebXR): у десктопа и Scene Viewer на странице одна three.js. -->
     <script>
         self.ModelViewerElement = self.ModelViewerElement || {};
         self.ModelViewerElement.meshoptDecoderLocation = 'https://cdn.jsdelivr.net/npm/meshoptimizer/meshopt_decoder.js';
         </script>
-    <script type="module" src="./dist/viewer.bandle.js?v=7a1b631693"></script>
+    <script type="module" src="./dist/viewer.bandle.js?v=e7a451dc54"></script>
 </body>
 
 </html>
