@@ -30,6 +30,16 @@ describe('onReconcile', () => {
     expect(await onReconcile(deps)).toEqual({ groups: 1, changed: 0, index: null });
     expect([(await deps.state.heavy.get('hasSubtasks[]')).functionName, deps.pushed]).toEqual(['hasSubtasks', [[{ kind: 'heavy' }, null]]]);
   });
+  it('pushes the heavy runner once for several slow groups', async () => {
+    const pcs = [
+      { id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT, updated: old },
+      { id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'parent in (1)', used: RECENT, updated: old },
+    ];
+    const late = async () => { throw Object.assign(new Error('late'), { name: 'DeadlineError' }); };
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: late, childIssuesOf: late } });
+    await onReconcile(deps);
+    expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
+  });
   it('restarts the heavy lane when groups wait in it', async () => {
     const deps = makeDeps();
     await deps.state.heavy.put({ key: 'hasSubtasks[]', functionName: 'hasSubtasks', userArgs: [], at: 1 });

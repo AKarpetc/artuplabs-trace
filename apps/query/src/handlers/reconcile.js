@@ -10,10 +10,9 @@ export async function onReconcile(deps) {
     now: startedAt, usedMs: RECONCILE_USED_MS, staleMs: RECONCILE_STALE_MS, max: RECONCILE_MAX_GROUPS,
   });
   const byGroup = [];
-  let handed = 0;
+  let queued = false;
   const handOver = async (group) => {
-    handed += 1;
-    await handOff(deps, group);
+    if (await handOff(deps, group)) queued = true;
   };
   await pool(groups, REFRESH_CONCURRENCY, async (group) => {
     try {
@@ -32,6 +31,6 @@ export async function onReconcile(deps) {
     await deps.state.lastWrittenStart.set(startedAt);
     changed = await writeGroups(deps, startedAt, byGroup);
   }
-  if (!handed && (await deps.state.heavy.oldest())) await pushQuietly(deps, { kind: 'heavy' });
+  if (queued || (await deps.state.heavy.oldest())) await pushQuietly(deps, { kind: 'heavy' });
   return { groups: groups.length, changed, index: await deps.indexReconcile() };
 }

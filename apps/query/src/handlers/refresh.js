@@ -70,13 +70,17 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const byGroup = [];
   let recomputed = 0;
   let handed = 0;
+  let queued = false;
   let failed = 0;
+  const handOver = async (group) => {
+    handed += 1;
+    if (await handOff(deps, group)) queued = true;
+  };
   await pool(all, REFRESH_CONCURRENCY, async (group) => {
     try {
       if (!(await isStale(deps, group, summary))) return;
       if (await isHeavy(deps, group)) {
-        handed += 1;
-        await handOff(deps, group);
+        await handOver(group);
         return;
       }
       const groupDeadline = Math.min(deps.now() + REFRESH_GROUP_BUDGET_MS, deadline);
@@ -84,8 +88,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
       recomputed += 1;
     } catch (error) {
       if (isDeadline(error)) {
-        handed += 1;
-        await handOff(deps, group);
+        await handOver(group);
         return;
       }
       recomputed += 1;
@@ -95,6 +98,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
       await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
     }
   });
+  if (queued) await pushQuietly(deps, { kind: 'heavy' });
   let stale = false;
   let changed = 0;
   if (byGroup.some(([, updates]) => updates.length)) {

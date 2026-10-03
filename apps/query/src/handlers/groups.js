@@ -68,12 +68,12 @@ export async function isHeavy(deps, group) {
   return ((await deps.cache.meta(group.key))?.ms ?? 0) >= REFRESH_GROUP_BUDGET_MS;
 }
 
-/** Queues a group in the heavy lane, once: an entry that is waiting will start after this call, so it sees every change made before it. */
+/** Queues a group in the heavy lane, once (an entry that is waiting will start after this call, so it sees every change made before it); true when it queued, and the caller then pushes one runner. */
 export async function handOff(deps, group) {
   const waiting = await deps.state.heavy.get(group.key);
-  if (waiting && deps.now() - waiting.at < HEAVY_QUEUED_STALE_MS) return;
+  if (waiting && deps.now() - waiting.at < HEAVY_QUEUED_STALE_MS) return false;
   await deps.state.heavy.put({ key: group.key, functionName: group.functionName, userArgs: group.userArgs, at: deps.now() });
-  await pushQuietly(deps, { kind: 'heavy' });
+  return true;
 }
 
 /** Computes one group within the worker budget and writes its precomputations (clearing a stored Computing error); a group still without precomputations stays a background job. */

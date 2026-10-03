@@ -392,6 +392,16 @@ describe('heavy groups in a refresh pass', () => {
     expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
     expect(await deps.journal.read(10)).toEqual([]);
   });
+  it('pushes the heavy runner once for several groups handed in one pass', async () => {
+    const pcs = [
+      { id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'parent in (1)', used: RECENT },
+      { id: 'd', functionName: 'childIssuesOf', arguments: ['r'], value: 'parent in (1)', used: RECENT },
+    ];
+    const deps = makeDeps({ pcs, compute: { childIssuesOf: async () => { throw deadlineError(); } } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    expect((await refreshOnce(deps)).handed).toBe(2);
+    expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
+  });
   it('hands a group known to be slow to the heavy lane without computing it', async () => {
     const compute = { childIssuesOf: vi.fn() };
     const deps = makeDeps({ pcs: heavyPcs, compute });
