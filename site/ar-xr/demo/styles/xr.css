@@ -747,8 +747,13 @@ input[type=range][orient=vertical] {
     bottom: calc(150px + var(--avt-safe-bottom));
     left: calc(var(--avt-space-4) + var(--avt-safe-left));
     z-index: 910;
+    /* Класс toolbar_button даёт стекло и тень; размер, рамка и раскладка — свои: площадка 100×100
+       вместе с рамкой, центр ручки и стрелок — ровно центр площадки. */
+    display: block;
+    box-sizing: border-box;
     width: 100px;
     height: 100px;
+    padding: 0;
     background: var(--avt-glass);
     border: 1px solid var(--avt-glass-border);
     border-radius: 50%;
@@ -758,26 +763,44 @@ input[type=range][orient=vertical] {
     -webkit-backdrop-filter: blur(12px);
 }
 
+/* Селектор по id сильнее утилиты `.hidden`: скрытая площадка скрывается явно. */
+#joystick-container.hidden {
+    display: none;
+}
+
+/* Ручка: в покое — в центре; смещение пальца — переменные --dx/--dy (index.js, joystick.mjs). */
 #joystick {
     position: absolute;
-    top: 25px;
-    left: 25px;
+    top: 50%;
+    left: 50%;
+    box-sizing: border-box;
     width: 50px;
     height: 50px;
     background: rgba(var(--avt-tint-light), 0.45);
     border-radius: 50%;
-    transition: top 0.1s, left 0.1s;
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)));
+    transition: transform 0.1s;
+    pointer-events: none;
 }
 
 .arrow-h {
     position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
     color: var(--avt-ink-inverse);
+    line-height: 1;
+    pointer-events: none;
 }
 
-.arrow-h__left { top: 35px; left: 6px; }
-.arrow-h__up { top: -4px; left: 45px; }
-.arrow-h__down { top: 78px; left: 45px; }
-.arrow-h__right { top: 35px; right: 6px; }
+/* Стрелки симметричны относительно центра: по 40 px от него (между ручкой и краем площадки). */
+.arrow-h__left { transform: translate(calc(-50% - 40px), -50%); }
+.arrow-h__right { transform: translate(calc(-50% + 40px), -50%); }
+.arrow-h__up { transform: translate(-50%, calc(-50% - 40px)); }
+.arrow-h__down { transform: translate(-50%, calc(-50% + 40px)); }
 
 /* ─── Модальное окно «Что такое XR» ───────────────────────────────────────── */
 

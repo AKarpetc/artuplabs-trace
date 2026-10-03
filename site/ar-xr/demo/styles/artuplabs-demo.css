@@ -379,3 +379,5 @@ body:has(#xr-selection-bar:not(.d-none)) .fab { bottom: calc(140px + env(safe-ar
 
 /* Чип открытого плана: одна строка с многоточием (полное имя — в title и в «Мои планы»). */
 .ar-main .room-badge { display: block; line-height: 20px; }
+/* Без открытого плана чипа нет: правила выше задают `display` и иначе перебивают `.hidden` (пустая плашка справа сверху). */
+.ar-main .room-badge.hidden { display: none; }
