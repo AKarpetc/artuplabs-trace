@@ -1,5 +1,5 @@
 {
-  "eventType": "avi:jira:created:attachment",
+  "eventType": "avi:jira:deleted:attachment",
   "selfGenerated": false,
   "attachment": {
     "id": "50001",

@@ -24,12 +24,17 @@
     "id": "20001",
     "items": [
       {
-        "field": "Parent",
-        "fieldId": "parent",
-        "from": null,
+        "field": "IssueParentAssociation",
+        "fieldtype": "jira",
+        "from": "10099",
         "to": "10100"
       }
     ]
   },
-  "timestamp": 1790584137824
+  "timestamp": "1790584137824",
+  "associatedUsers": [
+    {
+      "accountId": "5c37e3bdb393bf4ce95658d5"
+    }
+  ]
 }

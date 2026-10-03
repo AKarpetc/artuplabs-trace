@@ -9,12 +9,9 @@
   "issueLinkType": {
     "id": "10000",
     "name": "Blocks",
-    "outwardName": "blocks",
-    "inwardName": "is blocked by"
+    "inward": "is blocked by",
+    "outward": "blocks"
   },
-  "issueLink": {
-    "sourceIssueId": "10101",
-    "destinationIssueId": "10102"
-  },
-  "timestamp": 1790584137824
+  "timestamp": "1790584137824",
+  "atlassianId": "5c37e3bdb393bf4ce95658d5"
 }

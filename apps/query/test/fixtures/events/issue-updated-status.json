@@ -22,12 +22,15 @@
     "items": [
       {
         "field": "status",
+        "fieldtype": "jira",
         "fieldId": "status",
         "from": "10004",
-        "to": "3"
+        "fromString": "To Do",
+        "to": "3",
+        "toString": "In Progress"
       }
     ]
   },
   "associatedStatuses": [],
-  "timestamp": 1790584137824
+  "timestamp": "1790584137824"
 }

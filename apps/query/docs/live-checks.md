@@ -124,3 +124,47 @@ all match reference: no
 - (г) Имена событий для манифеста (Tasks 14, 24, 27): `avi:jira:created|updated|deleted:issue`, `avi:jira:created|deleted:issuelink`, `avi:jira:commented:issue`, `avi:jira:deleted:comment`, `avi:jira:created|deleted:attachment`, `avi:jira-software:created|started|updated|closed|deleted:sprint`. **`avi:jira:updated:comment` в документации отсутствует** — правка комментария отдельным событием не гарантирована; Ruling Q-R38: правки комментариев обновляет часовая сверка, листинг не обещает секунды для правок (формулировка — Task 27). `changelog.id` документацией не подтверждён: Ruling Q-R39: идемпотентность событий не зависит от `changelog.id`; запасной ключ — `issue.id` + `timestamp` + содержимое `items`.
 - (д) `issueLinkType` совпал с эталоном **не на 100%**: Blocks outward 1 863 против 1 190. Ruling Q-R36: аргумент, равный имени типа, — обе стороны через `issueLinkType`; аргумент, равный описанию направления, — только если оно не совпадает с именем какого-либо типа (без учёта регистра), иначе вычисляемый список id (дерево). Cloners, Duplicate, Relates точны.
 - Лимиты функции: ответ ≤ 25 с, ≤ 1 000 значений в `{ jql }`, прекомпутации живут 7 дней без вычисления; предел числа модулей `jira:jqlFunction` не документирован — проверить деплоем 24 модулей (Task 14).
+
+## M1 on site
+
+Сайт `artuplabs-dev`, окружение development, приложение 2.x (13 функций в `autocompletedata`, `forge eligibility`: eligible). Прототип J-G5 снят (`forge uninstall`). Доска для спринтовых функций — `RPT scrum (browser-test)` (id 36; `RPT board` — kanban, спринтов нет). Закрытые и будущий спринты на доске созданы через Agile API (закрыт спринт «BT sprint», создан будущий «AQ future planned» с тремя задачами). Удаление задач на JQLG недоступно пользователю токена (нет DELETE_ISSUES), проверка события удаления сделана на SAM1. Тестовые задачи JQLG-40152…40156 остаются на сайте.
+
+### Формы событий (живые тела, `forge logs`)
+
+Расхождения с прежними фикстурами; фикстуры `test/fixtures/events/*.json` приведены к живым телам, добавлены `attachment-deleted`, `sprint-created`, `sprint-updated`, `sprint-deleted`; `eventRecord` читает все тела без `unknown`.
+
+| Что | Живое тело |
+|---|---|
+| `timestamp` | строка (`"1791038284541"`), не число |
+| смена родителя | `changelog.items[0] = { field: "IssueParentAssociation", fieldtype: "jira", from: "<id>", to: "<id>" }`, `fieldId` нет; `changelog.id` есть |
+| связь | `issueLinkType = { id, name, inward, outward }` (не `inwardName/outwardName`); объекта `issueLink` нет; `sourceIssueId`/`destinationIssueId` на верхнем уровне |
+| вложение | `attachment = { id, issueId, projectId, fileName, createDate, size, mimeType, author }`; `atlassianId` на верхнем уровне |
+| комментарий | `comment = { id, author, body, updateAuthor, created, updated, jsdPublic }`; `visibility` нет; правка комментария приходит как второе `commented:issue`, `updated:comment` не приходит; каждый комментарий и вложение дают ещё `updated:issue` с `Comment`/`Attachment` |
+| спринт | `sprint.id`, `originBoardId` — строки; `updated:sprint` несёт `oldValue: { name }`; `closed` несёт `completeDate` |
+| удаление задачи | `fields` без `parent` у не-подзадачи; у удалённой подзадачи `parent` есть |
+| прочее | `updated:issue` из Sprint-поля несёт `metadata: { operationType, sendMail }`; `associatedUsers` в событиях задач |
+
+### Прочие проверки платформы
+
+- `issueLinkType = "is blocked by"` → 834 (только входящая сторона), `= "blocks"` → 1 863 и `= "Blocks"` → 1 863 (имя типа, обе стороны).
+- `kvs.query().where('key', beginsWith(...))` отдаёт ключи в лексикографическом порядке байтов: `zz:10, zz:9, zz:B, zz:a, zz:b, zz:c`.
+- `getAppContext().environmentType` в development — `DEVELOPMENT`; `license` присутствует среди ключей контекста. Чтение `environmentType` из контекста resolver Custom UI на странице не проверялось.
+- `jql/function/computation`: `used` выставляется первым вычислением (через 0,1 с после создания).
+- Потребитель очереди, бросивший ошибку, вызывается повторно (`retryContext.retryCount: 1`, `FUNCTION_ERROR_HOSTED_APP_CODE`, примерно через 40 с).
+- `POST /rest/api/3/changelog/bulkfetch` из Forge `asApp` доступен: 200.
+- Первая `queue.push` сразу после `forge deploy` дважды вернула `400 Bad Request` (триггер и функция); следующие пуши проходят.
+- Записи 429 с Retry-After в логах не встретились.
+
+### Полнота M1 (`data/acceptance-complete-m1.json`, второй проход; первый — в отчёте задачи)
+
+Эталон — обход REST. `complete: true` у 22 из 24 строк на втором проходе; `childIssuesOf` на всех уровнях (ожидалось 39 661) и `linkedIssuesOf("project in (JQLG, RPT)")` (ожидалось 5 922) вернули 0 без ошибки (первое обращение длится около 31 с, функция возвращает «Computing, retry in a minute», Jira отдаёт пустой результат, дальше значение остаётся пустым). Подробности и журнал — в отчёте задачи 17.
+
+### Свежесть
+
+- `newSubtask` (30 из 30): p50 2,8 с, p90 3,0 с, max 3,3 с. Прогон `fresh --group query --n 30` остановлен вручную: изменения связей (`newLink`) и полей (`field`) не были видны за 10 минут; потребитель очереди упирается в лимит 300 с на пересчёте больших групп `childIssuesOf` (см. отчёт).
+- Группа `board` (n=3, остановлен после первого цикла): `nextSprint` и `previousSprint` не обновились за 10 минут каждый.
+- Холодный старт: первое вычисление `subtasksOf("project = JQLG AND labels = jg-mid")` — 4,7 с без «Computing».
+
+### Team-managed
+
+Проект JQLT создан `acceptance.mjs seed-tm` (14 задач: 2 эпика, 6 историй, 6 подзадач, дубликатов нет); `issuesInEpics` 6 из 6, `subtasksOf` 6 из 6.

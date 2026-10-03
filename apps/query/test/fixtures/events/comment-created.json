@@ -21,12 +21,17 @@
     "author": {
       "accountId": "5c37e3bdb393bf4ce95658d5"
     },
+    "updateAuthor": {
+      "accountId": "5c37e3bdb393bf4ce95658d5"
+    },
     "created": "2026-10-03T12:00:00.000+0200",
     "updated": "2026-10-03T12:00:00.000+0200",
-    "visibility": {
-      "type": "role",
-      "value": "Administrators"
-    }
+    "jsdPublic": true
   },
-  "timestamp": 1790584137824
+  "timestamp": "1790584137824",
+  "associatedUsers": [
+    {
+      "accountId": "5c37e3bdb393bf4ce95658d5"
+    }
+  ]
 }
