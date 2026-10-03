@@ -605,6 +605,21 @@ pre.code.wrap, .frame pre.code { white-space: pre-wrap; overflow-wrap: anywhere;
 }
 .lang-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+/* Header on phones, small tablets and touch screens: brand and RU|EN on the first row, the nav wraps
+   below at full width; links and buttons get 40-44px tap targets. */
+@media (max-width: 56rem), (pointer: coarse) {
+  .brand { min-height: 2.75rem; }
+  .site-nav a { display: inline-flex; align-items: center; justify-content: center; min-width: 2.5rem; min-height: 2.5rem; }
+  .lang-toggle button { min-width: 2.5rem; min-height: 2.5rem; }
+}
+@media (max-width: 56rem) {
+  .site-header .container { gap: 0.25rem 1rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .site-header .brand { order: 1; }
+  .site-header .lang-toggle { order: 2; }
+  .site-nav { order: 3; flex: 1 1 100%; }
+  .site-nav ul { gap: 0 1rem; }
+}
+
 /* Russian-only notes (the legal pages' translation disclaimer); hidden in English and without JS */
 html:not([lang="ru"]) [data-lang="ru"] { display: none !important; }
 .i18n-note {
