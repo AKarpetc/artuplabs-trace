@@ -1,0 +1,149 @@
+import api, { assumeTrustedRoute } from '@forge/api';
+import {
+  BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, LIST_PAGE, MAX_TOUCHED, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
+  REQUEST_ATTEMPTS, RETRY_BASE_MS, USER_SEARCH_MAX,
+} from '../core/limits.js';
+import { pool } from './pool.js';
+
+/** Jira answered with an error that a retry will not fix. */
+export class JiraError extends Error {
+  constructor(status, messages) {
+    super(messages.length ? messages.join('; ') : `Jira answered ${status}`);
+    this.name = 'JiraError';
+    this.status = status;
+  }
+}
+
+const wait = (ms) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+const enc = encodeURIComponent;
+const chunks = (list, size) => Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, (i + 1) * size));
+
+function messagesOf(raw) {
+  try {
+    const body = JSON.parse(raw);
+    return [...(body.errorMessages ?? []), ...Object.values(body.errors ?? {})].map(String);
+  } catch {
+    return [];
+  }
+}
+
+/** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff. */
+export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS } = {}) {
+  async function call(method, path, body) {
+    for (let attempt = 1; ; attempt += 1) {
+      const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
+      const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
+      if ((res.status === 429 || res.status >= 500) && attempt < attempts) {
+        await sleep(Number(res.headers.get('retry-after')) * 1000 || RETRY_BASE_MS * 2 ** attempt);
+        continue;
+      }
+      const raw = await res.text();
+      if (res.status >= 400) throw new JiraError(res.status, messagesOf(raw));
+      return raw ? JSON.parse(raw) : null;
+    }
+  }
+
+  async function paged(path, size = LIST_PAGE) {
+    const out = [];
+    let startAt = 0;
+    for (;;) {
+      const page = await call('GET', `${path}${path.includes('?') ? '&' : '?'}startAt=${startAt}&maxResults=${size}`);
+      const items = page?.values ?? [];
+      out.push(...items);
+      startAt += items.length;
+      if (page?.isLast === true || !items.length || (Number.isFinite(page?.total) && startAt >= page.total)) return out;
+    }
+  }
+
+  async function searchIds(jql, { reconcile = [] } = {}) {
+    const out = [];
+    let nextPageToken;
+    do {
+      const page = await call('POST', '/rest/api/3/search/jql', {
+        jql,
+        fields: ['id'],
+        maxResults: ID_PAGE,
+        ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, MAX_TOUCHED).map(Number) } : {}),
+        ...(nextPageToken ? { nextPageToken } : {}),
+      });
+      out.push(...(page.issues ?? []).map((x) => String(x.id)));
+      nextPageToken = page.nextPageToken;
+    } while (nextPageToken);
+    return out;
+  }
+
+  async function bulkIssues(ids, fields) {
+    const pages = await pool(chunks(ids, BULK_BATCH), BULK_CONCURRENCY, (chunk) => call('POST', '/rest/api/3/issue/bulkfetch', { issueIdsOrKeys: chunk, fields }));
+    return pages.flatMap((p) => p?.issues ?? []);
+  }
+
+  async function boards(arg) {
+    const text = String(arg).trim();
+    const named = await paged(`/rest/agile/1.0/board?name=${enc(text)}`);
+    if (!/^\d+$/.test(text)) return named;
+    try {
+      const byId = await call('GET', `/rest/agile/1.0/board/${text}`);
+      return [byId, ...named.filter((b) => String(b.id) !== text)];
+    } catch (error) {
+      if (error instanceof JiraError && error.status === 404) return named;
+      throw error;
+    }
+  }
+
+  async function changelogs(ids, fieldIds) {
+    const out = new Map();
+    for (const chunk of chunks(ids, CHANGELOG_BATCH)) {
+      let nextPageToken;
+      do {
+        const page = await call('POST', '/rest/api/3/changelog/bulkfetch', { issueIdsOrKeys: chunk, fieldIds, maxResults: CHANGELOG_PAGE, ...(nextPageToken ? { nextPageToken } : {}) });
+        for (const log of page?.issueChangeLogs ?? []) {
+          const key = String(log.issueId);
+          out.set(key, [...(out.get(key) ?? []), ...(log.changeHistories ?? [])]);
+        }
+        nextPageToken = page?.nextPageToken;
+      } while (nextPageToken);
+    }
+    return out;
+  }
+
+  async function groupMemberIds(name) {
+    return (await paged(`/rest/api/3/group/member?groupname=${enc(name)}&includeInactiveUsers=true`)).map((u) => u.accountId);
+  }
+
+  async function roleMemberIds(projectKey, roleName) {
+    const roles = (await call('GET', `/rest/api/3/project/${enc(projectKey)}/role`)) ?? {};
+    const url = Object.entries(roles).find(([name]) => name.toLowerCase() === String(roleName).toLowerCase())?.[1];
+    if (!url) return null;
+    const role = await call('GET', `/rest/api/3/project/${enc(projectKey)}/role/${enc(String(url).split('/').pop())}`);
+    const users = (role?.actors ?? []).filter((a) => a.actorUser).map((a) => a.actorUser.accountId);
+    for (const group of (role?.actors ?? []).filter((a) => a.actorGroup).map((a) => a.actorGroup.name)) users.push(...(await groupMemberIds(group)));
+    return [...new Set(users)];
+  }
+
+  return {
+    call,
+    searchIds,
+    bulkIssues,
+    boards,
+    changelogs,
+    groupMemberIds,
+    roleMemberIds,
+    issue: (id, fields) => call('GET', `/rest/api/3/issue/${enc(id)}?fields=${fields.map(enc).join(',')}`),
+    linkTypes: async () => (await call('GET', '/rest/api/3/issueLinkType'))?.issueLinkTypes ?? [],
+    fields: () => call('GET', '/rest/api/3/field'),
+    statusCategories: async () => new Map(((await call('GET', '/rest/api/3/status')) ?? []).map((s) => [String(s.id), s.statusCategory?.key ?? 'new'])),
+    allBoards: () => paged('/rest/agile/1.0/board'),
+    sprints: (boardId) => paged(`/rest/agile/1.0/board/${enc(boardId)}/sprint?state=active,closed,future`),
+    precomputations: () => paged('/rest/api/3/jql/function/computation', PRECOMPUTATION_PAGE),
+    writePrecomputations: async (updates) => {
+      for (const batch of chunks(updates, PRECOMPUTATION_BATCH)) await call('POST', '/rest/api/3/jql/function/computation?skipNotFoundPrecomputations=true', { values: batch });
+    },
+    userIds: async (query) => ((await call('GET', `/rest/api/3/user/search?query=${enc(query)}&maxResults=${USER_SEARCH_MAX}`)) ?? []).map((u) => u.accountId),
+    approximateCount: async (jql) => (await call('POST', '/rest/api/3/search/approximate-count', { jql }))?.count ?? 0,
+  };
+}
+
+/** Client acting as the app, against the Jira of the installation only. */
+export const appJira = () => createJira((path, init) => api.asApp().requestJira(assumeTrustedRoute(path), init));
