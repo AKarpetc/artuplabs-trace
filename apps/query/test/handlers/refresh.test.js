@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ids, makeDeps, RECENT } from './makeDeps.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
-import { FAILED_ROWS_KEEP_MS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
+import { handOff } from '../../src/handlers/groups.js';
+import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
 const jiraError = (status) => Object.assign(new Error(`Jira answered ${status}`), { name: 'JiraError', status });
@@ -536,6 +537,33 @@ describe('onRefresh heavy lane', () => {
     await expect(onRefresh(deps, { body: { kind: 'heavy' } })).rejects.toThrow('write refused');
     expect(await deps.cache.meta('childIssuesOf["q"]')).toBeNull();
   });
+  it('keeps a group in the lane until its precomputations are written', async () => {
+    const write = async () => { throw new Error('write refused'); };
+    const deps = makeDeps({ pcs, write, compute: { childIssuesOf: async () => ({ ids: ['3'], field: 'parent', watch: ['9'] }) } });
+    await deps.state.heavy.put(queued('q', 990000));
+    await expect(onRefresh(deps, { body: { kind: 'heavy' } })).rejects.toThrow('write refused');
+    expect(await deps.state.heavy.oldest()).toMatchObject({ key: 'childIssuesOf["q"]', tries: 1 });
+    expect(await deps.state.heavy.lease.get()).toBeNull();
+  });
+  it('moves a group whose run failed behind the other waiting groups', async () => {
+    const deps = makeDeps({ compute: { childIssuesOf: async () => { throw new Error('KVS limit'); } } });
+    await deps.state.heavy.put(queued('a', 990000));
+    await deps.state.heavy.put(queued('b', 995000));
+    await expect(onRefresh(deps, { body: { kind: 'heavy' } })).rejects.toThrow('KVS limit');
+    expect((await deps.state.heavy.oldest()).key).toBe('childIssuesOf["b"]');
+  });
+  it('runs a group again when it was handed to the lane while it ran', async () => {
+    const deps = makeDeps({ pcs });
+    deps.compute.childIssuesOf = async () => {
+      deps.advance(1000);
+      await handOff(deps, { key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'] });
+      return { ids: ['3'], field: 'parent', watch: ['9'] };
+    };
+    await deps.state.heavy.put(queued('q', 990000));
+    await onRefresh(deps, { body: { kind: 'heavy' } });
+    expect(await deps.state.heavy.oldest()).toMatchObject({ key: 'childIssuesOf["q"]', at: 1001000 });
+    expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
+  });
   it('pushes itself again while more groups wait', async () => {
     const deps = makeDeps({ compute: { childIssuesOf: async () => ({ ids: ['3'], field: 'parent', watch: ['9'] }) } });
     await deps.state.heavy.put(queued('b', 995000));
@@ -559,6 +587,19 @@ describe('onRefresh heavy lane', () => {
     expect(deps.written).toEqual([]);
     expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'childIssuesOf', message: 'Refresh ran out of time' }]);
     expect(await deps.state.heavy.lease.get()).toBeNull();
+  });
+  it('tries a group that runs past the worker budget again after the others, then gives it up', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = makeDeps({ pcs, compute: { childIssuesOf: async () => { throw deadlineError(); } } });
+    await deps.state.heavy.put(queued('q', 990000));
+    const tries = [];
+    for (let i = 0; i < HEAVY_ATTEMPTS; i += 1) {
+      await onRefresh(deps, { body: { kind: 'heavy' } });
+      tries.push((await deps.state.heavy.oldest())?.tries ?? null);
+      deps.advance(1000);
+    }
+    error.mockRestore();
+    expect(tries).toEqual([...Array.from({ length: HEAVY_ATTEMPTS - 1 }, (_, i) => i + 1), null]);
   });
   it('does not overwrite a group that a later computation wrote while it ran', async () => {
     const deps = makeDeps({ pcs });

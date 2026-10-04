@@ -2,7 +2,7 @@ import { groupKey, parseArgs, splitPage } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
 import { groupPrecomputations } from '../core/affected.js';
-import { ACTIVE_MS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
+import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
 import { computeGroup, fragmentFor } from './functions.js';
 
 /** Whether a computation stopped because it ran past its deadline. */
@@ -87,10 +87,13 @@ export async function isHeavy(deps, group) {
   return ((await deps.cache.meta(group.key))?.ms ?? 0) >= REFRESH_GROUP_BUDGET_MS;
 }
 
-/** Queues a group in the heavy lane, once (an entry that is waiting will start after this call, so it sees every change made before it); true when it queued, and the caller then pushes one runner. */
+/**
+ * Queues a group in the heavy lane, once: an entry that is waiting will start after this call, so it sees every change made before it;
+ * an entry whose run already started is replaced, so the group runs again. True when it queued, and the caller then pushes one runner.
+ */
 export async function handOff(deps, group) {
   const waiting = await deps.state.heavy.get(group.key);
-  if (waiting && deps.now() - waiting.at < HEAVY_QUEUED_STALE_MS) return false;
+  if (waiting && !waiting.runningSince && deps.now() - waiting.at < HEAVY_QUEUED_STALE_MS) return false;
   await deps.state.heavy.put({ key: group.key, functionName: group.functionName, userArgs: group.userArgs, at: deps.now() });
   return true;
 }
@@ -125,7 +128,23 @@ export async function laneIdle(deps) {
   return deps.now() - ((await deps.state.heavy.lease.get()) ?? 0) >= HEAVY_LEASE_MS;
 }
 
-/** Heavy lane runner: one waiting group per invocation under a lease, then it pushes itself while groups wait. */
+/**
+ * Settles the lane entry of a finished run: removed once the run wrote the group, kept when the group was handed again meanwhile,
+ * moved behind the other groups when the run failed or ran out of time (until HEAVY_ATTEMPTS runs).
+ */
+async function settle(deps, running, unfinished) {
+  const current = await deps.state.heavy.get(running.key);
+  if (!current || current.runningSince !== running.runningSince) return;
+  const tries = (running.tries ?? 0) + 1;
+  if (unfinished && tries < HEAVY_ATTEMPTS) {
+    const { runningSince, ...job } = running;
+    await deps.state.heavy.put({ ...job, tries, at: deps.now() });
+    return;
+  }
+  await deps.state.heavy.take(running.key);
+}
+
+/** Heavy lane runner: one waiting group per invocation under a lease; its entry stays until the group is written, so a failed run is retried. */
 export async function runHeavy(deps) {
   if (!(await laneIdle(deps))) return { busy: true };
   await deps.state.heavy.lease.set(deps.now());
@@ -133,8 +152,15 @@ export async function runHeavy(deps) {
   try {
     const job = await deps.state.heavy.oldest();
     if (job) {
-      await deps.state.heavy.take(job.key);
-      heavy = await runGroupJob(deps, job);
+      const running = { ...job, runningSince: deps.now() };
+      await deps.state.heavy.put(running);
+      try {
+        heavy = await runGroupJob(deps, running);
+      } catch (error) {
+        await settle(deps, running, true);
+        throw error;
+      }
+      await settle(deps, running, Boolean(heavy.timedOut));
     }
   } finally {
     await deps.state.heavy.lease.clear();
