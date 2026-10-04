@@ -92,6 +92,11 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     return out;
   }
 
+  async function searchPage(jql, nextPageToken) {
+    const page = await call('POST', '/rest/api/3/search/jql', { jql, fields: ['id'], maxResults: ID_PAGE, ...(nextPageToken ? { nextPageToken } : {}) });
+    return { ids: (page?.issues ?? []).map((x) => String(x.id)), nextPageToken: page?.nextPageToken ?? null };
+  }
+
   async function bulkIssues(ids, fields) {
     const pages = await pool(chunks(ids, BULK_BATCH), BULK_CONCURRENCY, (chunk) => call('POST', '/rest/api/3/issue/bulkfetch', { issueIdsOrKeys: chunk, fields }));
     return pages.flatMap((p) => p?.issues ?? []);
@@ -143,6 +148,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
   return {
     call,
     searchIds,
+    searchPage,
     bulkIssues,
     boards,
     changelogs,
@@ -153,6 +159,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     fields: () => call('GET', '/rest/api/3/field'),
     statusCategories: async () => new Map(((await call('GET', '/rest/api/3/status')) ?? []).map((s) => [String(s.id), s.statusCategory?.key ?? 'new'])),
     allBoards: () => paged('/rest/agile/1.0/board'),
+    projects: async () => (await paged('/rest/api/3/project/search')).map((p) => ({ id: String(p.id), key: p.key })),
     sprints: (boardId) => paged(`/rest/agile/1.0/board/${enc(boardId)}/sprint?state=active,closed,future`),
     precomputations: () => paged('/rest/api/3/jql/function/computation', PRECOMPUTATION_PAGE),
     writePrecomputations: async (updates) => {

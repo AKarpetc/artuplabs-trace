@@ -96,4 +96,11 @@ describe('state', () => {
     const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
     expect([await state.excluded(), await state.jobs(0), await state.errors()]).toEqual([[], [], []]);
   });
+  it('keeps the cached ids of the Sprint fields', async () => {
+    const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
+    await state.sprintFields.set({ ids: ['customfield_1'], at: 5 });
+    expect(await state.sprintFields.get()).toEqual({ ids: ['customfield_1'], at: 5 });
+    await state.sprintFields.clear();
+    expect(await state.sprintFields.get()).toBeNull();
+  });
 });

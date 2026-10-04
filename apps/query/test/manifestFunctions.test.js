@@ -52,4 +52,14 @@ describe('manifest JQL functions', () => {
     expect(wired).toEqual(['index.onEvent', 'index.onRefresh', 'index.onReconcile']);
     for (const name of ['onEvent', 'onRefresh', 'onReconcile']) expect(indexText).toMatch(new RegExp(`export const ${name}\\b`));
   });
+  it('declares the SQL database, the lifecycle trigger and the backfill consumer on exported handlers', () => {
+    const functions = new Map(manifest.modules.function.map((x) => [x.key, x]));
+    const lifecycle = manifest.modules.trigger.find((t) => t.key === 'query-lifecycle');
+    const backfill = manifest.modules.consumer.find((c) => c.queue === 'query-backfill');
+    expect(manifest.modules.sql).toEqual([{ key: 'main', engine: 'mysql' }]);
+    expect(lifecycle.events).toEqual(['avi:forge:installed:app', 'avi:forge:upgraded:app']);
+    expect([functions.get(lifecycle.function).handler, functions.get(backfill.function).handler]).toEqual(['index.onLifecycle', 'index.onBackfill']);
+    expect(functions.get(backfill.function).timeoutSeconds).toBe(300);
+    for (const name of ['onLifecycle', 'onBackfill']) expect(indexText).toMatch(new RegExp(`export const ${name}\\b`));
+  });
 });

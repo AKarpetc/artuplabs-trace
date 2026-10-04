@@ -209,10 +209,21 @@ modules:
         - avi:jira-software:deleted:sprint
       filter:
         ignoreSelf: true
+    - key: query-lifecycle
+      function: on-lifecycle
+      events:
+        - avi:forge:installed:app
+        - avi:forge:upgraded:app
   consumer:
     - key: query-refresh-consumer
       queue: query-refresh
       function: on-refresh
+    - key: query-backfill-consumer
+      queue: query-backfill
+      function: on-backfill
+  sql:
+    - key: main
+      engine: mysql
   scheduledTrigger:
     - key: query-reconcile
       function: on-reconcile
@@ -254,6 +265,11 @@ modules:
     - key: on-reconcile
       handler: index.onReconcile
       timeoutSeconds: 900
+    - key: on-backfill
+      handler: index.onBackfill
+      timeoutSeconds: 300
+    - key: on-lifecycle
+      handler: index.onLifecycle
 resources:
   - key: global-page
     path: static/app/dist/global-page

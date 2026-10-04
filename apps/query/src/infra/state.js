@@ -31,6 +31,7 @@ export function createState({ kvs, hash, beginsWith }) {
     lease: record('q:running'),
     lastWrittenStart: record('q:lastWrittenStart'),
     lastRefresh: record('log:refresh'),
+    sprintFields: record('cfg:sprintFields'),
     progress: {
       async get() {
         const values = await Promise.all(INDEX_PARTS.map((part) => kvs.get(progressKey(part))));

@@ -9,11 +9,14 @@ import { appJira, withDeadline } from './infra/jira.js';
 import { createValueCache } from './infra/cache.js';
 import { createJournal } from './infra/journal.js';
 import { createState } from './infra/state.js';
+import { createIndexRepo } from './infra/indexRepo.js';
+import { runMigrations } from './infra/schema.js';
 import { createQueueClient } from './infra/queue.js';
 import { meterKvs } from './infra/meter.js';
 import { createHierarchyCompute } from './compute/hierarchy.js';
 import { createLinkCompute } from './compute/links.js';
 import { createBoardCompute } from './compute/boards.js';
+import { createIndexing } from './handlers/indexing.js';
 
 const sha1 = (text) => createHash('sha1').update(text).digest('hex');
 
@@ -26,14 +29,16 @@ function currentAppContext() {
   }
 }
 
-/** Production dependencies of every handler; `retryMaxMs` caps one Jira retry sleep (queue workers pass no cap); all KVS access goes through the write meter. */
+/** Production dependencies of every handler; `retryMaxMs` caps one Jira retry sleep (queue workers pass a longer cap); all KVS access goes through the write meter; the index parts, the event writer and the gap filler read and write the Forge SQL index. */
 export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
   const jira = appJira({ retryMaxMs });
   const meter = meterKvs(kvs);
   const state = createState({ kvs: meter.kvs, hash: sha1, beginsWith: WhereConditions.beginsWith });
-  return {
+  const repo = createIndexRepo();
+  const deps = {
     jira,
     state,
+    repo,
     cache: createValueCache({ kvs: meter.kvs, hash: sha1 }),
     journal: createJournal({ kvs: meter.kvs, beginsWith: WhereConditions.beginsWith }),
     meter,
@@ -42,8 +47,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     backfillQueue: createQueueClient(new Queue({ key: 'query-backfill' })),
     compute: { ...createHierarchyCompute({ jira }), ...createLinkCompute({ jira }), ...createBoardCompute({ jira }) },
     withDeadline,
-    indexEvent: async () => null,
-    indexReconcile: async () => null,
+    migrate: runMigrations,
     hash: sha1,
     appContext: currentAppContext,
     now: () => Date.now(),
@@ -54,4 +58,10 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     debugEvents: process.env.QUERY_DEBUG_EVENTS === '1',
     ready: async (functionName) => readinessError(await state.progress.get(), FUNCTION_BY_NAME.get(functionName).group),
   };
+  const indexing = createIndexing(deps);
+  deps.indexParts = indexing.parts;
+  deps.indexEvent = indexing.indexEvent;
+  deps.indexReconcile = indexing.reconcileIndex;
+  deps.shippedParts = indexing.shippedParts;
+  return deps;
 }

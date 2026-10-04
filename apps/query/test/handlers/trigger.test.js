@@ -44,6 +44,16 @@ describe('onEvent', () => {
     await onEvent(deps, { eventType: 'avi:jira:created:issue', issue: { id: '5' } });
     expect(order).toEqual(['index', 'journal']);
   });
+  it('journals the event and pushes the refresh even when the index write fails', async () => {
+    const deps = makeDeps({ indexEvent: async () => { throw Object.assign(new Error('JQLG-7 secret'), { status: 503 }); } });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await onEvent(deps, { eventType: 'avi:jira:updated:issue', issue: { id: '5' }, changelog: { id: '1', items: [] } });
+    const lines = error.mock.calls.map((c) => c.join(' '));
+    error.mockRestore();
+    expect(await deps.journal.read(10)).toHaveLength(1);
+    expect(deps.pushed).toHaveLength(1);
+    expect(lines).toEqual(['Index write failed: Jira answered 503']);
+  });
   it('hands the index the change id of the event', async () => {
     const seen = [];
     const deps = makeDeps({ indexEvent: async (event, meta) => { seen.push(meta); } });

@@ -1,3 +1,4 @@
+import { LOG } from '../core/errors.js';
 import { eventRecord } from '../core/events.js';
 import { LEASE_MS, PENDING_STALE_MS } from '../core/limits.js';
 import { pushRefresh } from './refresh.js';
@@ -8,13 +9,17 @@ export function changeId(event, hash) {
   return hash(JSON.stringify([event?.eventType ?? null, event?.issue?.id ?? null, event?.timestamp ?? null, items]));
 }
 
-/** Product event → index rows, one journal record, and a refresh job unless one is pending or running. */
+/** Product event → index rows, one journal record, and a refresh job unless one is pending or running; a failed index write is logged without values and left to the hourly gap filler, so the journal still gets the event. */
 export async function onEvent(deps, event) {
   const record = eventRecord(event);
   if (deps.debugEvents) {
     console.log(JSON.stringify({ event: event?.eventType, keys: Object.keys(event ?? {}), items: (Array.isArray(event?.changelog?.items) ? event.changelog.items : []).map((i) => [i?.field, i?.fieldId]), record }));
   }
-  await deps.indexEvent(event, { changeId: changeId(event, deps.hash) });
+  try {
+    await deps.indexEvent(event, { changeId: changeId(event, deps.hash) });
+  } catch (error) {
+    console.error(LOG.indexFailed(error?.status));
+  }
   const ts = deps.now();
   await deps.journal.append(record, ts);
   const [pending, running] = await Promise.all([deps.state.pending.get(), deps.state.lease.get()]);

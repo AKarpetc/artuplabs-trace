@@ -72,3 +72,11 @@ export const EXPRESSION_MAX_LENGTH = 1000;
 export const EXPRESSION_MAX_DEPTH = 64;
 /** Characters of the user's expression an error message quotes. */
 export const EXPRESSION_SNIPPET = 30;
+/** Ids in one SQL `IN (…)` list and rows in one INSERT. */
+export const SQL_IN_CHUNK = 500;
+/** How long the ids of the Sprint fields stay cached. */
+export const SPRINT_FIELDS_TTL_MS = 24 * 60 * 60 * 1000;
+/** Recently updated issues the hourly reconcile re-reads into the index. */
+export const RECONCILE_RECENT_MAX = 2000;
+/** Age of the last saved backfill cursor after which the hourly reconcile queues the backfill again (its job was lost or failed). */
+export const BACKFILL_STALE_MS = 30 * 60 * 1000;

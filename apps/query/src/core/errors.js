@@ -33,6 +33,7 @@ export const LOG = {
   rejected: () => 'Function call rejected',
   refreshTimedOut: () => 'Refresh ran out of time',
   refreshFailed: (status) => (status ? `Refresh failed: Jira answered ${status}` : 'Refresh failed'),
+  indexFailed: (status) => (status ? `Index write failed: Jira answered ${status}` : 'Index write failed'),
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

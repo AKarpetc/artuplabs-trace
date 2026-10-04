@@ -154,3 +154,20 @@ describe('backoff and roles', () => {
     expect(calls[1].path).toBe('/rest/api/3/project/A/role/10');
   });
 });
+
+describe('index reads', () => {
+  it('returns one search page with its token', async () => {
+    const { request, calls } = scripted([reply(200, { issues: [{ id: 1 }], nextPageToken: 'x' })]);
+    expect(await createJira(request).searchPage('project = "A" ORDER BY id ASC', null)).toEqual({ ids: ['1'], nextPageToken: 'x' });
+    expect(calls[0].body).toEqual({ jql: 'project = "A" ORDER BY id ASC', fields: ['id'], maxResults: 5000 });
+  });
+  it('asks the next search page by its token and reads the last page', async () => {
+    const { request, calls } = scripted([reply(200, {})]);
+    expect(await createJira(request).searchPage('x', 'tok')).toEqual({ ids: [], nextPageToken: null });
+    expect(calls[0].body.nextPageToken).toBe('tok');
+  });
+  it('lists projects as id and key', async () => {
+    const { request } = scripted([reply(200, { values: [{ id: 10, key: 'A', name: 'n' }], isLast: true })]);
+    expect(await createJira(request).projects()).toEqual([{ id: '10', key: 'A' }]);
+  });
+});
