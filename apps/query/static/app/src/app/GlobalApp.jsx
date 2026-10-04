@@ -2,9 +2,10 @@ import { useState } from 'react';
 import Button from '@atlaskit/button/new';
 import EmptyState from '@atlaskit/empty-state';
 import Skeleton from '@atlaskit/skeleton';
-import Tabs, { Tab, TabList } from '@atlaskit/tabs';
+import SectionMessage, { SectionMessageAction } from '@atlaskit/section-message';
+import Tabs, { Tab, TabList, TabPanel } from '@atlaskit/tabs';
 import { token } from '@atlaskit/tokens';
-import { Box, Stack, xcss } from '@atlaskit/primitives';
+import { Box, Stack, Text, xcss } from '@atlaskit/primitives';
 import { errorMessage } from '../api.js';
 import { AppHeader } from '../components/AppHeader.jsx';
 import { Card } from '../components/Card.jsx';
@@ -23,6 +24,7 @@ const POLL_MS = 15000;
 const SKELETON_CARDS = [0, 1, 2];
 
 const pageStyles = xcss({ padding: 'space.300' });
+const panelStyles = xcss({ paddingBlockStart: 'space.300', width: '100%' });
 
 const readTab = () => {
   try {
@@ -66,7 +68,7 @@ function GlobalPage() {
     setSelected(index);
     writeTab(index);
   };
-  const body = () => {
+  const body = (index) => {
     if (status.status === 'loading') return <LoadingCards />;
     if (status.status === 'error') {
       return (
@@ -78,7 +80,16 @@ function GlobalPage() {
         />
       );
     }
-    return selected === 0 ? <FunctionReference functions={status.data.functions} /> : <StatusPanel status={status.data} />;
+    return (
+      <Stack space="space.300">
+        {status.stale ? (
+          <SectionMessage appearance="warning" testId="status-stale" actions={<SectionMessageAction onClick={status.reload}>{t('errors.tryAgain')}</SectionMessageAction>}>
+            <Text>{errorMessage(t, status.stale)}</Text>
+          </SectionMessage>
+        ) : null}
+        {index === 0 ? <FunctionReference functions={status.data.functions} /> : <StatusPanel status={status.data} />}
+      </Stack>
+    );
   };
   return (
     <Stack space="space.400">
@@ -86,13 +97,14 @@ function GlobalPage() {
         subtitle={t('app.tagline')}
         actions={<Button iconBefore={RefreshIcon} onClick={status.reload} testId="status-refresh">{t('status.refresh')}</Button>}
       />
-      <Tabs id="global-tabs" selected={selected} onChange={choose}>
+      <Tabs id="global-tabs" selected={selected} onChange={choose} shouldUnmountTabPanelOnChange>
         <TabList>
           <Tab testId="tab-functions">{t('tabs.functions')}</Tab>
           <Tab testId="tab-status">{t('tabs.status')}</Tab>
         </TabList>
+        <TabPanel testId="panel-functions"><Box xcss={panelStyles}>{body(0)}</Box></TabPanel>
+        <TabPanel testId="panel-status"><Box xcss={panelStyles}>{body(1)}</Box></TabPanel>
       </Tabs>
-      <Box role="tabpanel">{body()}</Box>
     </Stack>
   );
 }

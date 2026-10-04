@@ -23,4 +23,23 @@ describe('StatusPanel', () => {
     expect(screen.getByText('parentsOf')).toBeTruthy();
     expect(screen.getByText('Usage: parentsOf(subquery)')).toBeTruthy();
   });
+  it('shows a waiting queue', () => {
+    view({ ...BASE, queue: { pending: true, running: false } });
+    expect(screen.getByText('Waiting')).toBeTruthy();
+  });
+  it('shows a running queue over a pending one', () => {
+    view({ ...BASE, queue: { pending: true, running: true } });
+    expect(screen.getByText('Updating')).toBeTruthy();
+    expect(screen.queryByText('Waiting')).toBeNull();
+  });
+  it('lists the excluded projects before any index part has started', () => {
+    view({ ...BASE, progress: null, excluded: ['HR', 'OPS'] });
+    expect(screen.getByText('Projects excluded from the index: HR, OPS')).toBeTruthy();
+    expect(screen.queryByRole('progressbar')).toBeNull();
+  });
+  it('never shows a part as more than complete', () => {
+    view({ ...BASE, progress: { sprint: { done: 60, total: 50 } } });
+    expect(screen.getByText('50 of 50 issues')).toBeTruthy();
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('1');
+  });
 });

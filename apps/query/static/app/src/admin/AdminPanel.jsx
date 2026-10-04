@@ -93,6 +93,7 @@ export function AdminPanel() {
         renderImage={() => (forbidden ? <LockIllustration size={160} /> : <EmptyIllustration size={160} />)}
         primaryAction={forbidden ? null : <Button appearance="primary" onClick={start}>{t('errors.tryAgain')}</Button>}
         headingLevel={2}
+        testId="admin-error"
       />
     );
   }
@@ -186,7 +187,7 @@ export function AdminPanel() {
         </Inline>
         {reindex?.started ? <SectionMessage appearance="success"><Text>{t('admin.reindex.started', { project: reindex.started })}</Text></SectionMessage> : null}
         {reindex?.error ? (
-          <SectionMessage appearance={reindexBusy ? 'warning' : 'error'}>
+          <SectionMessage appearance={reindexBusy ? 'warning' : 'error'} testId="reindex-error">
             <Text>{reindexBusy ? t('admin.reindex.busy') : errorMessage(t, reindex.error)}</Text>
           </SectionMessage>
         ) : null}

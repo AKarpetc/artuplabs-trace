@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build --mode global-page && vite build --mode admin-page",
-    "test": "vitest run"
+    "test": "vitest run",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@atlaskit/badge": "22.0.0",

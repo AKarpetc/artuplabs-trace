@@ -8,11 +8,12 @@ import { IndexProgress } from './IndexProgress.jsx';
 
 const iso = (ms) => new Date(ms).toISOString();
 
-/** Refresh queue, last update, index progress per part and the recent JQL editor errors. */
+/** Refresh queue, last update, index progress per part with the excluded projects (shown even before any part starts) and the recent JQL editor errors. */
 export function StatusPanel({ status }) {
   const { t, locale } = useI18n();
   const queue = status.queue.running ? ['inprogress', 'status.running'] : status.queue.pending ? ['moved', 'status.pending'] : ['success', 'status.idle'];
   const hasParts = Object.keys(status.progress ?? {}).length > 0;
+  const excluded = status.excluded ?? [];
   const rows = status.errors.map((e, i) => ({
     key: `${e.at}-${i}`,
     cells: [{ key: 't', content: formatDate(locale, iso(e.at)) }, { key: 'f', content: e.functionName }, { key: 'm', content: e.message }],
@@ -28,12 +29,12 @@ export function StatusPanel({ status }) {
           </Inline>
         </Stack>
       </Card>
-      {hasParts ? (
-        <Card>
+      {hasParts || excluded.length ? (
+        <Card testId="status-index">
           <Stack space="space.200">
             <Heading size="small" as="h2">{t('status.index')}</Heading>
             <IndexProgress progress={status.progress} />
-            {status.excluded.length ? <Text>{t('status.excluded', { keys: status.excluded.join(', ') })}</Text> : null}
+            {excluded.length ? <Text>{t('status.excluded', { keys: excluded.join(', ') })}</Text> : null}
           </Stack>
         </Card>
       ) : null}

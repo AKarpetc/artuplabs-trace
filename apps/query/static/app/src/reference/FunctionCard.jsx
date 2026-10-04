@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IconButton } from '@atlaskit/button/new';
 import { Code } from '@atlaskit/code';
 import Heading from '@atlaskit/heading';
@@ -9,15 +9,21 @@ import { CopyIcon } from '../components/icons.js';
 import { useT } from '../i18n/index.js';
 import { copyText } from './copy.js';
 
+const COPIED_MS = 2000;
 const exampleStyles = xcss({ minWidth: '0', overflowWrap: 'anywhere' });
 
-/** One function: signature, description and examples, each with a copy button. */
+/** One function: signature, description and examples, each with a copy button; "Copied" shows for two seconds after a copy that worked. */
 export function FunctionCard({ fn }) {
   const t = useT();
   const [copied, setCopied] = useState(null);
+  useEffect(() => {
+    if (copied === null) return undefined;
+    const timer = setTimeout(() => setCopied(null), COPIED_MS);
+    return () => clearTimeout(timer);
+  }, [copied]);
   const copy = async (example) => {
-    await copyText(example);
-    setCopied(example);
+    setCopied(null);
+    if (await copyText(example)) setCopied(example);
   };
   return (
     <Card testId={`fn-${fn.name}`}>

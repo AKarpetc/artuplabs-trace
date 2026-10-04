@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../src/i18n/index.js';
 import { FunctionReference } from '../src/reference/FunctionReference.jsx';
 
@@ -10,6 +10,9 @@ const FUNCTIONS = [
 const view = () => render(<I18nProvider locale="en-US"><FunctionReference functions={FUNCTIONS} /></I18nProvider>);
 
 describe('FunctionReference', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   it('shows every function under its group heading', () => {
     view();
     expect(screen.getByTestId('fn-subtasksOf')).toBeTruthy();
@@ -35,6 +38,29 @@ describe('FunctionReference', () => {
     fireEvent.click(screen.getAllByTestId('copy')[0]);
     expect(await screen.findByText('Copied')).toBeTruthy();
     expect(writeText).toHaveBeenCalledWith('issue in subtasksOf("project = DEMO")');
+  });
+  it('hides "Copied" after two seconds', async () => {
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(async () => {}) } });
+    vi.useFakeTimers();
+    view();
+    await act(async () => {
+      fireEvent.click(screen.getAllByTestId('copy')[0]);
+    });
+    expect(screen.getByText('Copied')).toBeTruthy();
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(screen.queryByText('Copied')).toBeNull();
+  });
+  it('does not say "Copied" when the copy fails', async () => {
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(async () => { throw new Error('denied'); }) } });
+    document.execCommand = vi.fn(() => false);
+    view();
+    await act(async () => {
+      fireEvent.click(screen.getAllByTestId('copy')[0]);
+    });
+    expect(document.execCommand).toHaveBeenCalledWith('copy');
+    expect(screen.queryByText('Copied')).toBeNull();
   });
   it('explains the ScriptRunner difference', () => {
     view();
