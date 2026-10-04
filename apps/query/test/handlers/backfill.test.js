@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createFakeKvs } from '../fakeKvs.js';
+import { beginsWith, createFakeKvs } from '../fakeKvs.js';
+import { createJournal } from '../../src/infra/journal.js';
 import { createState } from '../../src/infra/state.js';
 import { onBackfill, startBackfill } from '../../src/handlers/backfill.js';
 
@@ -10,8 +11,12 @@ function makeDeps({ pages, cost = 0 }) {
   const pushed = [];
   const indexed = [];
   const counted = [];
+  const queued = [];
   return {
     state: createState({ kvs }),
+    journal: createJournal({ kvs, beginsWith, random: () => 'r' }),
+    queue: { push: async (body) => { queued.push(body); } },
+    queued,
     jira: {
       projects: async () => [{ id: '1', key: 'A' }, { id: '2', key: 'B' }, { id: '3', key: 'X' }],
       approximateCount: async (jql) => {
@@ -93,6 +98,33 @@ describe('backfill', () => {
     await deps.state.progress.setPart('comments', { generation: 1, cursor: { projects: [], index: 0, token: null, offset: 0 } });
     expect(await onBackfill(deps, { body: { part: 'comments', generation: 1 } })).toEqual({ skipped: true });
     expect(await onBackfill(deps, undefined)).toEqual({ skipped: true });
+  });
+  it('asks a refresh of the groups that read the part once it is ready', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await startBackfill(deps, 'sprint');
+    await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } });
+    expect((await deps.journal.read(10)).map((r) => r.value)).toEqual([{ ids: [], kinds: ['index-sprint'] }]);
+    expect([deps.queued, await deps.state.pending.get()]).toEqual([[{ kind: 'refresh', ts: 1000 }], 1000]);
+  });
+  it('still finishes, with a log line free of values, when the refresh cannot be asked', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    deps.journal.append = async () => { throw Object.assign(new Error('JQLG secret'), { status: 503 }); };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await startBackfill(deps, 'sprint');
+    const out = await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } });
+    const lines = error.mock.calls.map((c) => c.join(' '));
+    error.mockRestore();
+    expect([out, (await deps.state.progress.getPart('sprint')).readyAt, lines]).toEqual([{ finished: true, done: 6510 }, 1000, ['Refresh after the index build was not queued']]);
+  });
+  it('stops without saving when another copy of the same job finished the part during the slice', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await startBackfill(deps, 'sprint');
+    const finished = { generation: 1000, done: 6510, cursor: null, finishedAt: 1000, readyAt: 1000 };
+    deps.indexParts.sprint.index = async () => {
+      await deps.state.progress.setPart('sprint', finished);
+    };
+    expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ skipped: true });
+    expect(await deps.state.progress.getPart('sprint')).toEqual(finished);
   });
   it('fills only the given projects and finishes at once without any', async () => {
     const deps = makeDeps({ pages: PAGES });

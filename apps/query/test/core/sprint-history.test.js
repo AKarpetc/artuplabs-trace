@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { addedAfterStart, categoryAt, membersAt, removedAfterStart, sprintEvents, sprintIdsOf, sprintOutcome, statusEvents, toMs } from '../../src/core/sprint-history.js';
+import { addedAfterStart, categoryAt, createdInSprint, membersAt, removedAfterStart, sprintEvents, sprintIdsOf, sprintOutcome, statusEvents, toMs } from '../../src/core/sprint-history.js';
 
 const FIELDS = new Set(['customfield_10020']);
 const ev = (issueId, sprintId, kind, at, changeId = at) => ({ issueId, sprintId, kind, at, changeId: String(changeId) });
@@ -73,6 +73,15 @@ describe('added and removed after the start', () => {
   });
   it('has nothing before the sprint started', () => {
     expect(addedAfterStart(events, '9', { startAt: null, completeAt: null })).toEqual([]);
+  });
+});
+
+describe('issues created inside a sprint', () => {
+  it('takes members without any event of the sprint', () => {
+    expect(createdInSprint(['1', '2'], [ev('2', '9', 'added', 150), ev('1', '8', 'added', 150)], '9')).toEqual(['1']);
+  });
+  it('takes issues whose first event of the sprint removes them', () => {
+    expect(createdInSprint([], [ev('3', '9', 'added', 170), ev('3', '9', 'removed', 160), ev('4', '9', 'added', 150), ev('4', '9', 'removed', 160)], 9)).toEqual(['3']);
   });
 });
 

@@ -144,3 +144,108 @@ export const REFERENCES = {
     return future.length ? sprintIssues(future[0].id) : [];
   },
 };
+
+const SPRINT_FIELD = 'customfield_10020';
+const jiraMs = (v) => Date.parse(String(v).replace(/([+-]\d{2})(\d{2})$/, '$1:$2'));
+const changelogCache = new Map();
+const currentCache = new Map();
+
+async function changelogOf(key) {
+  if (changelogCache.has(key)) return changelogCache.get(key);
+  const out = [];
+  for (let startAt = 0; ; startAt += 100) {
+    const page = await api('GET', `/rest/api/3/issue/${key}/changelog?startAt=${startAt}&maxResults=100`);
+    out.push(...page.values);
+    if (page.isLast || !page.values.length) break;
+  }
+  changelogCache.set(key, out);
+  return out;
+}
+
+/** Sprint field, status and creation time of today, fetched once per issue for every case of a run. */
+async function currentOf(idList) {
+  const missing = idList.filter((id) => !currentCache.has(String(id)));
+  for (const x of await bulk(missing, [SPRINT_FIELD, 'status', 'created'])) currentCache.set(String(x.id), x.fields);
+  return new Map(idList.map((id) => [String(id), currentCache.get(String(id)) ?? null]));
+}
+
+const sprintSet = (v) => new Set(String(v ?? '').split(',').map((x) => x.trim()).filter(Boolean));
+
+async function sprintByName(board, name) {
+  const all = await sprintsOf(await boardId(board), 'active,closed,future');
+  return name === undefined ? all.find((s) => s.state === 'active') : all.find((s) => s.name === name || String(s.id) === String(name));
+}
+
+async function sprintChanges(candidates, sprintId) {
+  const out = [];
+  for (const id of candidates) {
+    for (const h of await changelogOf(id)) {
+      for (const item of h.items.filter((i) => i.field === 'Sprint')) {
+        const had = sprintSet(item.from).has(String(sprintId));
+        const has = sprintSet(item.to).has(String(sprintId));
+        if (had !== has) out.push({ id, at: jiraMs(h.created), added: has });
+      }
+    }
+  }
+  return out.sort((a, b) => a.at - b.at);
+}
+
+/** Issues created inside the sprint (no Sprint change adds them): the first change removes them, or none touches it and the field holds it today. */
+async function createdInside(candidates, sprintId, changes) {
+  const first = new Map();
+  for (const c of changes) if (!first.has(c.id)) first.set(c.id, c.added);
+  const current = await currentOf(candidates);
+  return candidates.filter((id) => (first.has(id) ? first.get(id) === false : (current.get(String(id))?.[SPRINT_FIELD] ?? []).some((x) => String(x.id) === String(sprintId))))
+    .map((id) => ({ id, at: jiraMs(current.get(String(id))?.created), added: true }));
+}
+
+const windowOf = (s) => ({ start: jiraMs(s.activatedDate ?? s.startDate), end: s.completeDate ? jiraMs(s.completeDate) : Infinity });
+
+Object.assign(REFERENCES, {
+  async addedAfterSprintStart([board, sprint], { candidates }) {
+    const s = await sprintByName(board, sprint);
+    const { start, end } = windowOf(s);
+    const all = await must(candidates);
+    const changes = await sprintChanges(all, s.id);
+    const added = [...changes, ...(await createdInside(all, s.id, changes))];
+    return uniq(added.filter((c) => c.added && c.at > start && c.at <= end).map((c) => c.id));
+  },
+  async removedAfterSprintStart([board, sprint], { candidates }) {
+    const s = await sprintByName(board, sprint);
+    const { start, end } = windowOf(s);
+    const changes = (await sprintChanges(await must(candidates), s.id)).filter((c) => c.at <= end);
+    const last = new Map(changes.map((c) => [c.id, c]));
+    return uniq([...new Set(changes.filter((c) => !c.added && c.at > start).map((c) => c.id))].filter((id) => !last.get(id).added));
+  },
+  async completeInSprint(args, options) {
+    return (await outcomeRef(args, options)).complete;
+  },
+  async incompleteInSprint(args, options) {
+    return (await outcomeRef(args, options)).incomplete;
+  },
+});
+
+async function outcomeRef([board, sprint], { candidates }) {
+  const s = await sprintByName(board, sprint);
+  const t = s.completeDate ? jiraMs(s.completeDate) : Date.now();
+  const statuses = new Map((await api('GET', '/rest/api/3/status')).map((x) => [String(x.id), x.statusCategory.key]));
+  const all = await must(candidates);
+  const current = await currentOf(all);
+  const complete = [];
+  const incomplete = [];
+  for (const id of all) {
+    const log = await changelogOf(id);
+    const fields = current.get(String(id));
+    const sprintItems = log.flatMap((h) => h.items.filter((i) => i.field === 'Sprint').map((i) => ({ at: jiraMs(h.created), from: i.from, to: i.to })));
+    const before = sprintItems.filter((i) => i.at <= t).at(-1);
+    const after = sprintItems.find((i) => i.at > t);
+    const value = before ? sprintSet(before.to) : after ? sprintSet(after.from) : new Set((fields?.[SPRINT_FIELD] ?? []).map((x) => String(x.id)));
+    if (!value.has(String(s.id))) continue;
+    const statusItems = log.flatMap((h) => h.items.filter((i) => i.fieldId === 'status').map((i) => ({ at: jiraMs(h.created), from: i.from, to: i.to })));
+    const sb = statusItems.filter((i) => i.at <= t).at(-1);
+    const sa = statusItems.find((i) => i.at > t);
+    const statusId = sb ? sb.to : sa ? sa.from : fields?.status?.id;
+    (statuses.get(String(statusId)) === 'done' ? complete : incomplete).push(id);
+  }
+  return { complete: uniq(complete), incomplete: uniq(incomplete) };
+}

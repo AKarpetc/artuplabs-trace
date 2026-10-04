@@ -7,6 +7,9 @@ export function indexPartOf(group) {
   return PART_OF_GROUP[group] ?? null;
 }
 
+/** Journal change kind written when an index part finishes building, so the groups that read it are recomputed. */
+export const indexReadyKind = (part) => `index-${part}`;
+
 /** "Index is building" until the part a group needs was built once (a later reindex keeps it ready); null when not needed. */
 export function readinessError(progress, group) {
   const part = indexPartOf(group);

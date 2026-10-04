@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { indexPartOf, readinessError } from '../../src/core/readiness.js';
+import { indexPartOf, indexReadyKind, readinessError } from '../../src/core/readiness.js';
 
 describe('readiness', () => {
   it('maps groups to index parts', () => {
     expect([indexPartOf('sprint'), indexPartOf('comment'), indexPartOf('attachment'), indexPartOf('query')]).toEqual(['sprint', 'comments', 'comments', null]);
+  });
+  it('names the journal change kind of a built index part', () => {
+    expect([indexReadyKind('sprint'), indexReadyKind('comments')]).toEqual(['index-sprint', 'index-comments']);
   });
   it('needs nothing for groups without an index', () => {
     expect(readinessError(null, 'query')).toBeNull();

@@ -193,6 +193,66 @@ modules:
         - in
         - not in
       function: fn-nex-spr
+    - key: added-after-sprint-start
+      name: addedAfterSprintStart
+      arguments:
+        - name: board
+          required: true
+        - name: sprint
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-add-aft-spr-sta
+    - key: removed-after-sprint-start
+      name: removedAfterSprintStart
+      arguments:
+        - name: board
+          required: true
+        - name: sprint
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-rem-aft-spr-sta
+    - key: incomplete-in-sprint
+      name: incompleteInSprint
+      arguments:
+        - name: board
+          required: true
+        - name: sprint
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-inc-in-spr
+    - key: complete-in-sprint
+      name: completeInSprint
+      arguments:
+        - name: board
+          required: true
+        - name: sprint
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-com-in-spr
   trigger:
     - key: query-events
       function: on-event
@@ -257,6 +317,14 @@ modules:
       handler: index.previousSprint
     - key: fn-nex-spr
       handler: index.nextSprint
+    - key: fn-add-aft-spr-sta
+      handler: index.addedAfterSprintStart
+    - key: fn-rem-aft-spr-sta
+      handler: index.removedAfterSprintStart
+    - key: fn-inc-in-spr
+      handler: index.incompleteInSprint
+    - key: fn-com-in-spr
+      handler: index.completeInSprint
     - key: on-event
       handler: index.onEvent
     - key: on-refresh

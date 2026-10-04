@@ -3,17 +3,18 @@
  * Acceptance tool for ArtUp Query against the dev site; every request has a timeout, and a write that broke
  * is sent again only after a check that it was not applied.
  *
- *   complete  every case of a table against a reference built by REST traversal (--cases m1, --board, --tag)
- *   fresh     seconds until a change is visible and changes lost after 10 minutes (--group query|board, --n, --tag)
+ *   complete  every case of a table against a reference built by REST traversal (--cases m1|m2, --board, --candidates, --tag)
+ *   fresh     seconds until a change is visible and changes lost after 10 minutes (--group query|board|sprint, --n, --tag)
  *   seed-tm   a team-managed project JQLT with epics, stories and subtasks
  *
  * Usage:
  *   set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
- *   node apps/query/scripts/acceptance.mjs complete [--cases m1] [--board "RPT board"] [--tag t]
- *   node apps/query/scripts/acceptance.mjs fresh [--group query|board] [--n 30] [--board "RPT board"] [--tag t]
+ *   node apps/query/scripts/acceptance.mjs complete [--cases m1|m2] [--board "RPT board"] [--tag t]
+ *   node apps/query/scripts/acceptance.mjs fresh [--group query|board|sprint] [--n 30] [--board "RPT board"] [--tag t]
  *   node apps/query/scripts/acceptance.mjs seed-tm
  */
-import { api, ids, settledIds, sleep, stats, write } from './lib/http.mjs';
+import { readFileSync } from 'node:fs';
+import { api, ids, settledIds, sleep, stats, UnsafeRetryError, write } from './lib/http.mjs';
 import { latency, latencyResult, waitFor } from './lib/latency.mjs';
 import { boardId, myAccountId, REFERENCES, sprintsOf } from './lib/reference.mjs';
 import { compare, save } from './lib/report.mjs';
@@ -176,6 +177,72 @@ async function seedTeamManaged() {
 
 /** Freshness phases by function group; later stages add sprint, comment, attachment and fields. */
 export const FRESH = { query: queryLatency, board: boardLatency };
+
+const JG6_SEED = new URL('../../../atlassian/data/jg6-seed.json', import.meta.url);
+const jg6Seed = () => JSON.parse(readFileSync(JG6_SEED, 'utf8'));
+args.candidates = args.candidates ?? 'project = JQLG AND labels in (jg-sprint, jg-sprint-big)';
+
+Object.defineProperty(CASES, 'm2', {
+  enumerable: true,
+  get() {
+    const seed = jg6Seed();
+    const board = 'JQLG board';
+    const SPRINT_FUNCTIONS = ['addedAfterSprintStart', 'removedAfterSprintStart', 'completeInSprint', 'incompleteInSprint'];
+    return [
+      ...seed.sprints.flatMap((s) => [
+        ['addedAfterSprintStart', [board, s.name], `${s.name}: added after the start`],
+        ['removedAfterSprintStart', [board, s.name], `${s.name}: removed after the start`],
+      ]),
+      ...seed.sprints.slice(0, 10).flatMap((s) => [
+        ['completeInSprint', [board, s.name], `${s.name}: done at the close`],
+        ['incompleteInSprint', [board, s.name], `${s.name}: not done at the close`],
+      ]),
+      ['addedAfterSprintStart', [board], 'active sprint'],
+      ...SPRINT_FUNCTIONS.map((fn) => [fn, [board, seed.big.name], `${seed.big.name}: sprint of 2 200 issues (> 1 000)`]),
+    ];
+  },
+});
+
+async function addToSprint(sprintId, issueId) {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    try {
+      await api('POST', `/rest/agile/1.0/sprint/${sprintId}/issue`, { issues: [issueId] }, { unsafe: true });
+      return;
+    } catch (error) {
+      if (!(error instanceof UnsafeRetryError)) throw error;
+      if ((await ids(`sprint = ${sprintId} AND id = ${issueId}`)).ids?.length) return;
+      await sleep(1000 * attempt);
+    }
+  }
+  throw new Error(`issue ${issueId} was not added to sprint ${sprintId}`);
+}
+
+async function toDone(issueId) {
+  const { transitions } = await api('GET', `/rest/api/3/issue/${issueId}/transitions`);
+  const done = transitions.find((t) => t.to?.statusCategory?.key === 'done');
+  await api('POST', `/rest/api/3/issue/${issueId}/transitions`, { transition: { id: done.id } });
+}
+
+FRESH.sprint = async () => {
+  const { active } = jg6Seed();
+  const free = (await ids('project = JQLG AND labels = jg-sprint AND sprint is EMPTY ORDER BY key')).ids.slice(0, args.n);
+  const open = (await ids(`sprint = ${active.id} AND statusCategory != Done ORDER BY key`)).ids.slice(0, args.n);
+  const rows = { addedAfterStart: [], completed: [] };
+  const t0 = Date.now();
+  for (const x of free) {
+    const t = Date.now();
+    await addToSprint(active.id, x);
+    rows.addedAfterStart.push(await waitFor(clause('addedAfterSprintStart', ['JQLG board']), x, true, t));
+  }
+  for (const x of open) {
+    const t = Date.now();
+    await toDone(x);
+    rows.completed.push(await waitFor(clause('completeInSprint', ['JQLG board', active.name]), x, true, t));
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-sprint'), { stats, ...result });
+};
 
 async function fresh() {
   if (!FRESH[args.group]) throw new Error(`groups: ${Object.keys(FRESH).join(', ')}`);

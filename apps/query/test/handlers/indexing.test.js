@@ -3,8 +3,6 @@ import { createFakeKvs } from '../fakeKvs.js';
 import { createState } from '../../src/infra/state.js';
 import { createIndexing } from '../../src/handlers/indexing.js';
 
-vi.mock('../../src/core/catalog.js', async (orig) => ({ ...(await orig()), SHIPPED_GROUPS: ['query', 'site', 'board', 'sprint'] }));
-
 function makeDeps() {
   let now = 5000;
   const repo = { addSprintEvents: vi.fn(), addStatusEvents: vi.fn(), upsertSprints: vi.fn(), deleteSprint: vi.fn(), deleteIssue: vi.fn() };
@@ -29,6 +27,13 @@ describe('indexEvent', () => {
     const deps = makeDeps();
     await createIndexing(deps).indexEvent({ ...updated([SPRINT_ITEM]), timestamp: '1790584137824' });
     expect(deps.repo.addSprintEvents.mock.calls[0][0][0].at).toBe(1790584137824);
+  });
+  it('dates the rows by the changelog time when the event carries it, as the backfill does', async () => {
+    const deps = makeDeps();
+    const event = updated([SPRINT_ITEM, { field: 'status', fieldId: 'status', from: '1', to: '2' }]);
+    event.changelog.created = '2026-01-02T00:00:00.000+0000';
+    await createIndexing(deps).indexEvent(event);
+    expect([deps.repo.addSprintEvents.mock.calls[0][0][0].at, deps.repo.addStatusEvents.mock.calls[0][0][0].at]).toEqual([Date.UTC(2026, 0, 2), Date.UTC(2026, 0, 2)]);
   });
   it('skips issues of excluded projects', async () => {
     const deps = makeDeps();
@@ -91,6 +96,13 @@ describe('indexEvent', () => {
     const deps = makeDeps();
     await createIndexing(deps).indexEvent({ eventType: 'avi:jira-software:closed:sprint', sprint: { id: '34', originBoardId: '36', state: 'closed', startDate: '2026-09-30T14:29:46.516+0200', completeDate: '2026-10-01T10:00:00.000+0200' } });
     expect(deps.repo.upsertSprints).toHaveBeenCalledWith([{ id: '34', boardId: '36', name: '', state: 'closed', startAt: Date.UTC(2026, 8, 30, 12, 29, 46, 516), completeAt: Date.UTC(2026, 9, 1, 8) }]);
+  });
+});
+
+describe('shipped parts', () => {
+  it('ships the sprint part with the sprint functions', () => {
+    const indexing = createIndexing(makeDeps());
+    expect([indexing.shippedParts(), indexing.shippedTables()]).toEqual([['sprint'], ['sprint_event', 'status_event']]);
   });
 });
 

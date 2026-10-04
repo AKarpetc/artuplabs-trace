@@ -61,7 +61,7 @@ export function createIndexing(deps) {
     const changeId = String(event.changelog?.id ?? '');
     if (!items.length || !NUMERIC.test(changeId) || !event.issue?.id) return;
     const fields = await sprintFieldIds();
-    const histories = [{ id: changeId, created: event.timestamp ?? deps.now(), items }];
+    const histories = [{ id: changeId, created: event.changelog.created ?? event.timestamp ?? deps.now(), items }];
     const sprintRows = sprintEvents(event.issue.id, histories, fields);
     const statusChanged = items.some(isStatus);
     if (!sprintRows.length && !statusChanged) return;

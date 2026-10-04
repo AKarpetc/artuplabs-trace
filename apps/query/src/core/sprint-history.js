@@ -68,6 +68,15 @@ export function removedAfterStart(events, sprintId, window) {
   return sortIds(out);
 }
 
+/** Issues that were in the sprint when they were created: today's members without any event of it, and issues whose first event of it removes them. */
+export function createdInSprint(currentIds, events, sprintId) {
+  const first = new Map();
+  for (const e of events.filter((x) => x.sprintId === String(sprintId)).sort(byTime)) if (!first.has(e.issueId)) first.set(e.issueId, e.kind);
+  const out = currentIds.map(String).filter((id) => !first.has(id));
+  for (const [id, kind] of first) if (kind === 'removed') out.push(id);
+  return sortIds(out);
+}
+
 /** Members of a sprint at time t: today's members with every later event undone. */
 export function membersAt(currentIds, events, sprintId, t) {
   const members = new Set(currentIds.map(String));

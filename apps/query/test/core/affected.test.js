@@ -57,6 +57,10 @@ describe('familyWants', () => {
     expect(familyWants('comment', ['issue-deleted'])).toBe(true);
     expect(familyWants('attachment', ['comment'])).toBe(false);
   });
+  it('recomputes the groups of an index part once that part is built', () => {
+    expect(['sprint', 'comment', 'attachment', 'board', 'query'].map((f) => familyWants(f, ['index-sprint']) || familyWants(f, ['index-comments']))).toEqual([true, true, true, false, false]);
+    expect([familyWants('sprint', ['index-comments']), familyWants('comment', ['index-sprint'])]).toEqual([false, false]);
+  });
   it('wants nothing for a family it does not know', () => {
     expect(familyWants('gone', ['issue-created', 'sprint'])).toBe(false);
   });

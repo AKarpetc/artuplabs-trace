@@ -33,6 +33,7 @@ export const LOG = {
   rejected: () => 'Function call rejected',
   refreshTimedOut: () => 'Refresh ran out of time',
   refreshFailed: (status) => (status ? `Refresh failed: Jira answered ${status}` : 'Refresh failed'),
+  indexRefreshNotQueued: () => 'Refresh after the index build was not queued',
   indexFailed: (status) => (status ? `Index write failed: Jira answered ${status}` : 'Index write failed'),
 };
 

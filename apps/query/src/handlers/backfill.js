@@ -1,4 +1,7 @@
+import { LOG } from '../core/errors.js';
 import { CHANGELOG_BATCH, WORKER_BUDGET_MS } from '../core/limits.js';
+import { indexReadyKind } from '../core/readiness.js';
+import { pushRefresh } from './refresh.js';
 
 const inList = (projects) => projects.map((p) => `"${p.key}"`).join(', ');
 
@@ -15,7 +18,17 @@ export async function startBackfill(deps, part, { projects } = {}) {
   return progress;
 }
 
-/** Backfill consumer: slices of issue ids, project by project, within the budget; then it queues itself to continue. */
+/** Journals a change of every group that reads the finished part and queues a refresh, so precomputations stored while it was building are recomputed; a failure is logged without values. */
+async function refreshReaders(deps, part) {
+  try {
+    await deps.journal.append({ ids: [], kinds: [indexReadyKind(part)] }, deps.now());
+    await pushRefresh(deps, deps.now());
+  } catch {
+    console.error(LOG.indexRefreshNotQueued());
+  }
+}
+
+/** Backfill consumer: slices of issue ids, project by project, within the budget; then it queues itself to continue; it stops when a newer backfill started or another copy of this job finished the part. */
 export async function onBackfill(deps, event) {
   const { part, generation } = event?.body ?? {};
   const p = part && deps.indexParts[part] ? await deps.state.progress.getPart(part) : null;
@@ -27,6 +40,7 @@ export async function onBackfill(deps, event) {
     const project = c.projects[c.index];
     if (!project) {
       await deps.state.progress.setPart(part, { ...p, cursor: null, finishedAt: deps.now(), readyAt: p.readyAt ?? deps.now() });
+      await refreshReaders(deps, part);
       return { finished: true, done: p.done };
     }
     if (!page) page = await deps.jira.searchPage(`project = "${project.key}" ORDER BY id ASC`, c.token);
@@ -45,7 +59,8 @@ export async function onBackfill(deps, event) {
       c.offset = 0;
       page = null;
     }
-    if ((await deps.state.progress.getPart(part))?.generation !== generation) return { skipped: true };
+    const current = await deps.state.progress.getPart(part);
+    if (current?.generation !== generation || current.finishedAt) return { skipped: true };
     p.savedAt = deps.now();
     await deps.state.progress.setPart(part, p);
   }
