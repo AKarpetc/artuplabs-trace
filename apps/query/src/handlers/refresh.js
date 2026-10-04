@@ -96,7 +96,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
         await handOver(group);
         return;
       }
-      names.computed.push(group.functionName);
+      names.computed.push(`${group.functionName}@${usedHoursAgo(group, startedAt)}h`);
       const ownDeadline = deps.now() + REFRESH_GROUP_BUDGET_MS;
       cutByWorker = ownDeadline > deadline;
       byGroup.push([group.key, await deps.withDeadline(Math.min(ownDeadline, deadline), () => rewrite(deps, group, reconcile))]);
@@ -150,6 +150,11 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
     oldestEventMs: summary.firstAt === null ? null : startedAt - summary.firstAt,
   };
 }
+
+const usedHoursAgo = (group, now) => {
+  const used = group.items.map((pc) => Date.parse(pc.used ?? '')).filter(Number.isFinite);
+  return used.length ? Math.floor((now - Math.max(...used)) / 3600000) : '-';
+};
 
 const nameCounts = (list) => {
   const counts = new Map();
