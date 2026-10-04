@@ -7,6 +7,10 @@
  *   fresh     seconds until a change is visible and changes lost after 10 minutes (--group query|board|sprint|comment|attachment|fields, --n, --tag)
  *   seed-tm   a team-managed project JQLT with epics, stories and subtasks
  *   seed-fields  50 RPT issues with a due date, an original estimate, a worklog and a done status (aq-fields)
+ *   burst     200 links created and then deleted within a minute each, then seconds until all are visible (--burst, --tag)
+ *   audit     issues updated by the app user (must be none: the app writes nothing to issues) (--since -7d)
+ *   errors    the editor errors of invalid calls, function groups that are shipped only (--groups)
+ *   sr        the 20 ScriptRunner samples against the reference, samples of groups not shipped skipped (--groups)
  *
  * Usage:
  *   set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
@@ -14,10 +18,14 @@
  *   node apps/query/scripts/acceptance.mjs fresh [--group query|board|sprint|comment|attachment|fields] [--n 30] [--board "RPT board"] [--tag t]
  *   node apps/query/scripts/acceptance.mjs seed-tm
  *   node apps/query/scripts/acceptance.mjs seed-fields
+ *   node apps/query/scripts/acceptance.mjs burst [--burst 200] [--tag t]
+ *   node apps/query/scripts/acceptance.mjs audit [--since -7d]
+ *   node apps/query/scripts/acceptance.mjs errors [--groups query,site,board,sprint,comment,attachment,fields]
+ *   node apps/query/scripts/acceptance.mjs sr [--groups query,site,board,sprint,comment,attachment,fields]
  */
 import { readFileSync } from 'node:fs';
-import { api, bulk, ids, settledIds, sleep, stats, UnsafeRetryError, upload, write } from './lib/http.mjs';
-import { latency, latencyResult, waitFor } from './lib/latency.mjs';
+import { api, bulk, ids, pool, settledIds, sleep, stats, UnsafeRetryError, upload, write } from './lib/http.mjs';
+import { latency, latencyResult, linkId, waitFor } from './lib/latency.mjs';
 import { boardId, myAccountId, REFERENCES, sprintsOf } from './lib/reference.mjs';
 import { compare, save } from './lib/report.mjs';
 
@@ -374,12 +382,115 @@ async function seedFields() {
   log(`seed-fields: ${seeded.length} already seeded, ${fresh.length} new, ${worklogs} worklogs, ${closed} moved to done`);
 }
 
+const shippedGroups = () => String(args.groups ?? 'query,site,board,sprint,comment,attachment,fields').split(',').map((g) => g.trim());
+
+const createLink = ([from, to]) => write('POST', '/rest/api/3/issueLink', { type: { name: 'Blocks' }, outwardIssue: { id: from }, inwardIssue: { id: to } }, () => linkId(from, to));
+
+async function deleteLink([from, to]) {
+  const id = await linkId(from, to);
+  if (id) await api('DELETE', `/rest/api/3/issueLink/${id}`, undefined, { raw: true });
+}
+
+/** A burst of link changes spread over one minute, four in flight: created, then deleted; each wave reports seconds from its last change until the app shows all of them, or the changes still missing after 10 minutes. */
+async function burst() {
+  const C = 'issue in linkedIssuesOf("project = JQLG AND labels = jg-lnk")';
+  log(`warm ${C}: ${(await settledIds(C, { log })).ids?.length}`);
+  const sources = (await ids('project = JQLG AND labels = jg-lnk ORDER BY key')).ids;
+  const targets = (await ids('project = JQLG AND labels = jg-task AND issueLinkType is EMPTY AND labels not in (jg-big, jg-mid, jg-small, jg-lnk, jg-sprint, jg-sprint-big) ORDER BY key ASC')).ids.slice(0, Number(args.burst ?? 200));
+  const pairs = targets.map((to, i) => [sources[i % sources.length], to]);
+  const gap = 60000 / pairs.length;
+  const wave = async (op, present) => {
+    const t0 = Date.now();
+    await pool(pairs, 4, async (pair, i) => {
+      const due = t0 + i * gap;
+      if (Date.now() < due) await sleep(due - Date.now());
+      await op(pair);
+    });
+    const tLast = Date.now();
+    const base = { changes: pairs.length, spreadSeconds: (tLast - t0) / 1000 };
+    for (;;) {
+      const got = new Set((await ids(`(${C}) AND id in (${targets.join(',')})`)).ids ?? []);
+      const ok = targets.filter((x) => got.has(x) === present).length;
+      if (ok === targets.length) return { ...base, lastChangeToVisibleSeconds: (Date.now() - tLast) / 1000, lost: 0 };
+      if (Date.now() - tLast > 10 * 60000) return { ...base, lastChangeToVisibleSeconds: null, lost: targets.length - ok };
+      await sleep(2000);
+    }
+  };
+  const created = await wave(createLink, true);
+  log(`burst created: ${JSON.stringify(created)}`);
+  const deleted = await wave(deleteLink, false);
+  log(`burst deleted: ${JSON.stringify(deleted)}`);
+  save(tagged('acceptance-burst'), { stats, created, deleted });
+}
+
+/** Issues the app user updated since `--since`: the app has no write scope on issues, so the count must be zero. */
+async function audit() {
+  const since = args.since ?? '-7d';
+  const users = await api('GET', '/rest/api/3/users/search?maxResults=1000');
+  const app = users.find((u) => u.accountType === 'app' && /ArtUp Query/i.test(u.displayName));
+  if (!app) throw new Error('ArtUp Query app user not found');
+  const touched = await ids(`issuekey in updatedBy(${q(app.accountId)}, ${q(since)})`);
+  const result = { appAccountId: app.accountId, appName: app.displayName, since, updatedByApp: touched.ids?.length ?? null, error: touched.error, pass: touched.ids?.length === 0 };
+  log(`audit: ${JSON.stringify(result)}`);
+  save('acceptance-audit', { stats, ...result });
+}
+
+/** Invalid calls with the start of the editor error each must give, and the function group it belongs to. */
+const ERRORS = [
+  ['issue in subtasksOf("projekt = JQLG")', 'subtasksOf: ', 'query'],
+  ['issue in subtasksOf("assignee = currentUser()")', 'currentUser() is not supported', 'query'],
+  ['issue in childIssuesOf("project = JQLG", "11")', 'depth must be between 1 and 10', 'query'],
+  ['issue in linkedIssuesOf("project = JQLG", "nope")', 'Link type "nope" not found', 'query'],
+  ['issue in previousSprint("No such board")', 'Board "No such board" not found', 'board'],
+  ['issue in addedAfterSprintStart("JQLG board", "No such sprint")', 'Sprint "No such sprint" not found', 'sprint'],
+  ['issue in commented("by nobody-xyz-123")', 'User "nobody-xyz-123" not found', 'comment'],
+  ['issue in commented("roleLevel Administrators")', 'Clause "roleLevel" is not available yet', 'comment'],
+  ['issue in lastComment("groupLevel jira-users-artuplabs-dev")', 'Clause "groupLevel" is not available yet', 'comment'],
+  ['issue in expression("project = JQLG", "nope > 1")', 'Field "nope" not found', 'fields'],
+];
+
+async function errors() {
+  const shipped = shippedGroups();
+  const rows = [];
+  for (const [jql, expected, group] of ERRORS.filter((e) => shipped.includes(e[2]))) {
+    const r = await api('POST', '/rest/api/3/search/jql', { jql, fields: ['id'], maxResults: 1 }, { raw: true });
+    const message = r.text.slice(0, 400);
+    rows.push({ jql, group, expected, status: r.status, message, pass: r.status === 400 && message.includes(expected) });
+    log(`${rows.at(-1).pass ? 'pass' : 'FAIL'} ${jql}: ${r.status} ${message}`);
+  }
+  save('acceptance-errors', { stats, groups: shipped, rows, allPass: rows.every((x) => x.pass) });
+}
+
+/** The ScriptRunner samples rewritten for the app, each against its reference; a sample of a group not shipped is skipped as v1.1. */
+async function sr() {
+  const { samples } = JSON.parse(readFileSync(new URL('../test/fixtures/sr-samples.json', import.meta.url), 'utf8'));
+  const shipped = shippedGroups();
+  const rows = [];
+  for (const s of samples) {
+    if (!shipped.includes(s.group)) {
+      rows.push({ id: s.id, scriptrunner: s.scriptrunner, group: s.group, skipped: 'v1.1', pass: null });
+      log(`sr ${s.id}: skipped, group ${s.group} is in v1.1`);
+      continue;
+    }
+    const got = await settledIds(s.query, { log });
+    let ref = await REFERENCES[s.reference.fn](s.reference.args, args);
+    if (s.reference.and) {
+      const allowed = new Set((await ids(s.reference.and)).ids ?? []);
+      ref = ref.filter((id) => allowed.has(String(id)));
+    }
+    const row = { id: s.id, scriptrunner: s.scriptrunner, group: s.group, query: s.query, seconds: got.seconds, attempts: got.attempts, error: got.error, ...(got.ids ? compare(got.ids, ref) : {}) };
+    rows.push({ ...row, pass: row.complete === true });
+    log(`sr ${s.id}: ${JSON.stringify(rows.at(-1))}`);
+  }
+  save(tagged('acceptance-sr'), { stats, groups: shipped, rows, passed: rows.filter((r) => r.pass === true).length, skipped: rows.filter((r) => r.skipped).length });
+}
+
 async function fresh() {
   if (!FRESH[args.group]) throw new Error(`groups: ${Object.keys(FRESH).join(', ')}`);
   await FRESH[args.group]();
 }
 
-const PHASES = { complete, fresh, 'seed-tm': seedTeamManaged, 'seed-fields': seedFields };
+const PHASES = { complete, fresh, 'seed-tm': seedTeamManaged, 'seed-fields': seedFields, burst, audit, errors, sr };
 if (!PHASES[args.phase]) {
   log(`phases: ${Object.keys(PHASES).join(', ')}`);
   process.exit(2);
