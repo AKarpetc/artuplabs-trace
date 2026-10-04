@@ -107,8 +107,16 @@ async function evaluateClause(deps, functionName, payload, context) {
 export async function handleFunction(deps, functionName, payload, context) {
   const reply = await evaluateSafely(deps, functionName, payload, context);
   if (!reply.error) return { jql: reply.jql };
-  if (reply.error !== ERR.computing()) await deps.state.recordError({ at: deps.now(), functionName, message: reply.log ?? LOG.rejected() });
+  if (reply.error !== ERR.computing()) await recordQuietly(deps, functionName, reply.log ?? LOG.rejected());
   return { error: reply.error, storeErrorAsPrecomputation: false };
+}
+
+async function recordQuietly(deps, functionName, message) {
+  try {
+    await deps.state.recordError({ at: deps.now(), functionName, message });
+  } catch (error) {
+    console.error(`${functionName} error log failed: ${error?.name}`);
+  }
 }
 
 /** Forge handlers for every catalog function, by function name. */

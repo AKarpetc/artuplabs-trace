@@ -27,6 +27,14 @@ describe('handleFunction', () => {
     expect(await handleFunction(deps, 'subtasksOf', payload(), DEV)).toEqual({ error: 'Usage: subtasksOf(subquery)', storeErrorAsPrecomputation: false });
     expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'subtasksOf', message: 'Usage: subtasksOf(subquery)' }]);
   });
+  it('still shows the argument error when the error log cannot be written', async () => {
+    const deps = fnDeps({});
+    deps.state.recordError = async () => { throw Object.assign(new Error('Limits for the current installation have been exceeded'), { name: 'ForgeKvsError' }); };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await handleFunction(deps, 'subtasksOf', payload(), DEV)).toEqual({ error: 'Usage: subtasksOf(subquery)', storeErrorAsPrecomputation: false });
+    expect(error.mock.calls.flat().join(' ')).not.toContain('subquery)');
+    error.mockRestore();
+  });
   it('turns a Jira 400 on the subquery into the function error', async () => {
     const bad = Object.assign(new Error('Field \'x\' does not exist'), { name: 'JiraError', status: 400 });
     const deps = fnDeps({ subtasksOf: async () => { throw bad; } });
