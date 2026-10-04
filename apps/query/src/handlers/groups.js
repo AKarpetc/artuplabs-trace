@@ -62,18 +62,18 @@ export async function rewrite(deps, group, reconcile) {
 }
 
 /**
- * Writes the updates of each group unless a computation that started later already wrote that group, then stores the cache entries of the
- * groups it did not skip; returns how many updates were written.
+ * Writes the updates of each group unless a computation that started later already wrote or confirmed that group, then stores the cache
+ * entries of the groups it did not skip; a group found unchanged is confirmed too, so an older computation finishing later cannot roll it
+ * back. Returns how many updates were written.
  */
 export async function writeGroups(deps, startedAt, byGroup) {
   const out = [];
   const entries = [];
   for (const [key, { updates, entry }] of byGroup) {
+    if (!updates.length && !entry) continue;
     if (((await deps.state.groupWrite.get(key)) ?? 0) > startedAt) continue;
-    if (updates.length) {
-      await deps.state.groupWrite.set(key, startedAt);
-      out.push(...updates);
-    }
+    await deps.state.groupWrite.set(key, startedAt);
+    out.push(...updates);
     if (entry) entries.push([key, entry]);
   }
   if (out.length) await deps.jira.writePrecomputations(out);

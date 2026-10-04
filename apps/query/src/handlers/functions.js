@@ -29,7 +29,7 @@ export async function computeGroup(deps, functionName, args, userArgs, { reconci
     result = { error: ERR.withFunction(functionName, error.message), log: ERR.subqueryRejected() };
   }
   if (!result.ids) return result;
-  const entry = { values: result.ids, watch: result.watch ?? null, field: result.field, rootFilter: result.rootFilter ?? null, at: deps.now(), source, ms: deps.now() - startedAt };
+  const entry = { values: result.ids, watch: result.watch ?? null, field: result.field, rootFilter: result.rootFilter ?? null, at: deps.now(), source, ms: deps.now() - startedAt, startedAt };
   if (!keep) return { ...result, entry };
   await deps.cache.write(groupKey(functionName, userArgs), entry);
   return result;

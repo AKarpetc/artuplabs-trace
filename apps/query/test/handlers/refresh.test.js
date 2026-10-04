@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ids, makeDeps, RECENT } from './makeDeps.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
-import { handOff } from '../../src/handlers/groups.js';
+import { handOff, writeGroups } from '../../src/handlers/groups.js';
 import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
@@ -509,6 +509,12 @@ describe('heavy groups in a refresh pass', () => {
     expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
     expect([await deps.state.groupWrite.get('hasSubtasks[]'), await deps.state.groupWrite.get('childIssuesOf["q"]')]).toEqual([1000000, 1000001]);
     expect(await deps.journal.read(10)).toEqual([]);
+  });
+  it('does not let an older computation overwrite a group a newer one found unchanged', async () => {
+    const deps = makeDeps({ pcs: lightPcs });
+    await writeGroups(deps, 2000, [['hasSubtasks[]', { updates: [], entry: { values: ['1'], watch: null, field: 'id', rootFilter: null, at: 2000, source: 'refresh', startedAt: 2000 } }]]);
+    const changed = await writeGroups(deps, 1000, [['hasSubtasks[]', { updates: [{ id: 'h', value: 'id in (9)' }], entry: { values: ['9'], watch: null, field: 'id', rootFilter: null, at: 1000, source: 'refresh', startedAt: 1000 } }]]);
+    expect([changed, deps.written, await deps.state.groupWrite.get('hasSubtasks[]')]).toEqual([0, [], 2000]);
   });
   it('remembers how long a group took to compute', async () => {
     const deps = makeDeps({ pcs: lightPcs });

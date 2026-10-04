@@ -115,6 +115,62 @@ describe('value cache', () => {
     expect(await cache.values('g', meta, 0, meta.n)).toEqual(written.values);
     expect(await cache.watch('g')).toEqual(new Set(written.watch));
   });
+  it('refuses a write from a computation that started before the stored one', async () => {
+    const { cache } = make();
+    await cache.write('g', entry(ids(3), { watch: ['7'], startedAt: 20 }));
+    await cache.write('g', entry(ids(3), { watch: ['8'], startedAt: 10 }));
+    expect([await cache.watch('g'), (await cache.meta('g')).startedAt]).toEqual([new Set(['7']), 20]);
+  });
+  const pausedAfterMetaRead = (kvs) => {
+    let release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    let paused = false;
+    const view = { ...kvs, query: () => kvs.query(), set: (k, v) => kvs.set(k, v), delete: (k) => kvs.delete(k), async get(key) {
+      const value = await kvs.get(key);
+      if (!paused && key.endsWith(':m')) {
+        paused = true;
+        await gate;
+      }
+      return value;
+    } };
+    return { view, release: () => release() };
+  };
+  for (const [name, slow, fast] of [['an older', 10, 20], ['a newer', 20, 10]]) {
+    it(`keeps every chunk readable when ${name} writer with the same values finishes last`, async () => {
+      const kvs = createFakeKvs({ pageSize: 100 });
+      const shared = createValueCache({ kvs, hash: (x) => x, chunkHash: sha });
+      await shared.write('g', entry(ids(10), { watch: ['1'], startedAt: 1 }));
+      const { view, release } = pausedAfterMetaRead(kvs);
+      const late = createValueCache({ kvs: view, hash: (x) => x, chunkHash: sha });
+      const lateWrite = late.write('g', entry(ids(10), { watch: ['2'], startedAt: slow }));
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
+      await shared.write('g', entry(ids(10), { watch: ['3'], startedAt: fast }));
+      release();
+      await lateWrite;
+      const meta = await shared.meta('g');
+      expect(await shared.values('g', meta, 0, 10)).toEqual(ids(10));
+      expect(await shared.watch('g')).toEqual(new Set([slow > fast ? '2' : '3']));
+    });
+  }
+  it('drops a meta whose chunk is gone, so the next write of the same content stores the chunk again', async () => {
+    const { kvs, cache } = make();
+    await cache.write('g', entry(ids(10), { watch: ids(2) }));
+    const meta = await cache.meta('g');
+    kvs.data.delete(`v:g:k${meta.c[0]}`);
+    expect(await cache.values('g', meta, 0, 10)).toBeNull();
+    expect(await cache.meta('g')).toBeNull();
+    await cache.write('g', entry(ids(10), { watch: ids(2) }));
+    expect(await cache.values('g', await cache.meta('g'), 0, 10)).toEqual(ids(10));
+  });
+  it('keeps a newer meta when a reader of the replaced one meets a deleted chunk', async () => {
+    const { kvs, cache } = make();
+    await cache.write('g', entry(ids(10)));
+    const before = await cache.meta('g');
+    await cache.write('g', entry(ids(10, 50)));
+    expect(await cache.values('g', before, 0, 10)).toBeNull();
+    expect((await cache.meta('g')).c).not.toEqual(before.c);
+    expect(kvs.data.has('v:g:m')).toBe(true);
+  });
   it('reads no list when a chunk of the range is gone, so the caller rereads or recomputes', async () => {
     const { kvs, cache } = make();
     await cache.write('g', entry(ids(12000), { watch: ids(6000, 50000) }));
