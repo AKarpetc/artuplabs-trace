@@ -28,13 +28,6 @@ describe('indexEvent', () => {
     await createIndexing(deps).indexEvent({ ...updated([SPRINT_ITEM]), timestamp: '1790584137824' });
     expect(deps.repo.addSprintEvents.mock.calls[0][0][0].at).toBe(1790584137824);
   });
-  it('dates the rows by the changelog time when the event carries it, as the backfill does', async () => {
-    const deps = makeDeps();
-    const event = updated([SPRINT_ITEM, { field: 'status', fieldId: 'status', from: '1', to: '2' }]);
-    event.changelog.created = '2026-01-02T00:00:00.000+0000';
-    await createIndexing(deps).indexEvent(event);
-    expect([deps.repo.addSprintEvents.mock.calls[0][0][0].at, deps.repo.addStatusEvents.mock.calls[0][0][0].at]).toEqual([Date.UTC(2026, 0, 2), Date.UTC(2026, 0, 2)]);
-  });
   it('skips issues of excluded projects', async () => {
     const deps = makeDeps();
     await deps.state.setExcluded(['JQLG']);

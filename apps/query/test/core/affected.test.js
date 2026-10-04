@@ -50,6 +50,7 @@ describe('familyWants', () => {
     expect(familyWants('subtasks', ['issue-created'])).toBe(true);
     expect(familyWants('subtasks', ['link'])).toBe(false);
     expect(familyWants('sprint', ['status'])).toBe(true);
+    expect(familyWants('sprint', ['issue-created'])).toBe(true);
     expect(familyWants('board', ['sprint'])).toBe(true);
     expect(familyWants('links', ['link'])).toBe(true);
     expect(familyWants('links', ['issue-deleted'])).toBe(true);
