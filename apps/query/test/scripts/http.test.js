@@ -18,6 +18,12 @@ describe('api', () => {
     expect(await api('GET', '/x')).toEqual({ a: 1 });
     expect(fetch.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
   });
+  it('adds the given headers to the request', async () => {
+    const fetch = vi.fn(async () => ok({ a: 1 }));
+    vi.stubGlobal('fetch', fetch);
+    await api('POST', '/x', { q: 1 }, { headers: { 'X-ExperimentalApi': 'JiraIssueSearch' } });
+    expect(fetch.mock.calls[0][1].headers).toMatchObject({ 'X-ExperimentalApi': 'JiraIssueSearch', 'Content-Type': 'application/json' });
+  });
   it('retries a read after a network error', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(timeout()).mockResolvedValueOnce(ok({ a: 2 })));

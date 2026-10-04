@@ -9,7 +9,8 @@
  *   seed-fields  50 RPT issues with a due date, an original estimate, a worklog and a done status (aq-fields)
  *   burst     200 links created and then deleted within a minute each, then seconds until all are visible (--burst, --tag)
  *   audit     issues updated by the app user (must be none: the app writes nothing to issues) (--since -7d, --app)
- *   errors    the editor errors of invalid calls, function groups that are shipped only (--groups)
+ *   errors    the editor errors of invalid calls, read from the issue search the JQL editor uses (GraphQL issueSearchStable; the REST
+ *             search answers an invalid query with no issues), function groups that are shipped only (--groups)
  *   sr        the 20 ScriptRunner samples against the reference, samples of groups not shipped skipped, empty references not passed (--groups)
  *
  * Usage:
@@ -489,7 +490,7 @@ async function audit() {
 
 /** Invalid calls with the start of the editor error each must give, and the function group it belongs to. */
 const ERRORS = [
-  ['issue in subtasksOf("projekt = JQLG")', 'subtasksOf: ', 'query'],
+  ['issue in subtasksOf("projekt = JQLG")', 'subtasksOf: Field \'projekt\' does not exist', 'query'],
   ['issue in subtasksOf("assignee = currentUser()")', 'currentUser() is not supported', 'query'],
   ['issue in childIssuesOf("project = JQLG", "11")', 'depth must be between 1 and 10', 'query'],
   ['issue in linkedIssuesOf("project = JQLG", "nope")', 'Link type "nope" not found', 'query'],
@@ -501,16 +502,43 @@ const ERRORS = [
   ['issue in expression("project = JQLG", "nope > 1")', 'Field "nope" not found', 'fields'],
 ];
 
+const ISSUE_SEARCH = 'query q($c: ID!, $j: String!) { jira { issueSearchStable(cloudId: $c, issueSearchInput: { jql: $j }, first: 1) { totalCount } } }';
+const COMPUTING = 'Computing, retry in a minute';
+const COMPUTING_RETRIES = 3;
+const COMPUTING_PAUSE_MS = 20000;
+
+/** The first error of the editor's issue search for a JQL (experimental GraphQL field, opted in by header), or null when it has none. */
+async function editorError(cloudId, jql) {
+  const r = await api('POST', '/gateway/api/graphql', { query: ISSUE_SEARCH, variables: { c: cloudId, j: jql } }, { raw: true, headers: { 'X-ExperimentalApi': 'JiraIssueSearch' } });
+  let body;
+  try {
+    body = JSON.parse(r.text);
+  } catch {
+    throw new Error(`issue search answered ${r.status} without JSON: ${r.text.slice(0, 300)}`);
+  }
+  if (r.status !== 200 || (!body.data?.jira && !body.errors?.length)) throw new Error(`issue search refused: ${r.status} ${r.text.slice(0, 300)}`);
+  return { status: r.status, message: body.errors?.[0]?.message ?? null, totalCount: body.data?.jira?.issueSearchStable?.totalCount ?? null };
+}
+
+/** Each invalid call through the editor's issue search; an answer of Computing is asked again after a pause, up to COMPUTING_RETRIES times. */
 async function errors() {
   const shipped = shippedGroups();
+  const { cloudId } = await api('GET', '/_edge/tenant_info');
   const rows = [];
   for (const [jql, expected, group] of ERRORS.filter((e) => shipped.includes(e[2]))) {
-    const r = await api('POST', '/rest/api/3/search/jql', { jql, fields: ['id'], maxResults: 1 }, { raw: true });
-    const message = r.text.slice(0, 400);
-    rows.push({ jql, group, expected, status: r.status, message, pass: r.status === 400 && message.includes(expected) });
-    log(`${rows.at(-1).pass ? 'pass' : 'FAIL'} ${jql}: ${r.status} ${message}`);
+    let answer = await editorError(cloudId, jql);
+    let retries = 0;
+    while (answer.message?.includes(COMPUTING) && retries < COMPUTING_RETRIES) {
+      retries += 1;
+      log(`${jql}: Computing, asking again in ${COMPUTING_PAUSE_MS / 1000} s (${retries}/${COMPUTING_RETRIES})`);
+      await sleep(COMPUTING_PAUSE_MS);
+      answer = await editorError(cloudId, jql);
+    }
+    const message = (answer.message ?? '').slice(0, 400);
+    rows.push({ jql, group, expected, status: answer.status, message, totalCount: answer.totalCount, retries, pass: message.includes(expected) });
+    log(`${rows.at(-1).pass ? 'pass' : 'FAIL'} ${jql}: ${message || `no error, ${answer.totalCount} issues`}`);
   }
-  save('acceptance-errors', { stats, groups: shipped, rows, allPass: rows.every((x) => x.pass) });
+  save('acceptance-errors', { stats, channel: 'graphql issueSearchStable', groups: shipped, rows, allPass: rows.every((x) => x.pass) });
 }
 
 /** The ScriptRunner samples rewritten for the app, each against its reference; a sample of a group not shipped is skipped as v1.1. */

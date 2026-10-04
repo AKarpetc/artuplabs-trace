@@ -9,8 +9,8 @@ export const sleep = (ms) => new Promise((resolve) => {
   setTimeout(resolve, ms);
 });
 
-/** REST call with a request timeout and retries of network errors, 429 and 5xx; `unsafe` throws on a network error or 5xx instead; `raw` returns status and text. */
-export async function api(method, path, body, { raw = false, attempts = 8, timeoutMs = 30000, unsafe = false } = {}) {
+/** REST call with a request timeout and retries of network errors, 429 and 5xx; `unsafe` throws on a network error or 5xx instead; `raw` returns status and text; `headers` are added to every attempt. */
+export async function api(method, path, body, { raw = false, attempts = 8, timeoutMs = 30000, unsafe = false, headers = {} } = {}) {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     stats.requests += 1;
     let res;
@@ -18,7 +18,7 @@ export async function api(method, path, body, { raw = false, attempts = 8, timeo
     try {
       res = await fetch(`${SITE}${path}`, {
         method,
-        headers: { Authorization: auth(), Accept: 'application/json', 'X-Atlassian-Token': 'no-check', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        headers: { Authorization: auth(), Accept: 'application/json', 'X-Atlassian-Token': 'no-check', ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
         body: body ? JSON.stringify(body) : undefined,
         signal: AbortSignal.timeout(timeoutMs),
       });
