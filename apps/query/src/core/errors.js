@@ -22,6 +22,12 @@ export const ERR = {
   expressionArithmetic: () => 'Cannot do arithmetic on a comparison',
   expressionTooLong: (max) => `The expression is longer than ${fmt(max)} characters`,
   expressionTooDeep: (max) => `The expression is nested deeper than ${fmt(max)} levels`,
+  invalidDate: (text) => `Invalid date "${clip(String(text))}"`,
+  unclosedQuote: (text) => `Unclosed quote in "${clip(String(text))}"`,
+  unknownClause: (word, allowed) => `Unknown clause "${clip(String(word))}"; use ${allowed.join(', ')}`,
+  clauseNeedsValue: (name) => `Clause "${name}" needs a value`,
+  clauseTwice: (name) => `Clause "${name}" is given twice`,
+  clausesTooLong: (max) => `Conditions are longer than ${fmt(max)} characters`,
 };
 
 /** Value-free texts for the error log: the log never stores argument values (board, sprint, link type names, project keys). */

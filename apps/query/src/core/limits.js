@@ -80,3 +80,7 @@ export const SPRINT_FIELDS_TTL_MS = 24 * 60 * 60 * 1000;
 export const RECONCILE_RECENT_MAX = 2000;
 /** Age of the last saved backfill cursor after which the hourly reconcile queues the backfill again (its job was lost or failed). */
 export const BACKFILL_STALE_MS = 30 * 60 * 1000;
+/** Characters one comment or attachment condition argument may hold. */
+export const CLAUSES_MAX_LENGTH = 1000;
+/** Farthest instant from 1970 a JavaScript date can hold, in ms either way. */
+export const DATE_MAX_ABS_MS = 8.64e15;
