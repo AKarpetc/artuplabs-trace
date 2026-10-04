@@ -9,6 +9,7 @@ import { PAGE_CACHE_MS } from '../../src/core/limits.js';
 const fnDeps = (compute, extra = {}) => makeDeps({ compute, ...extra });
 const ids = (n) => Array.from({ length: n }, (_, i) => String(i + 1));
 const payload = (...args) => ({ clause: { field: 'issue', operator: 'in', arguments: args } });
+const notIn = (...args) => ({ clause: { field: 'issue', operator: 'not in', arguments: args } });
 const DEV = { environmentType: 'DEVELOPMENT' };
 const SUBTASK_GROUP = 'subtasksOf["project = A"]';
 const jobEntry = (values) => ({ values, watch: values, field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', at: 1000000, source: 'job' });
@@ -145,6 +146,39 @@ describe('handleFunction', () => {
   it('answers the index error while the index builds', async () => {
     const deps = fnDeps({}, { ready: async () => 'Index is building: 5 of 10 issues' });
     expect((await handleFunction(deps, 'parentsOf', payload('q'), DEV)).error).toBe('Index is building: 5 of 10 issues');
+  });
+});
+
+describe('handleFunction with not in', () => {
+  it('answers a computed id list with its complement', async () => {
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3', '5'], field: 'id', watch: [] }) });
+    expect(await handleFunction(deps, 'parentsOf', notIn('project = A'), DEV)).toEqual({ jql: 'NOT (id in (3,5))' });
+  });
+  it('answers a tree root with filter and a native result with their complement', async () => {
+    const deps = fnDeps({ subtasksOf: async () => ({ ids: ['1'], field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', watch: [] }), hasAttachments: async () => ({ native: 'attachments is not EMPTY' }) });
+    expect(await handleFunction(deps, 'subtasksOf', notIn('project = A'), DEV)).toEqual({ jql: 'NOT ((issuetype in subTaskIssueTypes()) AND (parent in (1)))' });
+    expect(await handleFunction(deps, 'hasAttachments', notIn(), DEV)).toEqual({ jql: 'NOT (attachments is not EMPTY)' });
+  });
+  it('answers an empty result with every issue', async () => {
+    const deps = fnDeps({ parentsOf: async () => ({ ids: [], field: 'id', watch: [] }) });
+    expect(await handleFunction(deps, 'parentsOf', notIn('project = A'), DEV)).toEqual({ jql: 'NOT (id = -1)' });
+  });
+  it('negates the fewer-comments fragment back to the issues with at least n comments', async () => {
+    const deps = fnDeps({ hasComments: async () => ({ native: 'NOT (issue in hasComments("+2"))' }) });
+    expect(await handleFunction(deps, 'hasComments', notIn('-3'), DEV)).toEqual({ jql: 'NOT (NOT (issue in hasComments("+2")))' });
+  });
+  it('answers a cached page with its complement too', async () => {
+    const deps = fnDeps({});
+    await deps.cache.write(SUBTASK_GROUP, jobEntry(ids(1500)));
+    const leaf = await handleFunction(deps, 'subtasksOf', notIn('project = A', '__aq:l2'), DEV);
+    expect(leaf.jql.startsWith('NOT (parent in (1001,')).toBe(true);
+  });
+  it('gives the same error and the same Computing answer as for in, never every issue', async () => {
+    const deps = fnDeps({ nextSprint: async () => ({ error: 'Board "B" not found', log: 'Board not found' }), parentsOf: never });
+    expect(await handleFunction(deps, 'nextSprint', notIn('B'), DEV)).toEqual({ error: 'Board "B" not found', storeErrorAsPrecomputation: false });
+    const deferred = handleFunction({ ...deps, sleep: async () => {} }, 'parentsOf', notIn('q'), DEV);
+    expect(await deferred).toEqual({ error: 'Computing, retry in a minute', storeErrorAsPrecomputation: false });
+    expect(await handleFunction(deps, 'subtasksOf', notIn(), DEV)).toEqual({ error: 'Usage: subtasksOf(subquery)', storeErrorAsPrecomputation: false });
   });
 });
 

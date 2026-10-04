@@ -12,3 +12,13 @@ export function quote(text) {
 export function pageCall(functionName, userArgs, page) {
   return `issue in ${functionName}(${[...userArgs, pageToken(page)].map(quote).join(', ')})`;
 }
+
+/** Whether a clause or precomputation operator is `not in`, whatever its case or separator. */
+export function isNotIn(operator) {
+  return String(operator ?? '').toLowerCase().replace(/[^a-z]/g, '') === 'notin';
+}
+
+/** Stored JQL of a clause with its operator: `not in` gets the complement of the function's result, so an empty result means every issue. */
+export function forOperator(jql, operator) {
+  return isNotIn(operator) ? `NOT (${jql})` : jql;
+}

@@ -284,6 +284,17 @@ describe('rewrite', () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 2' }) } });
     expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], error: 'Board "B" not found' }]), [])).updates).toEqual([{ id: 'x', value: 'sprint = 2', error: null }]);
   });
+  it('writes each precomputation in the form of its operator from one computation', async () => {
+    const compute = { parentsOf: vi.fn(async () => ({ ids: ['4'], field: 'id', watch: [] })) };
+    const deps = makeDeps({ compute });
+    const items = [{ id: 'a', arguments: ['q'], operator: 'in', value: 'id in (1)' }, { id: 'b', arguments: ['q'], operator: 'not in', value: 'id in (1)' }, { id: 'c', arguments: ['q'], operator: 'NOT_IN', value: 'NOT (id in (4))' }];
+    expect((await rewrite(deps, group('parentsOf', ['q'], items), [])).updates).toEqual([{ id: 'a', value: 'id in (4)' }, { id: 'b', value: 'NOT (id in (4))' }]);
+    expect(compute.parentsOf).toHaveBeenCalledTimes(1);
+  });
+  it('stores the same error for a not in precomputation as for in', async () => {
+    const deps = makeDeps({ compute: { previousSprint: async () => ({ error: 'Board "B" not found', log: 'Board not found' }) } });
+    expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], operator: 'not in', value: 'NOT (sprint = 1)' }]), [])).updates).toEqual([{ id: 'x', error: 'Board "B" not found' }]);
+  });
   it('writes nothing when the stored value is unchanged', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 1' }) } });
     expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1' }]), [])).updates).toEqual([]);
@@ -622,5 +633,11 @@ describe('onRefresh compute job precomputations', () => {
     const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
     expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } })).toEqual({ computed: 'parentsOf["q"]', changed: 1 });
     expect(deps.written).toEqual([{ id: 'root', value: 'id in (4)', error: null }]);
+  });
+  it('writes the complement over the Computing error of a deferred not in call', async () => {
+    const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], operator: 'not in', error: 'Computing, retry in a minute', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
+    await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } });
+    expect(deps.written).toEqual([{ id: 'root', value: 'NOT (id in (4))', error: null }]);
   });
 });

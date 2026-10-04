@@ -3,6 +3,7 @@ import { groupKey, parseArgs } from '../core/args.js';
 import { FUNCTIONS } from '../core/catalog.js';
 import { ERR, LOG } from '../core/errors.js';
 import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, PAGE_CACHE_MS, VALUE_LIMIT } from '../core/limits.js';
+import { forOperator } from '../core/jql-build.js';
 import { buildFragment, valuesOf } from '../core/tree.js';
 
 const TIMEOUT = Symbol('timeout');
@@ -103,10 +104,13 @@ async function evaluateClause(deps, functionName, payload, context) {
   return fragmentFor(functionName, userArgs, page, outcome, deps.levels);
 }
 
-/** One JQL function clause → stored JQL, or an error Jira shows in the editor; never throws (Jira answers a thrown call with "Your query couldn't be processed"); the log gets value-free text only. */
+/**
+ * One JQL function clause → stored JQL (the complement for `not in`), or an error Jira shows in the editor for either operator; never throws
+ * (Jira answers a thrown call with "Your query couldn't be processed"); the log gets value-free text only.
+ */
 export async function handleFunction(deps, functionName, payload, context) {
   const reply = await evaluateSafely(deps, functionName, payload, context);
-  if (!reply.error) return { jql: reply.jql };
+  if (!reply.error) return { jql: forOperator(reply.jql, payload?.clause?.operator) };
   if (reply.error !== ERR.computing()) await recordQuietly(deps, functionName, reply.log ?? LOG.rejected());
   return { error: reply.error, storeErrorAsPrecomputation: false };
 }

@@ -2,6 +2,7 @@ import { groupKey, parseArgs, splitPage } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
 import { groupPrecomputations } from '../core/affected.js';
+import { forOperator } from '../core/jql-build.js';
 import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
 import { computeGroup, fragmentFor } from './functions.js';
 
@@ -34,11 +35,12 @@ async function keepEntry(deps, key, result) {
   if (result.entry) await deps.cache.write(key, result.entry);
 }
 
-/** Precomputation updates whose stored value or error changed; a value clears a stored error, which Jira keeps otherwise. */
+/** Precomputation updates whose stored value or error changed, each in the form of its operator (`not in` stores the complement); a value clears a stored error, which Jira keeps otherwise. */
 export function updatesFor(group, result, levels) {
   const updates = [];
   for (const pc of group.items) {
-    const r = fragmentFor(group.functionName, group.userArgs, splitPage(pc.arguments).page, result, levels);
+    const fragment = fragmentFor(group.functionName, group.userArgs, splitPage(pc.arguments).page, result, levels);
+    const r = fragment.error ? fragment : { jql: forOperator(fragment.jql, pc.operator) };
     const storedError = pc.error ?? null;
     if ((r.jql ?? null) === (pc.value ?? null) && (r.error ?? null) === storedError) continue;
     if (r.error) updates.push({ id: pc.id, error: r.error });

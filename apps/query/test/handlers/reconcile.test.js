@@ -11,6 +11,12 @@ describe('onReconcile', () => {
     expect(await onReconcile(deps)).toEqual({ groups: 1, changed: 1, index: null });
     expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
   });
+  it('rewrites a not in precomputation with the complement', async () => {
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], operator: 'not in', value: 'id in (1)', used: RECENT, updated: old }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await onReconcile(deps);
+    expect(deps.written).toEqual([{ id: 'h', value: 'NOT (id in (2))' }]);
+  });
   it('does not overwrite a refresh that started after it', async () => {
     const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT, updated: old }];
     const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
