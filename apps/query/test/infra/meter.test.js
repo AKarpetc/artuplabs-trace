@@ -28,6 +28,14 @@ describe('meterKvs', () => {
     expect([...first.results, ...second.results].map((r) => r.key)).toEqual(['p:1', 'p:2', 'p:3']);
     expect(meter.take().reads).toEqual({ gets: 2, queries: 2, bytes: (3 + 7) + (3 + 7) + (3 + 4) + (3 + 1) });
   });
+  it('counts reads without their bytes when read bytes are off', async () => {
+    const raw = createFakeKvs();
+    await raw.set('p:1', { a: 1 });
+    const meter = meterKvs(raw, { readBytes: false });
+    await meter.kvs.get('p:1');
+    await meter.kvs.query().where('key', { values: ['p:'] }).getMany();
+    expect(meter.take().reads).toEqual({ gets: 1, queries: 1, bytes: 0 });
+  });
   it('counts a query page without results as a read of no bytes', async () => {
     const meter = meterKvs(createFakeKvs());
     expect((await meter.kvs.query().where('key', { values: ['none'] }).getMany()).results).toEqual([]);
@@ -50,7 +58,7 @@ describe('withKvsLog', () => {
     const meter = meterKvs(createFakeKvs());
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     await meter.kvs.set('before', 1);
-    const handler = withKvsLog('on-event', meter, { writes: true },  async (x) => {
+    const handler = withKvsLog('on-event', meter, { writes: true }, async (x) => {
       await meter.kvs.set('secret-key', 'secret value');
       return x + 1;
     });

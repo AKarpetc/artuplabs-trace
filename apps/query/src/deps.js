@@ -43,7 +43,8 @@ function currentAppContext() {
 /** Production dependencies of every handler; `retryMaxMs` caps one Jira retry sleep (queue workers pass a longer cap); all KVS access goes through the write meter; the index parts, the event writer and the gap filler read and write the Forge SQL index. */
 export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
   const jira = appJira({ retryMaxMs });
-  const meter = meterKvs(kvs);
+  const logKvs = { writes: process.env.QUERY_LOG_WRITES === '1', reads: process.env.QUERY_LOG_READS === '1' };
+  const meter = meterKvs(kvs, { readBytes: logKvs.reads });
   const state = createState({ kvs: meter.kvs, hash: sha1, beginsWith: WhereConditions.beginsWith });
   const repo = createIndexRepo();
   const deps = {
@@ -53,7 +54,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     cache: createValueCache({ kvs: meter.kvs, hash: sha1 }),
     journal: createJournal({ kvs: meter.kvs, beginsWith: WhereConditions.beginsWith }),
     meter,
-    logKvs: { writes: process.env.QUERY_LOG_WRITES === '1', reads: process.env.QUERY_LOG_READS === '1' },
+    logKvs,
     queue: createQueueClient(new Queue({ key: 'query-refresh' })),
     backfillQueue: createQueueClient(new Queue({ key: 'query-backfill' })),
     compute: {

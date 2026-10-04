@@ -30,20 +30,25 @@ const meteredQuery = (builder, count) => ({
   },
 });
 
-/** KVS wrapper that counts writes (sets with their key and JSON bytes, in total and per record family, and deletes) and reads (gets, query pages and the key and JSON bytes they return); `take` returns the counts since the last take. */
-export function meterKvs(kvs) {
+/**
+ * KVS wrapper that counts writes (sets with their key and JSON bytes, in total and per record family, and deletes) and reads (gets,
+ * query pages and, when `readBytes`, the key and JSON bytes they return); `take` returns the counts since the last take. A query offers
+ * only `where`, `limit`, `cursor` and `getMany`.
+ */
+export function meterKvs(kvs, { readBytes = true } = {}) {
   let totals = empty();
+  const readSize = readBytes ? entryBytes : () => 0;
   return {
     kvs: {
       async get(key) {
         const value = await kvs.get(key);
         totals.reads.gets += 1;
-        totals.reads.bytes += entryBytes(key, value);
+        totals.reads.bytes += readSize(key, value);
         return value;
       },
       query: () => meteredQuery(kvs.query(), (results) => {
         totals.reads.queries += 1;
-        totals.reads.bytes += results.reduce((sum, r) => sum + entryBytes(r.key, r.value), 0);
+        totals.reads.bytes += results.reduce((sum, r) => sum + readSize(r.key, r.value), 0);
       }),
       async set(key, value) {
         const bytes = Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(value) ?? '');

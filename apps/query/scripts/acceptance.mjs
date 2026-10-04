@@ -8,9 +8,9 @@
  *   seed-tm   a team-managed project JQLT with epics, stories and subtasks
  *   seed-fields  50 RPT issues with a due date, an original estimate, a worklog and a done status (aq-fields)
  *   burst     200 links created and then deleted within a minute each, then seconds until all are visible (--burst, --tag)
- *   audit     issues updated by the app user (must be none: the app writes nothing to issues) (--since -7d)
+ *   audit     issues updated by the app user (must be none: the app writes nothing to issues) (--since -7d, --app)
  *   errors    the editor errors of invalid calls, function groups that are shipped only (--groups)
- *   sr        the 20 ScriptRunner samples against the reference, samples of groups not shipped skipped (--groups)
+ *   sr        the 20 ScriptRunner samples against the reference, samples of groups not shipped skipped, empty references not passed (--groups)
  *
  * Usage:
  *   set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
@@ -19,7 +19,7 @@
  *   node apps/query/scripts/acceptance.mjs seed-tm
  *   node apps/query/scripts/acceptance.mjs seed-fields
  *   node apps/query/scripts/acceptance.mjs burst [--burst 200] [--tag t]
- *   node apps/query/scripts/acceptance.mjs audit [--since -7d]
+ *   node apps/query/scripts/acceptance.mjs audit [--since -7d] [--app "ArtUp Query"]
  *   node apps/query/scripts/acceptance.mjs errors [--groups query,site,board,sprint,comment,attachment,fields]
  *   node apps/query/scripts/acceptance.mjs sr [--groups query,site,board,sprint,comment,attachment,fields]
  */
@@ -386,51 +386,103 @@ const shippedGroups = () => String(args.groups ?? 'query,site,board,sprint,comme
 
 const createLink = ([from, to]) => write('POST', '/rest/api/3/issueLink', { type: { name: 'Blocks' }, outwardIssue: { id: from }, inwardIssue: { id: to } }, () => linkId(from, to));
 
+/** Deletes the link between two issues; true when there was none or Jira answered 204. */
 async function deleteLink([from, to]) {
   const id = await linkId(from, to);
-  if (id) await api('DELETE', `/rest/api/3/issueLink/${id}`, undefined, { raw: true });
+  if (!id) return true;
+  return (await api('DELETE', `/rest/api/3/issueLink/${id}`, undefined, { raw: true })).status === 204;
 }
 
-/** A burst of link changes spread over one minute, four in flight: created, then deleted; each wave reports seconds from its last change until the app shows all of them, or the changes still missing after 10 minutes. */
+/**
+ * A burst of link changes spread over one minute, four in flight: created, then deleted; each wave reports seconds from its last change
+ * until the app shows all of them, or the changes still missing after 10 minutes. Every poll carries a control issue that stays in the
+ * result, so an error, a Computing answer or an empty answer never counts as "the deletions are visible".
+ */
 async function burst() {
   const C = 'issue in linkedIssuesOf("project = JQLG AND labels = jg-lnk")';
-  log(`warm ${C}: ${(await settledIds(C, { log })).ids?.length}`);
-  const sources = (await ids('project = JQLG AND labels = jg-lnk ORDER BY key')).ids;
-  const targets = (await ids('project = JQLG AND labels = jg-task AND issueLinkType is EMPTY AND labels not in (jg-big, jg-mid, jg-small, jg-lnk, jg-sprint, jg-sprint-big) ORDER BY key ASC')).ids.slice(0, Number(args.burst ?? 200));
+  const want = Number(args.burst ?? 200);
+  const warm = await settledIds(C, { log });
+  if (!warm.ids?.length) throw new Error(`${C} answered no issues (${warm.error ?? 'empty'}): no control issue`);
+  const sources = (await ids('project = JQLG AND labels = jg-lnk ORDER BY key')).ids ?? [];
+  const targets = ((await ids('project = JQLG AND labels = jg-task AND issueLinkType is EMPTY AND labels not in (jg-big, jg-mid, jg-small, jg-lnk, jg-sprint, jg-sprint-big) ORDER BY key ASC')).ids ?? []).slice(0, want);
+  if (!sources.length || targets.length !== want) throw new Error(`burst needs ${want} free targets and jg-lnk sources: found ${targets.length} targets, ${sources.length} sources`);
+  const control = warm.ids.find((x) => !targets.includes(x));
+  if (!control) throw new Error('no control issue outside the burst targets');
   const pairs = targets.map((to, i) => [sources[i % sources.length], to]);
   const gap = 60000 / pairs.length;
+  const poll = `(${C}) AND id in (${[...targets, control].join(',')})`;
   const wave = async (op, present) => {
     const t0 = Date.now();
-    await pool(pairs, 4, async (pair, i) => {
+    const results = await pool(pairs, 4, async (pair, i) => {
       const due = t0 + i * gap;
       if (Date.now() < due) await sleep(due - Date.now());
-      await op(pair);
+      return op(pair);
     });
     const tLast = Date.now();
-    const base = { changes: pairs.length, spreadSeconds: (tLast - t0) / 1000 };
+    const spreadSeconds = (tLast - t0) / 1000;
+    const base = { changes: pairs.length, failed: results.filter((r) => r === false).length, spreadSeconds, ratePerMinute: Math.round((pairs.length / Math.max(spreadSeconds, 1)) * 60) };
+    let ok = 0;
     for (;;) {
-      const got = new Set((await ids(`(${C}) AND id in (${targets.join(',')})`)).ids ?? []);
-      const ok = targets.filter((x) => got.has(x) === present).length;
-      if (ok === targets.length) return { ...base, lastChangeToVisibleSeconds: (Date.now() - tLast) / 1000, lost: 0 };
+      const r = await ids(poll);
+      const got = new Set(r.ids ?? []);
+      if (!r.error && got.has(control)) {
+        ok = targets.filter((x) => got.has(x) === present).length;
+        if (ok === targets.length) return { ...base, lastChangeToVisibleSeconds: (Date.now() - tLast) / 1000, lost: 0 };
+      }
       if (Date.now() - tLast > 10 * 60000) return { ...base, lastChangeToVisibleSeconds: null, lost: targets.length - ok };
       await sleep(2000);
     }
   };
-  const created = await wave(createLink, true);
+  let created;
+  try {
+    created = await wave(createLink, true);
+  } catch (error) {
+    log(`burst interrupted, deleting the links it made: ${error.message}`);
+    await pool(pairs, 4, (pair) => deleteLink(pair).catch(() => false));
+    throw error;
+  }
   log(`burst created: ${JSON.stringify(created)}`);
   const deleted = await wave(deleteLink, false);
   log(`burst deleted: ${JSON.stringify(deleted)}`);
-  save(tagged('acceptance-burst'), { stats, created, deleted });
+  save(tagged('acceptance-burst'), { stats, control, created, deleted });
 }
 
-/** Issues the app user updated since `--since`: the app has no write scope on issues, so the count must be zero. */
+async function allUsers() {
+  const out = [];
+  for (let startAt = 0; ; startAt += 1000) {
+    const page = await api('GET', `/rest/api/3/users/search?startAt=${startAt}&maxResults=1000`);
+    out.push(...page);
+    if (page.length < 1000) return out;
+  }
+}
+
+/**
+ * Issues the app user updated since `--since`: the app has no write scope on issues, so the count must be zero. The app user is the
+ * one app account named exactly `--app` (default "ArtUp Query"); the same search for the tool's own account must find issues
+ * (the tool edits issues in the other phases), otherwise the audit proves nothing and `pass` is null.
+ */
 async function audit() {
   const since = args.since ?? '-7d';
-  const users = await api('GET', '/rest/api/3/users/search?maxResults=1000');
-  const app = users.find((u) => u.accountType === 'app' && /ArtUp Query/i.test(u.displayName));
-  if (!app) throw new Error('ArtUp Query app user not found');
+  const name = args.app ?? 'ArtUp Query';
+  const apps = (await allUsers()).filter((u) => u.accountType === 'app');
+  const matched = apps.filter((u) => u.displayName === name);
+  if (matched.length !== 1) throw new Error(`expected one app user named "${name}", found ${matched.length}; app users: ${apps.map((u) => `${u.displayName} (${u.accountId})`).join(', ')}`);
+  const [app] = matched;
+  const me = await myAccountId();
+  const control = await ids(`issuekey in updatedBy(${q(me)}, ${q(since)})`);
   const touched = await ids(`issuekey in updatedBy(${q(app.accountId)}, ${q(since)})`);
-  const result = { appAccountId: app.accountId, appName: app.displayName, since, updatedByApp: touched.ids?.length ?? null, error: touched.error, pass: touched.ids?.length === 0 };
+  const controlOk = !control.error && control.ids.length > 0;
+  const result = {
+    appAccountId: app.accountId,
+    appName: app.displayName,
+    since,
+    controlUpdatedByTool: control.ids?.length ?? null,
+    controlError: control.error,
+    updatedByApp: touched.ids?.length ?? null,
+    error: touched.error,
+    pass: !controlOk || touched.error ? null : touched.ids.length === 0,
+    ...(controlOk ? {} : { reason: 'updatedBy found no issues for the tool account: the search proves nothing' }),
+  };
   log(`audit: ${JSON.stringify(result)}`);
   save('acceptance-audit', { stats, ...result });
 }
@@ -475,14 +527,17 @@ async function sr() {
     const got = await settledIds(s.query, { log });
     let ref = await REFERENCES[s.reference.fn](s.reference.args, args);
     if (s.reference.and) {
-      const allowed = new Set((await ids(s.reference.and)).ids ?? []);
-      ref = ref.filter((id) => allowed.has(String(id)));
+      const allowed = await ids(s.reference.and);
+      if (allowed.error) throw new Error(`sr ${s.id}: reference filter failed: ${allowed.error}`);
+      const inFilter = new Set(allowed.ids);
+      ref = ref.filter((id) => inFilter.has(String(id)));
     }
     const row = { id: s.id, scriptrunner: s.scriptrunner, group: s.group, query: s.query, seconds: got.seconds, attempts: got.attempts, error: got.error, ...(got.ids ? compare(got.ids, ref) : {}) };
-    rows.push({ ...row, pass: row.complete === true });
+    const vacuous = !got.error && ref.length === 0;
+    rows.push({ ...row, ...(vacuous ? { vacuous: true } : {}), pass: vacuous ? null : row.complete === true });
     log(`sr ${s.id}: ${JSON.stringify(rows.at(-1))}`);
   }
-  save(tagged('acceptance-sr'), { stats, groups: shipped, rows, passed: rows.filter((r) => r.pass === true).length, skipped: rows.filter((r) => r.skipped).length });
+  save(tagged('acceptance-sr'), { stats, groups: shipped, rows, passed: rows.filter((r) => r.pass === true).length, failed: rows.filter((r) => r.pass === false).length, vacuous: rows.filter((r) => r.vacuous).length, skipped: rows.filter((r) => r.skipped).length });
 }
 
 async function fresh() {
