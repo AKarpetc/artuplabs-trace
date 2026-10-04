@@ -12,14 +12,15 @@ export const ids = (n, from = 1) => Array.from({ length: n }, (_, i) => String(f
 /** A `used` time inside the active window of the test clock. */
 export const RECENT = new Date(999000).toISOString();
 
-/** Handler dependencies over a fake KVS and a scripted Jira; records pushed jobs and written precomputations; `extra` overrides any field. */
-export function makeDeps({ pcs = [], compute = {}, searches = {}, write, ...extra } = {}) {
+/** Handler dependencies over a fake KVS and a scripted Jira; `invalid` maps a query to the text Jira's strict parser rejects it with; records pushed jobs, written precomputations and validated queries; `extra` overrides any field. */
+export function makeDeps({ pcs = [], compute = {}, searches = {}, invalid = {}, write, ...extra } = {}) {
   const kvs = createFakeKvs({ pageSize: 1000 });
   let now = 1000000;
   let tag = 0;
   const pushed = [];
   const written = [];
   const searched = [];
+  const validated = [];
   const deadlines = [];
   return {
     kvs,
@@ -34,6 +35,10 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, write, ...extr
         const answer = searches[jql] ?? [];
         if (answer instanceof Error) throw answer;
         return answer;
+      },
+      validateJql: async (jql) => {
+        validated.push(jql);
+        if (invalid[jql]) throw Object.assign(new Error(invalid[jql]), { name: 'JiraError', status: 400 });
       },
       writePrecomputations: write ?? (async (updates) => { written.push(...updates); }),
     },
@@ -53,6 +58,7 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, write, ...extr
     pushed,
     written,
     searched,
+    validated,
     deadlines,
     ...extra,
   };

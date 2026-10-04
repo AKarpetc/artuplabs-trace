@@ -34,9 +34,9 @@ describe('refreshOnce', () => {
     refuse = false;
     deps.advance(1000);
     expect(await refreshOnce(deps)).toMatchObject({ all: true, recomputed: 2, changed: 2 });
-    expect(deps.written).toEqual([
-      { id: 'never', value: 'id in (3)' },
+    expect([...deps.written].sort((a, b) => a.id.localeCompare(b.id))).toEqual([
       { id: 'idle', value: 'NOT (id in (6))' },
+      { id: 'never', value: 'id in (3)' },
     ]);
     expect(await deps.journal.read(10)).toEqual([]);
   });
@@ -340,6 +340,11 @@ describe('rewrite', () => {
   it('stores the same error for a not in precomputation as for in', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ error: 'Board "B" not found', log: 'Board not found' }) } });
     expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], operator: 'not in', value: 'NOT (sprint = 1)' }]), [])).updates).toEqual([{ id: 'x', error: 'Board "B" not found' }]);
+  });
+  it('stores Jira\'s parser error for a subquery that became invalid', async () => {
+    const deps = makeDeps({ compute: { parentsOf: async () => ({ ids: [], field: 'id', watch: [] }) }, invalid: { 'x = 1': 'Field \'x\' does not exist' } });
+    const items = [{ id: 'a', arguments: ['x = 1'], operator: 'in', value: 'id in (4)' }];
+    expect(await rewrite(deps, group('parentsOf', ['x = 1'], items), [])).toEqual({ updates: [{ id: 'a', error: 'parentsOf: Field \'x\' does not exist' }], entry: null });
   });
   it('writes nothing when the stored value is unchanged', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 1' }) } });

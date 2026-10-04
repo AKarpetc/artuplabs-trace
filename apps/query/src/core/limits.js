@@ -98,3 +98,5 @@ export const EXCLUDED_IDS_MAX = 1000;
 export const PROJECT_KEY_MAX_LENGTH = 100;
 /** How long the exclusion keeps the project list it checked the excluded keys against. */
 export const EXCLUSION_PROJECTS_TTL_MS = 60 * 1000;
+/** How long the strict parser's answer about one subquery text is reused: a function call and a refresh pass ask once per text. */
+export const JQL_CHECK_MS = 60 * 1000;

@@ -1,6 +1,6 @@
 import { decideLicence } from '../access.js';
 import { groupKey, parseArgs } from '../core/args.js';
-import { FUNCTIONS } from '../core/catalog.js';
+import { FUNCTION_BY_NAME, FUNCTIONS } from '../core/catalog.js';
 import { ERR, LOG } from '../core/errors.js';
 import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, PAGE_CACHE_MS, VALUE_LIMIT } from '../core/limits.js';
 import { forOperator } from '../core/jql-build.js';
@@ -16,15 +16,18 @@ export function licenceInput(payload, context, app) {
   };
 }
 
+const takesSubquery = (functionName) => FUNCTION_BY_NAME.get(functionName)?.args.some((a) => a.type === 'jql') ?? false;
+
 /**
- * Runs a value source, leaves the excluded projects out of it and caches a value list with its compute time; a Jira 400 (invalid subquery)
- * becomes the function's error with a generic log line.
+ * Runs a value source, leaves the excluded projects out of it and caches a value list with its compute time; a subquery is first checked by
+ * Jira's strict parser (its search answers an invalid query with no issues), and a Jira 400 becomes the function's error with a generic log line.
  * With `keep: false` the cache entry is returned as `entry` instead, for the caller to store once Jira holds the same value.
  */
 export async function computeGroup(deps, functionName, args, userArgs, { reconcile = [], source = 'function', keep = true } = {}) {
   const startedAt = deps.now();
   let result;
   try {
+    if (takesSubquery(functionName)) await deps.jira.validateJql(args.subquery);
     result = await deps.compute[functionName](args, { reconcile });
   } catch (error) {
     if (error?.name !== 'JiraError' || error.status !== 400) throw error;

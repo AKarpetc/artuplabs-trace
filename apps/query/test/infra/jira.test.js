@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
 const { createJira, JiraError, withDeadline } = await import('../../src/infra/jira.js');
-const { FUNCTION_BUDGET_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
+const { FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -184,5 +184,49 @@ describe('index reads', () => {
   it('lists projects as id and key', async () => {
     const { request } = scripted([reply(200, { values: [{ id: 10, key: 'A', name: 'n' }], isLast: true })]);
     expect(await createJira(request).projects()).toEqual([{ id: '10', key: 'A' }]);
+  });
+});
+
+describe('subquery validation', () => {
+  const parsed = (errors) => reply(200, { queries: [{ query: 'q', ...(errors ? { errors } : { structure: {} }) }] });
+  it('asks Jira\'s strict parser about the query', async () => {
+    const { request, calls } = scripted([parsed()]);
+    await createJira(request).validateJql('project = A');
+    expect(calls).toEqual([{ path: '/rest/api/3/jql/parse?validation=strict', method: 'POST', body: { queries: ['project = A'] } }]);
+  });
+  it('accepts a query the parser finds no errors in', async () => {
+    const { request } = scripted([parsed()]);
+    await expect(createJira(request).validateJql('project = A')).resolves.toBeUndefined();
+  });
+  it('rejects a query with a 400 carrying the parser\'s texts', async () => {
+    const { request } = scripted([parsed(['Field \'projekt\' does not exist or you do not have permission to view it.', 'Second.'])]);
+    const error = await createJira(request).validateJql('projekt = A').catch((e) => e);
+    expect(error).toBeInstanceOf(JiraError);
+    expect([error.status, error.message]).toEqual([400, 'Field \'projekt\' does not exist or you do not have permission to view it.; Second.']);
+  });
+  it('asks once for the same query within the check window', async () => {
+    let now = 1000;
+    const { request, calls } = scripted([parsed(['Bad.'])]);
+    const jira = createJira(request, { clock: () => now });
+    await jira.validateJql('x = 1').catch(() => {});
+    now += JQL_CHECK_MS - 1;
+    await expect(jira.validateJql('x = 1')).rejects.toMatchObject({ status: 400, message: 'Bad.' });
+    expect(calls).toHaveLength(1);
+  });
+  it('asks again once the check window has passed', async () => {
+    let now = 1000;
+    const { request, calls } = scripted([parsed(), parsed(['Gone.'])]);
+    const jira = createJira(request, { clock: () => now });
+    await jira.validateJql('x = 1');
+    now += JQL_CHECK_MS;
+    await expect(jira.validateJql('x = 1')).rejects.toMatchObject({ message: 'Gone.' });
+    expect(calls).toHaveLength(2);
+  });
+  it('asks again after the parser call itself failed', async () => {
+    const { request, calls } = scripted([reply(503, {}), parsed()]);
+    const jira = createJira(request, { attempts: 1 });
+    await expect(jira.validateJql('x = 1')).rejects.toMatchObject({ status: 503 });
+    await expect(jira.validateJql('x = 1')).resolves.toBeUndefined();
+    expect(calls).toHaveLength(2);
   });
 });

@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import api, { assumeTrustedRoute } from '@forge/api';
 import {
-  BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, LIST_PAGE, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
+  BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
   RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
 import { pool } from './pool.js';
@@ -97,6 +97,29 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     return { ids: (page?.issues ?? []).map((x) => String(x.id)), nextPageToken: page?.nextPageToken ?? null };
   }
 
+  const checked = new Map();
+
+  async function parseErrors(jql) {
+    const answer = await call('POST', '/rest/api/3/jql/parse?validation=strict', { queries: [jql] });
+    return (answer?.queries?.[0]?.errors ?? []).map(String);
+  }
+
+  /** Rejects a query Jira's strict parser finds errors in with a 400 carrying its texts; the answer per text is reused for JQL_CHECK_MS. */
+  async function validateJql(jql) {
+    const now = clock();
+    for (const [text, entry] of checked) if (now - entry.at >= JQL_CHECK_MS) checked.delete(text);
+    let entry = checked.get(jql);
+    if (!entry) {
+      entry = { at: now, errors: parseErrors(jql) };
+      checked.set(jql, entry);
+      entry.errors.catch(() => {
+        if (checked.get(jql) === entry) checked.delete(jql);
+      });
+    }
+    const errors = await entry.errors;
+    if (errors.length) throw new JiraError(400, errors);
+  }
+
   async function bulkIssues(ids, fields) {
     const pages = await pool(chunks(ids, BULK_BATCH), BULK_CONCURRENCY, (chunk) => call('POST', '/rest/api/3/issue/bulkfetch', { issueIdsOrKeys: chunk, fields }));
     return pages.flatMap((p) => p?.issues ?? []);
@@ -162,6 +185,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     call,
     searchIds,
     searchPage,
+    validateJql,
     bulkIssues,
     boards,
     changelogs,

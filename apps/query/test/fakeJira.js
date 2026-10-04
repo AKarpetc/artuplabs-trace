@@ -11,7 +11,7 @@ export function issue(id, { level = 0, parent, subtasks = [], links = [] } = {})
   };
 }
 
-/** In-memory Jira: explicit search answers, `parent in (…)` and the subtask search computed from the issues. */
+/** In-memory Jira: explicit search answers, `parent in (…)` and the subtask search computed from the issues; any other query finds no issues, as Jira's search answers an invalid one. */
 export function fakeJira({ issues = [], searches = {}, linkTypes = [], boards = [], sprints = {} } = {}) {
   const byId = new Map(issues.map((i) => [i.id, i]));
   const calls = [];
@@ -30,7 +30,7 @@ export function fakeJira({ issues = [], searches = {}, linkTypes = [], boards = 
         return issues.filter((i) => set.has(i.fields.parent?.id)).map((i) => i.id);
       }
       if (jql === 'issuetype in subTaskIssueTypes()') return issues.filter((i) => i.fields.issuetype.hierarchyLevel === -1).map((i) => i.id);
-      throw Object.assign(new Error(`unexpected search ${jql}`), { name: 'JiraError', status: 400 });
+      return [];
     },
     async bulkIssues(ids, fields) {
       calls.push(['bulk', ids.length, fields]);

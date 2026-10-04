@@ -4,6 +4,8 @@ import { computeGroup, createFunctionHandlers, fragmentFor, handleFunction, lice
 import { FUNCTIONS } from '../../src/core/catalog.js';
 import { createBoardCompute } from '../../src/compute/boards.js';
 import { createFieldCompute } from '../../src/compute/fields.js';
+import { createHierarchyCompute } from '../../src/compute/hierarchy.js';
+import { createJira } from '../../src/infra/jira.js';
 import { fakeJira } from '../fakeJira.js';
 import { PAGE_CACHE_MS } from '../../src/core/limits.js';
 
@@ -236,6 +238,48 @@ describe('computeGroup', () => {
   it('rethrows errors that are not a rejected subquery', async () => {
     const deps = fnDeps({ parentsOf: async () => { throw new TypeError('boom'); } });
     await expect(computeGroup(deps, 'parentsOf', { subquery: 'q' }, ['q'])).rejects.toThrow('boom');
+  });
+});
+
+describe('subquery validation', () => {
+  const FIELD_MISSING = 'Field \'projekt\' does not exist or you do not have permission to view it.';
+  const liveJira = (errors) => createJira(async (path) => {
+    const body = path.startsWith('/rest/api/3/jql/parse') ? { queries: [{ query: 'q', errors }] } : { issues: [], isLast: true };
+    return { status: 200, headers: { get: () => null }, text: async () => JSON.stringify(body) };
+  });
+  const liveDeps = (errors) => {
+    const jira = liveJira(errors);
+    return fnDeps(createHierarchyCompute({ jira }), { jira });
+  };
+  it('shows Jira\'s parser error for a subquery that the search answers with an empty list', async () => {
+    const deps = liveDeps([FIELD_MISSING]);
+    expect(await handleFunction(deps, 'subtasksOf', payload('projekt = JQLG'), DEV)).toEqual({ error: `subtasksOf: ${FIELD_MISSING}`, storeErrorAsPrecomputation: false });
+  });
+  it('logs a subquery the parser rejects without Jira\'s text', async () => {
+    const deps = liveDeps([FIELD_MISSING]);
+    await handleFunction(deps, 'subtasksOf', payload('projekt = JQLG'), DEV);
+    expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'subtasksOf', message: 'Subquery rejected by Jira' }]);
+  });
+  it('caches no value for a subquery the parser rejects', async () => {
+    const deps = liveDeps([FIELD_MISSING]);
+    await handleFunction(deps, 'subtasksOf', payload('projekt = JQLG'), DEV);
+    expect(await deps.cache.meta('subtasksOf["projekt = JQLG"]')).toBeNull();
+  });
+  it('validates the subquery before running the value source', async () => {
+    const compute = { parentsOf: vi.fn(async () => ({ ids: ['3'], field: 'id', watch: [] })) };
+    const deps = fnDeps(compute, { invalid: { 'x = 1': 'Bad field' } });
+    expect(await computeGroup(deps, 'parentsOf', { subquery: 'x = 1' }, ['x = 1'])).toEqual({ error: 'parentsOf: Bad field', log: 'Subquery rejected by Jira' });
+    expect(compute.parentsOf).not.toHaveBeenCalled();
+  });
+  it('validates the subquery of each subquery function once per computation', async () => {
+    const deps = fnDeps({ linkedIssuesOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) });
+    await computeGroup(deps, 'linkedIssuesOf', { subquery: 'project = A', linkType: null }, ['project = A']);
+    expect(deps.validated).toEqual(['project = A']);
+  });
+  it('does not validate anything for a function without a subquery', async () => {
+    const deps = fnDeps({ hasSubtasks: async () => ({ ids: [], field: 'id', watch: null }) });
+    await computeGroup(deps, 'hasSubtasks', {}, []);
+    expect(deps.validated).toEqual([]);
   });
 });
 
