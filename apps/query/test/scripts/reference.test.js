@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { commentCountTest, compileExpression, hasExtension, linkedOthers, valueOfField } from '../../scripts/lib/reference.mjs';
+import { commentCountTest, compileExpression, fieldIdOf, hasExtension, linkedOthers, valueOfField } from '../../scripts/lib/reference.mjs';
 
 const BLOCKS = { name: 'Blocks', outward: 'blocks', inward: 'is blocked by' };
 const RELATES = { name: 'Relates', outward: 'relates to', inward: 'relates to' };
@@ -57,6 +57,16 @@ describe('reference field expressions', () => {
   it('refuses text it cannot read', () => {
     expect(() => compileExpression('timespent >', 'number')).toThrow('reference: cannot read');
     expect(() => compileExpression('timespent', 'number')).toThrow('reference: cannot read');
+    expect(() => compileExpression('(timespent > 1', 'number')).toThrow('reference: cannot read');
+  });
+  it('reads a quoted comment time as the pseudo-field', () => {
+    expect(compileExpression('"LastCommented" > "Story Points"', 'date').fields).toEqual(['lastcommented', 'Story Points']);
+  });
+  it('finds a field by id first, then by its one display name', () => {
+    const all = [{ id: 'created', name: 'Created' }, { id: 'customfield_1', name: 'Points' }, { id: 'customfield_2', name: 'points' }];
+    expect(fieldIdOf(all, 'CREATED')).toBe('created');
+    expect(() => fieldIdOf(all, 'points')).toThrow('matches 2 fields');
+    expect(() => fieldIdOf(all, 'nope')).toThrow('matches 0 fields');
   });
   it('turns REST values into numbers', () => {
     expect([valueOfField(null), valueOfField(3), valueOfField({ votes: 2 }), valueOfField('7'), valueOfField('2026-01-05'), valueOfField('2026-01-07T00:00:00.000+0000'), valueOfField('x')])

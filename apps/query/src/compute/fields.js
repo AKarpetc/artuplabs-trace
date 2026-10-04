@@ -10,7 +10,7 @@ const named = (functionName, failure) => ({ error: ERR.withFunction(functionName
 
 /**
  * Value sources of dateCompare and expression: the subquery's issues whose field expression is true. Fields are read by id or display name,
- * in slices of FIELD_EVAL_CHUNK issues; firstCommented and lastCommented come from the comment index, which counts only comments visible to everyone.
+ * in slices of FIELD_EVAL_CHUNK issues (no issue read at all when only comment times are compared); firstCommented and lastCommented come from the comment index, which counts only comments visible to everyone.
  */
 export function createFieldCompute({ jira, repo, commentsShipped, commentGate = async () => null }) {
   async function fieldIds(names) {
@@ -32,7 +32,7 @@ export function createFieldCompute({ jira, repo, commentsShipped, commentGate = 
     const out = [];
     for (let i = 0; i < inner.length; i += FIELD_EVAL_CHUNK) {
       const slice = inner.slice(i, i + FIELD_EVAL_CHUNK);
-      const issues = await jira.bulkIssues(slice, wanted);
+      const issues = wanted.length ? await jira.bulkIssues(slice, wanted) : slice.map((id) => ({ id, fields: {} }));
       const bounds = pseudo.length ? await repo.commentBounds(slice) : new Map();
       for (const issue of issues ?? []) {
         const valueOf = (name) => {

@@ -401,6 +401,7 @@ export function compileExpression(text, mode) {
         i = start;
         inner = or();
       }
+      if (op() !== ')') return fail();
       i += 1;
       return inner;
     }
@@ -409,7 +410,8 @@ export function compileExpression(text, mode) {
       return (get) => (e(get) === null ? null : -e(get));
     }
     if (t[5] !== undefined) return fail();
-    const name = t[4] ?? FIELD_ALIAS[t[3].toLowerCase()] ?? t[3].toLowerCase();
+    const quoted = t[4] !== undefined && COMMENT_BOUNDS.has(t[4].toLowerCase()) ? t[4].toLowerCase() : t[4];
+    const name = quoted ?? FIELD_ALIAS[t[3].toLowerCase()] ?? t[3].toLowerCase();
     fields.add(name);
     return (get) => get(name);
   }
@@ -478,11 +480,20 @@ export function valueOfField(raw) {
   return Number.isFinite(t) ? t : null;
 }
 
+/** Field id for a name the reference reads: the id first, else the one field with that display name. */
+export function fieldIdOf(all, name) {
+  const byId = all.find((x) => x.id.toLowerCase() === name.toLowerCase());
+  const byName = byId ? [byId] : all.filter((x) => x.name.toLowerCase() === name.toLowerCase());
+  if (byName.length !== 1) throw new Error(`reference: field ${name} matches ${byName.length} fields`);
+  return byName[0].id;
+}
+
 async function fieldExpression([q, expr], mode) {
   const { test, fields } = compileExpression(expr, mode);
   const all = await api('GET', '/rest/api/3/field');
-  const idOf = new Map(fields.filter((f) => !COMMENT_BOUNDS.has(f)).map((f) => [f, (all.find((x) => x.id.toLowerCase() === f.toLowerCase()) ?? all.find((x) => x.name.toLowerCase() === f.toLowerCase())).id]));
-  const issues = await bulk(await must(q), [...new Set(idOf.values())]);
+  const idOf = new Map(fields.filter((f) => !COMMENT_BOUNDS.has(f)).map((f) => [f, fieldIdOf(all, f)]));
+  const inner = await must(q);
+  const issues = idOf.size ? await bulk(inner, [...new Set(idOf.values())]) : inner.map((id) => ({ id, fields: {} }));
   const bounds = new Map();
   if (fields.some((f) => COMMENT_BOUNDS.has(f))) {
     for (const x of await allComments(q)) {

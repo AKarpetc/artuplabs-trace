@@ -317,6 +317,7 @@ M3_PARTS.push(() => [
   ['dateCompare', ['project in (JQLG, RPT)', 'resolutiondate > duedate'], 'dates over 50 000 issues'],
   ['expression', ['project in (JQLG, RPT)', 'timespent > originalestimate * 1.2'], 'work time over 50 000 issues'],
   ['expression', ['project = RPT AND key <= RPT-8500', 'votes >= 0'], '8 500 values: one-level tree (> 1 000, ≤ 9 000)'],
+  ['dateCompare', ['project = JQLG', 'lastCommented > firstCommented'], 'comment times from the index, visible comments only'],
 ]);
 
 FRESH.fields = async () => {

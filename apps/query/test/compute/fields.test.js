@@ -37,11 +37,14 @@ describe('field compute', () => {
   it('reads firstCommented from the comment index when it is shipped', async () => {
     expect((await make({ comments: true }).compute.dateCompare({ subquery: 'S', expression: 'created + 2d < firstCommented' }, { reconcile: [] })).ids).toEqual(['1']);
   });
-  it('explains an unknown field, a parse error and firstCommented without the comment index', async () => {
-    const { compute } = make();
-    expect((await compute.expression({ subquery: 'S', expression: 'nope > 1' }, { reconcile: [] })).error).toBe('expression: Field "nope" not found');
-    expect((await compute.expression({ subquery: 'S', expression: 'timespent >' }, { reconcile: [] })).error).toBe('expression: Unexpected end of expression');
-    expect((await compute.dateCompare({ subquery: 'S', expression: 'created < firstCommented' }, { reconcile: [] })).error).toBe('dateCompare: firstCommented needs the comment index, which this site does not have');
+  it('explains an unknown field', async () => {
+    expect((await make().compute.expression({ subquery: 'S', expression: 'nope > 1' }, { reconcile: [] })).error).toBe('expression: Field "nope" not found');
+  });
+  it('explains a parse error', async () => {
+    expect((await make().compute.expression({ subquery: 'S', expression: 'timespent >' }, { reconcile: [] })).error).toBe('expression: Unexpected end of expression');
+  });
+  it('explains firstCommented without the comment index', async () => {
+    expect((await make().compute.dateCompare({ subquery: 'S', expression: 'created < firstCommented' }, { reconcile: [] })).error).toBe('dateCompare: firstCommented needs the comment index, which this site does not have');
   });
 });
 
@@ -64,9 +67,13 @@ describe('field compute edges', () => {
     return { reply: await compute[fn]({ subquery: 'S', expression }, { reconcile: ['7'] }), seen };
   };
 
-  it('logs every expression error without the user text', async () => {
+  it('logs an unknown field without its name', async () => {
     expect((await run('nope > 1')).reply.log).toBe('Field not found');
+  });
+  it('logs a parse error without the expression', async () => {
     expect((await run('timespent > "secret"x')).reply.log).toBe('Invalid expression');
+  });
+  it('logs comment times without the comment index as a fixed text', async () => {
     expect((await run('created < lastCommented', { comments: false })).reply).toEqual({ error: 'expression: lastCommented needs the comment index, which this site does not have', log: 'Comment index not shipped' });
   });
   it('rejects a display name two fields share, asking for the id', async () => {
@@ -86,6 +93,11 @@ describe('field compute edges', () => {
     expect((await run('timespent > 0')).seen.bounds).toEqual([]);
     const { reply, seen } = await run('lastCommented > resolutiondate', { fn: 'dateCompare' });
     expect([reply.ids, seen.bounds, seen.bulk[0][1]]).toEqual([['2'], [['1', '2']], ['resolutiondate']]);
+  });
+  it('reads no issue fields when the expression compares only comment times', async () => {
+    const bounds = { commentBounds: async () => new Map([['1', { first: Date.UTC(2026, 0, 1), last: Date.UTC(2026, 0, 20) }], ['2', { first: Date.UTC(2026, 0, 1), last: Date.UTC(2026, 0, 3) }]]) };
+    const { reply, seen } = await run('lastCommented > firstCommented + 7d', { fn: 'dateCompare', repo: bounds });
+    expect([reply.ids, seen.bulk]).toEqual([['1'], []]);
   });
   it('treats an issue without visible comments as an empty pseudo-field', async () => {
     expect((await run('firstCommented < created + 30d', { fn: 'dateCompare' })).reply.ids).toEqual(['2']);

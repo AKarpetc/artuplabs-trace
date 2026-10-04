@@ -280,11 +280,19 @@ describe('handleFunction for dateCompare and expression', () => {
     expect(await handleFunction(deps, 'expression', payload('q', 'timespent > 1h'), DEV)).toEqual({ jql: '(id in (1)) AND project not in ("OPS")' });
     expect(await handleFunction(deps, 'expression', notIn('q', 'timespent > 1h'), DEV)).toEqual({ jql: 'NOT (id in (1)) AND project not in ("OPS")' });
   });
-  it('shows expression errors under both operators and logs them without the user text', async () => {
+  it('shows an unknown field under not in and logs it without the name', async () => {
     const deps = fnDeps(fieldCompute());
     expect(await handleFunction(deps, 'expression', notIn('q', 'timespent > "Secret field"'), DEV)).toEqual({ error: 'expression: Field "Secret field" not found', storeErrorAsPrecomputation: false });
+    expect((await deps.state.errors()).map((e) => e.message)).toEqual(['Field not found']);
+  });
+  it('shows a parse error under in and logs it without the expression', async () => {
+    const deps = fnDeps(fieldCompute());
     expect(await handleFunction(deps, 'dateCompare', payload('q', 'duedate < secretword ('), DEV)).toEqual({ error: 'dateCompare: Unexpected "(" at 22', storeErrorAsPrecomputation: false });
+    expect((await deps.state.errors()).map((e) => e.message)).toEqual(['Invalid expression']);
+  });
+  it('shows comment times without the comment index under not in, never every issue', async () => {
+    const deps = fnDeps(fieldCompute());
     expect(await handleFunction(deps, 'dateCompare', notIn('q', 'duedate < firstCommented'), DEV)).toEqual({ error: 'dateCompare: firstCommented needs the comment index, which this site does not have', storeErrorAsPrecomputation: false });
-    expect((await deps.state.errors()).map((e) => e.message)).toEqual(['Comment index not shipped', 'Invalid expression', 'Field not found']);
+    expect((await deps.state.errors()).map((e) => e.message)).toEqual(['Comment index not shipped']);
   });
 });
