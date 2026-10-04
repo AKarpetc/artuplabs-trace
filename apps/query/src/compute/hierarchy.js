@@ -5,7 +5,7 @@ import { sortIds } from '../core/ids.js';
 /** Root filter of subtasksOf. */
 export const SUBTASK_FILTER = 'issuetype in subTaskIssueTypes()';
 
-/** Value sources of the hierarchy functions and hasSubtasks. */
+/** Value sources of the hierarchy functions and hasSubtasks; watched ids are kept in id order, so a new issue changes only the last cache chunk. */
 export function createHierarchyCompute({ jira }) {
   const inner = (subquery, reconcile) => jira.searchIds(subquery, { reconcile });
 
@@ -33,11 +33,11 @@ export function createHierarchyCompute({ jira }) {
       const ids = await inner(subquery, reconcile);
       let parents = ids;
       if (ids.length > VALUE_LIMIT) parents = (await jira.bulkIssues(ids, ['subtasks'])).filter((x) => x.fields?.subtasks?.length).map((x) => x.id);
-      return { ids: sortIds(parents), field: 'parent', rootFilter: SUBTASK_FILTER, watch: ids };
+      return { ids: sortIds(parents), field: 'parent', rootFilter: SUBTASK_FILTER, watch: sortIds(ids) };
     },
     async parentsOf({ subquery }, { reconcile }) {
       const ids = await inner(subquery, reconcile);
-      return { ids: parentIds(ids, nodesFrom(await jira.bulkIssues(ids, ['parent', 'issuetype']))), field: 'id', watch: ids };
+      return { ids: parentIds(ids, nodesFrom(await jira.bulkIssues(ids, ['parent', 'issuetype']))), field: 'id', watch: sortIds(ids) };
     },
     async epicsOf({ subquery }, { reconcile }) {
       const ids = await inner(subquery, reconcile);
@@ -47,7 +47,7 @@ export function createHierarchyCompute({ jira }) {
     async issuesInEpics({ subquery }, { reconcile }) {
       const ids = await inner(subquery, reconcile);
       const epics = (await jira.bulkIssues(ids, ['issuetype'])).filter((x) => x.fields?.issuetype?.hierarchyLevel === 1).map((x) => x.id);
-      return { ids: sortIds(epics), field: 'parent', watch: ids };
+      return { ids: sortIds(epics), field: 'parent', watch: sortIds(ids) };
     },
     async childIssuesOf({ subquery, depth }, { reconcile }) {
       const ids = await inner(subquery, reconcile);

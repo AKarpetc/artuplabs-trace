@@ -3,7 +3,7 @@ import { closure, linkQuery, linkedIds, matchLinkType } from '../core/links.js';
 import { quote } from '../core/jql-build.js';
 import { sortIds } from '../core/ids.js';
 
-/** Value sources of the link functions; hasLinks/hasLinkType use Jira's own issueLinkType clause where it matches exactly. */
+/** Value sources of the link functions; hasLinks/hasLinkType use Jira's own issueLinkType clause where it matches exactly; watched ids are kept in id order. */
 export function createLinkCompute({ jira }) {
   async function filterOf(linkType) {
     if (linkType === undefined) return { types: [], filter: null };
@@ -50,7 +50,7 @@ export function createLinkCompute({ jira }) {
       if (f.error) return { error: f.error, log: f.log };
       const ids = await jira.searchIds(subquery, { reconcile });
       const map = await linksOf(ids, reconcile);
-      return { ids: sortIds(ids.flatMap((id) => linkedIds(map.get(String(id)), f.filter))), field: 'id', watch: ids };
+      return { ids: sortIds(ids.flatMap((id) => linkedIds(map.get(String(id)), f.filter))), field: 'id', watch: sortIds(ids) };
     },
     linkedIssuesOfRecursive: (args, { reconcile }) => recursive(args, MAX_DEPTH, reconcile),
     linkedIssuesOfRecursiveLimited: (args, { reconcile }) => recursive(args, args.depth, reconcile),

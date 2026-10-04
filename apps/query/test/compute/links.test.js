@@ -18,6 +18,9 @@ describe('link compute', () => {
   it('linkedIssuesOf returns every linked issue without a type', async () => {
     expect(await make({ S: ['1'] }).linkedIssuesOf({ subquery: 'S' }, ctx)).toEqual({ ids: ['2', '5'], field: 'id', watch: ['1'] });
   });
+  it('linkedIssuesOf watches the inner issues in id order', async () => {
+    expect((await make({ S: ['5', '1'] }).linkedIssuesOf({ subquery: 'S' }, ctx)).watch).toEqual(['1', '5']);
+  });
   it('linkedIssuesOf follows one direction of a type', async () => {
     expect((await make({ S: ['2'] }).linkedIssuesOf({ subquery: 'S', linkType: 'blocks' }, ctx)).ids).toEqual(['3']);
     expect((await make({ S: ['2'] }).linkedIssuesOf({ subquery: 'S', linkType: 'is blocked by' }, ctx)).ids).toEqual(['1']);
