@@ -12,6 +12,11 @@ export const ERR = {
   perUser: (word) => `${word} is not supported: results are shared by all users`,
   subqueryRejected: () => 'Subquery rejected by Jira',
   withFunction: (functionName, message) => `${functionName}: ${message}`,
+  expressionEnd: () => 'Unexpected end of expression',
+  expressionUnexpected: (text, at) => `Unexpected "${text}" at ${at}`,
+  expressionParen: () => 'Missing ")"',
+  expressionNotCompared: () => 'The expression must compare values, such as a > b',
+  expressionArithmetic: () => 'Cannot do arithmetic on a comparison',
 };
 
 /** Value-free texts for the error log: the log never stores argument values (board, sprint, link type names, project keys). */
