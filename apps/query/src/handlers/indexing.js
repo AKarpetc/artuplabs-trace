@@ -4,7 +4,7 @@ import { extOf } from '../core/comment-clauses.js';
 import { BACKFILL_STALE_MS, COMMENT_PAGE, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS } from '../core/limits.js';
 import { indexPartOf } from '../core/readiness.js';
 import { sprintEvents, statusEvents, toMs } from '../core/sprint-history.js';
-import { startBackfill } from './backfill.js';
+import { startBackfill, startWaiting } from './backfill.js';
 
 const SPRINT_FIELD = 'com.pyxis.greenhopper.jira:gh-sprint';
 const RECENT_JQL = 'updated >= -2h';
@@ -156,7 +156,7 @@ export function createIndexing(deps) {
   }
 
   async function resumeStalled(part, progress) {
-    if (progress.finishedAt || deps.now() - (progress.savedAt ?? progress.startedAt ?? 0) < BACKFILL_STALE_MS) return;
+    if (deps.now() - (progress.savedAt ?? progress.startedAt ?? 0) < BACKFILL_STALE_MS) return;
     await deps.backfillQueue.push({ kind: 'backfill', part, generation: progress.generation });
   }
 
@@ -180,7 +180,8 @@ export function createIndexing(deps) {
     const started = [];
     for (const part of shipped) {
       const progress = await deps.state.progress.getPart(part);
-      if (progress) await resumeStalled(part, progress);
+      if (progress?.finishedAt) await startWaiting(deps, part);
+      else if (progress) await resumeStalled(part, progress);
       else {
         await startBackfill(deps, part);
         started.push(part);

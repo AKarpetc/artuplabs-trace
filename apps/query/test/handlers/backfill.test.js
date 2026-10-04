@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createJournal } from '../../src/infra/journal.js';
 import { createState } from '../../src/infra/state.js';
-import { onBackfill, startBackfill } from '../../src/handlers/backfill.js';
+import { backfillProjects, onBackfill, startBackfill } from '../../src/handlers/backfill.js';
 
 function makeDeps({ pages, cost = 0 }) {
   let now = 1000;
@@ -133,5 +133,45 @@ describe('backfill', () => {
     expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ finished: true, done: 0 });
     expect((await startBackfill(deps, 'sprint', { projects: [{ id: '2', key: 'B' }] })).total).toBe(4500);
     expect(deps.counted).toEqual(['project in ("B")']);
+  });
+  it('skips a project excluded after the fill started', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    deps.repo = { deleteProject: vi.fn(async () => {}) };
+    deps.indexParts.sprint.tables = ['sprint_event'];
+    await startBackfill(deps, 'sprint');
+    await deps.state.setExcluded(['A', 'X']);
+    expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ finished: true, done: 10 });
+    expect(deps.indexed).toEqual([['B', 10]]);
+    expect(deps.repo.deleteProject).not.toHaveBeenCalled();
+  });
+  it('deletes what it wrote of a project excluded while its slice was being written', async () => {
+    const deps = makeDeps({ pages: { 'project = "B" ORDER BY id ASC|null': { ids: ids(10, 9001), nextPageToken: null } } });
+    deps.repo = { deleteProject: vi.fn(async () => {}) };
+    deps.indexParts.sprint.tables = ['sprint_event', 'status_event'];
+    await startBackfill(deps, 'sprint', { projects: [{ id: '2', key: 'B' }] });
+    deps.indexParts.sprint.index = async () => {
+      await deps.state.setExcluded(['B', 'X']);
+    };
+    expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ finished: true, done: 0 });
+    expect(deps.repo.deleteProject.mock.calls).toEqual([['2', ['sprint_event', 'status_event']]]);
+  });
+  it('starts the projects kept for later once the running fill finishes', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await startBackfill(deps, 'sprint', { projects: [{ id: '1', key: 'A' }] });
+    await deps.state.waiting.add('sprint', [{ id: '2', key: 'B' }]);
+    expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ finished: true, done: 6500 });
+    const next = await deps.state.progress.getPart('sprint');
+    expect([next.cursor.projects, next.finishedAt, next.readyAt]).toEqual([[{ id: '2', key: 'B' }], null, 1000]);
+    expect(deps.pushed.at(-1)).toEqual({ kind: 'backfill', part: 'sprint', generation: 1000 });
+    expect(await deps.state.waiting.get('sprint')).toEqual([]);
+  });
+  it('fills the projects kept for later now when no fill of the part runs, else keeps them once each', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await startBackfill(deps, 'sprint', { projects: [{ id: '1', key: 'A' }] });
+    expect(await backfillProjects(deps, 'sprint', [{ id: '2', key: 'B' }])).toBeNull();
+    expect(await backfillProjects(deps, 'sprint', [{ id: '2', key: 'B' }, { id: '3', key: 'C' }])).toBeNull();
+    expect(await deps.state.waiting.get('sprint')).toEqual([{ id: '2', key: 'B' }, { id: '3', key: 'C' }]);
+    await deps.state.progress.setPart('sprint', { generation: 1, finishedAt: 5, readyAt: 5 });
+    expect((await backfillProjects(deps, 'sprint', [{ id: '2', key: 'B' }])).cursor.projects).toEqual([{ id: '2', key: 'B' }]);
   });
 });

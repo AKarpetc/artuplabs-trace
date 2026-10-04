@@ -3,6 +3,7 @@ import { ids, makeDeps, RECENT } from './makeDeps.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
 import { handOff, writeGroups } from '../../src/handlers/groups.js';
 import { createFieldCompute } from '../../src/compute/fields.js';
+import { EXCLUDED_KIND } from '../../src/core/affected.js';
 import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
@@ -11,6 +12,41 @@ const jiraError = (status) => Object.assign(new Error(`Jira answered ${status}`)
 describe('refreshOnce', () => {
   it('does nothing on an empty journal', async () => {
     expect(await refreshOnce(makeDeps())).toBeNull();
+  });
+  it('rewrites every stored root, used or not, after a change of the excluded projects, and only then drops the row', async () => {
+    const OLD = new Date(1000000 - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const pcs = [
+      { id: 'never', functionName: 'parentsOf', arguments: ['q'], operator: 'in', value: 'id in (4)' },
+      { id: 'idle', functionName: 'hasLinks', arguments: [], operator: 'not in', value: 'NOT (id in (5))', used: OLD },
+      { id: 'page', functionName: 'parentsOf', arguments: ['q', '__aq:l2'], operator: 'in', value: 'id = -1', used: RECENT },
+    ];
+    const compute = { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }), hasLinks: async () => ({ ids: ['5'], field: 'id', watch: null }) };
+    let refuse = true;
+    const write = async (updates) => {
+      if (refuse) throw new Error('Jira answered 503');
+      deps.written.push(...updates);
+    };
+    const deps = makeDeps({ pcs, compute, write });
+    await deps.state.setExcluded(['OPS']);
+    await deps.journal.append({ ids: [], kinds: [EXCLUDED_KIND] }, 999500);
+    await expect(refreshOnce(deps)).rejects.toThrow('503');
+    expect((await deps.journal.read(10)).length).toBe(1);
+    refuse = false;
+    deps.advance(1000);
+    expect(await refreshOnce(deps)).toMatchObject({ all: true, recomputed: 2, changed: 2 });
+    expect(deps.written).toEqual([
+      { id: 'never', value: '(id in (4)) AND project not in ("OPS")' },
+      { id: 'idle', value: 'NOT (id in (5)) AND project not in ("OPS")' },
+    ]);
+    expect(await deps.journal.read(10)).toEqual([]);
+  });
+  it('skips unused and idle groups on an ordinary change', async () => {
+    const pcs = [{ id: 'never', functionName: 'hasLinks', arguments: [], value: 'id in (5)' }];
+    const compute = { hasLinks: vi.fn(async () => ({ ids: ['6'], field: 'id', watch: null })) };
+    const deps = makeDeps({ pcs, compute });
+    await deps.journal.append({ ids: [], kinds: ['unknown'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ groups: 0, recomputed: 0 });
+    expect(compute.hasLinks).not.toHaveBeenCalled();
   });
   it('rewrites the root and its pages from one value set', async () => {
     const pcs = [

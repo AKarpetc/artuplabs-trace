@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createResolverDefinitions } from '../src/handlers/resolvers.js';
 import { createFakeKvs } from './fakeKvs.js';
 import { createState } from '../src/infra/state.js';
@@ -33,5 +33,36 @@ describe('getStatus', () => {
   it('refuses without a licence', async () => {
     const defs = createResolverDefinitions({ state: createState({ kvs: createFakeKvs() }), now: () => 0 });
     await expect(run(defs, 'getStatus', { environmentType: 'PRODUCTION', license: { active: false } })).rejects.toThrow('unlicensed');
+  });
+});
+
+describe('admin resolvers', () => {
+  const ADMIN = ['adminStatus', 'setExcluded', 'reindexProject', 'resetIndex'];
+  const adminDeps = (overrides = {}) => ({
+    state: createState({ kvs: createFakeKvs() }),
+    now: () => 0,
+    isAdmin: async () => false,
+    shippedParts: () => [],
+    ...overrides,
+  });
+  it('defines every admin action', () => {
+    expect(ADMIN.every((key) => typeof createResolverDefinitions(adminDeps())[key] === 'function')).toBe(true);
+  });
+  it('passes the known error codes through', async () => {
+    const defs = createResolverDefinitions(adminDeps());
+    for (const key of ADMIN) await expect(run(defs, key, { environmentType: 'DEVELOPMENT' })).rejects.toThrow('forbidden');
+    await expect(run(defs, 'adminStatus', { environmentType: 'PRODUCTION', license: { active: false } })).rejects.toThrow('unlicensed');
+  });
+  it('answers internal for anything else and logs the action without values', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const defs = createResolverDefinitions(adminDeps({ isAdmin: async () => { throw Object.assign(new Error('JQLG secret'), { name: 'JiraError' }); } }));
+    await expect(run(defs, 'setExcluded', { environmentType: 'DEVELOPMENT' }, { projectKeys: ['JQLG'] })).rejects.toThrow(/^internal$/);
+    const lines = error.mock.calls.map((c) => c.join(' '));
+    error.mockRestore();
+    expect(lines).toEqual(['setExcluded failed: JiraError']);
+  });
+  it('treats a missing payload as empty', async () => {
+    const defs = createResolverDefinitions(adminDeps({ isAdmin: async () => true }));
+    expect(await run(defs, 'adminStatus', { environmentType: 'DEVELOPMENT' }, undefined)).toEqual({ excluded: [], progress: null, parts: [] });
   });
 });

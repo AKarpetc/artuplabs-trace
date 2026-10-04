@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { getAppContext } from '@forge/api';
+import api, { getAppContext, route } from '@forge/api';
 import { kvs, WhereConditions } from '@forge/kvs';
 import { Queue } from '@forge/events';
 import { FUNCTION_BY_NAME, SHIPPED_GROUPS } from './core/catalog.js';
@@ -22,6 +22,13 @@ import { createFieldCompute } from './compute/fields.js';
 import { createIndexing } from './handlers/indexing.js';
 
 const sha1 = (text) => createHash('sha1').update(text).digest('hex');
+
+/** Whether the calling user is a Jira administrator, asked as that user. */
+const isAdmin = async () => {
+  const res = await api.asUser().requestJira(route`/rest/api/3/mypermissions?permissions=ADMINISTER`);
+  if (!res.ok) return false;
+  return (await res.json()).permissions?.ADMINISTER?.havePermission === true;
+};
 
 /** The Forge app context of the running invocation, or null outside one (then the licence check fails closed). */
 function currentAppContext() {
@@ -66,6 +73,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     }),
     levels: Number(process.env.QUERY_TREE_LEVELS) || TREE_LEVELS,
     debugEvents: process.env.QUERY_DEBUG_EVENTS === '1',
+    isAdmin,
     ready: async (functionName) => readinessError(await state.progress.get(), FUNCTION_BY_NAME.get(functionName).group),
   };
   const indexing = createIndexing(deps);

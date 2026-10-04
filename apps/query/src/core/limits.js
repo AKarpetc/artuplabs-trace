@@ -90,3 +90,5 @@ export const COMMENT_PAGE = 5000;
 export const EXT_MAX_LENGTH = 32;
 /** Subquery issues whose fields one dateCompare or expression pass holds in memory at a time. */
 export const FIELD_EVAL_CHUNK = 5000;
+/** Projects one save may exclude from the index. */
+export const EXCLUDED_MAX = 200;

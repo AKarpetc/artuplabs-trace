@@ -1,7 +1,7 @@
 import { parseArgs } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
-import { commentTimesWanted, familyWants, groupPrecomputations, needsRepair, queryOverlap, summarizeJournal } from '../core/affected.js';
+import { commentTimesWanted, EXCLUDED_KIND, familyWants, groupPrecomputations, needsRepair, queryOverlap, summarizeJournal } from '../core/affected.js';
 import {
   ACTIVE_MS, FAILED_ROWS_KEEP_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
@@ -56,7 +56,8 @@ async function isStale(deps, group, summary) {
 }
 
 /**
- * One pass over a journal page: recompute stale groups (precomputations Jira used, and background jobs), each within its own deadline,
+ * One pass over a journal page: recompute stale groups (precomputations Jira used, every stored one after a change of the excluded
+ * projects, and background jobs), each within its own deadline,
  * hand slow groups to the heavy lane, write changes, then drop the rows; rows stay when the write fails, when a later pass wrote first,
  * when the worker budget stopped a group (it is not slow, so it stays out of the heavy lane and the next refresh computes it),
  * or (until FAILED_ROWS_KEEP_MS) when a group failed.
@@ -66,7 +67,9 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const rows = await deps.journal.read(JOURNAL_PAGE);
   if (!rows.length) return null;
   const summary = summarizeJournal(rows);
-  const groups = groupPrecomputations(await deps.jira.precomputations(), { now: startedAt, activeMs: ACTIVE_MS }).filter(isUsed);
+  const every = summary.kinds.includes(EXCLUDED_KIND);
+  const stored = groupPrecomputations(await deps.jira.precomputations(), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
+  const groups = every ? stored : stored.filter(isUsed);
   const all = [...groups, ...jobGroups(await deps.state.jobs(startedAt), groups)];
   const reconcile = summary.touched.slice(0, RECONCILE_MAX);
   const byGroup = [];

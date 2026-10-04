@@ -12,9 +12,11 @@ const FAMILY_KINDS = {
   comment: ['comment', 'issue-created', 'issue-deleted', 'index-comments'],
   attachment: ['attachment', 'issue-created', 'issue-deleted', 'index-comments'],
 };
+/** Journal change kind written when the excluded projects change: every stored root embeds that list, so all of them are rewritten. */
+export const EXCLUDED_KIND = 'excluded';
 const RELATIVE = /(^|[\s"(])[-+]\d+[mhdw]\b|\b(start|end)Of(Day|Week|Month|Year)\s*\(/i;
 
-/** A journal page → touched ids, change kinds, the oldest event time and whether everything must be recomputed. */
+/** A journal page → touched ids, change kinds, the oldest event time and whether everything must be recomputed (a full page, an unknown event, too many issues or new excluded projects). */
 export function summarizeJournal(rows, { page = JOURNAL_PAGE, maxTouched = TOUCHED_CHECK_MAX } = {}) {
   const ids = new Set();
   const kinds = new Set();
@@ -26,7 +28,7 @@ export function summarizeJournal(rows, { page = JOURNAL_PAGE, maxTouched = TOUCH
     for (const kind of row.value?.kinds ?? ['unknown']) kinds.add(kind);
   }
   const touched = sortIds(ids);
-  const all = rows.length >= page || kinds.has('unknown') || touched.length > maxTouched;
+  const all = rows.length >= page || kinds.has('unknown') || kinds.has(EXCLUDED_KIND) || touched.length > maxTouched;
   return { touched, kinds: [...kinds].sort(), all, firstAt };
 }
 

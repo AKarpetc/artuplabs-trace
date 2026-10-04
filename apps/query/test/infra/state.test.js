@@ -62,6 +62,20 @@ describe('state', () => {
     await state.setExcluded(['B', 'A', 'B']);
     expect(await state.excluded()).toEqual(['A', 'B']);
   });
+  it('keeps the projects waiting for a part once each and forgets the ones taken', async () => {
+    const kvs = createFakeKvs();
+    const state = createState({ kvs, hash: (s) => s, beginsWith });
+    await state.waiting.add('sprint', [{ id: '1', key: 'A' }]);
+    await state.waiting.add('sprint', [{ id: '1', key: 'A' }, { id: '2', key: 'B' }]);
+    expect([await state.waiting.get('sprint'), await state.waiting.get('comments')]).toEqual([[{ id: '1', key: 'A' }, { id: '2', key: 'B' }], []]);
+    await state.waiting.remove('sprint', ['A']);
+    expect(kvs.data.get('idx:waiting:sprint')).toEqual([{ id: '2', key: 'B' }]);
+    await state.waiting.remove('sprint', ['B']);
+    expect(kvs.data.has('idx:waiting:sprint')).toBe(false);
+    await state.waiting.add('sprint', [{ id: '3', key: 'C' }]);
+    await state.waiting.clear('sprint');
+    expect(await state.waiting.get('sprint')).toEqual([]);
+  });
   it('keeps index progress per part', async () => {
     const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
     await state.progress.setPart('sprint', { done: 1, total: 2 });

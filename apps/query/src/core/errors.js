@@ -55,3 +55,13 @@ export const FAIL = {
   ambiguous: (what, value, count) => ({ error: ERR.ambiguous(what, value, count), log: LOG.ambiguous(what) }),
   excluded: (key) => ({ error: ERR.excluded(key), log: LOG.excluded() }),
 };
+
+/** Codes a resolver of the app pages throws; the page maps each to its own message, anything else becomes `internal`. */
+export const CODE = {
+  unlicensed: 'unlicensed',
+  forbidden: 'forbidden',
+  badRequest: 'bad-request',
+  notFound: 'not-found',
+  busy: 'busy',
+  internal: 'internal',
+};

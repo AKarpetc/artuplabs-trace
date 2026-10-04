@@ -195,6 +195,20 @@ describe('reconcileIndex', () => {
     await indexing.reconcileIndex();
     expect(deps.backfillQueue.push).toHaveBeenCalledWith({ kind: 'backfill', part: 'sprint', generation: 7 });
   });
+  it('starts the projects kept for later of a finished part, and leaves those of a running part alone', async () => {
+    const deps = reconcileDeps();
+    await built(deps);
+    await deps.state.progress.setPart('comments', { generation: 7, startedAt: 5000, finishedAt: null, readyAt: 1 });
+    await deps.state.waiting.add('sprint', [{ id: '20', key: 'B' }]);
+    await deps.state.waiting.add('comments', [{ id: '20', key: 'B' }]);
+    const indexing = createIndexing(deps);
+    deps.indexParts = indexing.parts;
+    quiet(indexing);
+    await indexing.reconcileIndex();
+    expect(deps.backfillQueue.push.mock.calls).toEqual([[{ kind: 'backfill', part: 'sprint', generation: 5000 }]]);
+    expect((await deps.state.progress.getPart('sprint')).cursor.projects).toEqual([{ id: '20', key: 'B' }]);
+    expect([await deps.state.waiting.get('sprint'), await deps.state.waiting.get('comments')]).toEqual([[], [{ id: '20', key: 'B' }]]);
+  });
 });
 
 describe('comment and attachment events', () => {
