@@ -57,6 +57,7 @@ async function isStale(deps, group, summary) {
 /**
  * One pass over a journal page: recompute stale groups (precomputations Jira used, and background jobs), each within its own deadline,
  * hand slow groups to the heavy lane, write changes, then drop the rows; rows stay when the write fails, when a later pass wrote first,
+ * when the worker budget stopped a group (it is not slow, so it stays out of the heavy lane and the next refresh computes it),
  * or (until FAILED_ROWS_KEEP_MS) when a group failed.
  */
 export async function refreshOnce(deps, { deadline = Infinity } = {}) {
@@ -72,21 +73,28 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   let handed = 0;
   let queued = false;
   let failed = 0;
+  let postponed = 0;
   const handOver = async (group) => {
     handed += 1;
     if (await handOff(deps, group)) queued = true;
   };
   await pool(all, REFRESH_CONCURRENCY, async (group) => {
+    let cutByWorker = false;
     try {
       if (!(await isStale(deps, group, summary))) return;
       if (await isHeavy(deps, group)) {
         await handOver(group);
         return;
       }
-      const groupDeadline = Math.min(deps.now() + REFRESH_GROUP_BUDGET_MS, deadline);
-      byGroup.push([group.key, await deps.withDeadline(groupDeadline, () => rewrite(deps, group, reconcile))]);
+      const ownDeadline = deps.now() + REFRESH_GROUP_BUDGET_MS;
+      cutByWorker = ownDeadline > deadline;
+      byGroup.push([group.key, await deps.withDeadline(Math.min(ownDeadline, deadline), () => rewrite(deps, group, reconcile))]);
       recomputed += 1;
     } catch (error) {
+      if (isDeadline(error) && cutByWorker) {
+        postponed += 1;
+        return;
+      }
       if (isDeadline(error)) {
         await handOver(group);
         return;
@@ -108,7 +116,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
       changed = await writeGroups(deps, startedAt, byGroup);
     }
   }
-  if (!stale) await deps.journal.remove((failed ? rows.filter((r) => r.key < expiredBefore(startedAt)) : rows).map((r) => r.key));
+  if (!stale && !postponed) await deps.journal.remove((failed ? rows.filter((r) => r.key < expiredBefore(startedAt)) : rows).map((r) => r.key));
   return {
     touched: summary.touched.slice(0, MAX_TOUCHED),
     kinds: summary.kinds,
@@ -120,6 +128,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
     changed,
     stale,
     failed,
+    postponed,
     oldestEventMs: summary.firstAt === null ? null : startedAt - summary.firstAt,
   };
 }
@@ -143,7 +152,7 @@ export async function onRefresh(deps, event) {
       if (!pass) break;
       passes.push(pass);
       await deps.state.lease.set(deps.now());
-      if (pass.stale || pass.failed) break;
+      if (pass.stale || pass.failed || pass.postponed) break;
     }
   } finally {
     await deps.state.lease.clear();

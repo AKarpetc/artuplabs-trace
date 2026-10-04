@@ -392,6 +392,31 @@ describe('heavy groups in a refresh pass', () => {
     expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
     expect(await deps.journal.read(10)).toEqual([]);
   });
+  it('keeps a light group the worker budget cut short out of the heavy lane and keeps the rows for the next refresh', async () => {
+    const deps = makeDeps({ pcs: lightPcs, compute: { hasSubtasks: async () => { throw deadlineError(); } } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    const pass = await refreshOnce(deps, { deadline: 1000000 + 2000 });
+    expect(pass).toMatchObject({ recomputed: 0, handed: 0, postponed: 1, failed: 0 });
+    expect([await deps.state.heavy.get('hasSubtasks[]'), deps.pushed]).toEqual([null, []]);
+    expect(await deps.journal.read(10)).toHaveLength(1);
+  });
+  it('pushes the next refresh at once for rows a pass kept because the worker budget ran out', async () => {
+    let deps;
+    const write = async () => {
+      deps.advance(WORKER_BUDGET_MS - 1000);
+      await deps.journal.append({ ids: ['10'], kinds: ['issue-created'] }, deps.now());
+    };
+    deps = makeDeps({ pcs: lightPcs, write });
+    deps.compute.hasSubtasks = async () => {
+      if (deps.now() > 1000000) throw deadlineError();
+      return { ids: ['2'], field: 'id', watch: null };
+    };
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    const result = await onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } });
+    expect(result.passes.map((p) => p.postponed)).toEqual([0, 1]);
+    expect(deps.pushed[0]).toEqual([{ kind: 'refresh', ts: 1000000 + WORKER_BUDGET_MS - 1000 }, null]);
+    expect(await deps.state.heavy.get('hasSubtasks[]')).toBeNull();
+  });
   it('pushes the heavy runner once for several groups handed in one pass', async () => {
     const pcs = [
       { id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'parent in (1)', used: RECENT },
