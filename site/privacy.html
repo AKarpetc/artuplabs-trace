@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Privacy Policy — ArtUp Labs</title>
-  <meta name="description" content="Privacy Policy for ArtUp Trace for Jira Cloud, ArtUp Export for Confluence Cloud, ArtUp Reports for Jira Cloud and the artuplabs.com website.">
+  <meta name="description" content="Privacy Policy for ArtUp Trace for Jira Cloud, ArtUp Export for Confluence Cloud, ArtUp Reports for Jira Cloud, ArtUp Query for Jira Cloud and the artuplabs.com website.">
   <meta name="color-scheme" content="light dark">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -19,6 +19,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="export/">ArtUp Export</a></li>
           <li><a href="reports/">ArtUp Reports</a></li>
+          <li><a href="query/">ArtUp Query</a></li>
           <li><a href="docs.html">Docs</a></li>
           <li><a href="support.html">Support</a></li>
           <li><a href="security.html">Security</a></li>
@@ -31,10 +32,10 @@
 
   <main id="main" class="doc">
     <h1>Privacy Policy</h1>
-    <p class="meta">Last updated: 2026-09-30</p>
+    <p class="meta">Last updated: 2026-10-04</p>
 
     <div class="notice">
-      <p><strong>In short:</strong> ArtUp Trace runs entirely on Atlassian's infrastructure. Its data is stored by Atlassian in your Jira site's data residency region, ArtUp Labs operates no servers that receive it, and the app sends nothing to third parties. ArtUp Export stores nothing at all: it converts Confluence pages in your browser and downloads the result to your computer. ArtUp Reports builds Excel, Word and PDF files from Jira issues in your browser; it stores only export templates, including the Atlassian account id of each template's author, and never stores issue content. This website uses no cookies and no analytics.</p>
+      <p><strong>In short:</strong> ArtUp Trace runs entirely on Atlassian's infrastructure. Its data is stored by Atlassian in your Jira site's data residency region, ArtUp Labs operates no servers that receive it, and the app sends nothing to third parties. ArtUp Export stores nothing at all: it converts Confluence pages in your browser and downloads the result to your computer. ArtUp Reports builds Excel, Word and PDF files from Jira issues in your browser; it stores only export templates, including the Atlassian account id of each template's author, and never stores issue content. ArtUp Query adds JQL functions to Jira: it reads work items, links, hierarchy, Sprint and status history and comment and attachment metadata as the app, and stores only ids, dates and metadata (including the Atlassian account ids of comment and attachment authors) — never issue text, comment bodies or attachment content. This website uses no cookies and no analytics.</p>
     </div>
 
     <nav class="toc" aria-labelledby="toc-title">
@@ -46,6 +47,7 @@
         <li><a href="#what">What data ArtUp Trace processes</a></li>
         <li><a href="#export">What data ArtUp Export processes</a></li>
         <li><a href="#reports">What data ArtUp Reports processes</a></li>
+        <li><a href="#query">What data ArtUp Query processes</a></li>
         <li><a href="#why">Why we process it</a></li>
         <li><a href="#where">Where the data is stored</a></li>
         <li><a href="#retention">Retention and deletion</a></li>
@@ -74,7 +76,8 @@
     <ul>
       <li><strong>ArtUp Trace for Jira Cloud</strong> (the "App"), an Atlassian Forge app for requirements traceability, distributed through the Atlassian Marketplace;</li>
       <li><strong>ArtUp Export for Confluence Cloud</strong> ("ArtUp Export"), an Atlassian Forge app that exports Confluence pages to Markdown, distributed through the Atlassian Marketplace;</li>
-      <li><strong>ArtUp Reports for Jira Cloud</strong> ("ArtUp Reports"), an Atlassian Forge app that exports Jira issues to Excel, Word and PDF files, distributed through the Atlassian Marketplace. Where this policy says "the App", it applies to ArtUp Export and ArtUp Reports as well, except where sections 5 and 6 say otherwise; and</li>
+      <li><strong>ArtUp Reports for Jira Cloud</strong> ("ArtUp Reports"), an Atlassian Forge app that exports Jira issues to Excel, Word and PDF files, distributed through the Atlassian Marketplace. Where this policy says "the App", it applies to ArtUp Export and ArtUp Reports as well, except where sections 5, 6 and 7 say otherwise;</li>
+      <li><strong>ArtUp Query for Jira Cloud</strong> ("ArtUp Query"), an Atlassian Forge app that adds JQL functions to Jira (subtasks, links, sprint history, comments, attachments and field comparison), distributed through the Atlassian Marketplace. Where this policy says "the App", it applies to ArtUp Query as well, except where section 7 says otherwise; and</li>
       <li>the website at <strong>artuplabs.com</strong> (the "Website").</li>
     </ul>
     <p>Your use of Jira Cloud and Confluence Cloud itself is governed by Atlassian's own privacy policy and terms. This policy does not cover Atlassian's processing.</p>
@@ -180,26 +183,70 @@
     <h3>6.4 Backend and logs</h3>
     <p>ArtUp Reports' backend functions save, list and delete templates, check the current user's Jira permissions to decide who may manage a project or site template, and report whether the licence is active. They receive no issue content. If a backend function fails, the Forge platform log contains only the function name and the error message — no issue content, titles or user data. Errors in the browser stay in the user's browser.</p>
 
-    <h2 id="why">7. Why we process it</h2>
-    <p>Data is processed only to provide the App's features: showing coverage of requirements, detecting suspect links, creating and comparing baselines, producing exports (including ArtUp Export's Markdown exports and ArtUp Reports' Excel, Word and PDF files), keeping ArtUp Reports' export templates, and diagnosing errors. We do not use App data for advertising, profiling, selling, or training machine-learning models.</p>
+    <h2 id="query">7. What data ArtUp Query processes</h2>
+    <h3>7.1 Data the app reads from Jira</h3>
+    <p>ArtUp Query answers JQL functions that Jira calls in a search. To do that it reads Jira <strong>as the app</strong> (not as a user): work items (key, project, type, status, dates, parent and epic), issue links, the hierarchy, the changelog entries for Sprint and status, and the <strong>metadata</strong> of comments and attachments — the author's account id, dates, the visibility type of a comment and the file extension of an attachment. It reads no comment text and no attachment content, and it <strong>never writes to Jira issues</strong>.</p>
+    <p>ArtUp Query requests these Atlassian scopes:</p>
+    <ul>
+      <li><code>read:jira-work</code> — read work items, links, the hierarchy, the changelog, comment and attachment metadata and run JQL searches;</li>
+      <li><code>read:jira-user</code> and <code>read:user:jira</code> — resolve the users and group members that conditions such as <code>by</code>, <code>inRole</code> and <code>inGroup</code> mean;</li>
+      <li><code>read:group:jira</code> and <code>read:avatar:jira</code> — read group membership (the avatar scope comes with the user and group reads; no avatars are stored);</li>
+      <li><code>read:board-scope:jira-software</code> and <code>read:sprint:jira-software</code> — read boards and sprints for the sprint functions;</li>
+      <li><code>read:project:jira</code> — read the project list for the settings page and to check project keys;</li>
+      <li><code>read:app-data:jira</code> — read the state of the app's JQL function precomputations;</li>
+      <li><code>write:app-data:jira</code> — <strong>write the app's JQL function precomputations only</strong>; it does not allow writing to work items;</li>
+      <li><code>storage:app</code> — the app's own Forge storage (section 7.3).</li>
+    </ul>
+
+    <h3>7.2 Where the processing happens</h3>
+    <p>All processing happens in Atlassian's Forge runtime. The app has no external servers and makes no outbound network calls; nothing is sent to ArtUp Labs or to any third party. The settings and reference pages run in the user's browser and call only the app's backend and Jira.</p>
+
+    <h3>7.3 Data the app stores</h3>
+    <p>ArtUp Query stores the following in Forge SQL and Forge storage:</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Data stored by ArtUp Query</caption>
+        <thead>
+          <tr><th scope="col">Category</th><th scope="col">Contents</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Work item index</td><td>Work item ids, project ids, the hierarchy and link edges between ids, status categories and dates.</td></tr>
+          <tr><td>Sprint history</td><td>Sprint ids, board ids, changelog entry ids, and the moves of a work item into and out of a sprint with their dates.</td></tr>
+          <tr><td>Comments and attachments</td><td>Comment and attachment ids, the <strong>Atlassian account id of the author</strong>, dates, the visibility type of a comment (comments with restricted visibility are ignored by every function), and the file extension of an attachment.</td></tr>
+          <tr><td>Results</td><td>Cached result ids of functions and the queue of pending updates.</td></tr>
+          <tr><td>Settings</td><td>The projects an administrator excluded and the state of the index.</td></tr>
+          <tr><td>Error log</td><td>The function name, the time and the error message. <strong>Never the function arguments</strong>, which contain the customer's JQL.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The account ids of the authors of comments and attachments are the <strong>only personal data</strong> ArtUp Query stores. They are used to answer conditions such as <code>by</code>. Display names and email addresses are not stored. ArtUp Query does <strong>not</strong> store work item summaries, descriptions, comment bodies, attachment names or content, custom field values, passwords, access tokens or payment data.</p>
+    <p>Administrators can exclude projects from the index; the index rows of an excluded project are removed.</p>
+
+    <h3>7.4 Backend, logs and retention</h3>
+    <p>If a backend function fails, the app's error log and the Forge platform log contain only the function name, the time and the error message — no arguments, no work item content and no user data. The app deletes the index rows of a work item, comment or attachment when Jira reports that it was deleted, and removes an excluded project's rows. When the app is uninstalled, Atlassian deletes its Forge storage and SQL data according to Atlassian's data retention policy.</p>
+
+    <h2 id="why">8. Why we process it</h2>
+    <p>Data is processed only to provide the App's features: showing coverage of requirements, detecting suspect links, creating and comparing baselines, producing exports (including ArtUp Export's Markdown exports and ArtUp Reports' Excel, Word and PDF files), keeping ArtUp Reports' export templates, answering ArtUp Query's JQL functions, and diagnosing errors. We do not use App data for advertising, profiling, selling, or training machine-learning models.</p>
     <p>Where the GDPR applies, the customer as controller determines the legal basis for processing its Jira data. Our processing of App data is on the customer's instructions, as expressed by installing and using the App. Our processing of support correspondence is based on our legitimate interest in answering your request.</p>
 
-    <h2 id="where">8. Where the data is stored</h2>
+    <h2 id="where">9. Where the data is stored</h2>
     <p>ArtUp Trace is an Atlassian Forge app with the <strong>"Runs on Atlassian"</strong> designation. It has no external servers and makes no outbound network calls (no egress). All stored data remains in Forge SQL and Forge storage on Atlassian's infrastructure, in the customer's data residency region as handled by Atlassian. ArtUp Labs does not copy App data to its own systems.</p>
     <p>ArtUp Export is also a Forge app with no external servers and no outbound network calls. It stores no data; Confluence content stays in the customer's Confluence site and, once exported, in the zip file on the user's device, under the customer's control.</p>
     <p>ArtUp Reports is also a Forge app with no external servers and no outbound network calls. Its templates are stored in Forge storage on Atlassian's infrastructure, in the customer's data residency region as handled by Atlassian. Issue data stays in the customer's Jira site and, once exported, in the file on the user's device, under the customer's control. ArtUp Labs has no copy of either.</p>
+    <p>ArtUp Query is also a Forge app with no external servers and no outbound network calls. Its index and settings are stored in Forge SQL and Forge storage on Atlassian's infrastructure, in the customer's data residency region as handled by Atlassian. ArtUp Labs does not copy them to its own systems.</p>
 
-    <h2 id="retention">9. Retention and deletion</h2>
+    <h2 id="retention">10. Retention and deletion</h2>
     <ul>
       <li>App data is kept while the App is installed, so that coverage, confirmations and baselines remain available.</li>
       <li>Atlassian deletes app data stored in Forge after the app is uninstalled, according to Atlassian's data retention policy. See <a href="https://developer.atlassian.com/platform/forge/storage/">Atlassian's Forge storage documentation</a> for reference.</li>
       <li>ArtUp Export keeps no data, so there is nothing to retain or delete after uninstalling it. Zip files users downloaded stay on their devices under the customer's control.</li>
       <li>ArtUp Reports keeps each template until a user with permission to manage it deletes it in the app; deleting a template removes its settings, its index entry and every part of its Word file. Atlassian deletes the app's Forge storage after the app is uninstalled, according to Atlassian's data retention policy. Files users downloaded stay on their devices under the customer's control.</li>
+      <li>ArtUp Query keeps its index while the app is installed, so that functions stay fresh. It deletes the rows of a deleted work item, comment or attachment and of a project an administrator excludes. Atlassian deletes the app's Forge storage and SQL data after the app is uninstalled, according to Atlassian's data retention policy.</li>
       <li>Forge platform logs are retained by Atlassian according to Atlassian's policies.</li>
       <li>Support emails are kept for as long as needed to handle the request and any follow-up, and deleted on request unless we must keep them by law. Support emails are deleted no later than 24 months after the last message in the conversation.</li>
     </ul>
 
-    <h2 id="subprocessors">10. Sub-processors</h2>
+    <h2 id="subprocessors">11. Sub-processors</h2>
     <div class="table-wrap">
       <table>
         <caption>Sub-processors for App data</caption>
@@ -207,38 +254,38 @@
           <tr><th scope="col">Sub-processor</th><th scope="col">Purpose</th><th scope="col">Location</th></tr>
         </thead>
         <tbody>
-          <tr><td>Atlassian</td><td>Hosting and running the Apps (Forge), storage for ArtUp Trace (Forge SQL and Forge storage) and ArtUp Reports templates (Forge storage), platform logs, Marketplace licensing and billing</td><td>Customer's data residency region as handled by Atlassian</td></tr>
+          <tr><td>Atlassian</td><td>Hosting and running the Apps (Forge), storage for ArtUp Trace (Forge SQL and Forge storage), ArtUp Reports templates (Forge storage) and the ArtUp Query index (Forge SQL and Forge storage), platform logs, Marketplace licensing and billing</td><td>Customer's data residency region as handled by Atlassian</td></tr>
         </tbody>
       </table>
     </div>
     <p>We use no other sub-processors for App data. We will update this list before adding one.</p>
 
-    <h2 id="website">11. This website</h2>
+    <h2 id="website">12. This website</h2>
     <p>The Website is a set of static pages. It sets <strong>no cookies</strong>, uses <strong>no analytics</strong>, and loads no third-party scripts, fonts or trackers. Pages are served through Cloudflare, which as our hosting and DNS provider may process technical request data (such as IP addresses) to deliver and protect the site.</p>
 
-    <h2 id="email">12. When you email us</h2>
+    <h2 id="email">13. When you email us</h2>
     <p>If you email <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> or <a href="mailto:security@artuplabs.com">security@artuplabs.com</a>, we receive your email address, name (if included) and whatever you choose to send, such as screenshots. Please do not send more Jira or Confluence content than needed. We use this only to answer you. Email is handled by our email provider, Zoho Mail (Zoho Corporation).</p>
 
-    <h2 id="payments">13. Payments</h2>
+    <h2 id="payments">14. Payments</h2>
     <p>Purchases, licensing and payments are handled by Atlassian through the Atlassian Marketplace. ArtUp Labs does not receive or store payment card data. Atlassian may share with us licence and billing contact information for the purposes described in Atlassian's Marketplace terms.</p>
 
-    <h2 id="security">14. Security</h2>
+    <h2 id="security">15. Security</h2>
     <p>See our <a href="security.html">Security page</a> for the App's architecture, access scopes, and how we handle vulnerabilities and incidents.</p>
 
-    <h2 id="rights">15. Your rights</h2>
+    <h2 id="rights">16. Your rights</h2>
     <p>Depending on where you live, you may have the right to access, correct, delete, restrict or object to processing of your personal data, to data portability, and to complain to a data protection authority.</p>
     <ul>
       <li><strong>App data:</strong> because the customer is the controller, please direct requests to your organisation's Jira or Confluence administrator first. We will help the customer respond. Administrators can remove all App data by uninstalling the App.</li>
       <li><strong>Correspondence with us:</strong> email <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>. We will respond within one month.</li>
     </ul>
 
-    <h2 id="children">16. Children</h2>
+    <h2 id="children">17. Children</h2>
     <p>The App and Website are business tools and are not directed at children.</p>
 
-    <h2 id="changes">17. Changes to this policy</h2>
+    <h2 id="changes">18. Changes to this policy</h2>
     <p>We may update this policy, for example when the App gains new features or we add a sub-processor. We will change the "Last updated" date above and, for material changes, notify customers through the Marketplace listing or by email to the technical contact before the change takes effect.</p>
 
-    <h2 id="contact">18. Contact</h2>
+    <h2 id="contact">19. Contact</h2>
     <p>ArtUp Labs (Artyom Karpets, individual entrepreneur), 32 E. P. Slavsky Embankment, apt. 132, Ust-Kamenogorsk (Oskemen), 070004, East Kazakhstan Region, Republic of Kazakhstan<br>
     Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
   </main>
@@ -253,6 +300,7 @@
         <ul>
           <li><a href="export/">ArtUp Export</a></li>
           <li><a href="reports/">ArtUp Reports</a></li>
+          <li><a href="query/">ArtUp Query</a></li>
           <li><a href="docs.html">Docs</a></li>
           <li><a href="support.html">Support</a></li>
           <li><a href="security.html">Security</a></li>

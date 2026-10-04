@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation — ArtUp Query</title>
+  <meta name="description" content="How to use ArtUp Query for Jira Cloud: the reference of 24 JQL functions with examples, dates and time, excluded projects, freshness, errors and moving from ScriptRunner.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../../query/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="../../index.html"><span class="brand-mark" aria-hidden="true">A</span>ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="../../index.html">Home</a></li>
+          <li><a href="../../export/">ArtUp Export</a></li>
+          <li><a href="../../reports/">ArtUp Reports</a></li>
+          <li><a href="../../query/" aria-current="page">ArtUp Query</a></li>
+          <li><a href="../../docs.html">Docs</a></li>
+          <li><a href="../../support.html">Support</a></li>
+          <li><a href="../../security.html">Security</a></li>
+          <li><a href="../../privacy.html">Privacy</a></li>
+          <li><a href="../../terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="doc-wide">
+    <nav class="toc" aria-labelledby="toc-title">
+      <h2 id="toc-title">Contents</h2>
+      <ol>
+        <li><a href="#install">Install and first search</a></li>
+        <li><a href="#syntax">How to write a function</a></li>
+        <li><a href="#reference">Function reference</a></li>
+        <li><a href="#dates">Dates, time zone and working time</a></li>
+        <li><a href="#excluded">Excluded projects</a></li>
+        <li><a href="#fresh">Freshness and the index</a></li>
+        <li><a href="#errors">Errors</a></li>
+        <li><a href="#scriptrunner">Coming from ScriptRunner</a></li>
+        <li><a href="#limits">Limits</a></li>
+        <li><a href="#data">Data handling</a></li>
+        <li><a href="#support">Languages and support</a></li>
+      </ol>
+    </nav>
+
+    <main id="main" class="doc">
+      <h1>ArtUp Query documentation</h1>
+      <p class="meta">ArtUp Query for Jira Cloud · Last updated: 2026-10-04</p>
+
+      <div class="notice">
+        <p><strong>In short:</strong> type <code>issue in</code> and a function in the Jira search, a filter, a board or a dashboard — for example <code>issue in subtasksOf("project = DEMO AND status = Done")</code>. There are 24 functions in seven groups. They work with <code>in</code> and <code>not in</code>, and the app only reads your work items.</p>
+      </div>
+
+      <h2 id="install">1. Install and first search</h2>
+      <ol>
+        <li>A Jira administrator installs <strong>ArtUp Query</strong> from the Atlassian Marketplace (<em>Apps</em> → <em>Explore more apps</em>).</li>
+        <li>Sites with up to 10 users use it free; larger sites start a trial or a subscription in <em>Manage apps</em>. Without an active licence the functions answer “ArtUp Query license is not active”.</li>
+        <li>Open <strong>Apps → ArtUp Query</strong>. The <em>Functions</em> tab lists every function with its arguments and a copyable example; the <em>Status</em> tab shows the update queue, the index and recent errors.</li>
+        <li>In the Jira search, switch to <strong>JQL</strong> and type a query such as <code>project = DEMO AND issue in hasSubtasks()</code>.</li>
+      </ol>
+      <p>The first time on a site the index is filled once. Until it is ready, the sprint, comment and attachment functions answer “Index is building: n of m issues”.</p>
+
+      <h2 id="syntax">2. How to write a function</h2>
+      <ul>
+        <li>Write <code>issue in functionName(…)</code> or <code>issue not in functionName(…)</code>. With <code>not in</code> the result is the exact complement of <code>in</code>.</li>
+        <li>Arguments are strings in double quotes. A subquery is any JQL, a saved filter (<code>filter = 10001</code>) or a list of keys.</li>
+        <li>Functions nest: <code>issue in subtasksOf("issue in linkedIssuesOf(\"key = DEMO-1\", \"blocks\")")</code>. Escape inner quotes with a backslash.</li>
+        <li>Optional arguments can be left out. <code>currentUser()</code> inside an argument is refused: the answer is shared by all users and computed as the app.</li>
+        <li>Combine with ordinary JQL: <code>project = DEMO AND issue in hasLinks("blocks") ORDER BY created DESC</code>.</li>
+      </ul>
+
+      <h2 id="reference">3. Function reference</h2>
+      <p>The same list as the <em>Functions</em> tab in the app.</p>
+      <h3>Work items of a query</h3>
+      <p>Each takes a subquery: any JQL, <code>filter = 10001</code> or a list of keys such as <code>key in (DEMO-1, DEMO-2)</code>. The answer is computed on request and kept fresh by Jira events.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>What it returns</th><th>Example</th></tr></thead>
+          <tbody>
+<tr id="fn-subtasksOf"><td><code>subtasksOf(subquery)</code></td><td>Subtasks of the work items the subquery returns.</td><td><code>issue in subtasksOf(&quot;project = DEMO AND status = \&quot;In Progress\&quot;&quot;)</code><br></td></tr>
+<tr id="fn-parentsOf"><td><code>parentsOf(subquery)</code></td><td>Parents of the work items the subquery returns: the task of a subtask, the epic of a task, at any level.</td><td><code>issue in parentsOf(&quot;project = DEMO AND type = Sub-task AND status = Done&quot;)</code><br></td></tr>
+<tr id="fn-epicsOf"><td><code>epicsOf(subquery)</code></td><td>Epics of the work items the subquery returns.</td><td><code>issue in epicsOf(&quot;fixVersion = 2.0&quot;)</code><br></td></tr>
+<tr id="fn-issuesInEpics"><td><code>issuesInEpics(subquery)</code></td><td>Work items in the epics the subquery returns, in company-managed and team-managed projects.</td><td><code>issue in issuesInEpics(&quot;project = DEMO AND status = Done&quot;)</code><br></td></tr>
+<tr id="fn-childIssuesOf"><td><code>childIssuesOf(subquery, [depth])</code></td><td>All descendants of the work items the subquery returns; the optional depth limits the levels.</td><td><code>issue in childIssuesOf(&quot;key = DEMO-1&quot;)</code><br><code>issue in childIssuesOf(&quot;project = DEMO AND type = Epic&quot;, &quot;1&quot;)</code><br></td></tr>
+<tr id="fn-linkedIssuesOf"><td><code>linkedIssuesOf(subquery, [linkType])</code></td><td>Work items linked to the work items the subquery returns; optionally one link type or direction, such as &quot;blocks&quot; or &quot;is blocked by&quot;.</td><td><code>issue in linkedIssuesOf(&quot;project = DEMO AND status = Open&quot;, &quot;blocks&quot;)</code><br></td></tr>
+<tr id="fn-linkedIssuesOfRecursive"><td><code>linkedIssuesOfRecursive(subquery, [linkType])</code></td><td>Work items linked directly or through other links, up to 10 levels, without looping on cycles.</td><td><code>issue in linkedIssuesOfRecursive(&quot;key = DEMO-1&quot;, &quot;is blocked by&quot;)</code><br></td></tr>
+<tr id="fn-linkedIssuesOfRecursiveLimited"><td><code>linkedIssuesOfRecursiveLimited(subquery, depth, [linkType])</code></td><td>The same as linkedIssuesOfRecursive with the depth you set.</td><td><code>issue in linkedIssuesOfRecursiveLimited(&quot;key = DEMO-1&quot;, &quot;3&quot;, &quot;blocks&quot;)</code><br></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Links and subtasks across the site</h3>
+      <p>Answered from the site index; no subquery.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>What it returns</th><th>Example</th></tr></thead>
+          <tbody>
+<tr id="fn-hasLinks"><td><code>hasLinks([linkType])</code></td><td>Work items that have links, optionally of one type or direction.</td><td><code>issue in hasLinks(&quot;blocks&quot;)</code><br></td></tr>
+<tr id="fn-hasLinkType"><td><code>hasLinkType(linkType)</code></td><td>Work items that have links of the given type (the ScriptRunner name of hasLinks).</td><td><code>issue in hasLinkType(&quot;Duplicate&quot;)</code><br></td></tr>
+<tr id="fn-hasSubtasks"><td><code>hasSubtasks()</code></td><td>Work items that have subtasks.</td><td><code>project = DEMO AND issue in hasSubtasks()</code><br></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Board sprints</h3>
+      <p>Take a board name or id.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>What it returns</th><th>Example</th></tr></thead>
+          <tbody>
+<tr id="fn-previousSprint"><td><code>previousSprint(board)</code></td><td>Work items of the last closed sprint of a board.</td><td><code>issue in previousSprint(&quot;DEMO board&quot;)</code><br></td></tr>
+<tr id="fn-nextSprint"><td><code>nextSprint(board)</code></td><td>Work items of the next future sprint of a board.</td><td><code>issue in nextSprint(&quot;DEMO board&quot;)</code><br></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Sprint history</h3>
+      <p>Built from the Sprint changelog in the site index. Take a board and a sprint (name or id).</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>What it returns</th><th>Example</th></tr></thead>
+          <tbody>
+<tr id="fn-addedAfterSprintStart"><td><code>addedAfterSprintStart(board, [sprint])</code></td><td>Work items added to a sprint after it started, even if removed later; without a sprint, the active sprint of the board.</td><td><code>issue in addedAfterSprintStart(&quot;DEMO board&quot;)</code><br><code>issue in addedAfterSprintStart(&quot;DEMO board&quot;, &quot;DEMO Sprint 7&quot;)</code><br></td></tr>
+<tr id="fn-removedAfterSprintStart"><td><code>removedAfterSprintStart(board, [sprint])</code></td><td>Work items removed from a sprint after it started and not returned before it closed.</td><td><code>issue in removedAfterSprintStart(&quot;DEMO board&quot;)</code><br></td></tr>
+<tr id="fn-incompleteInSprint"><td><code>incompleteInSprint(board, sprint)</code></td><td>Work items that were in the sprint when it closed and not done.</td><td><code>issue in incompleteInSprint(&quot;DEMO board&quot;, &quot;DEMO Sprint 6&quot;)</code><br></td></tr>
+<tr id="fn-completeInSprint"><td><code>completeInSprint(board, sprint)</code></td><td>Work items that were in the sprint when it closed and done.</td><td><code>issue in completeInSprint(&quot;DEMO board&quot;, &quot;DEMO Sprint 6&quot;)</code><br></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Comments</h3>
+      <p>Read the comment index. Comments with restricted visibility are ignored.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>What it returns</th><th>Example</th></tr></thead>
+          <tbody>
+<tr id="fn-commented"><td><code>commented([clauses])</code></td><td>Work items with comments matching the clauses: by, after, before, on, inRole, inGroup.</td><td><code>issue in commented(&quot;after -7d inRole Developers&quot;)</code><br></td></tr>
+<tr id="fn-lastComment"><td><code>lastComment([clauses])</code></td><td>Work items whose last comment matches the clauses.</td><td><code>issue in lastComment(&quot;before -14d&quot;)</code><br></td></tr>
+<tr id="fn-hasComments"><td><code>hasComments([count])</code></td><td>Work items with comments: without a number, any; &quot;n&quot; for exactly n, &quot;+n&quot; for more than n, &quot;-n&quot; for fewer than n.</td><td><code>issue in hasComments(&quot;5&quot;)</code><br><code>issue in hasComments(&quot;+5&quot;)</code><br><code>issue in hasComments(&quot;-3&quot;)</code><br></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Attachments</h3>
+      <p>Read the attachment index.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>What it returns</th><th>Example</th></tr></thead>
+          <tbody>
+<tr id="fn-fileAttached"><td><code>fileAttached([clauses])</code></td><td>Work items with attachments matching the clauses: by, after, before, on, ext.</td><td><code>issue in fileAttached(&quot;after startOfWeek() ext pdf&quot;)</code><br></td></tr>
+<tr id="fn-hasAttachments"><td><code>hasAttachments([extension])</code></td><td>Work items with attachments, optionally of one file extension.</td><td><code>issue in hasAttachments(&quot;xlsx&quot;)</code><br></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Compare fields</h3>
+      <p>Take a subquery and an expression over fields of each work item.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Function</th><th>What it returns</th><th>Example</th></tr></thead>
+          <tbody>
+<tr id="fn-dateCompare"><td><code>dateCompare(subquery, expression)</code></td><td>Work items of the subquery where one date field compares to another, such as resolutiondate &gt; duedate or created + 2d &lt; firstCommented.</td><td><code>issue in dateCompare(&quot;project = DEMO&quot;, &quot;resolutiondate &gt; duedate&quot;)</code><br></td></tr>
+<tr id="fn-expression"><td><code>expression(subquery, expression)</code></td><td>Work items of the subquery where arithmetic over number and time fields is true, such as timespent &gt; originalestimate * 1.2.</td><td><code>issue in expression(&quot;project = DEMO&quot;, &quot;timespent &gt; originalestimate * 1.2&quot;)</code><br></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Conditions of <code>commented</code>, <code>lastComment</code> and <code>fileAttached</code></h3>
+      <p>The argument is a list of conditions separated by spaces:</p>
+      <ul>
+        <li><code>by</code> — the author of the comment or attachment (<code>currentUser()</code> is not supported);</li>
+        <li><code>after</code>, <code>before</code>, <code>on</code> — dates: <code>after -7d</code>, <code>on 2026/03/28</code>, <code>after startOfWeek()</code>;</li>
+        <li><code>inRole</code>, <code>inGroup</code> — the author belongs to the role or group (comments only);</li>
+        <li><code>ext</code> — the file extension without a dot, such as <code>pdf</code> or <code>gz</code> (attachments only).</li>
+      </ul>
+      <p>The conditions <code>roleLevel</code> and <code>groupLevel</code> (the comment's own visibility) are planned for a later version; today they answer “Clause is not available yet”. Comments with restricted visibility are ignored by every function, so a result never reveals that a restricted comment exists.</p>
+      <p><code>hasComments</code> takes a count: <code>"5"</code> exactly five, <code>"+5"</code> more than five, <code>"-3"</code> fewer than three.</p>
+
+      <h3><code>dateCompare</code> and <code>expression</code></h3>
+      <ul>
+        <li><code>dateCompare</code> compares two date fields: operators <code>&lt; &gt; &lt;= &gt;= =</code>, an interval such as <code>+2d</code> or <code>+1w</code> on either side, and the pseudo-fields <code>firstCommented</code> and <code>lastCommented</code>.</li>
+        <li><code>expression</code> does arithmetic over number and time fields: <code>timespent &gt; originalestimate * 1.2</code>. Units are <code>Nw</code>, <code>Nd</code>, <code>Nh</code>, <code>Nm</code>, and the ScriptRunner names <code>wd</code> and <code>ww</code>. Compare with <code>&gt; &lt; &gt;= &lt;= = == !=</code>. Write a field whose name has spaces without the spaces, or as <code>customfield_NNNNN</code>.</li>
+      </ul>
+
+      <h2 id="dates">4. Dates, time zone and working time</h2>
+      <ul>
+        <li>Dates in conditions (<code>after</code>, <code>on</code>, <code>before</code>, <code>-7d</code>, <code>startOfWeek()</code>) are in <strong>UTC</strong>, and weeks start on <strong>Monday</strong>. Jira does not tell a function the time zone of the user, so a day boundary can differ from the one you see in Jira by your offset from UTC.</li>
+        <li>In <code>expression</code>, <strong>1d of work time is 8h and 1w is 5d</strong>, the Jira default. Jira does not pass the site's time-tracking settings to a function. This differs from ScriptRunner, where <code>d</code> is a 24-hour day; <code>wd</code> and <code>ww</code> are supported.</li>
+      </ul>
+
+      <h2 id="excluded">5. Excluded projects</h2>
+      <p>A Jira administrator opens <strong>Apps → ArtUp Query settings</strong> and chooses projects to exclude from the index — for example a large archive project.</p>
+      <ul>
+        <li>Their sprint history, comments and attachments are removed from the index.</li>
+        <li>Under <code>in</code>, work items of excluded projects never match a function that reads the index or runs the app's own searches. Under <code>not in</code> the result is the exact complement, so they appear like any other work item outside the result.</li>
+        <li>A few functions are answered by Jira itself and are not filtered: <code>previousSprint</code>, <code>nextSprint</code>, <code>hasAttachments()</code> without an extension, <code>hasComments("-n")</code> and, in most cases, <code>hasLinks</code> and <code>hasLinkType</code>.</li>
+        <li>A sprint function for a board of an excluded project answers “Project X is excluded from the ArtUp Query index” instead of an empty result.</li>
+        <li>The same page can reindex one project or rebuild the whole index. A work item moved to another project keeps its old project in the index until you reindex the old project and then the new one.</li>
+      </ul>
+
+      <h2 id="fresh">6. Freshness and the index</h2>
+      <p>The functions keep their results up to date from Jira events. What we measured on a test site with 50,000 issues:</p>
+      <ul>
+        <li>Subtask and link functions: 90th percentile 24.7 seconds after an edit (30 edits). <!-- refresh after acceptance --></li>
+        <li>Board sprints: 90th percentile 7.1 seconds (30 edits). <!-- refresh after acceptance --></li>
+        <li>Sprint history: under a minute. <!-- refresh after acceptance --></li>
+        <li>Comments 11.4 seconds, attachments 12 seconds (90th percentile, 10 edits each). <!-- refresh after acceptance --></li>
+        <li>The index of 50,000 issues fills in about half a minute to a minute. <!-- refresh after acceptance --></li>
+      </ul>
+      <p><strong>Seconds for ordinary edits; bulk imports and bulk edits can take minutes</strong>, because the change events arrive in a queue. The <em>Status</em> tab shows what is waiting. Times depend on your site and Jira's own load.</p>
+      <p>If a function needs more than a few seconds to compute, it answers “Computing, retry in a minute” and finishes in the background — never an empty or partial result.</p>
+
+      <h2 id="errors">7. Errors</h2>
+      <p>A problem is reported in the JQL editor in English (Jira does not give a function the user's language). The app pages are in 26 languages.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Message</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>Board "X" not found; Sprint "Y" not found</td><td>The name or id does not exist. If several match, use the id.</td></tr>
+            <tr><td>Subquery rejected by Jira</td><td>The JQL in the argument is not valid; the message carries Jira's own text.</td></tr>
+            <tr><td>Index is building: n of m issues</td><td>The first fill is not finished.</td></tr>
+            <tr><td>Computing, retry in a minute</td><td>A long computation continues in the background.</td></tr>
+            <tr><td>The result needs n issues; one function returns at most m</td><td>Narrow the subquery.</td></tr>
+            <tr><td>Project X is excluded from the ArtUp Query index</td><td>An administrator excluded it.</td></tr>
+            <tr><td>ArtUp Query license is not active</td><td>The site has more than 10 users and no active licence.</td></tr>
+            <tr><td>Unknown clause, Invalid date, Unclosed quote…</td><td>A condition is not valid; the message lists what is allowed.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The <em>Status</em> tab keeps the recent errors with the function name and message. It never stores the arguments, which hold your JQL.</p>
+
+      <h2 id="scriptrunner">8. Coming from ScriptRunner</h2>
+      <p>Names and arguments are the same wherever the meaning is the same. Write <code>issue in</code> instead of <code>issueFunction in</code>: <code>issue in subtasksOf("project = DEMO")</code>. ScriptRunner Enhanced Search on Cloud works only on its own search screen; ArtUp Query works in the standard Jira search.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Difference</th><th>In ArtUp Query</th></tr></thead>
+          <tbody>
+            <tr><td><code>childrenOf</code> (Cloud), <code>portfolioChildrenOf</code> (DC)</td><td><code>childIssuesOf(subquery, [depth])</code></td></tr>
+            <tr><td><code>parentsOf</code> depth argument (Cloud)</td><td>None; <code>parentsOf</code> covers parents at any level.</td></tr>
+            <tr><td><code>linkedIssuesOf</code> with several link names (DC)</td><td>One link type or direction; use two calls joined by <code>OR</code> for more.</td></tr>
+            <tr><td><code>hasLinks("blocks", "+2")</code>, <code>hasAttachments("pdf", "+3")</code> (a count)</td><td>Not supported yet; the call answers with an error.</td></tr>
+            <tr><td><code>incompleteInSprint</code> and <code>completeInSprint</code> without a sprint</td><td>The sprint is required (the state when the sprint closed).</td></tr>
+            <tr><td><code>d</code> in <code>expression</code> is a 24-hour day</td><td>1d is 8h; <code>wd</code> and <code>ww</code> work as in ScriptRunner.</td></tr>
+            <tr><td><code>.clearTime()</code> in <code>dateCompare</code></td><td>Not supported.</td></tr>
+            <tr><td><code>roleLevel</code>, <code>groupLevel</code>, <code>visibility</code></td><td>Not available in this version; restricted comments are ignored.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="limits">9. Limits</h2>
+      <ul>
+        <li>Jira Cloud only; company-managed and team-managed projects.</li>
+        <li>The functions are the same for every user: results do not depend on who runs them, and the app reads as itself. Work items a user cannot see are still hidden by Jira when it applies the result to the search.</li>
+        <li>A result that cannot be returned in full is an error with the number, not a cut-off list.</li>
+        <li>No search in the text of comments or attachments.</li>
+      </ul>
+
+      <h2 id="data">10. Data handling</h2>
+      <p>No external servers and no egress. The app reads work items, links, the hierarchy, Sprint and status changes, and comment and attachment metadata as the app. It stores ids, dates, status categories, the account ids of comment and attachment authors, the visibility type of comments, file extensions and cached result ids; it does not store issue text, comment bodies or attachment content. The only write scope, <code>write:app-data:jira</code>, saves the JQL function results. Details: <a href="../../privacy.html#query">Privacy Policy</a> and <a href="../../security.html#query-architecture">Security</a>.</p>
+
+      <h2 id="support">11. Languages and support</h2>
+      <p>The app pages follow each user's Jira language (26 languages) and the light or dark theme.</p>
+      <p>Questions, bug reports and feature requests: <a href="mailto:hello@artuplabs.com?subject=ArtUp%20Query">hello@artuplabs.com</a>. Please include your Jira site URL, the JQL you ran and the message you saw. See <a href="../../support.html">Support</a>.</p>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="../../export/">ArtUp Export</a></li>
+          <li><a href="../../reports/">ArtUp Reports</a></li>
+          <li><a href="../../query/">ArtUp Query</a></li>
+          <li><a href="../export/">Export docs</a></li>
+          <li><a href="../reports/">Reports docs</a></li>
+          <li><a href="./">Query docs</a></li>
+          <li><a href="../../docs.html">Trace docs</a></li>
+          <li><a href="../../support.html">Support</a></li>
+          <li><a href="../../security.html">Security</a></li>
+          <li><a href="../../privacy.html">Privacy</a></li>
+          <li><a href="../../terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
