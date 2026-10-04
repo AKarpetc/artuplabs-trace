@@ -35,7 +35,7 @@
   <main id="main" class="doc">
     <p class="i18n-note" data-lang="ru" lang="ru">Перевод для удобства. При расхождении действует английская версия.</p>
     <h1 data-i18n-html="t11">Security</h1>
-    <p class="meta" data-i18n-html="t12">ArtUp Trace for Jira Cloud · ArtUp Export for Confluence Cloud · ArtUp Reports for Jira Cloud · Last updated: 2026-09-30</p>
+    <p class="meta" data-i18n-html="t12">ArtUp Trace for Jira Cloud · ArtUp Export for Confluence Cloud · ArtUp Reports for Jira Cloud · Last updated: 2026-10-04</p>
 
     <div class="notice">
       <p data-i18n-html="t13"><strong>In short:</strong> ArtUp Trace is an Atlassian Forge app with the "Runs on Atlassian" designation. There are no ArtUp Labs servers in the path, no outbound network calls, and no third-party trackers. The App reads Jira as the current user, checks Jira permissions on every action, and never writes to your issues. ArtUp Export reads Confluence as the current user, converts pages in the user's browser, stores nothing and never writes to Confluence. ArtUp Reports reads Jira as the current user, builds Excel, Word and PDF files in the user's browser, stores only export templates and never writes to Jira.</p>
@@ -61,7 +61,7 @@
       <li data-i18n-html="t25">The App's code executes inside Atlassian's infrastructure, not on a server operated by ArtUp Labs. <strong>ArtUp Labs runs no external servers</strong> for the App.</li>
       <li data-i18n-html="t26">The App has <strong>no outbound network calls (no egress)</strong>. It cannot send Jira data anywhere outside Atlassian.</li>
       <li data-i18n-html="t27">The App's own data (project settings, requirement and link records, baselines, sync job metadata) is stored only in Forge SQL and Forge storage, in the customer's data residency region as handled by Atlassian.</li>
-      <li data-i18n-html="t28">The App and this website load <strong>no third-party analytics, trackers or advertising scripts</strong>.</li>
+      <li data-i18n-html="t28">The App loads <strong>no third-party analytics, trackers or advertising scripts</strong>. This website loads no trackers or advertising scripts; it counts page views in aggregate with Cloudflare Web Analytics, which sets no cookies (see the <a href="privacy.html#website">Privacy Policy</a>).</li>
     </ul>
     <p data-i18n-html="t29">See the <a href="privacy.html">Privacy Policy</a> for the full list of what is stored.</p>
     <h3 id="export-architecture">1.1 ArtUp Export</h3>
@@ -246,7 +246,7 @@
   "t9": "<a href=\"privacy.html\">Конфиденциальность<\/a>",
   "t10": "<a href=\"terms.html\">Условия<\/a>",
   "t11": "Безопасность",
-  "t12": "ArtUp Trace для Jira Cloud · ArtUp Export для Confluence Cloud · ArtUp Reports для Jira Cloud · Обновлено: 2026-09-30",
+  "t12": "ArtUp Trace для Jira Cloud · ArtUp Export для Confluence Cloud · ArtUp Reports для Jira Cloud · Обновлено: 2026-10-04",
   "t13": "<strong>Коротко:<\/strong> ArtUp Trace — приложение на Atlassian Forge со статусом «Runs on Atlassian». Серверов ArtUp Labs на пути данных нет, исходящих сетевых запросов нет, сторонних трекеров нет. Приложение читает Jira от имени текущего пользователя, проверяет права в Jira при каждом действии и никогда не изменяет ваши задачи. ArtUp Export читает Confluence от имени текущего пользователя, преобразует страницы в браузере пользователя, ничего не хранит и никогда не изменяет Confluence. ArtUp Reports читает Jira от имени текущего пользователя, собирает файлы Excel, Word и PDF в браузере пользователя, хранит только шаблоны выгрузки и никогда не изменяет Jira.",
   "t14": "Содержание",
   "t15": "<a href=\"#architecture\">Архитектура<\/a>",
@@ -262,7 +262,7 @@
   "t25": "Код Приложения выполняется внутри инфраструктуры Atlassian, а не на сервере ArtUp Labs. <strong>ArtUp Labs не использует внешних серверов<\/strong> для Приложения.",
   "t26": "У Приложения <strong>нет исходящих сетевых запросов (нет egress)<\/strong>. Оно не может отправить данные Jira куда-либо за пределы Atlassian.",
   "t27": "Собственные данные Приложения (настройки проектов, записи о требованиях и связях, базовые срезы, метаданные заданий синхронизации) хранятся только в Forge SQL и хранилище Forge, в регионе размещения данных клиента, как это обеспечивает Atlassian.",
-  "t28": "Приложение и этот сайт <strong>не загружают сторонние скрипты аналитики, трекеры или рекламу<\/strong>.",
+  "t28": "Приложение <strong>не загружает сторонние скрипты аналитики, трекеры или рекламу<\/strong>. Этот сайт не загружает трекеры и рекламу; посещения он считает в обобщённом виде через Cloudflare Web Analytics, без cookie (см. <a href=\"privacy.html#website\">Политику конфиденциальности<\/a>).",
   "t29": "Полный перечень хранимых данных приведён в <a href=\"privacy.html\">Политике конфиденциальности<\/a>.",
   "t31": "ArtUp Export также целиком построено на Atlassian Forge: без внешних серверов, без модулей Connect, только со встроенными ресурсами.",
   "t32": "Страницы, вложения, метки и имена пользователей читаются <strong>в браузере пользователя<\/strong> через API Atlassian и с правами этого пользователя в Confluence. Преобразование в Markdown и упаковка в zip выполняются в браузере, а zip-архив скачивается на устройство пользователя.",
