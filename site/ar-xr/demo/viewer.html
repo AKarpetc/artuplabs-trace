@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- app-clip-banner:start -->
     <!-- app-clip-banner:end -->
+    <meta name="description" data-i18n-attr="content:viewer.metaDescription"
+      content="View a 3D model right in the browser and place it in your room with AR on iPhone or Android — no app to install.">
     <meta name="theme-color" content="#0d121c">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Шрифт не блокирует первую отрисовку: без Google Fonts страница остаётся на системном. -->
@@ -16,7 +18,7 @@
     <link type="text/css" href="./styles/viewer.css?v=395fc21dca" rel="stylesheet" />
     <link type="text/css" href="./styles/loading.css?v=391a97178e" rel="stylesheet" />
     <!-- Кнопка «Мои планы» демо ArtUp AR XR (другие окружения её не показывают). -->
-    <link type="text/css" href="./styles/artuplabs-demo.css?v=bc40456451" rel="stylesheet" />
+    <link type="text/css" href="./styles/artuplabs-demo.css?v=142547e428" rel="stylesheet" />
     <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
 </head>
 
@@ -40,10 +42,10 @@
     <div class="viewer-wrapper">
         <div class="viewer" id="container">
             <a class="back_button hidden" id="back" onclick="backOnClick()">&laquo; <span data-i18n="common.back">Назад</span></a>
-            <!-- <model-viewer> — скрытая пусковая площадка AR: единственный режим и артефакт под платформу
-                 задаёт src/viewer/render.js; reveal="manual" — сам он ничего не скачивает. -->
+            <!-- <model-viewer> — скрытая пусковая площадка Android WebXR (без Google Scene Viewer); режим и
+                 артефакт задаёт src/viewer/render.js. Scene Viewer и Quick Look запускаются без него. -->
             <model-viewer id="model-viewer" class="hidden" ar reveal="manual" loading="lazy" camera-controls
-                tone-mapping="commerce" shadow-intensity="1">
+                tone-mapping="neutral" shadow-intensity="1">
                 <div class="progress-bar hidden" slot="progress-bar">
                     <div class="update-bar"></div>
                 </div>
@@ -74,13 +76,9 @@
     <script src="./src/common/loading.js?v=662bf7395d"></script>
     <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
 
-    <!-- <model-viewer> (со своей копией three.js) подгружает src/viewer/render.js и только там, где он
-         пусковая площадка AR (Quick Look, Android WebXR): у десктопа и Scene Viewer на странице одна three.js. -->
-    <script>
-        self.ModelViewerElement = self.ModelViewerElement || {};
-        self.ModelViewerElement.meshoptDecoderLocation = 'https://cdn.jsdelivr.net/npm/meshoptimizer/meshopt_decoder.js';
-        </script>
-    <script type="module" src="./dist/viewer.bandle.js?v=e7a451dc54"></script>
+    <!-- <model-viewer> (со своей копией three.js) и его декодер meshopt подгружает src/viewer/render.js и только там,
+         где он пусковая площадка AR (Android WebXR): у десктопа, Scene Viewer и Quick Look на странице одна three.js. -->
+    <script type="module" src="./dist/viewer.bandle.js?v=9cadb35241"></script>
 </body>
 
 </html>

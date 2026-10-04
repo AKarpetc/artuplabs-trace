@@ -28,8 +28,8 @@
   --shape-l: 16px;
   --shape-m: 12px;
   --shape-full: 999px;
-  --font-brand: "Google Sans Flex", "Google Sans", "Roboto", system-ui, sans-serif;
-  --font-plain: "Roboto", system-ui, sans-serif;
+  --font-brand: "Google Sans Flex", sans-serif;
+  --font-plain: "Google Sans Flex", sans-serif;
   --gutter: max(clamp(16px, 4vw, 40px), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   /* Вырез сверху и, в приложении, его кнопки в левом верхнем углу (`--arxr-app-bar`; в браузере не задана). */
   --safe-top: calc(env(safe-area-inset-top, 0px) + var(--arxr-app-bar, 0px));
@@ -330,6 +330,20 @@ main { padding: 0 var(--gutter); max-width: 1320px; margin: 0 auto; }
   scrollbar-width: none;
 }
 .filter-row::-webkit-scrollbar { display: none; }
+/* Ряд шире экрана: у края, за которым есть ещё чипы, они растворяются (data-overflow ставит src/demo/demo.js). */
+.filter-row[data-overflow], .segmented[data-overflow] { --fade: 40px; }
+.filter-row[data-overflow="end"], .segmented[data-overflow="end"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--fade)), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--fade)), transparent);
+}
+.filter-row[data-overflow="start"], .segmented[data-overflow="start"] {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - var(--fade)), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - var(--fade)), transparent);
+}
+.filter-row[data-overflow="start end"], .segmented[data-overflow="start end"] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+}
 .filter-row__label {
   flex: none;
   margin-right: 4px;
@@ -471,6 +485,7 @@ main { padding: 0 var(--gutter); max-width: 1320px; margin: 0 auto; }
   box-shadow: var(--md-shadow-2);
   cursor: pointer;
 }
+.fab[hidden] { display: none; }
 .fab .material-symbols-rounded { font-size: 24px; }
 
 /* Лоадер поверх темы */

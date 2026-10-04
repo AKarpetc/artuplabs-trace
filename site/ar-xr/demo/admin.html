@@ -4,13 +4,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" data-i18n-attr="content:admin.metaDescription"
+    content="ArtUp AR XR demo admin: names, prices, visibility and XR scale of demo catalog models.">
+  <!-- Демо-админка — служебная страница без ссылок из демо: в поиск не попадает. -->
+  <meta name="robots" content="noindex">
   <meta name="theme-color" content="#111418">
   <title data-i18n="admin.docTitle">ArtUp AR XR — демо-админка</title>
   <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
-  <link type="text/css" href="./styles/demo.css?v=df276f6e2a" rel="stylesheet" />
+  <!-- Один шрифт всего демо — Google Sans Flex (семейство задаёт styles/artuplabs-demo.css). -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+  <link type="text/css" href="./styles/demo.css?v=6ee058d709" rel="stylesheet" />
   <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); страница работает и без них. -->
-  <link type="text/css" href="../assets/ar-xr.css" rel="stylesheet" />
-  <link type="text/css" href="./styles/artuplabs-demo.css?v=bc40456451" rel="stylesheet" />
+  <link type="text/css" href="../assets/ar-xr.css?v=2e0158b1d6" rel="stylesheet" />
+  <link type="text/css" href="./styles/artuplabs-demo.css?v=142547e428" rel="stylesheet" />
 </head>
 
 <body>
@@ -23,7 +31,6 @@
         <ul>
           <li><a href="./demo.html#catalog" data-i18n="nav.catalog">Каталог</a></li>
           <li><a href="./plans.html" data-i18n="nav.plans">Мои планы</a></li>
-          <li><a class="nav-small" aria-current="page" href="./admin.html" data-i18n="nav.admin">Админка</a></li>
         </ul>
       </nav>
       <div class="ax-header-actions">
@@ -59,10 +66,10 @@
   </main>
 
   <footer class="page-footer" data-contacts>
-    <span>ArtUp Labs</span> · <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>
+    <span>ArtUp Labs</span> <span class="contacts-sep" aria-hidden="true">·</span> <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>
   </footer>
 
-  <script type="module" src="./dist/demoAdmin.bandle.js?v=392a60266c"></script>
+  <script type="module" src="./dist/demoAdmin.bandle.js?v=c1b07ea3e3"></script>
 </body>
 
 </html>
