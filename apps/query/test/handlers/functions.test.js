@@ -3,6 +3,7 @@ import { makeDeps, never } from './makeDeps.js';
 import { computeGroup, createFunctionHandlers, fragmentFor, handleFunction, licenceInput } from '../../src/handlers/functions.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
 import { createBoardCompute } from '../../src/compute/boards.js';
+import { createFieldCompute } from '../../src/compute/fields.js';
 import { fakeJira } from '../fakeJira.js';
 import { PAGE_CACHE_MS } from '../../src/core/limits.js';
 
@@ -249,5 +250,41 @@ describe('fragmentFor', () => {
 describe('createFunctionHandlers', () => {
   it('has one handler per catalog function', () => {
     expect(Object.keys(createFunctionHandlers(fnDeps({})))).toEqual(FUNCTIONS.map((f) => f.name));
+  });
+});
+
+describe('handleFunction for dateCompare and expression', () => {
+  const fieldCompute = () => createFieldCompute({
+    jira: {
+      fields: async () => [{ id: 'duedate', name: 'Due date' }, { id: 'resolutiondate', name: 'Resolved' }, { id: 'timespent', name: 'Time Spent' }],
+      searchIds: async () => ['1', '2', '3'],
+      bulkIssues: async () => [
+        { id: '1', fields: { duedate: '2026-01-05', resolutiondate: '2026-01-07T00:00:00.000+0000', timespent: 36000 } },
+        { id: '2', fields: { duedate: '2026-01-10', resolutiondate: '2026-01-07T00:00:00.000+0000', timespent: 60 } },
+        { id: '3', fields: {} },
+      ],
+    },
+    repo: null,
+    commentsShipped: () => false,
+  });
+
+  it('answers in with the matching issues and not in with their complement', async () => {
+    const deps = fnDeps(fieldCompute());
+    expect(await handleFunction(deps, 'dateCompare', payload('q', 'resolutiondate > duedate'), DEV)).toEqual({ jql: 'id in (1)' });
+    expect(await handleFunction(deps, 'dateCompare', notIn('q', 'resolutiondate > duedate'), DEV)).toEqual({ jql: 'NOT (id in (1))' });
+    expect(await handleFunction(deps, 'expression', notIn('q', 'timespent > 1h'), DEV)).toEqual({ jql: 'NOT (id in (1))' });
+  });
+  it('leaves excluded projects out under both operators', async () => {
+    const deps = fnDeps(fieldCompute());
+    await deps.state.setExcluded(['OPS']);
+    expect(await handleFunction(deps, 'expression', payload('q', 'timespent > 1h'), DEV)).toEqual({ jql: '(id in (1)) AND project not in ("OPS")' });
+    expect(await handleFunction(deps, 'expression', notIn('q', 'timespent > 1h'), DEV)).toEqual({ jql: 'NOT (id in (1)) AND project not in ("OPS")' });
+  });
+  it('shows expression errors under both operators and logs them without the user text', async () => {
+    const deps = fnDeps(fieldCompute());
+    expect(await handleFunction(deps, 'expression', notIn('q', 'timespent > "Secret field"'), DEV)).toEqual({ error: 'expression: Field "Secret field" not found', storeErrorAsPrecomputation: false });
+    expect(await handleFunction(deps, 'dateCompare', payload('q', 'duedate < secretword ('), DEV)).toEqual({ error: 'dateCompare: Unexpected "(" at 22', storeErrorAsPrecomputation: false });
+    expect(await handleFunction(deps, 'dateCompare', notIn('q', 'duedate < firstCommented'), DEV)).toEqual({ error: 'dateCompare: firstCommented needs the comment index, which this site does not have', storeErrorAsPrecomputation: false });
+    expect((await deps.state.errors()).map((e) => e.message)).toEqual(['Comment index not shipped', 'Invalid expression', 'Field not found']);
   });
 });

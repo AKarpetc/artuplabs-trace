@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { familyWants, groupPrecomputations, isTimeRelative, needsRepair, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
+import { commentTimesWanted, familyWants, groupPrecomputations, isTimeRelative, needsRepair, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
 
 const row = (ts, ids, kinds) => ({ key: `t:${String(ts).padStart(15, '0')}:abc`, value: { ids, kinds } });
 const NOW = Date.parse('2026-10-10T12:00:00Z');
@@ -132,5 +132,21 @@ describe('reconcileTargets without rewrite times', () => {
 describe('isTimeRelative', () => {
   it.each([['after -7d', true], ['created > startOfWeek()', true], ['on 2026-01-01', false], ['project = A-7d', false]])('%s → %s', (arg, expected) => {
     expect(isTimeRelative([arg])).toBe(expected);
+  });
+});
+
+describe('commentTimesWanted', () => {
+  const group = (functionName, expression) => ({ functionName, userArgs: ['project = A', expression] });
+  it('wants comment changes for a fields group that reads comment times', () => {
+    expect([commentTimesWanted(group('dateCompare', 'created < firstCommented'), ['comment']), commentTimesWanted(group('expression', 'LASTCOMMENTED > 0'), ['index-comments'])]).toEqual([true, true]);
+  });
+  it('leaves other kinds, other expressions and other functions to the overlap check', () => {
+    expect([
+      commentTimesWanted(group('dateCompare', 'created < firstCommented'), ['issue-updated']),
+      commentTimesWanted(group('dateCompare', 'created < duedate'), ['comment']),
+      commentTimesWanted(group('parentsOf', 'firstCommented'), ['comment']),
+      commentTimesWanted({ functionName: 'expression', userArgs: [] }, ['comment']),
+      commentTimesWanted({ functionName: 'expression' }, ['comment']),
+    ]).toEqual([false, false, false, false, false]);
   });
 });

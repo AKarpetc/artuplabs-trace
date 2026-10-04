@@ -318,6 +318,36 @@ modules:
         - in
         - not in
       function: fn-has-att
+    - key: date-compare
+      name: dateCompare
+      arguments:
+        - name: subquery
+          required: true
+        - name: expression
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-dat-com
+    - key: expression
+      name: expression
+      arguments:
+        - name: subquery
+          required: true
+        - name: expression
+          required: true
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-exp
   trigger:
     - key: query-events
       function: on-event
@@ -404,6 +434,10 @@ modules:
       handler: index.fileAttached
     - key: fn-has-att
       handler: index.hasAttachments
+    - key: fn-dat-com
+      handler: index.dateCompare
+    - key: fn-exp
+      handler: index.expression
     - key: on-event
       handler: index.onEvent
     - key: on-refresh

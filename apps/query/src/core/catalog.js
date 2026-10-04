@@ -44,7 +44,7 @@ export const FUNCTIONS = [
 export const FUNCTION_BY_NAME = new Map(FUNCTIONS.map((f) => [f.name, f]));
 
 /** Groups whose code is built and declared in the manifest. */
-export const SHIPPED_GROUPS = ['query', 'site', 'board', 'sprint', 'comment', 'attachment'];
+export const SHIPPED_GROUPS = ['query', 'site', 'board', 'sprint', 'comment', 'attachment', 'fields'];
 
 /** Functions of the shipped groups, in catalog order. */
 export function shippedFunctions() {

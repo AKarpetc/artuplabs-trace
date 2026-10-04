@@ -50,6 +50,15 @@ export function familyWants(family, kinds) {
   return (FAMILY_KINDS[family] ?? []).some((k) => kinds.includes(k));
 }
 
+const COMMENT_TIME_KINDS = ['comment', 'index-comments'];
+const COMMENT_TIME_FIELD = /(first|last)commented/i;
+
+/** Whether a query-family group reads comment times (firstCommented, lastCommented) and the changes touch comments, which may name no issue. */
+export function commentTimesWanted(group, kinds) {
+  if (FUNCTION_BY_NAME.get(group.functionName)?.group !== 'fields') return false;
+  return COMMENT_TIME_FIELD.test(String(group.userArgs?.[1] ?? '')) && COMMENT_TIME_KINDS.some((k) => kinds.includes(k));
+}
+
 /** Query family: stale when a touched issue is watched or now matches the subquery; unknown inputs (null) mean stale. */
 export function queryOverlap({ watched, liveHits }) {
   if (liveHits === null || watched === null) return true;

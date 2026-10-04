@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { getAppContext } from '@forge/api';
 import { kvs, WhereConditions } from '@forge/kvs';
 import { Queue } from '@forge/events';
-import { FUNCTION_BY_NAME } from './core/catalog.js';
+import { FUNCTION_BY_NAME, SHIPPED_GROUPS } from './core/catalog.js';
 import { RETRY_MAX_MS, TREE_LEVELS } from './core/limits.js';
 import { readinessError } from './core/readiness.js';
 import { appJira, withDeadline } from './infra/jira.js';
@@ -18,6 +18,7 @@ import { createLinkCompute } from './compute/links.js';
 import { createBoardCompute } from './compute/boards.js';
 import { createSprintCompute } from './compute/sprints.js';
 import { createCommentCompute } from './compute/comments.js';
+import { createFieldCompute } from './compute/fields.js';
 import { createIndexing } from './handlers/indexing.js';
 
 const sha1 = (text) => createHash('sha1').update(text).digest('hex');
@@ -53,6 +54,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
       ...createBoardCompute({ jira }),
       ...createSprintCompute({ jira, repo, state, now: () => Date.now() }),
       ...createCommentCompute({ jira, repo, now: () => Date.now() }),
+      ...createFieldCompute({ jira, repo, commentsShipped: () => SHIPPED_GROUPS.includes('comment'), commentGate: async () => readinessError(await state.progress.get(), 'comment') }),
     },
     withDeadline,
     migrate: runMigrations,

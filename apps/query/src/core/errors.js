@@ -30,6 +30,7 @@ export const ERR = {
   clausesTooLong: (max) => `Conditions are longer than ${fmt(max)} characters`,
   clauseNotYet: (name) => `Clause "${name}" is not available yet`,
   extensionDot: (name) => `${name} takes the part after the last dot, such as gz`,
+  needsCommentIndex: (field) => `${field} needs the comment index, which this site does not have`,
 };
 
 /** Value-free texts for the error log: the log never stores argument values (board, sprint, link type names, project keys). */
@@ -44,6 +45,8 @@ export const LOG = {
   indexRefreshNotQueued: () => 'Refresh after the index build was not queued',
   indexFailed: (status) => (status ? `Index write failed: Jira answered ${status}` : 'Index write failed'),
   invalidConditions: () => 'Invalid conditions',
+  invalidExpression: () => 'Invalid expression',
+  commentIndexNotShipped: () => 'Comment index not shipped',
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

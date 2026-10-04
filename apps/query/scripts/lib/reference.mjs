@@ -362,3 +362,138 @@ Object.assign(REFERENCES, {
     return uniq((await allComments(scope)).filter((x) => x.attachments.some((a) => ext === undefined || hasExtension(a.filename, ext))).map((x) => x.id));
   },
 });
+
+const DURATION_REF = { date: { m: 60000, h: 3600000, d: 86400000, w: 604800000 }, number: { m: 60, h: 3600, d: 28800, w: 144000 } };
+const FIELD_ALIAS = { originalestimate: 'timeoriginalestimate', remainingestimate: 'timeestimate', due: 'duedate', resolved: 'resolutiondate' };
+const COMMENT_BOUNDS = new Set(['firstcommented', 'lastcommented']);
+const CMP_REF = { '<': (a, b) => a < b, '<=': (a, b) => a <= b, '>': (a, b) => a > b, '>=': (a, b) => a >= b, '=': (a, b) => a === b, '==': (a, b) => a === b, '!=': (a, b) => a !== b };
+
+/** Expression text → { test(get), fields }, written apart from the app's parser. */
+export function compileExpression(text, mode) {
+  const tokens = [...String(text).matchAll(/(\d+(?:\.\d+)?)([wdhm])?(?![\w])|([A-Za-z_][\w.]*)|"([^"]*)"|(<=|>=|!=|==|&&|\|\||[=<>+\-*/()])|(\S)/g)];
+  const fields = new Set();
+  let i = 0;
+  const op = () => tokens[i]?.[5] ?? (['and', 'or'].includes(String(tokens[i]?.[3]).toLowerCase()) ? String(tokens[i][3]).toLowerCase() : undefined);
+  const fail = () => {
+    throw new Error(`reference: cannot read ${text}`);
+  };
+  const arith = (l, r, o) => (get) => {
+    const a = l(get);
+    const b = r(get);
+    if (a === null || b === null) return null;
+    if (o === '+') return a + b;
+    if (o === '-') return a - b;
+    if (o === '*') return a * b;
+    return b === 0 ? null : a / b;
+  };
+  function atom() {
+    const t = tokens[i];
+    i += 1;
+    if (!t || t[6] !== undefined) return fail();
+    if (t[1] !== undefined) {
+      const v = Number(t[1]) * (t[2] ? DURATION_REF[mode][t[2]] : 1);
+      return () => v;
+    }
+    if (t[5] === '(') {
+      const start = i;
+      let inner = sum();
+      if (op() !== ')') {
+        i = start;
+        inner = or();
+      }
+      i += 1;
+      return inner;
+    }
+    if (t[5] === '-') {
+      const e = atom();
+      return (get) => (e(get) === null ? null : -e(get));
+    }
+    if (t[5] !== undefined) return fail();
+    const name = t[4] ?? FIELD_ALIAS[t[3].toLowerCase()] ?? t[3].toLowerCase();
+    fields.add(name);
+    return (get) => get(name);
+  }
+  function term() {
+    let e = atom();
+    while (op() === '*' || op() === '/') {
+      const o = op();
+      i += 1;
+      e = arith(e, atom(), o);
+    }
+    return e;
+  }
+  function sum() {
+    let e = term();
+    while (op() === '+' || op() === '-') {
+      const o = op();
+      i += 1;
+      e = arith(e, term(), o);
+    }
+    return e;
+  }
+  function cmp() {
+    const l = sum();
+    const o = op();
+    if (!CMP_REF[o]) return fail();
+    i += 1;
+    const r = sum();
+    return (get) => {
+      const a = l(get);
+      const b = r(get);
+      return a !== null && b !== null && CMP_REF[o](a, b);
+    };
+  }
+  function and() {
+    let e = cmp();
+    while (op() === 'and' || op() === '&&') {
+      i += 1;
+      const l = e;
+      const r = cmp();
+      e = (get) => l(get) && r(get);
+    }
+    return e;
+  }
+  function or() {
+    let e = and();
+    while (op() === 'or' || op() === '||') {
+      i += 1;
+      const l = e;
+      const r = and();
+      e = (get) => l(get) || r(get);
+    }
+    return e;
+  }
+  const test = or();
+  if (i < tokens.length) fail();
+  return { test, fields: [...fields] };
+}
+
+/** A REST field value as a number for the reference: numbers, numeric strings, dates (ms), votes and watch counts. */
+export function valueOfField(raw) {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'object') return ['votes', 'watchCount', 'value'].map((k) => raw[k]).find((v) => typeof v === 'number') ?? null;
+  if (/^-?\d+(\.\d+)?$/.test(raw)) return Number(raw);
+  const t = /^\d{4}-\d{2}-\d{2}$/.test(raw) ? Date.parse(`${raw}T00:00:00Z`) : jiraMs(raw);
+  return Number.isFinite(t) ? t : null;
+}
+
+async function fieldExpression([q, expr], mode) {
+  const { test, fields } = compileExpression(expr, mode);
+  const all = await api('GET', '/rest/api/3/field');
+  const idOf = new Map(fields.filter((f) => !COMMENT_BOUNDS.has(f)).map((f) => [f, (all.find((x) => x.id.toLowerCase() === f.toLowerCase()) ?? all.find((x) => x.name.toLowerCase() === f.toLowerCase())).id]));
+  const issues = await bulk(await must(q), [...new Set(idOf.values())]);
+  const bounds = new Map();
+  if (fields.some((f) => COMMENT_BOUNDS.has(f))) {
+    for (const x of await allComments(q)) {
+      const times = x.comments.map((c) => jiraMs(c.created));
+      if (times.length) bounds.set(x.id, { firstcommented: Math.min(...times), lastcommented: Math.max(...times) });
+    }
+  }
+  return uniq(issues.filter((x) => test((name) => (COMMENT_BOUNDS.has(name) ? bounds.get(String(x.id))?.[name] ?? null : valueOfField(x.fields[idOf.get(name)])))).map((x) => x.id));
+}
+
+Object.assign(REFERENCES, {
+  dateCompare: (userArgs) => fieldExpression(userArgs, 'date'),
+  expression: (userArgs) => fieldExpression(userArgs, 'number'),
+});

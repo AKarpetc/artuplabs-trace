@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ids, makeDeps, RECENT } from './makeDeps.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
 import { handOff, writeGroups } from '../../src/handlers/groups.js';
+import { createFieldCompute } from '../../src/compute/fields.js';
 import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
@@ -655,5 +656,44 @@ describe('onRefresh compute job precomputations', () => {
     const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
     await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } });
     expect(deps.written).toEqual([{ id: 'root', value: 'NOT (id in (4))', error: null }]);
+  });
+});
+
+describe('refresh of the fields group', () => {
+  const fieldDeps = (pcs, issues, bounds = new Map()) => {
+    const jira = {
+      fields: async () => [{ id: 'duedate', name: 'Due date' }, { id: 'resolutiondate', name: 'Resolved' }],
+      searchIds: async () => ['1', '2'],
+      bulkIssues: async () => issues(),
+    };
+    const compute = createFieldCompute({ jira, repo: { commentBounds: async () => bounds }, commentsShipped: () => true });
+    return makeDeps({ pcs, compute });
+  };
+  const issue = (id, due) => ({ id, fields: { duedate: due, resolutiondate: '2026-01-07T00:00:00.000+0000' } });
+
+  it('recomputes a dateCompare result when a field of a watched issue changes, and stores the complement for not in', async () => {
+    const pcs = [
+      { id: 'in', functionName: 'dateCompare', arguments: ['q', 'resolutiondate > duedate'], operator: 'in', value: 'id in (1)', used: RECENT },
+      { id: 'out', functionName: 'dateCompare', arguments: ['q', 'resolutiondate > duedate'], operator: 'not in', value: 'NOT (id in (1))', used: RECENT },
+    ];
+    let due2 = '2026-01-10';
+    const deps = fieldDeps(pcs, () => [issue('1', '2026-01-05'), issue('2', due2)]);
+    await deps.cache.write('dateCompare["q","resolutiondate > duedate"]', { values: ['1'], watch: ['1', '2'], field: 'id', rootFilter: null, at: 1, source: 'refresh' });
+    due2 = '2026-01-06';
+    await deps.journal.append({ ids: ['2'], kinds: ['issue-updated'] }, 999500);
+    await refreshOnce(deps);
+    expect(deps.written).toEqual([{ id: 'in', value: 'id in (1,2)' }, { id: 'out', value: 'NOT (id in (1,2))' }]);
+  });
+  it('recomputes an expression reading comment times on a comment change that names no issue, and leaves other expressions alone', async () => {
+    const pcs = [
+      { id: 'c', functionName: 'dateCompare', arguments: ['q', 'lastCommented > resolutiondate'], value: 'id = -1', used: RECENT },
+      { id: 'd', functionName: 'dateCompare', arguments: ['q', 'resolutiondate > duedate'], value: 'id = -1', used: RECENT },
+    ];
+    const deps = fieldDeps(pcs, () => [issue('1', '2026-01-05'), issue('2', '2026-01-10')], new Map([['2', { first: Date.UTC(2026, 0, 8), last: Date.UTC(2026, 0, 9) }]]));
+    await deps.cache.write('dateCompare["q","lastCommented > resolutiondate"]', { values: [], watch: ['1', '2'], field: 'id', rootFilter: null, at: 1, source: 'refresh' });
+    await deps.cache.write('dateCompare["q","resolutiondate > duedate"]', { values: [], watch: ['1', '2'], field: 'id', rootFilter: null, at: 1, source: 'refresh' });
+    await deps.journal.append({ ids: [], kinds: ['comment'] }, 999500);
+    await refreshOnce(deps);
+    expect(deps.written).toEqual([{ id: 'c', value: 'id in (2)' }]);
   });
 });

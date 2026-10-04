@@ -1,7 +1,7 @@
 import { parseArgs } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
-import { familyWants, groupPrecomputations, needsRepair, queryOverlap, summarizeJournal } from '../core/affected.js';
+import { commentTimesWanted, familyWants, groupPrecomputations, needsRepair, queryOverlap, summarizeJournal } from '../core/affected.js';
 import {
   ACTIVE_MS, FAILED_ROWS_KEEP_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
@@ -34,6 +34,7 @@ function jobGroups(jobs, groups) {
 async function isStale(deps, group, summary) {
   if (summary.all || group.items.some(needsRepair)) return true;
   if (group.family !== 'query') return familyWants(group.family, summary.kinds);
+  if (commentTimesWanted(group, summary.kinds)) return true;
   if (!summary.touched.length) return false;
   const parsed = parseArgs(group.functionName, group.userArgs);
   if (parsed.error) return false;

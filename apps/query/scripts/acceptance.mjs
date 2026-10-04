@@ -4,14 +4,16 @@
  * is sent again only after a check that it was not applied.
  *
  *   complete  every case of a table against a reference built by REST traversal (--cases m1|m2|m3, --board, --candidates, --tag)
- *   fresh     seconds until a change is visible and changes lost after 10 minutes (--group query|board|sprint|comment|attachment, --n, --tag)
+ *   fresh     seconds until a change is visible and changes lost after 10 minutes (--group query|board|sprint|comment|attachment|fields, --n, --tag)
  *   seed-tm   a team-managed project JQLT with epics, stories and subtasks
+ *   seed-fields  50 RPT issues with a due date, an original estimate, a worklog and a done status (aq-fields)
  *
  * Usage:
  *   set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
  *   node apps/query/scripts/acceptance.mjs complete [--cases m1|m2|m3] [--board "RPT board"] [--tag t]
- *   node apps/query/scripts/acceptance.mjs fresh [--group query|board|sprint|comment|attachment] [--n 30] [--board "RPT board"] [--tag t]
+ *   node apps/query/scripts/acceptance.mjs fresh [--group query|board|sprint|comment|attachment|fields] [--n 30] [--board "RPT board"] [--tag t]
  *   node apps/query/scripts/acceptance.mjs seed-tm
+ *   node apps/query/scripts/acceptance.mjs seed-fields
  */
 import { readFileSync } from 'node:fs';
 import { api, bulk, ids, settledIds, sleep, stats, UnsafeRetryError, upload, write } from './lib/http.mjs';
@@ -311,12 +313,67 @@ FRESH.attachment = async () => {
   save(tagged('acceptance-fresh-attachment'), { stats, ...result });
 };
 
+M3_PARTS.push(() => [
+  ['dateCompare', ['project in (JQLG, RPT)', 'resolutiondate > duedate'], 'dates over 50 000 issues'],
+  ['expression', ['project in (JQLG, RPT)', 'timespent > originalestimate * 1.2'], 'work time over 50 000 issues'],
+  ['expression', ['project = RPT AND key <= RPT-8500', 'votes >= 0'], '8 500 values: one-level tree (> 1 000, ≤ 9 000)'],
+]);
+
+FRESH.fields = async () => {
+  const day = 86400000;
+  const resolvedMs = (x) => Date.parse(x.fields.resolutiondate.replace(/([+-]\d{2})(\d{2})$/, '$1:$2'));
+  const dueMs = (x) => (x.fields.duedate ? Date.parse(`${x.fields.duedate}T00:00:00Z`) : null);
+  const resolved = await bulk((await ids('project = RPT AND resolution is not EMPTY ORDER BY key')).ids, ['duedate', 'resolutiondate']);
+  const targets = resolved.filter((x) => x.fields.resolutiondate && (dueMs(x) === null || dueMs(x) >= resolvedMs(x))).slice(0, args.n);
+  const C = clause('dateCompare', ['project = RPT', 'resolutiondate > duedate']);
+  const rows = { enter: [], leave: [] };
+  const t0 = Date.now();
+  for (const x of targets) {
+    const dayBefore = new Date(Math.floor(resolvedMs(x) / day) * day - day).toISOString().slice(0, 10);
+    let t = Date.now();
+    await api('PUT', `/rest/api/3/issue/${x.id}`, { fields: { duedate: dayBefore } });
+    rows.enter.push(await waitFor(C, x.id, true, t));
+    t = Date.now();
+    await api('PUT', `/rest/api/3/issue/${x.id}`, { fields: { duedate: x.fields.duedate ?? null } });
+    rows.leave.push(await waitFor(C, x.id, false, t));
+    log(`fields ${x.id}: in ${rows.enter.at(-1)} s out ${rows.leave.at(-1)} s`);
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-fields'), { stats, ...result });
+};
+
+/** Gives SEED_FIELDS issues of RPT a due date around today, an original estimate, a 2 h worklog and a done status, labelled aq-fields; reruns skip the labelled ones. */
+const SEED_FIELDS = 50;
+async function seedFields() {
+  const day = 86400000;
+  const seeded = (await ids('project = RPT AND labels = aq-fields')).ids ?? [];
+  const fresh = ((await ids('project = RPT AND (labels is EMPTY OR labels != aq-fields) ORDER BY key')).ids ?? []).slice(0, Math.max(0, SEED_FIELDS - seeded.length));
+  const today = Math.floor(Date.now() / day) * day;
+  let worklogs = 0;
+  let closed = 0;
+  for (const [i, x] of fresh.entries()) {
+    const duedate = new Date(today + ((i % 20) - 10) * day).toISOString().slice(0, 10);
+    await api('PUT', `/rest/api/3/issue/${x}`, { fields: { duedate, timetracking: { originalEstimate: i % 2 ? '1h' : '4h' } }, update: { labels: [{ add: 'aq-fields' }] } });
+    const now = await api('GET', `/rest/api/3/issue/${x}?fields=timespent,status`);
+    if (!now.fields.timespent) {
+      await api('POST', `/rest/api/3/issue/${x}/worklog`, { timeSpentSeconds: 7200, started: new Date(today - day).toISOString().replace('Z', '+0000') }, { unsafe: true });
+      worklogs += 1;
+    }
+    if (now.fields.status?.statusCategory?.key !== 'done') {
+      await toDone(x);
+      closed += 1;
+    }
+  }
+  log(`seed-fields: ${seeded.length} already seeded, ${fresh.length} new, ${worklogs} worklogs, ${closed} moved to done`);
+}
+
 async function fresh() {
   if (!FRESH[args.group]) throw new Error(`groups: ${Object.keys(FRESH).join(', ')}`);
   await FRESH[args.group]();
 }
 
-const PHASES = { complete, fresh, 'seed-tm': seedTeamManaged };
+const PHASES = { complete, fresh, 'seed-tm': seedTeamManaged, 'seed-fields': seedFields };
 if (!PHASES[args.phase]) {
   log(`phases: ${Object.keys(PHASES).join(', ')}`);
   process.exit(2);

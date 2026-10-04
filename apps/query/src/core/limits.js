@@ -88,3 +88,5 @@ export const DATE_MAX_ABS_MS = 8.64e15;
 export const COMMENT_PAGE = 5000;
 /** Characters of a file extension kept in the index and read from a condition. */
 export const EXT_MAX_LENGTH = 32;
+/** Subquery issues whose fields one dateCompare or expression pass holds in memory at a time. */
+export const FIELD_EVAL_CHUNK = 5000;
