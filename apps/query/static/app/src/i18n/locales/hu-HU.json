@@ -72,7 +72,7 @@
   "status.function": "Függvény",
   "status.message": "Üzenet",
   "admin.excluded.title": "Az indexből kizárt projektek",
-  "admin.excluded.help": "E projektek feladatai in esetén egyetlen ArtUp Query-függvénynek sem felelnek meg, ezért not in esetén úgy jelennek meg, mint bármely más, az eredményen kívüli feladat. Sprintelőzményeik, megjegyzéseik és mellékleteik törlődnek az indexből.",
+  "admin.excluded.help": "In esetén e projektek feladatai soha nem felelnek meg azoknak a függvényeknek, amelyek az ArtUp Query indexét vagy az alkalmazás saját kereséseit olvassák; not in esetén úgy jelennek meg, mint bármely más, az eredményen kívüli feladat. Sprintelőzményeik, megjegyzéseik és mellékleteik törlődnek az indexből. Néhány függvényre maga a Jira válaszol, ezeket nem szűrjük: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\"), és a legtöbb esetben hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Válasszon projekteket",
   "admin.excluded.save": "Mentés",
   "admin.excluded.saved": "Mentve",

@@ -5,7 +5,7 @@ import { createJournal } from '../../src/infra/journal.js';
 import { createAdminActions } from '../../src/handlers/admin.js';
 import { onBackfill } from '../../src/handlers/backfill.js';
 import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
-import { EXCLUDED_MAX } from '../../src/core/limits.js';
+import { EXCLUDED_MAX, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 function makeDeps({ admin = true } = {}) {
   const kvs = createFakeKvs();
@@ -99,6 +99,15 @@ describe('admin actions', () => {
     await createAdminActions(deps).setExcluded({ projectKeys: ['B'] }, DEV);
     await onBackfill(deps, { body: { kind: 'purge' } });
     expect(deps.repo.deleteProject.mock.calls).toEqual([['2', ['comment_meta', 'attachment_meta']], ['2', ['sprint_event', 'status_event']]]);
+  });
+  it('purges within the worker budget and queues itself for the rest', async () => {
+    const deps = makeDeps();
+    let now = 0;
+    deps.now = () => now;
+    deps.repo.deleteProject = vi.fn(async () => { now += WORKER_BUDGET_MS; });
+    await deps.state.setExcluded(['A', 'B']);
+    expect(await onBackfill(deps, { body: { kind: 'purge' } })).toEqual({ purged: 1, continued: true });
+    expect(deps.backfillQueue.push).toHaveBeenCalledWith({ kind: 'purge' });
   });
   it('purges nothing of a project that returned to the index before the job ran', async () => {
     const deps = makeDeps();

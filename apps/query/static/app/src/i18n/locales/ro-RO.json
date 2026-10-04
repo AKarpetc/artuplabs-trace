@@ -72,7 +72,7 @@
   "status.function": "Funcție",
   "status.message": "Mesaj",
   "admin.excluded.title": "Proiecte excluse din index",
-  "admin.excluded.help": "Tichetele acestor proiecte nu corespund niciunei funcții ArtUp Query cu in, așa că, cu not in, apar ca orice alt tichet din afara rezultatului. Istoricul sprinturilor, comentariile și atașamentele lor sunt eliminate din index.",
+  "admin.excluded.help": "Cu in, tichetele acestor proiecte nu corespund niciodată funcțiilor care citesc indexul ArtUp Query sau căutările proprii ale aplicației; cu not in apar ca orice alt tichet din afara rezultatului. Istoricul sprinturilor, comentariile și atașamentele lor sunt eliminate din index. Câteva funcții primesc răspuns direct de la Jira și nu sunt filtrate: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") și, în majoritatea cazurilor, hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Alegeți proiectele",
   "admin.excluded.save": "Salvați",
   "admin.excluded.saved": "Salvat",

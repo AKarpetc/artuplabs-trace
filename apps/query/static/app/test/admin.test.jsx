@@ -75,7 +75,7 @@ describe('AdminPanel', () => {
   });
   it('explains that excluded projects leave every function and what a reindex repairs', async () => {
     view();
-    expect(await screen.findByText(/never match any ArtUp Query function under in/)).toBeTruthy();
+    expect(await screen.findByText(/answered by Jira itself and are not filtered: previousSprint, nextSprint/)).toBeTruthy();
     expect(screen.getByText(/moved to another project/)).toBeTruthy();
   });
   it('keeps the reset when the dialog is cancelled', async () => {

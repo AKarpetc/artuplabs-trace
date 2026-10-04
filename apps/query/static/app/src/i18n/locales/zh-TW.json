@@ -72,7 +72,7 @@
   "status.function": "函式",
   "status.message": "訊息",
   "admin.excluded.title": "從索引中排除的專案",
-  "admin.excluded.help": "使用 in 時，這些專案的議題不會符合任何 ArtUp Query 函式；因此使用 not in 時，它們會像結果之外的其他議題一樣出現。其衝刺歷程、留言和附件會從索引中刪除。",
+  "admin.excluded.help": "使用 in 時，這些專案的議題永遠不會符合讀取 ArtUp Query 索引或應用程式自身搜尋的函式；使用 not in 時，它們會像結果之外的其他議題一樣出現。其衝刺歷程、留言和附件會從索引中刪除。少數函式由 Jira 本身回應，不會被篩選：previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\")，以及在大多數情況下的 hasLinks, hasLinkType。",
   "admin.excluded.placeholder": "選擇專案",
   "admin.excluded.save": "儲存",
   "admin.excluded.saved": "已儲存",

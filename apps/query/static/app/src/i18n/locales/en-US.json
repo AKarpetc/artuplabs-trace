@@ -72,7 +72,7 @@
   "status.function": "Function",
   "status.message": "Message",
   "admin.excluded.title": "Projects excluded from the index",
-  "admin.excluded.help": "Issues of these projects never match any ArtUp Query function under in, so under not in they appear like any other issue outside the result. Their sprint history, comments and attachments are removed from the index.",
+  "admin.excluded.help": "Under in, issues of these projects never match functions that read the ArtUp Query index or run the app's own searches; under not in they appear like any other issue outside the result. Their sprint history, comments and attachments are removed from the index. A few functions are answered by Jira itself and are not filtered: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") and, in most cases, hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Choose projects",
   "admin.excluded.save": "Save",
   "admin.excluded.saved": "Saved",

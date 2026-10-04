@@ -64,7 +64,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
       ...createCommentCompute({ jira, repo, now: () => Date.now() }),
       ...createFieldCompute({ jira, repo, commentsShipped: () => SHIPPED_GROUPS.includes('comment'), commentGate: async () => readinessError(await state.progress.get(), 'comment') }),
     },
-    exclude: createExclusion({ jira, state }),
+    exclude: createExclusion({ jira, state, now: () => Date.now() }),
     withDeadline,
     migrate: runMigrations,
     hash: sha1,

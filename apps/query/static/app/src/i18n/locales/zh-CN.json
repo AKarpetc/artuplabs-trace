@@ -72,7 +72,7 @@
   "status.function": "函数",
   "status.message": "消息",
   "admin.excluded.title": "从索引中排除的项目",
-  "admin.excluded.help": "使用 in 时，这些项目的事务不会匹配任何 ArtUp Query 函数；因此使用 not in 时，它们会像结果之外的其他事务一样出现。其冲刺历史、评论和附件会从索引中删除。",
+  "admin.excluded.help": "使用 in 时，这些项目的事务永远不会匹配读取 ArtUp Query 索引或应用自身搜索的函数；使用 not in 时，它们会像结果之外的其他事务一样出现。其冲刺历史、评论和附件会从索引中删除。少数函数由 Jira 自身应答，不会被过滤：previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\")，以及在大多数情况下的 hasLinks, hasLinkType。",
   "admin.excluded.placeholder": "选择项目",
   "admin.excluded.save": "保存",
   "admin.excluded.saved": "已保存",

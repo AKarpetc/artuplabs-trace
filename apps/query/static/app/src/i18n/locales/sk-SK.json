@@ -72,7 +72,7 @@
   "status.function": "Funkcia",
   "status.message": "Správa",
   "admin.excluded.title": "Projekty vylúčené z indexu",
-  "admin.excluded.help": "Úlohy týchto projektov s in nezodpovedajú žiadnej funkcii ArtUp Query, takže s not in sa zobrazia ako každá iná úloha mimo výsledku. Ich história šprintov, komentáre a prílohy sú z indexu odstránené.",
+  "admin.excluded.help": "S in úlohy týchto projektov nikdy nezodpovedajú funkciám, ktoré čítajú index ArtUp Query alebo vlastné vyhľadávania aplikácie; s not in sa zobrazia ako každá iná úloha mimo výsledku. Ich história šprintov, komentáre a prílohy sú z indexu odstránené. Na niekoľko funkcií odpovedá priamo Jira a nie sú filtrované: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") a vo väčšine prípadov hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Vyberte projekty",
   "admin.excluded.save": "Uložiť",
   "admin.excluded.saved": "Uložené",

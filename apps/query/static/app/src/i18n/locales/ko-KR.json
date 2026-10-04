@@ -72,7 +72,7 @@
   "status.function": "함수",
   "status.message": "메시지",
   "admin.excluded.title": "인덱스에서 제외된 프로젝트",
-  "admin.excluded.help": "이 프로젝트의 이슈는 in에서 어떤 ArtUp Query 함수와도 일치하지 않으므로, not in에서는 결과 밖의 다른 이슈처럼 표시됩니다. 스프린트 기록, 댓글, 첨부 파일은 인덱스에서 삭제됩니다.",
+  "admin.excluded.help": "in에서는 이 프로젝트의 이슈가 ArtUp Query 인덱스나 앱 자체 검색을 읽는 함수와 일치하지 않으며, not in에서는 결과 밖의 다른 이슈처럼 표시됩니다. 스프린트 기록, 댓글, 첨부 파일은 인덱스에서 삭제됩니다. 일부 함수는 Jira가 직접 응답하므로 필터링되지 않습니다: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\"), 그리고 대부분의 경우 hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "프로젝트 선택",
   "admin.excluded.save": "저장",
   "admin.excluded.saved": "저장됨",

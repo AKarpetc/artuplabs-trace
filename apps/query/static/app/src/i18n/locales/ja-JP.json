@@ -72,7 +72,7 @@
   "status.function": "関数",
   "status.message": "メッセージ",
   "admin.excluded.title": "インデックスから除外するプロジェクト",
-  "admin.excluded.help": "これらのプロジェクトの課題は、in ではどの ArtUp Query 関数にも一致しません。そのため not in では、結果に含まれない他の課題と同様に表示されます。スプリント履歴、コメント、添付ファイルはインデックスから削除されます。",
+  "admin.excluded.help": "in では、これらのプロジェクトの課題は ArtUp Query のインデックスやアプリ独自の検索を読む関数に一致しません。not in では、結果に含まれない他の課題と同様に表示されます。スプリント履歴、コメント、添付ファイルはインデックスから削除されます。一部の関数は Jira 自身が応答するため、フィルターされません: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\")、およびほとんどの場合 hasLinks, hasLinkType。",
   "admin.excluded.placeholder": "プロジェクトを選択",
   "admin.excluded.save": "保存",
   "admin.excluded.saved": "保存しました",

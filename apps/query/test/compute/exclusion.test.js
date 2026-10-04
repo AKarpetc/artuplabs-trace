@@ -2,14 +2,19 @@ import { describe, expect, it, vi } from 'vitest';
 import { createFakeKvs } from '../fakeKvs.js';
 import { createState } from '../../src/infra/state.js';
 import { createExclusion } from '../../src/compute/exclusion.js';
-import { EXCLUDED_IDS_MAX, VALUE_LIMIT } from '../../src/core/limits.js';
+import { EXCLUDED_IDS_MAX, EXCLUSION_PROJECTS_TTL_MS, VALUE_LIMIT } from '../../src/core/limits.js';
 
 const ids = (n, from = 1) => Array.from({ length: n }, (_, i) => String(from + i));
 
-function make({ excluded = ['OPS'], searches = {} } = {}) {
+function make({ excluded = ['OPS'], searches = {}, pages = {} } = {}) {
   const state = createState({ kvs: createFakeKvs() });
   const searched = [];
+  let now = 1000;
   const jira = {
+    searchPage: async (jql) => {
+      searched.push(`page ${jql}`);
+      return pages[jql] ?? { ids: [], nextPageToken: null };
+    },
     projects: vi.fn(async () => [{ id: '1', key: 'OPS' }, { id: '2', key: 'DEV' }, { id: '3', key: 'HR' }]),
     searchIds: async (jql) => {
       searched.push(jql);
@@ -17,7 +22,7 @@ function make({ excluded = ['OPS'], searches = {} } = {}) {
       return answer ?? [];
     },
   };
-  return { exclude: createExclusion({ jira, state }), state, jira, searched, excluded };
+  return { exclude: createExclusion({ jira, state, now: () => now }), state, jira, searched, excluded, advance: (ms) => { now += ms; } };
 }
 const withList = async (m, keys) => {
   await m.state.setExcluded(keys);
@@ -48,31 +53,46 @@ describe('exclusion', () => {
     expect(await n.exclude(result)).toBe(result);
     expect(n.searched).toEqual([]);
   });
-  it('keeps a parent result and leaves out the excluded children by id in its root filter', async () => {
-    const m = await withList(make({ searches: { '(issuetype in subTaskIssueTypes()) AND parent in (7,8) AND project in ("OPS")': ['70'] } }), ['OPS']);
+  it('keeps a parent result and leaves out the excluded children by id in its root filter, reading one page per chunk', async () => {
+    const m = await withList(make({ pages: { '(issuetype in subTaskIssueTypes()) AND parent in (7,8) AND project in ("OPS")': { ids: ['70'], nextPageToken: null } } }), ['OPS']);
     expect(await m.exclude({ ids: ['7', '8'], field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', watch: ['1'] })).toEqual({
       ids: ['7', '8'], field: 'parent', rootFilter: '(issuetype in subTaskIssueTypes()) AND id not in (70)', watch: ['1'],
     });
+    expect(m.searched).toEqual(['page (issuetype in subTaskIssueTypes()) AND parent in (7,8) AND project in ("OPS")']);
   });
   it('adds the filter to a parent result without one, and leaves a parent result with no excluded child as it is', async () => {
-    const m = await withList(make({ searches: { 'parent in (7) AND project in ("OPS")': ['71', '70'] } }), ['OPS']);
+    const m = await withList(make({ pages: { 'parent in (7) AND project in ("OPS")': { ids: ['71', '70'], nextPageToken: null } } }), ['OPS']);
     expect((await m.exclude({ ids: ['7'], field: 'parent', watch: null })).rootFilter).toBe('id not in (70,71)');
     const result = { ids: ['8'], field: 'parent', watch: null };
     expect(await m.exclude(result)).toBe(result);
   });
-  it('turns a parent result into the matching ids when too many children are excluded', async () => {
-    const many = ids(EXCLUDED_IDS_MAX + 1, 5000);
-    const m = await withList(make({ searches: { 'parent in (7) AND project in ("HR", "OPS")': many, 'parent in (7) AND project not in ("HR", "OPS")': ['12', '11'] } }), ['OPS', 'HR']);
+  it('turns a parent result into the matching ids when more children are excluded than one clause may list, without paging through them', async () => {
+    const pages = { 'parent in (7) AND project in ("HR", "OPS")': { ids: ids(10, 5000), nextPageToken: 'more' } };
+    const m = await withList(make({ pages, searches: { 'parent in (7) AND project not in ("HR", "OPS")': ['12', '11'] } }), ['OPS', 'HR']);
     expect(await m.exclude({ ids: ['7'], field: 'parent', watch: ['3'] })).toEqual({ ids: ['11', '12'], field: 'id', watch: ['3'] });
+    const many = { 'parent in (7) AND project in ("OPS")': { ids: ids(EXCLUDED_IDS_MAX + 1, 5000), nextPageToken: null } };
+    const n = await withList(make({ pages: many, searches: { 'parent in (7) AND project not in ("OPS")': ['4'] } }), ['OPS']);
+    expect((await n.exclude({ ids: ['7'], field: 'parent', watch: null })).ids).toEqual(['4']);
   });
-  it('leaves out the excluded issues of a native answer by id, or turns it into ids when there are too many', async () => {
-    const m = await withList(make({ searches: { '(sprint = 5) AND project in ("OPS")': ['9', '4'] } }), ['OPS']);
-    expect(await m.exclude({ native: 'sprint = 5' })).toEqual({ native: '(sprint = 5) AND id not in (4,9)' });
-    const result = { native: 'id = -1' };
-    expect(await m.exclude(result)).toBe(result);
-    const many = ids(EXCLUDED_IDS_MAX + 1, 5000);
-    const n = await withList(make({ searches: { '(attachments is not EMPTY) AND project in ("OPS")': many, '(attachments is not EMPTY) AND project not in ("OPS")': ['3', '2'] } }), ['OPS']);
-    expect(await n.exclude({ native: 'attachments is not EMPTY' })).toEqual({ ids: ['2', '3'], field: 'id', watch: null });
+  it('returns a native answer unfiltered and runs no search for it', async () => {
+    const m = await withList(make(), ['OPS']);
+    for (const native of ['sprint = 5', 'attachments is not EMPTY', 'NOT (issue in hasComments("+2"))']) {
+      const result = { native };
+      expect(await m.exclude(result)).toBe(result);
+    }
+    expect([m.searched, m.jira.projects.mock.calls.length]).toEqual([[], 0]);
+  });
+  it('lists the projects once for many computations and again after a minute or a new list', async () => {
+    const m = await withList(make(), ['OPS']);
+    await m.exclude({ ids: ['1'], field: 'id', watch: null });
+    await m.exclude({ ids: ['2'], field: 'id', watch: null });
+    expect(m.jira.projects).toHaveBeenCalledTimes(1);
+    m.advance(EXCLUSION_PROJECTS_TTL_MS);
+    await m.exclude({ ids: ['3'], field: 'id', watch: null });
+    expect(m.jira.projects).toHaveBeenCalledTimes(2);
+    await m.state.setExcluded(['DEV']);
+    await m.exclude({ ids: ['4'], field: 'id', watch: null });
+    expect(m.jira.projects).toHaveBeenCalledTimes(3);
   });
   it('passes an error through untouched', async () => {
     const m = await withList(make(), ['OPS']);

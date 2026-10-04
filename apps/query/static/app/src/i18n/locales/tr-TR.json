@@ -72,7 +72,7 @@
   "status.function": "İşlev",
   "status.message": "İleti",
   "admin.excluded.title": "Dizinden hariç tutulan projeler",
-  "admin.excluded.help": "Bu projelerin iş kayıtları in ile hiçbir ArtUp Query fonksiyonuna uymaz; bu yüzden not in ile sonucun dışındaki diğer iş kayıtları gibi görünürler. Sprint geçmişleri, yorumları ve ekleri dizinden kaldırılır.",
+  "admin.excluded.help": "in ile bu projelerin iş kayıtları, ArtUp Query dizinini veya uygulamanın kendi aramalarını okuyan fonksiyonlara hiçbir zaman uymaz; not in ile sonucun dışındaki diğer iş kayıtları gibi görünürler. Sprint geçmişleri, yorumları ve ekleri dizinden kaldırılır. Birkaç fonksiyonu doğrudan Jira yanıtlar ve bunlar filtrelenmez: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") ve çoğu durumda hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Projeleri seçin",
   "admin.excluded.save": "Kaydet",
   "admin.excluded.saved": "Kaydedildi",

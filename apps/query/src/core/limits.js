@@ -96,3 +96,5 @@ export const EXCLUDED_MAX = 200;
 export const EXCLUDED_IDS_MAX = 1000;
 /** Characters of a Jira project key. */
 export const PROJECT_KEY_MAX_LENGTH = 100;
+/** How long the exclusion keeps the project list it checked the excluded keys against. */
+export const EXCLUSION_PROJECTS_TTL_MS = 60 * 1000;

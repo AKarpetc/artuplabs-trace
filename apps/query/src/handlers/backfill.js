@@ -56,12 +56,17 @@ export async function fillWaiting(deps, part) {
   return p.finishedAt ? startWaiting(deps, part) : null;
 }
 
-/** Deletes the index rows of every excluded project in every shipped part; idempotent, and a project that returned meanwhile is left alone. */
+/** Deletes the index rows of every excluded project in every shipped part within the worker budget, then queues itself for the rest; idempotent, and a project that returned meanwhile is left alone. */
 export async function purgeExcluded(deps) {
   const excluded = new Set(await deps.state.excluded());
   if (!excluded.size) return { purged: 0 };
+  const deadline = deps.now() + WORKER_BUDGET_MS;
   let purged = 0;
   for (const project of (await deps.jira.projects()).filter((p) => excluded.has(p.key))) {
+    if (deps.now() >= deadline) {
+      await deps.backfillQueue.push({ kind: 'purge' });
+      return { purged, continued: true };
+    }
     for (const part of deps.shippedParts()) {
       if (!(await excludedNow(deps, project))) break;
       await deps.repo.deleteProject(project.id, deps.indexParts[part].tables);

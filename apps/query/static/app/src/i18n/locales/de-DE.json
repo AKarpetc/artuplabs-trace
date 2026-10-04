@@ -72,7 +72,7 @@
   "status.function": "Funktion",
   "status.message": "Meldung",
   "admin.excluded.title": "Vom Index ausgeschlossene Projekte",
-  "admin.excluded.help": "Vorgänge dieser Projekte passen bei in zu keiner ArtUp Query-Funktion; bei not in erscheinen sie daher wie jeder andere Vorgang außerhalb des Ergebnisses. Ihr Sprintverlauf, ihre Kommentare und Anhänge werden aus dem Index entfernt.",
+  "admin.excluded.help": "Bei in passen Vorgänge dieser Projekte nie zu Funktionen, die den ArtUp Query-Index oder eigene Suchen der App lesen; bei not in erscheinen sie wie jeder andere Vorgang außerhalb des Ergebnisses. Ihr Sprintverlauf, ihre Kommentare und Anhänge werden aus dem Index entfernt. Einige Funktionen beantwortet Jira selbst, sie werden nicht gefiltert: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") und in den meisten Fällen hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Projekte auswählen",
   "admin.excluded.save": "Speichern",
   "admin.excluded.saved": "Gespeichert",

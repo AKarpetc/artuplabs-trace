@@ -72,7 +72,7 @@
   "status.function": "Funktion",
   "status.message": "Meddelande",
   "admin.excluded.title": "Projekt som är undantagna från indexet",
-  "admin.excluded.help": "Ärenden i dessa projekt matchar ingen ArtUp Query-funktion med in, så med not in visas de som alla andra ärenden utanför resultatet. Deras sprinthistorik, kommentarer och bilagor tas bort från indexet.",
+  "admin.excluded.help": "Med in matchar ärenden i dessa projekt aldrig funktioner som läser ArtUp Query-indexet eller appens egna sökningar; med not in visas de som alla andra ärenden utanför resultatet. Deras sprinthistorik, kommentarer och bilagor tas bort från indexet. Några funktioner besvaras av Jira själv och filtreras inte: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") och i de flesta fall hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Välj projekt",
   "admin.excluded.save": "Spara",
   "admin.excluded.saved": "Sparat",

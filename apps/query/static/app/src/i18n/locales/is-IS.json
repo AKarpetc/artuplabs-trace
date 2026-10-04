@@ -72,7 +72,7 @@
   "status.function": "Fall",
   "status.message": "Skilaboð",
   "admin.excluded.title": "Verkefni undanskilin úr atriðaskránni",
-  "admin.excluded.help": "Verk í þessum verkefnum passa ekki við neitt ArtUp Query-fall með in, svo með not in birtast þau eins og hvert annað verk utan niðurstöðunnar. Sprettasaga þeirra, athugasemdir og viðhengi eru fjarlægð úr atriðaskránni.",
+  "admin.excluded.help": "Með in passa verk í þessum verkefnum aldrei við föll sem lesa ArtUp Query-atriðaskrána eða eigin leitir forritsins; með not in birtast þau eins og hvert annað verk utan niðurstöðunnar. Sprettasaga þeirra, athugasemdir og viðhengi eru fjarlægð úr atriðaskránni. Jira svarar sjálft nokkrum föllum og þau eru ekki síuð: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") og í flestum tilvikum hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Veldu verkefni",
   "admin.excluded.save": "Vista",
   "admin.excluded.saved": "Vistað",

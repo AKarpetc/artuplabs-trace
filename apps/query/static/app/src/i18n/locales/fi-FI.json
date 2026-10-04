@@ -72,7 +72,7 @@
   "status.function": "Funktio",
   "status.message": "Viesti",
   "admin.excluded.title": "Indeksistä pois jätetyt projektit",
-  "admin.excluded.help": "Näiden projektien tehtävät eivät vastaa yhtäkään ArtUp Query -funktiota in-operaattorilla, joten not in -operaattorilla ne näkyvät kuten mikä tahansa muu tuloksen ulkopuolinen tehtävä. Niiden sprinttihistoria, kommentit ja liitteet poistetaan indeksistä.",
+  "admin.excluded.help": "In-operaattorilla näiden projektien tehtävät eivät koskaan vastaa funktioita, jotka lukevat ArtUp Query -indeksiä tai sovelluksen omia hakuja; not in -operaattorilla ne näkyvät kuten mikä tahansa muu tuloksen ulkopuolinen tehtävä. Niiden sprinttihistoria, kommentit ja liitteet poistetaan indeksistä. Muutamaan funktioon vastaa Jira itse, eikä niitä suodateta: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") ja useimmiten hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Valitse projektit",
   "admin.excluded.save": "Tallenna",
   "admin.excluded.saved": "Tallennettu",

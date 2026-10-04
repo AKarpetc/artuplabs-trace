@@ -72,7 +72,7 @@
   "status.function": "Funktsioon",
   "status.message": "Teade",
   "admin.excluded.title": "Indeksist välja jäetud projektid",
-  "admin.excluded.help": "Nende projektide probleemid ei vasta in korral ühelegi ArtUp Query funktsioonile, seega not in korral ilmuvad nad nagu iga teine tulemusest väljapoole jääv probleem. Nende sprindiajalugu, kommentaarid ja manused eemaldatakse indeksist.",
+  "admin.excluded.help": "In korral ei vasta nende projektide probleemid kunagi funktsioonidele, mis loevad ArtUp Query indeksit või rakenduse enda otsinguid; not in korral ilmuvad nad nagu iga teine tulemusest väljapoole jääv probleem. Nende sprindiajalugu, kommentaarid ja manused eemaldatakse indeksist. Mõnele funktsioonile vastab Jira ise ja neid ei filtreerita: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") ning enamasti hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Vali projektid",
   "admin.excluded.save": "Salvesta",
   "admin.excluded.saved": "Salvestatud",
