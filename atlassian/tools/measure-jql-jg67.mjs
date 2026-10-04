@@ -13,7 +13,9 @@
  *   sprint-latency --n 30            move a jg-sprint issue without a sprint into the active JQLG S31, wait until the
  *                                    function sees it
  *   comment-latency --n 30           comment "probe N" on a jg-mid issue, wait in g7Commented("by <me> after <today>")
- *   comment-complete                 g7Commented("by <me> after 2020-01-01") against a bulkfetch reference
+ *   comment-complete                 g7Commented("by <me> after 2020-01-01 ids <lo>..<hi>") against a bulkfetch reference,
+ *                                    in issue-id windows of at most 800 reference issues (Jira's limit is 1000 values per
+ *                                    function result); per-window counts, sums, the union and the index comment count
  *   attachment-latency --n 30        attach probe-<N>.jg7 to a jg-mid issue without one, wait in g7HasAttachments("jg7")
  *   attachment-complete              g7HasAttachments(xlsx|pdf|png|txt|docx) against a bulkfetch reference
  *
@@ -339,25 +341,78 @@ function restrictedNote() {
   return { role: kind(c.roleUsable, c.restrictedSeeded?.role), group: kind(c.groupUsable, c.restrictedSeeded?.group) };
 }
 
+/** Jira takes at most 1000 values per function result: windows hold at most this many reference issues. */
+const SLICE = 800;
+
+/**
+ * Contiguous issue-id windows over every scoped issue (first from 0, last to MAX_SAFE_INTEGER, so an extra anywhere
+ * falls into some window), each closed once it holds SLICE reference issues.
+ */
+function idWindows(allIds, refSet) {
+  const sorted = [...allIds].map(Number).sort((a, b) => a - b);
+  const out = [];
+  let lo = 0;
+  let n = 0;
+  for (let i = 0; i < sorted.length; i += 1) {
+    if (refSet.has(String(sorted[i]))) n += 1;
+    if (n === SLICE && i + 1 < sorted.length) {
+      out.push([lo, sorted[i]]);
+      lo = sorted[i] + 1;
+      n = 0;
+    }
+  }
+  out.push([lo, Number.MAX_SAFE_INTEGER]);
+  return out;
+}
+
 async function commentComplete() {
   const me = (await api('GET', '/rest/api/3/myself')).accountId;
   const after = '2020-01-01';
   const afterMs = Date.parse(after);
-  const clause = `issue in g7Commented("by ${me} after ${after}")`;
-  await recompute();
-  const own = await evaluate('g7Commented', [`by ${me} after ${after}`]);
-  if (own?.error) log(`function error: ${own.error}`);
-  const t0 = Date.now();
-  const got = await idsOf(clause);
-  const seconds = round(Date.now() - t0);
   const all = await idsOf(ALL);
   log(`reference over ${all.length} issues`);
   const ref = (await commentsOf(await bulk(all, ['comment']))).filter((x) => x.comments.some((c) => c.author?.accountId === me && ms(c.created) > afterMs)).map((x) => x.id);
-  const result = { ...compare(got, ref), functionError: own?.error ?? null };
-  if (own?.error) result.complete = false;
+  const refSet = new Set(ref.map(String));
+  const windows = idWindows(all, refSet);
+  log(`reference ${ref.length} issues → ${windows.length} id windows of at most ${SLICE}`);
+  await recompute();
+  const slices = [];
+  const gotAll = [];
+  let seconds = 0;
+  for (const [lo, hi] of windows) {
+    const fnArg = `by ${me} after ${after} ids ${lo}..${hi}`;
+    const clause = `issue in g7Commented("${fnArg}")`;
+    const own = await evaluate('g7Commented', [fnArg]);
+    if (own?.error) log(`function error ids ${lo}..${hi}: ${own.error}`);
+    const t0 = Date.now();
+    const got = await idsOf(clause);
+    const s = round(Date.now() - t0);
+    seconds += s;
+    gotAll.push(...got);
+    const sliceRef = ref.filter((id) => Number(id) >= lo && Number(id) <= hi);
+    const c = compare(got, sliceRef);
+    slices.push({ lo, hi, seconds: s, ...c, complete: c.complete && !own?.error, functionError: own?.error ?? null });
+    log(`ids ${lo}..${hi}: ${JSON.stringify(slices.at(-1))}`);
+  }
+  const union = compare(gotAll, ref);
+  const result = {
+    count: slices.reduce((a, x) => a + x.count, 0),
+    reference: ref.length,
+    missing: slices.reduce((a, x) => a + x.missing, 0),
+    extra: slices.reduce((a, x) => a + x.extra, 0),
+    union,
+    complete: slices.every((x) => x.complete) && union.complete,
+    functionErrors: slices.filter((x) => x.functionError).length,
+  };
+  let index = null;
+  try {
+    index = (await control({ action: 'count' })).count;
+  } catch (error) {
+    log(`index count unavailable: ${error.message}`);
+  }
   const restricted = restrictedNote();
-  log(`g7Commented: ${JSON.stringify(result)}; restricted: role ${restricted.role?.status}, group ${restricted.group?.status}`);
-  return { name: 'jg67-comment-complete', data: { clause, author: me, after, issues: all.length, seconds, result, restricted } };
+  log(`g7Commented: ${JSON.stringify(result)}; index ${JSON.stringify(index)}; restricted: role ${restricted.role?.status}, group ${restricted.group?.status}`);
+  return { name: 'jg67-comment-complete', data: { clause: `issue in g7Commented("by ${me} after ${after} ids <lo>..<hi>")`, author: me, after, issues: all.length, sliceLimit: SLICE, seconds: round(seconds * 1000), result, slices, index, restricted } };
 }
 
 // ---------- attachments ----------

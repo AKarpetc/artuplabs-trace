@@ -3,10 +3,12 @@
  * comment and attachment metadata, behind three jira:jqlFunction modules. Measurement only, not the product.
  *
  * g6AddedAfterSprintStart(board, sprint) → issues added to the sprint after its start (startDate) and not after its close
- * g7Commented("by <accountId> after <YYYY-MM-DD>") → issues with a comment of that author created after that day (UTC)
+ * g7Commented("by <accountId> after <YYYY-MM-DD> [ids <lo>..<hi>]") → issues with a comment of that author created after
+ *                                        that day (UTC), optionally only issue ids lo..hi (inclusive)
  * g7HasAttachments(ext)                  → issues with an attachment whose name ends with .<ext>
  *
- * Webtrigger g67-control: ?action=start&part=sprint|comments (backfill through the queue), ?action=progress, ?action=reset.
+ * Webtrigger g67-control: ?action=start&part=sprint|comments (backfill through the queue), ?action=progress, ?action=reset,
+ * ?action=recompute, ?action=evaluate&fn=&arg=, ?action=count (rows in comment_meta and attachment_meta).
  * Events append to the index and recompute every stored precomputation of the app.
  * Only asApp REST to the Jira of the installation; no egress.
  */
@@ -214,7 +216,10 @@ async function addedValue([board, sprint]) {
 async function commentedValue([clauses]) {
   const by = /\bby\s+(\S+)/.exec(clauses)?.[1] ?? '';
   const after = Date.parse(/\bafter\s+(\d{4}-\d{2}-\d{2})/.exec(clauses)?.[1] ?? '1970-01-01');
-  const rows = (await sql.prepare('SELECT DISTINCT issue_id FROM comment_meta WHERE author = ? AND created_at > ?').bindParams(by, after).execute()).rows;
+  // Optional issue-id window `ids <lo>..<hi>` (inclusive): lets a measurement check completeness in slices under 1000 values.
+  const win = /\bids\s+(\d+)\.\.(\d+)/.exec(clauses);
+  const [lo, hi] = win ? [Number(win[1]), Number(win[2])] : [0, Number.MAX_SAFE_INTEGER];
+  const rows = (await sql.prepare('SELECT DISTINCT issue_id FROM comment_meta WHERE author = ? AND created_at > ? AND issue_id >= ? AND issue_id <= ?').bindParams(by, after, lo, hi).execute()).rows;
   return rows.length > 1000 ? { error: `${rows.length} values` } : { jql: list(rows) };
 }
 
@@ -302,6 +307,10 @@ export async function onControl(request) {
     return reply({ reset: true, recompute: await recomputeAll() });
   }
   if (action === 'recompute') return reply({ recompute: await recomputeAll() });
+  if (action === 'count') {
+    const one = async (t) => Number((await sql.prepare(`SELECT COUNT(*) AS n FROM ${t}`).execute()).rows[0].n);
+    return reply({ count: { comments: await one('comment_meta'), attachments: await one('attachment_meta') } });
+  }
   if (action === 'evaluate') {
     // The function's own answer (REST search answers a function error with an empty 200): lets the tool fail fast.
     const fn = request.queryParameters?.fn?.[0];
