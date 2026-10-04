@@ -118,6 +118,21 @@ describe('settledIds', () => {
   it('passes an error through at once', async () => {
     expect(await settledIds('j', { now: () => 0, search: async () => ({ error: '400 x' }), sleep: async () => {} })).toEqual({ error: '400 x', seconds: 0, attempts: 1 });
   });
+  it('accepts a slow answer that has issues, since a Computing answer has none', async () => {
+    const { now, search } = clockOf([15]);
+    expect(await settledIds('j', { now, search, sleep: async () => {} })).toEqual({ ids: ['1'], seconds: 15, attempts: 1 });
+  });
+  it('accepts a slow empty answer when the editor search shows no Computing error for it', async () => {
+    const computing = vi.fn(async () => false);
+    const r = await settledIds('j', { now: () => 0, search: async () => ({ ids: [] }), sleep: async () => {}, slowS: 0, computing });
+    expect([r, computing.mock.calls]).toEqual([{ ids: [], seconds: 0, attempts: 1 }, [['j']]]);
+  });
+  it('searches again a slow empty answer the editor search shows as Computing', async () => {
+    const answers = [true, false];
+    const slept = [];
+    const r = await settledIds('j', { now: () => 0, search: async () => ({ ids: [] }), sleep: async (ms) => { slept.push(ms); }, slowS: 0, computing: async () => answers.shift() });
+    expect([r.attempts, slept]).toEqual([2, [60000]]);
+  });
   it('gives up after six slow answers', async () => {
     const { now, search } = clockOf([20, 20, 20, 20, 20, 20, 20]);
     expect(await settledIds('j', { now, search, sleep: async () => {} })).toEqual({ error: 'still slow after 6 attempts' });

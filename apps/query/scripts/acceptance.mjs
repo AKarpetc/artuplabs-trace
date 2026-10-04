@@ -25,7 +25,7 @@
  *   node apps/query/scripts/acceptance.mjs sr [--groups query,site,board,sprint,comment,attachment,fields]
  */
 import { readFileSync } from 'node:fs';
-import { api, bulk, ids, pool, settledIds, sleep, stats, UnsafeRetryError, upload, write } from './lib/http.mjs';
+import { api, bulk, editorComputing, ids, pool, settledIds, sleep, stats, UnsafeRetryError, upload, write } from './lib/http.mjs';
 import { latency, latencyResult, linkId, waitFor } from './lib/latency.mjs';
 import { boardId, myAccountId, REFERENCES, sprintsOf } from './lib/reference.mjs';
 import { compare, save } from './lib/report.mjs';
@@ -92,7 +92,7 @@ async function complete() {
       continue;
     }
     const jql = and ? `${clause(fn, userArgs)} AND (${and})` : clause(fn, userArgs);
-    const got = await settledIds(jql, { log });
+    const got = await settledIds(jql, { log, computing: editorComputing });
     const row = { fn, userArgs, note, and: and ?? null, seconds: got.seconds, attempts: got.attempts, error: got.error };
     if (got.ids) Object.assign(row, compare(got.ids, await REFERENCES[fn](userArgs, args)));
     log(`${fn} ${note}: ${JSON.stringify(row)}`);
@@ -402,7 +402,7 @@ async function deleteLink([from, to]) {
 async function burst() {
   const C = 'issue in linkedIssuesOf("project = JQLG AND labels = jg-lnk")';
   const want = Number(args.burst ?? 200);
-  const warm = await settledIds(C, { log });
+  const warm = await settledIds(C, { log, computing: editorComputing });
   if (!warm.ids?.length) throw new Error(`${C} answered no issues (${warm.error ?? 'empty'}): no control issue`);
   const sources = (await ids('project = JQLG AND labels = jg-lnk ORDER BY key')).ids ?? [];
   const targets = ((await ids('project = JQLG AND labels = jg-task AND issueLinkType is EMPTY AND labels not in (jg-big, jg-mid, jg-small, jg-lnk, jg-sprint, jg-sprint-big) ORDER BY key ASC')).ids ?? []).slice(0, want);
@@ -552,7 +552,7 @@ async function sr() {
       log(`sr ${s.id}: skipped, group ${s.group} is in v1.1`);
       continue;
     }
-    const got = await settledIds(s.query, { log });
+    const got = await settledIds(s.query, { log, computing: editorComputing });
     let ref = await REFERENCES[s.reference.fn](s.reference.args, args);
     if (s.reference.and) {
       const allowed = await ids(s.reference.and);
