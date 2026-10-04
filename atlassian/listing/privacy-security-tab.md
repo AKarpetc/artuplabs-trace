@@ -144,8 +144,8 @@ Source: `site/security.html` §6, §8; `site/support.html` §1, §5;
   correspondence within one month, per `site/privacy.html` §13)
 - Registered entity: ArtUp Labs, trade name of Artyom Karpets, individual
   entrepreneur (sole proprietor), Republic of Kazakhstan. Registered
-  address: Protozanov Street 119, apt. 33, Ust-Kamenogorsk (Oskemen), East
-  Kazakhstan Region, Republic of Kazakhstan.
+  address: 32 E. P. Slavsky Embankment, apt. 132, Ust-Kamenogorsk
+  (Oskemen), 070004, East Kazakhstan Region, Republic of Kazakhstan.
 
 ## What is intentionally left out here (owner to decide)
 

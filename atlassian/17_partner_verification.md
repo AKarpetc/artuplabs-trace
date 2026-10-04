@@ -20,7 +20,7 @@
 | Что | Откуда | Готово? |
 |---|---|---|
 | Название бизнеса: ИП «…» (как в регистрации) и торговое имя ArtUp Labs | талон/уведомление о регистрации ИП | ☐ |
-| Физический адрес ИП: Protozanov Street 119, apt. 33, Ust-Kamenogorsk, East Kazakhstan Region, Kazakhstan | то же | ☑ |
+| Физический адрес ИП (по уведомлению о регистрации, п. 6): 32 E. P. Slavsky Embankment, apt. 132, Ust-Kamenogorsk (Oskemen), 070004, East Kazakhstan Region, Kazakhstan; транслитерация как в документе — Naberezhnaya imeni E. P. Slavskogo 32, kv. 132 | то же | ☑ |
 | Налоговый/регистрационный номер: ИИН (есть, в site/terms.html) | то же | ☑ |
 | Скан/фото талона о регистрации ИП (PDF) — на случай запроса «other documents» | eGov → «Уведомление о начале деятельности ИП» | ☐ |
 | Загранпаспорт (Stripe Identity принимает паспорт; удостоверение РК может не пройти) | — | ☐ |

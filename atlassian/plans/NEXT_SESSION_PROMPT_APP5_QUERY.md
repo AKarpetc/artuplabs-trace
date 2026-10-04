@@ -26,9 +26,9 @@
 3. Продолжить план с **Задачи 18** (засев для ворот J-G6/J-G7) по ledger: модели по строке Model (код — только opus), ревью после каждой задачи, переносы из ledger передавать в бриф исполнителя.
 4. В конце — финальное ревью ветки (opus) с разбором `minor (deferred)` и `parked`, одна волна исправлений, список всех `Ruling:` владельцу.
 
-## Вопрос владельцу — до Partner Verification
+## Адрес ИП — решено 2026-10-04
 
-Адрес ИП расходится с документами: в анкете Partner Verification (`atlassian/17_partner_verification.md:23`), вкладке Privacy & Security листинга (`atlassian/listing/privacy-security-tab.md:147`), `site/terms.html`, `site/privacy.html` указан **Protozanov Street 119, apt. 33**, а в уведомлении о регистрации ИП (`IE/Уведомление.pdf`, п. 6) — **набережная им. Е. П. Славского, 32, кв. 132, 070004** (англ.: 32 E. P. Slavsky Embankment, apt. 132, Ust-Kamenogorsk, 070004, East Kazakhstan Region, Kazakhstan). Спросить, какой верный; если по уведомлению — поправить все четыре места и сказать владельцу обновить профиль вендора на Marketplace и перевыложить сайт.
+Везде стоит адрес из уведомления о регистрации ИП: **32 E. P. Slavsky Embankment, apt. 132, Ust-Kamenogorsk (Oskemen), 070004** (анкета, листинг, `site/terms.html`, `site/privacy.html`). Владелец сам обновляет профиль вендора и листинги в Marketplace и перевыкладывает сайт.
 
 ## Правила
 
