@@ -7,9 +7,12 @@ describe('rateLimitOf', () => {
   it('retries after the seconds of Retry-After', () => {
     expect(rateLimitOf(headers({ 'retry-after': '1847' }), 1000).retryAt).toEqual(1000 + 1847000);
   });
-  it('retries at the latest instant the headers name', () => {
-    const at = rateLimitOf(headers({ 'retry-after': '5', 'x-ratelimit-reset': '2026-10-04T21:00:00Z', 'beta-retry-after': '30' }), Date.parse('2026-10-04T20:50:00Z'));
-    expect(at.retryAt).toEqual(Date.parse('2026-10-04T21:00:00Z'));
+  it('retries when the window resets, even when Retry-After names a later instant (measured: 3600 s five minutes into the hour)', () => {
+    const at = rateLimitOf(headers({ 'retry-after': '3600', 'x-ratelimit-reset': '2026-10-04T22:00Z' }), Date.parse('2026-10-04T21:05:29Z'));
+    expect(at.retryAt).toEqual(Date.parse('2026-10-04T22:00:00Z'));
+  });
+  it('retries at the later of Retry-After and Beta-Retry-After without a reset instant', () => {
+    expect(rateLimitOf(headers({ 'retry-after': '5', 'beta-retry-after': '30' }), 0).retryAt).toEqual(30000);
   });
   it('knows no retry instant without rate headers', () => {
     expect(rateLimitOf(headers({}), 1000)).toEqual({ retryAt: null, reason: null, near: false, remaining: null });
