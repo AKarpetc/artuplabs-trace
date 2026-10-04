@@ -37,8 +37,8 @@ async function isStale(deps, group, summary) {
   if (!summary.touched.length) return false;
   const parsed = parseArgs(group.functionName, group.userArgs);
   if (parsed.error) return false;
-  const watch = await deps.cache.watch(group.key);
-  if (watch && summary.touched.some((id) => watch.has(id))) return true;
+  const watched = await deps.cache.watchHit(group.key, summary.touched);
+  if (watched) return true;
   const touched = new Set(summary.touched);
   const liveHits = [];
   try {
@@ -51,7 +51,7 @@ async function isStale(deps, group, summary) {
     if (error?.name !== 'JiraError') throw error;
     return true;
   }
-  return queryOverlap({ touched: summary.touched, watch, liveHits });
+  return queryOverlap({ watched, liveHits });
 }
 
 /**

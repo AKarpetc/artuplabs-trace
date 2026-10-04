@@ -64,17 +64,17 @@ describe('familyWants', () => {
 
 describe('queryOverlap', () => {
   it('is stale when a touched issue is watched', () => {
-    expect(queryOverlap({ touched: ['5'], watch: new Set(['5']), liveHits: [] })).toBe(true);
+    expect(queryOverlap({ watched: true, liveHits: [] })).toBe(true);
   });
   it('is stale when a touched issue now matches the subquery', () => {
-    expect(queryOverlap({ touched: ['5'], watch: new Set(), liveHits: ['5'] })).toBe(true);
+    expect(queryOverlap({ watched: false, liveHits: ['5'] })).toBe(true);
   });
   it('is stale when the watch list or the live check is unknown', () => {
-    expect(queryOverlap({ touched: ['5'], watch: null, liveHits: [] })).toBe(true);
-    expect(queryOverlap({ touched: ['5'], watch: new Set(), liveHits: null })).toBe(true);
+    expect(queryOverlap({ watched: null, liveHits: [] })).toBe(true);
+    expect(queryOverlap({ watched: false, liveHits: null })).toBe(true);
   });
   it('is fresh when nothing touched is related', () => {
-    expect(queryOverlap({ touched: ['5'], watch: new Set(['6']), liveHits: [] })).toBe(false);
+    expect(queryOverlap({ watched: false, liveHits: [] })).toBe(false);
   });
 });
 

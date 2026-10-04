@@ -50,11 +50,10 @@ export function familyWants(family, kinds) {
   return (FAMILY_KINDS[family] ?? []).some((k) => kinds.includes(k));
 }
 
-/** Query family: stale when a touched issue is watched or now matches the subquery; unknown inputs mean stale. */
-export function queryOverlap({ touched, watch, liveHits }) {
-  if (liveHits === null || watch === null) return true;
-  if (liveHits.length) return true;
-  return touched.some((id) => watch.has(id));
+/** Query family: stale when a touched issue is watched or now matches the subquery; unknown inputs (null) mean stale. */
+export function queryOverlap({ watched, liveHits }) {
+  if (liveHits === null || watched === null) return true;
+  return liveHits.length > 0 || watched;
 }
 
 /** Whether arguments mention the clock (`-7d`, `startOfWeek()`), so the result changes without any event. */

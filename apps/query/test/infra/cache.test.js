@@ -23,6 +23,38 @@ describe('value cache', () => {
     expect(await cache.watch('g')).toEqual(new Set(['1', '2', '3']));
     expect(chunkKeys(kvs)).toHaveLength(4);
   });
+  it('tells whether any given id is watched, reading only the watch chunks whose id range covers one', async () => {
+    const { kvs, cache } = make();
+    await cache.write('g', entry(ids(10), { watch: ids(12000) }));
+    const read = [];
+    const get = kvs.get;
+    kvs.get = async (key) => { read.push(key); return get(key); };
+    expect(await cache.watchHit('g', ['5001', '999999'])).toBe(true);
+    expect(read.filter((k) => k.startsWith('v:g:k'))).toHaveLength(1);
+    read.length = 0;
+    expect(await cache.watchHit('g', ['999999', '0'])).toBe(false);
+    expect(read.filter((k) => k.startsWith('v:g:k'))).toHaveLength(0);
+  });
+  it('finds a watched id in a watch list stored out of id order', async () => {
+    const { cache } = make();
+    await cache.write('g', entry(ids(1), { watch: [...ids(6000, 10).reverse(), '3'] }));
+    expect([await cache.watchHit('g', ['3']), await cache.watchHit('g', ['6009']), await cache.watchHit('g', ['5'])]).toEqual([true, true, false]);
+  });
+  it('answers an unknown watch for a group without a watch list or without a cache', async () => {
+    const { cache } = make();
+    await cache.write('g', entry(ids(3)));
+    expect([await cache.watchHit('g', ['1']), await cache.watchHit('none', ['1'])]).toEqual([null, null]);
+  });
+  it('adds the id ranges of the watch chunks to a meta written before they were kept', async () => {
+    const { kvs, cache } = make();
+    await cache.write('g', entry(ids(3), { watch: ids(3) }));
+    const meta = await cache.meta('g');
+    delete meta.wr;
+    await kvs.set('v:g:m', meta);
+    kvs.calls.ops.length = 0;
+    await cache.write('g', entry(ids(3), { watch: ids(3), at: 2 }));
+    expect([sets(kvs), (await cache.meta('g')).wr]).toEqual([['set v:g:m'], [['1', '3']]]);
+  });
   it('writes nothing when a refresh computes the same values again', async () => {
     const { kvs, cache } = make();
     await cache.write('g', entry(ids(12000), { watch: ids(7000) }));
