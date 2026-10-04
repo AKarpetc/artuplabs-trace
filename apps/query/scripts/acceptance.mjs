@@ -3,14 +3,14 @@
  * Acceptance tool for ArtUp Query against the dev site; every request has a timeout, and a write that broke
  * is sent again only after a check that it was not applied.
  *
- *   complete  every case of a table against a reference built by REST traversal (--cases m1|m2|m3, --board, --candidates, --tag)
+ *   complete  every case of a table against a reference built by REST traversal (--cases m1|m2|m3|tree2, --board, --candidates, --tag)
  *   fresh     seconds until a change is visible and changes lost after 10 minutes (--group query|board|sprint|comment|attachment|fields, --n, --tag)
  *   seed-tm   a team-managed project JQLT with epics, stories and subtasks
  *   seed-fields  50 RPT issues with a due date, an original estimate, a worklog and a done status (aq-fields)
  *
  * Usage:
  *   set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
- *   node apps/query/scripts/acceptance.mjs complete [--cases m1|m2|m3] [--board "RPT board"] [--tag t]
+ *   node apps/query/scripts/acceptance.mjs complete [--cases m1|m2|m3|tree2] [--board "RPT board"] [--tag t]
  *   node apps/query/scripts/acceptance.mjs fresh [--group query|board|sprint|comment|attachment|fields] [--n 30] [--board "RPT board"] [--tag t]
  *   node apps/query/scripts/acceptance.mjs seed-tm
  *   node apps/query/scripts/acceptance.mjs seed-fields
@@ -319,6 +319,11 @@ M3_PARTS.push(() => [
   ['expression', ['project = RPT AND key <= RPT-8500', 'votes >= 0'], '8 500 values: one-level tree (> 1 000, ≤ 9 000)'],
   ['dateCompare', ['project = JQLG', 'lastCommented > firstCommented'], 'comment times from the index, visible comments only'],
 ]);
+
+Object.defineProperty(CASES, 'tree2', {
+  enumerable: true,
+  get: () => [['expression', ['project in (JQLG, RPT)', 'votes >= 0'], '50 000 values, 50 leaves under 6 middle nodes']],
+});
 
 FRESH.fields = async () => {
   const day = 86400000;
