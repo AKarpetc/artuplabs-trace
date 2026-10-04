@@ -66,3 +66,9 @@ export const COUNT_MAX = 10000;
 export const JOURNAL_TS_DIGITS = 15;
 /** Background job keys read per KVS query page (the KVS page maximum). */
 export const JOB_PAGE = 100;
+/** Characters one dateCompare or expression argument may hold. */
+export const EXPRESSION_MAX_LENGTH = 1000;
+/** Nesting depth of one expression (parentheses, unary minus and chained operators), so parsing and evaluation never overflow the stack. */
+export const EXPRESSION_MAX_DEPTH = 64;
+/** Characters of the user's expression an error message quotes. */
+export const EXPRESSION_SNIPPET = 30;

@@ -1,4 +1,7 @@
+import { EXPRESSION_SNIPPET } from './limits.js';
+
 const fmt = (n) => Number(n).toLocaleString('en-US');
+const clip = (text) => (text.length > EXPRESSION_SNIPPET ? `${text.slice(0, EXPRESSION_SNIPPET)}…` : text);
 
 /** English messages for the JQL editor; Jira passes no locale to a JQL function. */
 export const ERR = {
@@ -13,10 +16,12 @@ export const ERR = {
   subqueryRejected: () => 'Subquery rejected by Jira',
   withFunction: (functionName, message) => `${functionName}: ${message}`,
   expressionEnd: () => 'Unexpected end of expression',
-  expressionUnexpected: (text, at) => `Unexpected "${text}" at ${at}`,
+  expressionUnexpected: (text, at) => `Unexpected "${clip(String(text))}" at ${at}`,
   expressionParen: () => 'Missing ")"',
   expressionNotCompared: () => 'The expression must compare values, such as a > b',
   expressionArithmetic: () => 'Cannot do arithmetic on a comparison',
+  expressionTooLong: (max) => `The expression is longer than ${fmt(max)} characters`,
+  expressionTooDeep: (max) => `The expression is nested deeper than ${fmt(max)} levels`,
 };
 
 /** Value-free texts for the error log: the log never stores argument values (board, sprint, link type names, project keys). */

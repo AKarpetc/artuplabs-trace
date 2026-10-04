@@ -80,3 +80,72 @@ describe('expression edge cases', () => {
       .toEqual([null, null, Date.UTC(2026, 0, 2, 3, 4, 5)]);
   });
 });
+
+describe('expression bounds', () => {
+  it('rejects text longer than the length limit', () => {
+    expect(parseExpression(`a > ${'1'.repeat(1000)}`)).toEqual({ error: 'The expression is longer than 1,000 characters' });
+  });
+  it('rejects deeply nested parentheses', () => {
+    expect(parseExpression(`${'('.repeat(65)}a > 1${')'.repeat(65)}`)).toEqual({ error: 'The expression is nested deeper than 64 levels' });
+  });
+  it('rejects a long chain of leading minus signs', () => {
+    expect(parseExpression(`${'-'.repeat(70)}a > 1`)).toEqual({ error: 'The expression is nested deeper than 64 levels' });
+  });
+  it('rejects a long arithmetic chain', () => {
+    expect(parseExpression(`${Array(70).fill('a').join(' + ')} > 1`)).toEqual({ error: 'The expression is nested deeper than 64 levels' });
+  });
+  it('rejects a long chain of or', () => {
+    expect(parseExpression(Array(70).fill('a > 1').join(' or '))).toEqual({ error: 'The expression is nested deeper than 64 levels' });
+  });
+  it('accepts an expression at the depth limit', () => {
+    expect(parseExpression(`${Array(63).fill('a').join(' + ')} > 1`).error).toBeUndefined();
+  });
+  it('never throws from evaluate, even when called deep in the stack', () => {
+    const p = parseExpression(`${Array(63).fill('a').join(' + ')} > 1`);
+    const deep = (n) => (n === 0 ? evaluate(p.ast, () => 1, 'number') : deep(n - 1));
+    expect(deep(5000)).toBe(true);
+  });
+  it('quotes at most 30 characters of the text in an error', () => {
+    expect(parseExpression(`2days ${'x'.repeat(100)}`)).toEqual({ error: `Unexpected "2days ${'x'.repeat(24)}…" at 1` });
+  });
+});
+
+describe('and and or operands', () => {
+  it('rejects bare fields joined by and', () => {
+    expect(parseExpression('a and b')).toEqual({ error: 'The expression must compare values, such as a > b' });
+  });
+  it('rejects a comparison and a bare field joined by and', () => {
+    expect(parseExpression('a > 1 and b')).toEqual({ error: 'The expression must compare values, such as a > b' });
+  });
+  it('rejects a bare field on the left of or', () => {
+    expect(parseExpression('a or b > 1')).toEqual({ error: 'The expression must compare values, such as a > b' });
+  });
+  it('accepts nested and and or in parentheses', () => {
+    expect(run('(a > 1 or b > 1) and (a < 9)', { a: 2, b: 0 }, 'number')).toBe(true);
+  });
+});
+
+describe('non-finite and malformed values', () => {
+  it('treats an infinite literal as empty', () => {
+    expect(run(`a < ${'9'.repeat(400)}`, { a: 1 }, 'number')).toBe(false);
+  });
+  it('treats NaN from arithmetic as empty so != does not match', () => {
+    expect(run(`a - a != 1`, { a: Infinity }, 'number')).toBe(false);
+  });
+  it('reads NaN and Infinity field values as empty', () => {
+    expect([fieldValue(NaN), fieldValue(Infinity)]).toEqual([null, null]);
+  });
+  it('rejects an empty quoted name', () => {
+    expect(parseExpression('"" > 1')).toEqual({ error: 'Unexpected """" at 1' });
+  });
+  it('returns null for a duration in an unknown mode', () => {
+    expect(evaluate({ k: 'dur', v: 1, unit: 'd' }, () => null, 'text')).toBeNull();
+  });
+});
+
+describe('evaluate guard', () => {
+  it('returns null when reading a value throws', () => {
+    const p = parseExpression('a > 1');
+    expect(evaluate(p.ast, () => { throw new Error('boom'); }, 'number')).toBeNull();
+  });
+});
