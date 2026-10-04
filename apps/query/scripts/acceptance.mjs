@@ -268,6 +268,8 @@ const commentCases = () => {
     ['commented', [`roleLevel "${comments.restricted.role}"`], 'restricted to a role', REF_SCOPE, comments.roleUsable ? {} : NOT_ON_DEV],
     ['commented', [`groupLevel "${comments.restricted.group}"`], 'restricted to a group', REF_SCOPE, comments.groupUsable ? {} : NOT_ON_DEV],
     ['lastComment', ['by @me'], 'last comment by one author', REF_SCOPE],
+    ['commented', ['inGroup jira-users-artuplabs-dev after 2020-01-01'], 'authors of one group, members read as the app', REF_SCOPE],
+    ['lastComment', ['inRole Administrators'], 'authors in a project role, members read per project as the app', REF_SCOPE],
   ];
 };
 const attachmentCases = () => [

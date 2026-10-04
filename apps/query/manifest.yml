@@ -489,6 +489,7 @@ permissions:
     - read:project:jira
     - read:group:jira
     - read:user:jira
+    - read:avatar:jira
     - read:app-data:jira
     - write:app-data:jira
     - storage:app

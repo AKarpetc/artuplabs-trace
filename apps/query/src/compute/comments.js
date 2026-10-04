@@ -63,9 +63,9 @@ export function createCommentCompute({ jira, repo, state, now }) {
 
   const commentWindow = (c, ids) => ({ after: c.after ?? (c.onStart !== undefined ? c.onStart - 1 : undefined), before: c.before ?? c.onEnd, authors: ids });
 
-  /** "Fewer than n" holds for issues without any comment too, so it is every issue outside those with at least n, as live JQL. */
+  /** "Fewer than n" holds for issues without any comment too, so it is every issue outside those with at least n, as live JQL; the nested call is always an `in` call, negated by NOT. */
   async function fewerThan(n) {
-    const atLeast = n === 1 ? 'issue not in hasComments()' : `issue not in hasComments(${quote(`+${n - 1}`)})`;
+    const atLeast = `NOT (issue in hasComments(${n === 1 ? '' : quote(`+${n - 1}`)}))`;
     const excluded = await state.excluded();
     return { native: excluded.length ? `${atLeast} AND project not in (${excluded.map(quote).join(', ')})` : atLeast };
   }

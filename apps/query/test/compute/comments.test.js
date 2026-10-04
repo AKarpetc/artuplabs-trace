@@ -85,12 +85,12 @@ describe('comment compute', () => {
   });
   it('hasComments fewer than n is every issue outside the issues with at least n comments, so issues without comments match', async () => {
     const { compute: c, repo } = make();
-    expect(await c.hasComments({ count: { op: 'fewer', n: 3 } }, {})).toEqual({ native: 'issue not in hasComments("+2")' });
-    expect(await c.hasComments({ count: { op: 'fewer', n: 1 } }, {})).toEqual({ native: 'issue not in hasComments()' });
+    expect(await c.hasComments({ count: { op: 'fewer', n: 3 } }, {})).toEqual({ native: 'NOT (issue in hasComments("+2"))' });
+    expect(await c.hasComments({ count: { op: 'fewer', n: 1 } }, {})).toEqual({ native: 'NOT (issue in hasComments())' });
     expect(repo.issuesWithCommentCount).not.toHaveBeenCalled();
   });
   it('hasComments fewer than n leaves out the projects outside the index', async () => {
-    expect(await compute({}, { excluded: ['OPS', 'HR'] }).hasComments({ count: { op: 'fewer', n: 2 } }, {})).toEqual({ native: 'issue not in hasComments("+1") AND project not in ("OPS", "HR")' });
+    expect(await compute({}, { excluded: ['OPS', 'HR'] }).hasComments({ count: { op: 'fewer', n: 2 } }, {})).toEqual({ native: 'NOT (issue in hasComments("+1")) AND project not in ("OPS", "HR")' });
   });
   it('hasAttachments without an extension is native JQL, with one it reads the index', async () => {
     expect(await compute().hasAttachments({}, {})).toEqual({ native: 'attachments is not EMPTY' });
