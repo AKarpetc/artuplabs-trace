@@ -15,7 +15,8 @@
   в 2 уровня) — **была в работе у агента прошлой сессии**: `apps/query/scripts/acceptance.mjs` изменён и не закоммичен,
   коммита `JQL-37` нет. Сначала проверь: есть ли коммит `JQL-37` и файл `task-30-report.md` в папке ledger. Если нет —
   посмотри `git diff apps/query/scripts/acceptance.mjs` (добавление `CASES.tree2` и т. п.), сохрани полезное и
-  перезапусти Задачу 30 (sonnet; правки кода внутри — opus).
+  перезапусти Задачу 30 (sonnet; правки кода внутри — opus). Агент остановлен посреди прогона: проверь
+  `forge variables list -e development` — могли остаться `QUERY_DEBUG_EVENTS` и `QUERY_TREE_LEVELS`.
 - Dev: artuplabs-dev, версия 4.x, development. Production ещё не деплоился (будет мажорный апгрейд: `core:sql`,
   скоупы `read:group:jira`, `read:user:jira`, `read:avatar:jira` → повторное согласие админов).
 - Адрес ИП везде — из уведомления о регистрации: 32 E. P. Slavsky Embankment, apt. 132, Ust-Kamenogorsk (Oskemen),
