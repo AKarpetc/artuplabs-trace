@@ -253,6 +253,71 @@ modules:
         - in
         - not in
       function: fn-com-in-spr
+    - key: commented
+      name: commented
+      arguments:
+        - name: clauses
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-com
+    - key: last-comment
+      name: lastComment
+      arguments:
+        - name: clauses
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-las-com
+    - key: has-comments
+      name: hasComments
+      arguments:
+        - name: count
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-has-com
+    - key: file-attached
+      name: fileAttached
+      arguments:
+        - name: clauses
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-fil-att
+    - key: has-attachments
+      name: hasAttachments
+      arguments:
+        - name: extension
+          required: false
+        - name: page
+          required: false
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-has-att
   trigger:
     - key: query-events
       function: on-event
@@ -267,6 +332,10 @@ modules:
         - avi:jira-software:closed:sprint
         - avi:jira-software:updated:sprint
         - avi:jira-software:deleted:sprint
+        - avi:jira:commented:issue
+        - avi:jira:deleted:comment
+        - avi:jira:created:attachment
+        - avi:jira:deleted:attachment
       filter:
         ignoreSelf: true
     - key: query-lifecycle
@@ -325,6 +394,16 @@ modules:
       handler: index.incompleteInSprint
     - key: fn-com-in-spr
       handler: index.completeInSprint
+    - key: fn-com
+      handler: index.commented
+    - key: fn-las-com
+      handler: index.lastComment
+    - key: fn-has-com
+      handler: index.hasComments
+    - key: fn-fil-att
+      handler: index.fileAttached
+    - key: fn-has-att
+      handler: index.hasAttachments
     - key: on-event
       handler: index.onEvent
     - key: on-refresh

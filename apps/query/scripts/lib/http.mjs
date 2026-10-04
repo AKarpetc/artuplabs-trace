@@ -113,3 +113,18 @@ export async function bulk(idList, fields) {
   const pages = await pool(chunks, 8, (c) => api('POST', '/rest/api/3/issue/bulkfetch', { issueIdsOrKeys: c, fields }));
   return pages.flatMap((p) => p.issues ?? []);
 }
+
+/** Uploads one small file as an attachment of an issue; not retried, because a retry could attach it twice. */
+export async function upload(issueId, filename, text) {
+  stats.requests += 1;
+  const form = new FormData();
+  form.append('file', new Blob([text]), filename);
+  const res = await fetch(`${SITE}/rest/api/3/issue/${issueId}/attachments`, {
+    method: 'POST',
+    headers: { Authorization: auth(), Accept: 'application/json', 'X-Atlassian-Token': 'no-check' },
+    body: form,
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) throw new Error(`upload ${issueId} → ${res.status} ${(await res.text()).slice(0, 300)}`);
+  return res.json();
+}

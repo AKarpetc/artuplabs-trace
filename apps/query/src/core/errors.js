@@ -41,6 +41,7 @@ export const LOG = {
   refreshFailed: (status) => (status ? `Refresh failed: Jira answered ${status}` : 'Refresh failed'),
   indexRefreshNotQueued: () => 'Refresh after the index build was not queued',
   indexFailed: (status) => (status ? `Index write failed: Jira answered ${status}` : 'Index write failed'),
+  invalidConditions: () => 'Invalid conditions',
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

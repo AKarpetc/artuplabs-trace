@@ -56,6 +56,7 @@ describe('familyWants', () => {
     expect(familyWants('links', ['issue-deleted'])).toBe(true);
     expect(familyWants('links', ['issue-updated'])).toBe(false);
     expect(familyWants('comment', ['issue-deleted'])).toBe(true);
+    expect([familyWants('comment', ['issue-created']), familyWants('attachment', ['issue-created']), familyWants('attachment', ['issue-deleted'])]).toEqual([true, true, true]);
     expect(familyWants('attachment', ['comment'])).toBe(false);
   });
   it('recomputes the groups of an index part once that part is built', () => {

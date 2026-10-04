@@ -35,5 +35,30 @@ export async function runMigrations() {
       INDEX idx_st_issue (issue_id, at),
       INDEX idx_st_project (project_id)
     )`)
+    .enqueue('v004_comment_meta', `CREATE TABLE IF NOT EXISTS comment_meta (
+      comment_id BIGINT PRIMARY KEY,
+      issue_id BIGINT NOT NULL,
+      project_id BIGINT NOT NULL,
+      author VARCHAR(128) NOT NULL,
+      created_at BIGINT NOT NULL,
+      updated_at BIGINT NOT NULL,
+      vis_type VARCHAR(8) NULL,
+      vis_value VARCHAR(255) NULL,
+      INDEX idx_cm_issue (issue_id, created_at),
+      INDEX idx_cm_author (author, created_at),
+      INDEX idx_cm_created (created_at),
+      INDEX idx_cm_project (project_id)
+    )`)
+    .enqueue('v005_attachment_meta', `CREATE TABLE IF NOT EXISTS attachment_meta (
+      attachment_id BIGINT PRIMARY KEY,
+      issue_id BIGINT NOT NULL,
+      project_id BIGINT NOT NULL,
+      author VARCHAR(128) NOT NULL,
+      created_at BIGINT NOT NULL,
+      ext VARCHAR(32) NOT NULL,
+      INDEX idx_am_issue (issue_id),
+      INDEX idx_am_ext (ext),
+      INDEX idx_am_project (project_id)
+    )`)
     .run();
 }

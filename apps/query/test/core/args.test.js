@@ -62,6 +62,9 @@ describe('parseArgs', () => {
   it('normalises a file extension', () => {
     expect(parseArgs('hasAttachments', ['.XLSX']).args).toEqual({ extension: 'xlsx' });
   });
+  it('rejects an extension that is only dots', () => {
+    expect(parseArgs('hasAttachments', ['..'])).toEqual({ error: 'hasAttachments: extension must not be empty' });
+  });
   it('runs comment functions without clauses', () => {
     expect(parseArgs('lastComment', [])).toEqual({ args: {}, userArgs: [], page: null });
   });

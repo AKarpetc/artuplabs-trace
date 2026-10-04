@@ -3,18 +3,18 @@
  * Acceptance tool for ArtUp Query against the dev site; every request has a timeout, and a write that broke
  * is sent again only after a check that it was not applied.
  *
- *   complete  every case of a table against a reference built by REST traversal (--cases m1|m2, --board, --candidates, --tag)
- *   fresh     seconds until a change is visible and changes lost after 10 minutes (--group query|board|sprint, --n, --tag)
+ *   complete  every case of a table against a reference built by REST traversal (--cases m1|m2|m3, --board, --candidates, --tag)
+ *   fresh     seconds until a change is visible and changes lost after 10 minutes (--group query|board|sprint|comment|attachment, --n, --tag)
  *   seed-tm   a team-managed project JQLT with epics, stories and subtasks
  *
  * Usage:
  *   set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
- *   node apps/query/scripts/acceptance.mjs complete [--cases m1|m2] [--board "RPT board"] [--tag t]
- *   node apps/query/scripts/acceptance.mjs fresh [--group query|board|sprint] [--n 30] [--board "RPT board"] [--tag t]
+ *   node apps/query/scripts/acceptance.mjs complete [--cases m1|m2|m3] [--board "RPT board"] [--tag t]
+ *   node apps/query/scripts/acceptance.mjs fresh [--group query|board|sprint|comment|attachment] [--n 30] [--board "RPT board"] [--tag t]
  *   node apps/query/scripts/acceptance.mjs seed-tm
  */
 import { readFileSync } from 'node:fs';
-import { api, ids, settledIds, sleep, stats, UnsafeRetryError, write } from './lib/http.mjs';
+import { api, bulk, ids, settledIds, sleep, stats, UnsafeRetryError, upload, write } from './lib/http.mjs';
 import { latency, latencyResult, waitFor } from './lib/latency.mjs';
 import { boardId, myAccountId, REFERENCES, sprintsOf } from './lib/reference.mjs';
 import { compare, save } from './lib/report.mjs';
@@ -28,7 +28,7 @@ const q = (s) => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 const clause = (fn, userArgs) => `issue in ${fn}(${userArgs.map(q).join(', ')})`;
 const tagged = (name) => `${name}${args.tag ? `-${args.tag}` : ''}`;
 
-/** Completeness cases: function, user arguments, what the case proves, optional native JQL ANDed to the result. Later stages append their own. */
+/** Completeness cases: function, user arguments, what the case proves, optional native JQL ANDed to the result, optional `{ skip }` with the reason a case cannot run on the dev site. Later stages append their own. */
 export const CASES = {
   m1: [
     ['subtasksOf', ['project = JQLG AND labels = jg-mid'], '1 200 subtasks (> 1 000)'],
@@ -72,9 +72,14 @@ async function complete() {
   await ensureFilter();
   const list = CASES[args.cases ?? 'm1'];
   const rows = [];
-  for (const [fn, raw, note, and] of list) {
+  for (const [fn, raw, note, and, { skip } = {}] of list) {
     const userArgs = [];
     for (const a of raw) userArgs.push(a === '@board' ? args.board : a.includes('@me') ? a.replace('@me', await myAccountId()) : a);
+    if (skip) {
+      log(`${fn} ${note}: skipped, ${skip}`);
+      rows.push({ fn, userArgs, note, and: and ?? null, skipped: skip });
+      continue;
+    }
     const jql = and ? `${clause(fn, userArgs)} AND (${and})` : clause(fn, userArgs);
     const got = await settledIds(jql, { log });
     const row = { fn, userArgs, note, and: and ?? null, seconds: got.seconds, attempts: got.attempts, error: got.error };
@@ -82,7 +87,7 @@ async function complete() {
     log(`${fn} ${note}: ${JSON.stringify(row)}`);
     rows.push(row);
   }
-  const path = save(tagged(`acceptance-complete-${args.cases ?? 'm1'}`), { stats, rows, allComplete: rows.every((r) => r.complete) });
+  const path = save(tagged(`acceptance-complete-${args.cases ?? 'm1'}`), { stats, rows, allComplete: rows.filter((r) => !r.skipped).every((r) => r.complete) });
   log(`saved ${path}`);
 }
 
@@ -242,6 +247,73 @@ FRESH.sprint = async () => {
   const result = latencyResult(rows, t0);
   log(JSON.stringify(result.summary));
   save(tagged('acceptance-fresh-sprint'), { stats, ...result });
+};
+
+const REF_SCOPE = 'project in (JQLG, RPT)';
+const NOT_ON_DEV = { skip: 'not testable on dev: Jira Free has no comment visibility restrictions' };
+const JG7_SEED = new URL('../../../atlassian/data/jg7-seed.json', import.meta.url);
+const M3_PARTS = [];
+Object.defineProperty(CASES, 'm3', { enumerable: true, get: () => M3_PARTS.flatMap((part) => part()) });
+
+const commentCases = () => {
+  const { comments } = JSON.parse(readFileSync(JG7_SEED, 'utf8'));
+  return [
+    ['hasComments', [], 'every issue with a comment (site-wide)', REF_SCOPE],
+    ['hasComments', ['1'], 'exactly one comment', REF_SCOPE],
+    ['hasComments', ['+2'], 'more than 2 comments', REF_SCOPE],
+    ['hasComments', ['-3'], 'fewer than 3 comments, issues without comments included', REF_SCOPE],
+    ['commented', [], 'no clauses: any comment', REF_SCOPE],
+    ['commented', ['after 2020-01-01'], 'any author since 2020 (site-wide)', REF_SCOPE],
+    ['commented', ['by @me after 2020-01-01'], 'one author, all time', REF_SCOPE],
+    ['commented', [`roleLevel "${comments.restricted.role}"`], 'restricted to a role', REF_SCOPE, comments.roleUsable ? {} : NOT_ON_DEV],
+    ['commented', [`groupLevel "${comments.restricted.group}"`], 'restricted to a group', REF_SCOPE, comments.groupUsable ? {} : NOT_ON_DEV],
+    ['lastComment', ['by @me'], 'last comment by one author', REF_SCOPE],
+  ];
+};
+const attachmentCases = () => [
+  ['hasAttachments', [], 'every issue with an attachment (site-wide, native)', REF_SCOPE],
+  ['hasAttachments', ['pdf'], 'one extension', REF_SCOPE],
+  ['hasAttachments', ['.PNG'], 'extension with a dot and in upper case', REF_SCOPE],
+  ['fileAttached', ['ext xlsx after 2020-01-01'], 'extension and date', REF_SCOPE],
+];
+M3_PARTS.push(commentCases);
+M3_PARTS.push(attachmentCases);
+
+FRESH.comment = async () => {
+  const me = await myAccountId();
+  const today = new Date().toISOString().slice(0, 10);
+  const mid = (await ids('project = JQLG AND labels = jg-mid ORDER BY key')).ids;
+  const targets = (await bulk(mid, ['comment']))
+    .filter((x) => !(x.fields.comment?.comments ?? []).some((c) => c.author?.accountId === me && String(c.created).startsWith(today)))
+    .map((x) => String(x.id))
+    .slice(0, args.n);
+  const rows = { comment: [] };
+  const t0 = Date.now();
+  for (const [i, x] of targets.entries()) {
+    const t = Date.now();
+    await api('POST', `/rest/api/3/issue/${x}/comment`, { body: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: `aq probe ${i}` }] }] } }, { unsafe: true });
+    rows.comment.push(await waitFor(clause('commented', [`by ${me} after ${today}`]), x, true, t));
+    log(`comment ${x}: ${rows.comment.at(-1)} s`);
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-comment'), { stats, ...result });
+};
+
+FRESH.attachment = async () => {
+  const ext = `aq${Date.now() % 1000000}`;
+  const targets = (await ids('project = JQLG AND labels = jg-mid ORDER BY key')).ids.slice(0, args.n);
+  const rows = { attachment: [] };
+  const t0 = Date.now();
+  for (const x of targets) {
+    const t = Date.now();
+    await upload(x, `probe.${ext}`, 'aq probe');
+    rows.attachment.push(await waitFor(clause('hasAttachments', [ext]), x, true, t));
+    log(`attachment ${x}: ${rows.attachment.at(-1)} s`);
+  }
+  const result = latencyResult(rows, t0);
+  log(JSON.stringify(result.summary));
+  save(tagged('acceptance-fresh-attachment'), { stats, ...result });
 };
 
 async function fresh() {

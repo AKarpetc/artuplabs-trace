@@ -35,10 +35,11 @@ describe('catalog', () => {
     ]);
   });
   it('ships the groups built so far', () => {
-    expect(SHIPPED_GROUPS).toEqual(['query', 'site', 'board', 'sprint']);
+    expect(SHIPPED_GROUPS).toEqual(['query', 'site', 'board', 'sprint', 'comment', 'attachment']);
     expect(shippedFunctions().map((f) => f.name)).toEqual([
       'subtasksOf', 'parentsOf', 'epicsOf', 'issuesInEpics', 'childIssuesOf', 'linkedIssuesOf', 'linkedIssuesOfRecursive', 'linkedIssuesOfRecursiveLimited', 'hasLinks', 'hasLinkType', 'hasSubtasks', 'previousSprint', 'nextSprint',
       'addedAfterSprintStart', 'removedAfterSprintStart', 'incompleteInSprint', 'completeInSprint',
+      'commented', 'lastComment', 'hasComments', 'fileAttached', 'hasAttachments',
     ]);
   });
 });

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api, pool, settledIds, stats, UnsafeRetryError, write } from '../../scripts/lib/http.mjs';
 
-const ok = (body, status = 200) => ({ ok: status < 300, status, headers: new Headers(), text: async () => JSON.stringify(body) });
+const ok = (body, status = 200) => ({ ok: status < 300, status, headers: new Headers(), text: async () => JSON.stringify(body), json: async () => body });
 const timeout = () => Object.assign(new Error('timed out'), { name: 'TimeoutError' });
 const reset = () => Object.assign(stats, { requests: 0, retries: 0, timeouts: 0 });
 
@@ -115,5 +115,23 @@ describe('settledIds', () => {
   it('gives up after six slow answers', async () => {
     const { now, search } = clockOf([20, 20, 20, 20, 20, 20, 20]);
     expect(await settledIds('j', { now, search, sleep: async () => {} })).toEqual({ error: 'still slow after 6 attempts' });
+  });
+});
+
+describe('upload', () => {
+  it('posts one file as multipart form data once, with the XSRF bypass header', async () => {
+    const fetch = vi.fn(async () => ok([{ id: '9' }]));
+    vi.stubGlobal('fetch', fetch);
+    const { upload } = await import('../../scripts/lib/http.mjs');
+    expect(await upload('7', 'probe.aq1', 'aq probe')).toEqual([{ id: '9' }]);
+    const [url, init] = fetch.mock.calls[0];
+    expect([url, init.method, init.headers['X-Atlassian-Token'], init.body.get('file').name]).toEqual(['https://artuplabs-dev.atlassian.net/rest/api/3/issue/7/attachments', 'POST', 'no-check', 'probe.aq1']);
+  });
+  it('throws on a refused upload without sending it again', async () => {
+    const fetch = vi.fn(async () => ({ ...ok({ errorMessages: ['no'] }, 403), json: async () => ({}) }));
+    vi.stubGlobal('fetch', fetch);
+    const { upload } = await import('../../scripts/lib/http.mjs');
+    await expect(upload('7', 'a.txt', 'x')).rejects.toThrow('upload 7 → 403');
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

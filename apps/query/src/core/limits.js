@@ -84,3 +84,7 @@ export const BACKFILL_STALE_MS = 30 * 60 * 1000;
 export const CLAUSES_MAX_LENGTH = 1000;
 /** Farthest instant from 1970 a JavaScript date can hold, in ms either way. */
 export const DATE_MAX_ABS_MS = 8.64e15;
+/** Comments read in one call when bulkfetch returned only part of an issue's comments. */
+export const COMMENT_PAGE = 5000;
+/** Characters of a file extension kept in the index and read from a condition. */
+export const EXT_MAX_LENGTH = 32;

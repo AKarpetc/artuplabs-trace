@@ -17,6 +17,7 @@ import { createHierarchyCompute } from './compute/hierarchy.js';
 import { createLinkCompute } from './compute/links.js';
 import { createBoardCompute } from './compute/boards.js';
 import { createSprintCompute } from './compute/sprints.js';
+import { createCommentCompute } from './compute/comments.js';
 import { createIndexing } from './handlers/indexing.js';
 
 const sha1 = (text) => createHash('sha1').update(text).digest('hex');
@@ -46,7 +47,13 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     logWrites: process.env.QUERY_LOG_WRITES === '1',
     queue: createQueueClient(new Queue({ key: 'query-refresh' })),
     backfillQueue: createQueueClient(new Queue({ key: 'query-backfill' })),
-    compute: { ...createHierarchyCompute({ jira }), ...createLinkCompute({ jira }), ...createBoardCompute({ jira }), ...createSprintCompute({ jira, repo, state, now: () => Date.now() }) },
+    compute: {
+      ...createHierarchyCompute({ jira }),
+      ...createLinkCompute({ jira }),
+      ...createBoardCompute({ jira }),
+      ...createSprintCompute({ jira, repo, state, now: () => Date.now() }),
+      ...createCommentCompute({ jira, repo, state, now: () => Date.now() }),
+    },
     withDeadline,
     migrate: runMigrations,
     hash: sha1,

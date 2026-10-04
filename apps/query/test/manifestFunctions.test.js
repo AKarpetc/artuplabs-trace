@@ -38,6 +38,10 @@ describe('manifest JQL functions', () => {
     const events = manifest.modules.trigger.find((t) => t.key === 'query-events').events;
     expect(events.filter((e) => e.startsWith('avi:jira-software:') && e.endsWith(':sprint')).length).toBeGreaterThanOrEqual(2);
   });
+  it('subscribes the event trigger to comment and attachment events for the shipped comment functions', () => {
+    const events = manifest.modules.trigger.find((t) => t.key === 'query-events').events;
+    expect(['avi:jira:commented:issue', 'avi:jira:deleted:comment', 'avi:jira:created:attachment', 'avi:jira:deleted:attachment'].filter((e) => !events.includes(e))).toEqual([]);
+  });
   it('does not subscribe to comment mentions or to an edited-comment event', () => {
     const events = manifest.modules.trigger.flatMap((t) => t.events);
     expect(events.filter((e) => e === 'avi:jira:mentioned:comment' || e === 'avi:jira:updated:comment')).toEqual([]);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { linkedOthers } from '../../scripts/lib/reference.mjs';
+import { commentCountTest, hasExtension, linkedOthers, visibleTo } from '../../scripts/lib/reference.mjs';
 
 const BLOCKS = { name: 'Blocks', outward: 'blocks', inward: 'is blocked by' };
 const RELATES = { name: 'Relates', outward: 'relates to', inward: 'relates to' };
@@ -28,5 +28,22 @@ describe('reference link direction', () => {
   });
   it('matches a type name loosely only when it is no description', () => {
     expect([linkedOthers(issue, 'relates'), linkedOthers(issue, 'unknown')]).toEqual([['3'], []]);
+  });
+});
+
+describe('reference comment helpers', () => {
+  it('reads a hasComments argument the ScriptRunner way, fewer than n including no comments', () => {
+    const counts = [0, 1, 2, 3, 4];
+    const passing = (arg) => counts.filter(commentCountTest(arg));
+    expect([passing(undefined), passing('2'), passing('+2'), passing('-2')]).toEqual([[1, 2, 3, 4], [2], [3, 4], [0, 1]]);
+    expect(() => commentCountTest('two')).toThrow('unsupported comment count');
+  });
+  it('matches restricted comments by the visibility body of the REST answer', () => {
+    const role = { visibility: { type: 'role', value: 'Administrators', identifier: 'Administrators' } };
+    const group = { visibility: { type: 'group', value: 'org-admins', identifier: '5f1e-77' } };
+    expect([visibleTo(role, 'role', 'administrators'), visibleTo(role, 'group', 'Administrators'), visibleTo(group, 'group', 'ORG-ADMINS'), visibleTo(group, 'group', '5f1e-77'), visibleTo({}, 'role', 'x')]).toEqual([true, false, true, true, false]);
+  });
+  it('matches a file extension without its leading dots and never an empty one', () => {
+    expect([hasExtension('Report.PDF', '.pdf'), hasExtension('report.pdf', 'df'), hasExtension('README', '.'), hasExtension('a.tar.gz', 'gz')]).toEqual([true, false, false, true]);
   });
 });

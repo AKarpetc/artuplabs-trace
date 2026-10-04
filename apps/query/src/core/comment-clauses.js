@@ -1,7 +1,7 @@
 import { DAY_MS, parseDate, startOfDayMs } from './dates.js';
 import { ERR } from './errors.js';
 import { sortIds } from './ids.js';
-import { CLAUSES_MAX_LENGTH } from './limits.js';
+import { CLAUSES_MAX_LENGTH, EXT_MAX_LENGTH } from './limits.js';
 
 const KEYWORDS = {
   comment: ['by', 'after', 'before', 'on', 'inrole', 'ingroup', 'rolelevel', 'grouplevel'],
@@ -12,6 +12,17 @@ const DATES = new Set(['after', 'before', 'on']);
 const WORD = /"((?:[^"\\]|\\.)*)"|(\S+)/g;
 const eq = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
 const canonical = (key) => CANONICAL[key] ?? key;
+
+/** A file extension as the index stores it and a condition compares it: no leading dots, lower case, at most EXT_MAX_LENGTH characters. */
+export function normalizeExt(text) {
+  return String(text ?? '').replace(/^\.+/, '').toLowerCase().slice(0, EXT_MAX_LENGTH);
+}
+
+/** Extension of a file name (after its last dot), normalised; empty when the name has none. */
+export function extOf(name) {
+  const s = String(name ?? '');
+  return s.includes('.') ? normalizeExt(s.slice(s.lastIndexOf('.') + 1)) : '';
+}
 
 /** Clause text → words; a double-quoted part keeps its spaces and `\"` inside it stands for a quote. */
 export function tokenize(text) {
@@ -28,8 +39,8 @@ export function tokenize(text) {
 
 function readValue(clauses, name, value, now) {
   if (name === 'ext') {
-    clauses.ext = value.replace(/^\.+/, '').toLowerCase();
-    return null;
+    clauses.ext = normalizeExt(value);
+    return clauses.ext ? null : { error: ERR.clauseNeedsValue(name) };
   }
   if (!DATES.has(name)) {
     clauses[name] = value;

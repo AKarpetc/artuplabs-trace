@@ -1,4 +1,5 @@
 import { FUNCTION_BY_NAME, usage } from './catalog.js';
+import { normalizeExt } from './comment-clauses.js';
 import { ERR, LOG } from './errors.js';
 
 const PAGE = /^__aq:([lm])([1-9]\d{0,2})$/;
@@ -51,7 +52,10 @@ function parseOne(spec, raw) {
   if (spec.type === 'int' || spec.type === 'count') return parseNumber(spec, value);
   if (!value) return { error: `${spec.name} must not be empty` };
   if (PER_USER.test(value)) return { error: ERR.perUser('currentUser()') };
-  if (spec.type === 'ext') return { value: value.replace(/^\.+/, '').toLowerCase() };
+  if (spec.type === 'ext') {
+    const ext = normalizeExt(value);
+    return ext ? { value: ext } : { error: `${spec.name} must not be empty` };
+  }
   return { value };
 }
 

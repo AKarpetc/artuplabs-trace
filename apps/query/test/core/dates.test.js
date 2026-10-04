@@ -65,6 +65,12 @@ describe('parseDate edges', () => {
       expect(parseDate(text, NOW).error).toBe(`Invalid date "${text.trim()}"`);
     },
   );
+  it('reads start and end function names in any case but their units only in lower case, like relative dates', () => {
+    expect(parseDate('StartOfDay(-1d)', NOW)).toEqual({ ms: Date.UTC(2026, 9, 7) });
+    expect(['startOfDay(-1D)', 'endOfWeek("+2H")', 'startOfMonth(-1M)', '-1D'].map((t) => parseDate(t, NOW).error)).toEqual([
+      'Invalid date "startOfDay(-1D)"', 'Invalid date "endOfWeek("+2H")"', 'Invalid date "startOfMonth(-1M)"', 'Invalid date "-1D"',
+    ]);
+  });
   it('rejects offsets beyond the calendar instead of returning a non-number', () => {
     expect(parseDate('-99999999999999999999d', NOW)).toEqual({ error: 'Invalid date "-99999999999999999999d"' });
     expect(parseDate('startOfMonth(999999999999)', NOW)).toEqual({ error: 'Invalid date "startOfMonth(999999999999)"' });

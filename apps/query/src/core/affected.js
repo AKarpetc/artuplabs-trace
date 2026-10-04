@@ -9,8 +9,8 @@ const FAMILY_KINDS = {
   subtasks: ['issue-created', 'issue-deleted', 'parent'],
   board: ['sprint'],
   sprint: ['sprint', 'sprint-field', 'status', 'issue-created', 'issue-deleted', 'index-sprint'],
-  comment: ['comment', 'issue-deleted', 'index-comments'],
-  attachment: ['attachment', 'issue-deleted', 'index-comments'],
+  comment: ['comment', 'issue-created', 'issue-deleted', 'index-comments'],
+  attachment: ['attachment', 'issue-created', 'issue-deleted', 'index-comments'],
 };
 const RELATIVE = /(^|[\s"(])[-+]\d+[mhdw]\b|\b(start|end)Of(Day|Week|Month|Year)\s*\(/i;
 

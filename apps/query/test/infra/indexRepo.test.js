@@ -102,3 +102,82 @@ describe('index repo', () => {
     expect(h.prepared).toEqual([{ query: 'SELECT 1 WHERE a = ?', params: [3] }, { query: 'DELETE FROM sprint', params: [] }]);
   });
 });
+
+describe('comment and attachment rows', () => {
+  it('upserts comments with their visibility', async () => {
+    const { calls, run } = recorder();
+    await createIndexRepo(run).upsertComments([
+      { id: '1', issueId: '10', projectId: '2', author: 'a', createdAt: 5, updatedAt: 6, visType: 'role', visValue: 'Developers' },
+      { id: '2', issueId: '10', projectId: '2', author: 'b', createdAt: 7 },
+    ]);
+    expect(calls[0]).toEqual([
+      'INSERT INTO comment_meta (comment_id, issue_id, project_id, author, created_at, updated_at, vis_type, vis_value) VALUES (?,?,?,?,?,?,?,?), (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE author = VALUES(author), updated_at = VALUES(updated_at), vis_type = VALUES(vis_type), vis_value = VALUES(vis_value)',
+      ['1', '10', '2', 'a', 5, 6, 'role', 'Developers', '2', '10', '2', 'b', 7, 7, null, null],
+    ]);
+  });
+  it('upserts attachments with their extension and deletes single comments and attachments', async () => {
+    const { calls, run } = recorder();
+    const repo = createIndexRepo(run);
+    await repo.upsertAttachments([{ id: '9', issueId: '10', projectId: '2', author: 'a', createdAt: 5, ext: 'pdf' }]);
+    await repo.deleteComment('1');
+    await repo.deleteAttachment('9');
+    expect(calls).toEqual([
+      ['INSERT INTO attachment_meta (attachment_id, issue_id, project_id, author, created_at, ext) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE ext = VALUES(ext)', ['9', '10', '2', 'a', 5, 'pdf']],
+      ['DELETE FROM comment_meta WHERE comment_id = ?', ['1']],
+      ['DELETE FROM attachment_meta WHERE attachment_id = ?', ['9']],
+    ]);
+  });
+  it('counts comments per issue in SQL: at least, exactly or more than n', async () => {
+    const { calls, run } = recorder([[{ issue_id: 11 }, { issue_id: 10 }], [], []]);
+    const repo = createIndexRepo(run);
+    expect(await repo.issuesWithCommentCount({ op: 'atLeast', n: 3 })).toEqual(['10', '11']);
+    await repo.issuesWithCommentCount({ op: 'exactly', n: 2 });
+    await repo.issuesWithCommentCount({ op: 'more', n: 4 });
+    expect(calls).toEqual([
+      ['SELECT issue_id FROM comment_meta GROUP BY issue_id HAVING COUNT(*) >= ?', [3]],
+      ['SELECT issue_id FROM comment_meta GROUP BY issue_id HAVING COUNT(*) = ?', [2]],
+      ['SELECT issue_id FROM comment_meta GROUP BY issue_id HAVING COUNT(*) > ?', [4]],
+    ]);
+  });
+  it('refuses a comparison that a list of indexed issues cannot answer', async () => {
+    const { calls, run } = recorder();
+    await expect(createIndexRepo(run).issuesWithCommentCount({ op: 'fewer', n: 3 })).rejects.toThrow('fewer');
+    expect(calls).toEqual([]);
+  });
+  it('reads the latest comment of each issue', async () => {
+    const { calls, run } = recorder([[{ comment_id: 3, issue_id: 10, project_id: 2, author: 'b', created_at: 9, vis_type: null, vis_value: null }]]);
+    expect(await createIndexRepo(run).lastCommentMetas()).toEqual([{ id: '3', issueId: '10', projectId: '2', author: 'b', createdAt: 9, visType: null, visValue: null, ext: '' }]);
+    expect(calls[0][0]).toContain('MAX(created_at)');
+  });
+  it('filters comments by time window and authors in SQL', async () => {
+    const { calls, run } = recorder([[{ comment_id: 1, issue_id: 10, project_id: 2, author: 'a', created_at: '7', vis_type: 'group', vis_value: 'staff' }], [], []]);
+    const repo = createIndexRepo(run);
+    expect(await repo.commentMetas({ after: 5, before: 9, authors: ['a', 'b'] })).toEqual([{ id: '1', issueId: '10', projectId: '2', author: 'a', createdAt: 7, visType: 'group', visValue: 'staff', ext: '' }]);
+    await repo.commentMetas({ authors: [] });
+    await repo.commentMetas();
+    expect(calls).toEqual([
+      ['SELECT comment_id, issue_id, project_id, author, created_at, vis_type, vis_value FROM comment_meta WHERE created_at > ? AND created_at < ? AND author IN (?,?)', [5, 9, 'a', 'b']],
+      ['SELECT comment_id, issue_id, project_id, author, created_at, vis_type, vis_value FROM comment_meta WHERE author IN (?)', ['']],
+      ['SELECT comment_id, issue_id, project_id, author, created_at, vis_type, vis_value FROM comment_meta', []],
+    ]);
+  });
+  it('reads attachments, optionally of one extension', async () => {
+    const { calls, run } = recorder([[{ attachment_id: 9, issue_id: 10, project_id: 2, author: 'a', created_at: 5, ext: 'pdf' }], []]);
+    const repo = createIndexRepo(run);
+    expect(await repo.attachmentMetas({ ext: 'pdf' })).toEqual([{ id: '9', issueId: '10', projectId: '2', author: 'a', createdAt: 5, visType: null, visValue: null, ext: 'pdf' }]);
+    expect(await repo.attachmentMetas()).toEqual([]);
+    expect(calls).toEqual([
+      ['SELECT attachment_id, issue_id, project_id, author, created_at, ext FROM attachment_meta WHERE ext = ?', ['pdf']],
+      ['SELECT attachment_id, issue_id, project_id, author, created_at, ext FROM attachment_meta', []],
+    ]);
+  });
+  it('reads the first and last comment time of issues', async () => {
+    const { calls, run } = recorder([[{ issue_id: 10, f: '3', l: 9 }]]);
+    expect([...(await createIndexRepo(run).commentBounds(['10', '11'])).entries()]).toEqual([['10', { first: 3, last: 9 }]]);
+    expect(calls[0]).toEqual(['SELECT issue_id, MIN(created_at) AS f, MAX(created_at) AS l FROM comment_meta WHERE issue_id IN (?,?) GROUP BY issue_id', ['10', '11']]);
+  });
+  it('reads empty answers as no rows', async () => {
+    const repo = createIndexRepo(async () => ({}));
+    expect([await repo.commentMetas(), await repo.lastCommentMetas(), await repo.issuesWithCommentCount({ op: 'atLeast', n: 1 }), await repo.attachmentMetas(), (await repo.commentBounds(['1'])).size]).toEqual([[], [], [], [], 0]);
+  });
+});

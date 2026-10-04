@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { issuesWith, metaMatches, parseClauses, tokenize } from '../../src/core/comment-clauses.js';
+import { issuesWith, metaMatches, parseClauses, tokenize, extOf, normalizeExt } from '../../src/core/comment-clauses.js';
 import { CLAUSES_MAX_LENGTH } from '../../src/core/limits.js';
 
 const NOW = Date.UTC(2026, 9, 8, 15, 0);
@@ -47,6 +47,15 @@ describe('parseClauses', () => {
   it('accepts ext only for attachments, without a dot and in lower case', () => {
     expect(parseClauses('ext .PDF', 'attachment', NOW)).toEqual({ clauses: { ext: 'pdf' } });
     expect(parseClauses('ext pdf', 'comment', NOW)).toEqual({ error: 'Unknown clause "ext"; use by, after, before, on, inRole, inGroup, roleLevel, groupLevel' });
+  });
+  it('rejects an extension that is empty without its dots, so it never matches every file without one', () => {
+    expect(parseClauses('ext .', 'attachment', NOW)).toEqual({ error: 'Clause "ext" needs a value' });
+    expect(parseClauses('ext "..."', 'attachment', NOW)).toEqual({ error: 'Clause "ext" needs a value' });
+  });
+  it('normalises the extension of a file name and of a clause the same way', () => {
+    expect([normalizeExt('.PDF'), normalizeExt('..Tar'), normalizeExt('x'.repeat(40))]).toEqual(['pdf', 'tar', 'x'.repeat(32)]);
+    expect([extOf('Report.Final.XLSX'), extOf('README'), extOf('trailing.'), extOf(undefined)]).toEqual(['xlsx', '', '', '']);
+    expect(parseClauses(`ext ${'x'.repeat(40)}`, 'attachment', NOW)).toEqual({ clauses: { ext: 'x'.repeat(32) } });
   });
   it('explains a clause without a value, a repeated clause and a bad date', () => {
     expect(parseClauses('by', 'comment', NOW)).toEqual({ error: 'Clause "by" needs a value' });
