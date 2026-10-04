@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Elementy robocze usunięte ze sprintu po jego rozpoczęciu i niezwrócone przed jego zamknięciem.",
   "fn.incompleteInSprint": "Elementy robocze, które były w sprincie w chwili zamknięcia i nie są ukończone.",
   "fn.completeInSprint": "Elementy robocze, które były w sprincie w chwili zamknięcia i są ukończone.",
-  "fn.commented": "Elementy robocze z komentarzami spełniającymi warunki: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Elementy robocze z komentarzami spełniającymi warunki: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Elementy robocze, których ostatni komentarz spełnia warunki.",
   "fn.hasComments": "Elementy robocze z komentarzami: bez liczby — dowolna liczba; \"n\" — dokładnie n, \"+n\" — więcej niż n, \"-n\" — mniej niż n.",
   "fn.fileAttached": "Elementy robocze z załącznikami spełniającymi warunki: by, after, before, on, ext.",

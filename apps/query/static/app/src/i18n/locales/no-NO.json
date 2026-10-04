@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Arbeidselementer fjernet fra en sprint etter start og ikke lagt tilbake før den ble lukket.",
   "fn.incompleteInSprint": "Arbeidselementer som var i sprinten da den ble lukket, og som ikke er ferdige.",
   "fn.completeInSprint": "Arbeidselementer som var i sprinten da den ble lukket, og som er ferdige.",
-  "fn.commented": "Arbeidselementer med kommentarer som samsvarer med betingelsene: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Arbeidselementer med kommentarer som samsvarer med betingelsene: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Arbeidselementer der siste kommentar samsvarer med betingelsene.",
   "fn.hasComments": "Arbeidselementer med kommentarer: uten tall et hvilket som helst antall; \"n\" for nøyaktig n, \"+n\" for flere enn n, \"-n\" for færre enn n.",
   "fn.fileAttached": "Arbeidselementer med vedlegg som samsvarer med betingelsene: by, after, before, on, ext.",

@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Werkitems die na de start uit een sprint zijn verwijderd en niet vóór de afsluiting zijn teruggezet.",
   "fn.incompleteInSprint": "Werkitems die bij de afsluiting in de sprint zaten en niet klaar zijn.",
   "fn.completeInSprint": "Werkitems die bij de afsluiting in de sprint zaten en klaar zijn.",
-  "fn.commented": "Werkitems met opmerkingen die aan de voorwaarden voldoen: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Werkitems met opmerkingen die aan de voorwaarden voldoen: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Werkitems waarvan de laatste opmerking aan de voorwaarden voldoet.",
   "fn.hasComments": "Werkitems met opmerkingen: zonder getal een willekeurig aantal; \"n\" voor precies n, \"+n\" voor meer dan n, \"-n\" voor minder dan n.",
   "fn.fileAttached": "Werkitems met bijlagen die aan de voorwaarden voldoen: by, after, before, on, ext.",

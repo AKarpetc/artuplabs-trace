@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "스프린트 시작 후 제거되어 완료 전까지 다시 추가되지 않은 업무 항목.",
   "fn.incompleteInSprint": "스프린트 완료 시 스프린트에 있었고 완료되지 않은 업무 항목.",
   "fn.completeInSprint": "스프린트 완료 시 스프린트에 있었고 완료된 업무 항목.",
-  "fn.commented": "절과 일치하는 댓글이 있는 업무 항목: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "절과 일치하는 댓글이 있는 업무 항목: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "마지막 댓글이 절과 일치하는 업무 항목.",
   "fn.hasComments": "댓글이 있는 업무 항목: 숫자가 없으면 개수 무관, \"n\"은 정확히 n개, \"+n\"은 n개 초과, \"-n\"은 n개 미만.",
   "fn.fileAttached": "절과 일치하는 첨부 파일이 있는 업무 항목: by, after, before, on, ext.",

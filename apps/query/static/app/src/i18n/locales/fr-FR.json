@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Tickets retirés d'un sprint après son début et non remis avant sa clôture.",
   "fn.incompleteInSprint": "Tickets présents dans le sprint à sa clôture et non terminés.",
   "fn.completeInSprint": "Tickets présents dans le sprint à sa clôture et terminés.",
-  "fn.commented": "Tickets avec des commentaires qui répondent aux clauses : by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Tickets avec des commentaires qui répondent aux clauses : by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Tickets dont le dernier commentaire répond aux clauses.",
   "fn.hasComments": "Tickets avec des commentaires : sans nombre, n'importe combien ; \"n\" pour exactement n, \"+n\" pour plus de n, \"-n\" pour moins de n.",
   "fn.fileAttached": "Tickets avec des pièces jointes qui répondent aux clauses : by, after, before, on, ext.",

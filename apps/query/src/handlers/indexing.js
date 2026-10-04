@@ -17,15 +17,16 @@ const isStatus = (item) => item?.fieldId === 'status' || item?.field === 'status
 const ZONELESS = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
 const COMMENT_EVENTS = new Set(['avi:jira:commented:issue', 'avi:jira:deleted:comment', 'avi:jira:created:attachment', 'avi:jira:deleted:attachment', 'avi:jira:created:issue']);
 
-/** Time of a comment or an attachment; an attachment event writes its date without a zone, in UTC; an unreadable date falls back to the event time. */
-const timeOf = (value, fallback) => toMs(ZONELESS.test(String(value ?? '')) ? `${String(value).replace(' ', 'T')}Z` : value) ?? toMs(fallback) ?? 0;
+/** Time of a comment or an attachment; an attachment event writes its date without a zone, in UTC; an unreadable date falls back to the event time, else null. */
+const timeOf = (value, fallback) => toMs(ZONELESS.test(String(value ?? '')) ? `${String(value).replace(' ', 'T')}Z` : value) ?? toMs(fallback);
+const dated = (metas) => metas.filter((m) => m.createdAt !== null);
 const commentMeta = (c, issueId, projectId, at) => ({
   id: String(c.id),
   issueId: String(issueId),
   projectId: String(projectId),
   author: c.author?.accountId ?? '',
   createdAt: timeOf(c.created, at),
-  updatedAt: timeOf(c.updated ?? c.created, at),
+  updatedAt: timeOf(c.updated, at) ?? timeOf(c.created, at),
   visType: c.visibility?.type ?? null,
   visValue: c.visibility?.value ?? c.visibility?.identifier ?? null,
 });
@@ -69,8 +70,8 @@ export function createIndexing(deps) {
           comments.push(...(await readComments(issue)).map((c) => commentMeta(c, issue.id, project.id)));
           attachments.push(...(issue.fields?.attachment ?? []).map((a) => attachmentMeta(a, issue.id, project.id)));
         }
-        await deps.repo.upsertComments(comments);
-        await deps.repo.upsertAttachments(attachments);
+        await deps.repo.upsertComments(dated(comments));
+        await deps.repo.upsertAttachments(dated(attachments));
       },
     },
     sprint: {
@@ -129,8 +130,8 @@ export function createIndexing(deps) {
     const project = await included(event.issue ? event : { issue: { id: issueId } });
     if (!project) return null;
     if (type === 'avi:jira:created:issue') return parts.comments.index([issueId], project);
-    if (event.comment) return deps.repo.upsertComments([commentMeta(event.comment, issueId, project.id, event.timestamp)]);
-    return deps.repo.upsertAttachments([attachmentMeta(event.attachment, issueId, project.id, event.timestamp)]);
+    if (event.comment) return deps.repo.upsertComments(dated([commentMeta(event.comment, issueId, project.id, event.timestamp)]));
+    return deps.repo.upsertAttachments(dated([attachmentMeta(event.attachment, issueId, project.id, event.timestamp)]));
   }
 
   async function indexSprintEvent(type, event) {

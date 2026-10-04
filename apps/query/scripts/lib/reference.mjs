@@ -260,7 +260,7 @@ async function allComments(scopeJql) {
   for (const x of await bulk(await must(scopeJql), ['comment', 'attachment', 'project'])) {
     let list = x.fields.comment?.comments ?? [];
     if ((x.fields.comment?.total ?? 0) > list.length) list = (await api('GET', `/rest/api/3/issue/${x.id}/comment?maxResults=5000`)).comments;
-    out.push({ id: String(x.id), project: x.fields.project.key, comments: list, attachments: x.fields.attachment ?? [] });
+    out.push({ id: String(x.id), project: x.fields.project.key, comments: list.filter((c) => !c.visibility), attachments: x.fields.attachment ?? [] });
   }
   commentCache.set(scopeJql, out);
   return out;
@@ -305,17 +305,10 @@ const DATE_TESTS = {
   },
 };
 
-/** Visibility of a comment as the REST body gives it: a role by name, a group by name or by its id. */
-export function visibleTo(item, kind, value) {
-  const v = item.visibility;
-  if (v?.type !== kind) return false;
-  return (kind === 'group' ? [v.value, v.identifier] : [v.value]).some((x) => lower(x) === lower(value));
-}
-
 /** Whether a file name ends with the extension of a condition, leading dots of the condition ignored. */
 export const hasExtension = (filename, ext) => Boolean(bareExt(ext)) && lower(filename).endsWith(`.${bareExt(ext)}`);
 
-/** Clause text → test of one comment or attachment of a project, written apart from the app's parser. */
+/** Clause text → test of one comment visible to everyone or one attachment of a project, written apart from the app's parser. */
 async function clauseTest(text, projects) {
   const w = words(text);
   const tests = [];
@@ -328,8 +321,6 @@ async function clauseTest(text, projects) {
       const people = /^[0-9a-f]{24}$|^\d+:[0-9a-f-]{36}$/i.test(value) ? [value] : (await api('GET', `/rest/api/3/user/search?query=${encodeURIComponent(value)}`)).map((u) => u.accountId);
       tests.push((item) => people.includes(item.author?.accountId));
     } else if (key === 'ext') tests.push((item) => hasExtension(item.filename, value));
-    else if (key === 'rolelevel') tests.push((item) => visibleTo(item, 'role', value));
-    else if (key === 'grouplevel') tests.push((item) => visibleTo(item, 'group', value));
     else if (key === 'ingroup') {
       const members = await membersOfGroup(value);
       tests.push((item) => members.has(item.author?.accountId));

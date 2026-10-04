@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "衝刺開始後移除且在衝刺關閉前未加回的工作項目。",
   "fn.incompleteInSprint": "衝刺關閉時在衝刺中且未完成的工作項目。",
   "fn.completeInSprint": "衝刺關閉時在衝刺中且已完成的工作項目。",
-  "fn.commented": "留言符合子句的工作項目：by、after、before、on、inRole、inGroup、roleLevel、groupLevel。",
+  "fn.commented": "留言符合子句的工作項目：by、after、before、on、inRole、inGroup。",
   "fn.lastComment": "最後一則留言符合子句的工作項目。",
   "fn.hasComments": "有留言的工作項目：不帶數字為任意則數；\"n\" 為剛好 n 則，\"+n\" 為多於 n 則，\"-n\" 為少於 n 則。",
   "fn.fileAttached": "附件符合子句的工作項目：by、after、before、on、ext。",

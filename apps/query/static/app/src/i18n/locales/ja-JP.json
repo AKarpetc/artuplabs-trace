@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "スプリント開始後に削除され、完了までに戻されなかった作業項目。",
   "fn.incompleteInSprint": "スプリント完了時にスプリントにあり、完了していない作業項目。",
   "fn.completeInSprint": "スプリント完了時にスプリントにあり、完了している作業項目。",
-  "fn.commented": "句に一致するコメントがある作業項目: by、after、before、on、inRole、inGroup、roleLevel、groupLevel。",
+  "fn.commented": "句に一致するコメントがある作業項目: by、after、before、on、inRole、inGroup。",
   "fn.lastComment": "最後のコメントが句に一致する作業項目。",
   "fn.hasComments": "コメントがある作業項目: 数値なしは件数を問わず、\"n\" はちょうど n 件、\"+n\" は n 件より多い、\"-n\" は n 件より少ない。",
   "fn.fileAttached": "句に一致する添付ファイルがある作業項目: by、after、before、on、ext。",

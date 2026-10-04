@@ -265,6 +265,16 @@ describe('comment and attachment events', () => {
   });
 });
 
+describe('comment part dates', () => {
+  it('skips a comment or an attachment whose date cannot be read instead of storing it at 1970', async () => {
+    const deps = makeDeps();
+    deps.jira.bulkIssues = async () => [{ id: '7', fields: { comment: { total: 2, comments: [{ id: '1', author: { accountId: 'a' } }, { id: '2', author: { accountId: 'a' }, created: '2026-01-01T00:00:00.000+0000', updated: 'garbage' }] }, attachment: [{ id: '4', filename: 'x.pdf', created: 'soon' }] } }];
+    await createIndexing(deps).parts.comments.index(['7'], { id: '10', key: 'JQLG' });
+    expect(deps.repo.upsertComments).toHaveBeenCalledWith([{ id: '2', issueId: '7', projectId: '10', author: 'a', createdAt: Date.UTC(2026, 0, 1), updatedAt: Date.UTC(2026, 0, 1), visType: null, visValue: null }]);
+    expect(deps.repo.upsertAttachments).toHaveBeenCalledWith([]);
+  });
+});
+
 describe('comment part', () => {
   it('reads every comment of an issue whose bulkfetch list is cut', async () => {
     const deps = makeDeps();

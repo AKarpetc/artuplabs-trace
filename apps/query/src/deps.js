@@ -52,7 +52,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
       ...createLinkCompute({ jira }),
       ...createBoardCompute({ jira }),
       ...createSprintCompute({ jira, repo, state, now: () => Date.now() }),
-      ...createCommentCompute({ jira, repo, state, now: () => Date.now() }),
+      ...createCommentCompute({ jira, repo, now: () => Date.now() }),
     },
     withDeadline,
     migrate: runMigrations,

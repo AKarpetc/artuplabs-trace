@@ -250,14 +250,10 @@ FRESH.sprint = async () => {
 };
 
 const REF_SCOPE = 'project in (JQLG, RPT)';
-const NOT_ON_DEV = { skip: 'not testable on dev: Jira Free has no comment visibility restrictions' };
-const JG7_SEED = new URL('../../../atlassian/data/jg7-seed.json', import.meta.url);
 const M3_PARTS = [];
 Object.defineProperty(CASES, 'm3', { enumerable: true, get: () => M3_PARTS.flatMap((part) => part()) });
 
-const commentCases = () => {
-  const { comments } = JSON.parse(readFileSync(JG7_SEED, 'utf8'));
-  return [
+const commentCases = () => [
     ['hasComments', [], 'every issue with a comment (site-wide)', REF_SCOPE],
     ['hasComments', ['1'], 'exactly one comment', REF_SCOPE],
     ['hasComments', ['+2'], 'more than 2 comments', REF_SCOPE],
@@ -265,13 +261,10 @@ const commentCases = () => {
     ['commented', [], 'no clauses: any comment', REF_SCOPE],
     ['commented', ['after 2020-01-01'], 'any author since 2020 (site-wide)', REF_SCOPE],
     ['commented', ['by @me after 2020-01-01'], 'one author, all time', REF_SCOPE],
-    ['commented', [`roleLevel "${comments.restricted.role}"`], 'restricted to a role', REF_SCOPE, comments.roleUsable ? {} : NOT_ON_DEV],
-    ['commented', [`groupLevel "${comments.restricted.group}"`], 'restricted to a group', REF_SCOPE, comments.groupUsable ? {} : NOT_ON_DEV],
     ['lastComment', ['by @me'], 'last comment by one author', REF_SCOPE],
     ['commented', ['inGroup jira-users-artuplabs-dev after 2020-01-01'], 'authors of one group, members read as the app', REF_SCOPE],
     ['lastComment', ['inRole Administrators'], 'authors in a project role, members read per project as the app', REF_SCOPE],
-  ];
-};
+];
 const attachmentCases = () => [
   ['hasAttachments', [], 'every issue with an attachment (site-wide, native)', REF_SCOPE],
   ['hasAttachments', ['pdf'], 'one extension', REF_SCOPE],

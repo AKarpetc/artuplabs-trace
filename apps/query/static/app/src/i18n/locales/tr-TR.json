@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Sprint başladıktan sonra çıkarılan ve sprint kapanmadan geri eklenmeyen iş öğeleri.",
   "fn.incompleteInSprint": "Sprint kapandığında sprintte olan ve tamamlanmamış iş öğeleri.",
   "fn.completeInSprint": "Sprint kapandığında sprintte olan ve tamamlanmış iş öğeleri.",
-  "fn.commented": "Koşullarla eşleşen yorumları olan iş öğeleri: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Koşullarla eşleşen yorumları olan iş öğeleri: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Son yorumu koşullarla eşleşen iş öğeleri.",
   "fn.hasComments": "Yorumu olan iş öğeleri: sayı yoksa herhangi bir sayıda; \"n\" tam olarak n, \"+n\" n’den fazla, \"-n\" n’den az.",
   "fn.fileAttached": "Koşullarla eşleşen ekleri olan iş öğeleri: by, after, before, on, ext.",

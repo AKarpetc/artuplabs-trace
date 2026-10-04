@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "冲刺开始后被移除且在冲刺关闭前未加回的工作项。",
   "fn.incompleteInSprint": "冲刺关闭时在冲刺中且未完成的工作项。",
   "fn.completeInSprint": "冲刺关闭时在冲刺中且已完成的工作项。",
-  "fn.commented": "评论符合子句的工作项：by、after、before、on、inRole、inGroup、roleLevel、groupLevel。",
+  "fn.commented": "评论符合子句的工作项：by、after、before、on、inRole、inGroup。",
   "fn.lastComment": "最后一条评论符合子句的工作项。",
   "fn.hasComments": "有评论的工作项：不带数字为任意条数；\"n\" 为恰好 n 条，\"+n\" 为多于 n 条，\"-n\" 为少于 n 条。",
   "fn.fileAttached": "附件符合子句的工作项：by、after、before、on、ext。",

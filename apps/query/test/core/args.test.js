@@ -62,6 +62,9 @@ describe('parseArgs', () => {
   it('normalises a file extension', () => {
     expect(parseArgs('hasAttachments', ['.XLSX']).args).toEqual({ extension: 'xlsx' });
   });
+  it('rejects an extension with a dot inside', () => {
+    expect(parseArgs('hasAttachments', ['tar.gz'])).toEqual({ error: 'hasAttachments: extension takes the part after the last dot, such as gz' });
+  });
   it('rejects an extension that is only dots', () => {
     expect(parseArgs('hasAttachments', ['..'])).toEqual({ error: 'hasAttachments: extension must not be empty' });
   });

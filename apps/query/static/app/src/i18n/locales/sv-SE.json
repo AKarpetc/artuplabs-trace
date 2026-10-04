@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Arbetsobjekt som tagits bort från en sprint efter start och inte lagts tillbaka innan den stängdes.",
   "fn.incompleteInSprint": "Arbetsobjekt som var med i sprinten när den stängdes och inte är klara.",
   "fn.completeInSprint": "Arbetsobjekt som var med i sprinten när den stängdes och är klara.",
-  "fn.commented": "Arbetsobjekt med kommentarer som matchar villkoren: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Arbetsobjekt med kommentarer som matchar villkoren: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Arbetsobjekt vars senaste kommentar matchar villkoren.",
   "fn.hasComments": "Arbetsobjekt med kommentarer: utan tal valfritt antal; \"n\" för exakt n, \"+n\" för fler än n, \"-n\" för färre än n.",
   "fn.fileAttached": "Arbetsobjekt med bilagor som matchar villkoren: by, after, before, on, ext.",

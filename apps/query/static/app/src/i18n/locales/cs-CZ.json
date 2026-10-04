@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Pracovní položky odebrané ze sprintu po jeho zahájení a nevrácené před jeho uzavřením.",
   "fn.incompleteInSprint": "Pracovní položky, které byly ve sprintu při jeho uzavření a nejsou hotové.",
   "fn.completeInSprint": "Pracovní položky, které byly ve sprintu při jeho uzavření a jsou hotové.",
-  "fn.commented": "Pracovní položky s komentáři, které odpovídají podmínkám: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Pracovní položky s komentáři, které odpovídají podmínkám: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Pracovní položky, jejichž poslední komentář odpovídá podmínkám.",
   "fn.hasComments": "Pracovní položky s komentáři: bez čísla libovolný počet; \"n\" přesně n, \"+n\" více než n, \"-n\" méně než n.",
   "fn.fileAttached": "Pracovní položky s přílohami, které odpovídají podmínkám: by, after, before, on, ext.",

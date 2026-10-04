@@ -135,13 +135,26 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     return (await paged(`/rest/api/3/group/member?groupname=${enc(name)}&includeInactiveUsers=true`)).map((u) => u.accountId);
   }
 
-  async function roleMemberIds(projectKey, roleName) {
+  async function roleGroupMembers(name) {
+    try {
+      return await groupMemberIds(name);
+    } catch (error) {
+      if (error instanceof JiraError && error.status === 404) return [];
+      throw error;
+    }
+  }
+
+  /** Members of a project role, or null when the project has no such role; `groups` caches role groups across the calls that share it, and a role group Jira no longer knows has no members. */
+  async function roleMemberIds(projectKey, roleName, { groups = new Map() } = {}) {
     const roles = (await call('GET', `/rest/api/3/project/${enc(projectKey)}/role`)) ?? {};
     const url = Object.entries(roles).find(([name]) => name.toLowerCase() === String(roleName).toLowerCase())?.[1];
     if (!url) return null;
     const role = await call('GET', `/rest/api/3/project/${enc(projectKey)}/role/${enc(String(url).split('/').pop())}`);
     const users = (role?.actors ?? []).filter((a) => a.actorUser).map((a) => a.actorUser.accountId);
-    for (const group of (role?.actors ?? []).filter((a) => a.actorGroup).map((a) => a.actorGroup.name)) users.push(...(await groupMemberIds(group)));
+    for (const group of (role?.actors ?? []).filter((a) => a.actorGroup).map((a) => a.actorGroup.name)) {
+      if (!groups.has(group)) groups.set(group, roleGroupMembers(group));
+      users.push(...(await groups.get(group)));
+    }
     return [...new Set(users)];
   }
 

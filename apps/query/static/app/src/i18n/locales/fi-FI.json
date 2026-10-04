@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Sprintistä sen alkamisen jälkeen poistetut työkohteet, joita ei palautettu ennen sulkemista.",
   "fn.incompleteInSprint": "Työkohteet, jotka olivat sprintissä sen sulkeutuessa eivätkä ole valmiita.",
   "fn.completeInSprint": "Työkohteet, jotka olivat sprintissä sen sulkeutuessa ja ovat valmiita.",
-  "fn.commented": "Työkohteet, joiden kommentit vastaavat ehtoja: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Työkohteet, joiden kommentit vastaavat ehtoja: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Työkohteet, joiden viimeisin kommentti vastaa ehtoja.",
   "fn.hasComments": "Työkohteet, joilla on kommentteja: ilman lukua mikä tahansa määrä; \"n\" tarkalleen n, \"+n\" enemmän kuin n, \"-n\" vähemmän kuin n.",
   "fn.fileAttached": "Työkohteet, joiden liitteet vastaavat ehtoja: by, after, before, on, ext.",

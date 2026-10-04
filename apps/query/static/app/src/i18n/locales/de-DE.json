@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Nach Sprintbeginn entfernte Arbeitselemente, die vor dem Sprintabschluss nicht zurückkamen.",
   "fn.incompleteInSprint": "Arbeitselemente, die beim Abschluss im Sprint waren und nicht erledigt sind.",
   "fn.completeInSprint": "Arbeitselemente, die beim Abschluss im Sprint waren und erledigt sind.",
-  "fn.commented": "Arbeitselemente mit Kommentaren, die den Bedingungen entsprechen: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Arbeitselemente mit Kommentaren, die den Bedingungen entsprechen: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Arbeitselemente, deren letzter Kommentar den Bedingungen entspricht.",
   "fn.hasComments": "Arbeitselemente mit Kommentaren: ohne Zahl beliebig viele; \"n\" für genau n, \"+n\" für mehr als n, \"-n\" für weniger als n.",
   "fn.fileAttached": "Arbeitselemente mit Anhängen, die den Bedingungen entsprechen: by, after, before, on, ext.",

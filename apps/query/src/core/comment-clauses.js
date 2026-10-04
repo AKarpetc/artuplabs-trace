@@ -1,16 +1,15 @@
 import { DAY_MS, parseDate, startOfDayMs } from './dates.js';
 import { ERR } from './errors.js';
-import { sortIds } from './ids.js';
 import { CLAUSES_MAX_LENGTH, EXT_MAX_LENGTH } from './limits.js';
 
 const KEYWORDS = {
-  comment: ['by', 'after', 'before', 'on', 'inrole', 'ingroup', 'rolelevel', 'grouplevel'],
+  comment: ['by', 'after', 'before', 'on', 'inrole', 'ingroup'],
   attachment: ['by', 'after', 'before', 'on', 'ext'],
 };
+const LATER = { comment: ['rolelevel', 'grouplevel'] };
 const CANONICAL = { inrole: 'inRole', ingroup: 'inGroup', rolelevel: 'roleLevel', grouplevel: 'groupLevel' };
 const DATES = new Set(['after', 'before', 'on']);
 const WORD = /"((?:[^"\\]|\\.)*)"|(\S+)/g;
-const eq = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
 const canonical = (key) => CANONICAL[key] ?? key;
 
 /** A file extension as the index stores it and a condition compares it: no leading dots, lower case, at most EXT_MAX_LENGTH characters. */
@@ -40,7 +39,8 @@ export function tokenize(text) {
 function readValue(clauses, name, value, now) {
   if (name === 'ext') {
     clauses.ext = normalizeExt(value);
-    return clauses.ext ? null : { error: ERR.clauseNeedsValue(name) };
+    if (!clauses.ext) return { error: ERR.clauseNeedsValue(name) };
+    return clauses.ext.includes('.') ? { error: ERR.extensionDot(name) } : null;
   }
   if (!DATES.has(name)) {
     clauses[name] = value;
@@ -64,6 +64,7 @@ export function parseClauses(text, kind, now) {
   const seen = new Set();
   for (let i = 0; i < t.words.length; i += 2) {
     const key = t.words[i].toLowerCase();
+    if (LATER[kind]?.includes(key)) return { error: ERR.clauseNotYet(canonical(key)) };
     if (!allowed.includes(key)) return { error: ERR.unknownClause(t.words[i], allowed.map(canonical)) };
     const name = canonical(key);
     if (i + 1 >= t.words.length || t.words[i + 1] === '') return { error: ERR.clauseNeedsValue(name) };
@@ -73,33 +74,4 @@ export function parseClauses(text, kind, now) {
     if (failed) return failed;
   }
   return { clauses };
-}
-
-/** Whether one comment or attachment passes every clause; people holds account ids resolved for by, inGroup and inRole. */
-export function metaMatches(meta, clauses, people) {
-  if (clauses.by !== undefined && !people?.by?.has(meta.author)) return false;
-  if (clauses.inGroup !== undefined && !people?.inGroup?.has(meta.author)) return false;
-  if (clauses.inRole !== undefined && !people?.inRole?.get(String(meta.projectId))?.has(meta.author)) return false;
-  if (clauses.roleLevel !== undefined && !(meta.visType === 'role' && eq(meta.visValue, clauses.roleLevel))) return false;
-  if (clauses.groupLevel !== undefined && !(meta.visType === 'group' && eq(meta.visValue, clauses.groupLevel))) return false;
-  if (clauses.after !== undefined && !(meta.createdAt > clauses.after)) return false;
-  if (clauses.before !== undefined && !(meta.createdAt < clauses.before)) return false;
-  if (clauses.onStart !== undefined && !(meta.createdAt >= clauses.onStart && meta.createdAt < clauses.onEnd)) return false;
-  if (clauses.ext !== undefined && meta.ext !== clauses.ext) return false;
-  return true;
-}
-
-function lastPerIssue(metas) {
-  const latest = new Map();
-  for (const m of metas) {
-    const cur = latest.get(m.issueId);
-    if (!cur || m.createdAt > cur.createdAt || (m.createdAt === cur.createdAt && Number(m.id) > Number(cur.id))) latest.set(m.issueId, m);
-  }
-  return [...latest.values()];
-}
-
-/** Issues with a matching comment or attachment; with `last`, only each issue's latest comment is checked. */
-export function issuesWith(metas, clauses, { last = false, people = {} } = {}) {
-  const pool = last ? lastPerIssue(metas) : metas;
-  return sortIds(pool.filter((m) => metaMatches(m, clauses, people)).map((m) => m.issueId));
 }

@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Itens de trabalho removidos de um sprint depois do início e não repostos antes da conclusão.",
   "fn.incompleteInSprint": "Itens de trabalho que estavam no sprint na conclusão e não foram concluídos.",
   "fn.completeInSprint": "Itens de trabalho que estavam no sprint na conclusão e foram concluídos.",
-  "fn.commented": "Itens de trabalho com comentários que cumprem as cláusulas: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Itens de trabalho com comentários que cumprem as cláusulas: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Itens de trabalho cujo último comentário cumpre as cláusulas.",
   "fn.hasComments": "Itens de trabalho com comentários: sem número, qualquer quantidade; \"n\" para exatamente n, \"+n\" para mais de n, \"-n\" para menos de n.",
   "fn.fileAttached": "Itens de trabalho com anexos que cumprem as cláusulas: by, after, before, on, ext.",

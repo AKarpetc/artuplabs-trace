@@ -291,6 +291,15 @@ describe('rewrite', () => {
     expect((await rewrite(deps, group('parentsOf', ['q'], items), [])).updates).toEqual([{ id: 'a', value: 'id in (4)' }, { id: 'b', value: 'NOT (id in (4))' }]);
     expect(compute.parentsOf).toHaveBeenCalledTimes(1);
   });
+  it('leaves excluded projects out of the stored roots under both operators', async () => {
+    const deps = makeDeps({ compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
+    await deps.state.setExcluded(['OPS']);
+    const items = [{ id: 'a', arguments: ['q'], operator: 'in' }, { id: 'b', arguments: ['q'], operator: 'not in' }];
+    expect((await rewrite(deps, group('parentsOf', ['q'], items), [])).updates).toEqual([
+      { id: 'a', value: '(id in (4)) AND project not in ("OPS")' },
+      { id: 'b', value: 'NOT (id in (4)) AND project not in ("OPS")' },
+    ]);
+  });
   it('stores the same error for a not in precomputation as for in', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ error: 'Board "B" not found', log: 'Board not found' }) } });
     expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], operator: 'not in', value: 'NOT (sprint = 1)' }]), [])).updates).toEqual([{ id: 'x', error: 'Board "B" not found' }]);
@@ -633,6 +642,13 @@ describe('onRefresh compute job precomputations', () => {
     const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
     expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } })).toEqual({ computed: 'parentsOf["q"]', changed: 1 });
     expect(deps.written).toEqual([{ id: 'root', value: 'id in (4)', error: null }]);
+  });
+  it('leaves excluded projects out of a deferred group written by the job', async () => {
+    const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], operator: 'not in', error: 'Computing, retry in a minute', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
+    await deps.state.setExcluded(['OPS']);
+    await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } });
+    expect(deps.written).toEqual([{ id: 'root', value: 'NOT (id in (4)) AND project not in ("OPS")', error: null }]);
   });
   it('writes the complement over the Computing error of a deferred not in call', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], operator: 'not in', error: 'Computing, retry in a minute', used: RECENT }];

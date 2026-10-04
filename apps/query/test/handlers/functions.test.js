@@ -167,6 +167,21 @@ describe('handleFunction with not in', () => {
     const deps = fnDeps({ hasComments: async () => ({ native: 'NOT (issue in hasComments("+2"))' }) });
     expect(await handleFunction(deps, 'hasComments', notIn('-3'), DEV)).toEqual({ jql: 'NOT (NOT (issue in hasComments("+2")))' });
   });
+  it('leaves excluded projects out of the root under both operators, but not out of a page', async () => {
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) });
+    await deps.state.setExcluded(['OPS']);
+    expect(await handleFunction(deps, 'parentsOf', payload('q'), DEV)).toEqual({ jql: '(id in (3)) AND project not in ("OPS")' });
+    expect(await handleFunction(deps, 'parentsOf', notIn('q'), DEV)).toEqual({ jql: 'NOT (id in (3)) AND project not in ("OPS")' });
+    await deps.cache.write(SUBTASK_GROUP, jobEntry(ids(1500)));
+    expect((await handleFunction(deps, 'subtasksOf', payload('project = A', '__aq:l2'), DEV)).jql).not.toContain('OPS');
+  });
+  it('answers Computing when the excluded projects cannot be read, never an unfiltered result', async () => {
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) });
+    deps.state.excluded = async () => { throw new Error('kvs down'); };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await handleFunction(deps, 'parentsOf', notIn('q'), DEV)).toEqual({ error: 'Computing, retry in a minute', storeErrorAsPrecomputation: false });
+    error.mockRestore();
+  });
   it('answers a cached page with its complement too', async () => {
     const deps = fnDeps({});
     await deps.cache.write(SUBTASK_GROUP, jobEntry(ids(1500)));

@@ -28,6 +28,8 @@ export const ERR = {
   clauseNeedsValue: (name) => `Clause "${name}" needs a value`,
   clauseTwice: (name) => `Clause "${name}" is given twice`,
   clausesTooLong: (max) => `Conditions are longer than ${fmt(max)} characters`,
+  clauseNotYet: (name) => `Clause "${name}" is not available yet`,
+  extensionDot: (name) => `${name} takes the part after the last dot, such as gz`,
 };
 
 /** Value-free texts for the error log: the log never stores argument values (board, sprint, link type names, project keys). */

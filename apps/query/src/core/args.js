@@ -54,7 +54,8 @@ function parseOne(spec, raw) {
   if (PER_USER.test(value)) return { error: ERR.perUser('currentUser()') };
   if (spec.type === 'ext') {
     const ext = normalizeExt(value);
-    return ext ? { value: ext } : { error: `${spec.name} must not be empty` };
+    if (!ext) return { error: `${spec.name} must not be empty` };
+    return ext.includes('.') ? { error: ERR.extensionDot(spec.name) } : { value: ext };
   }
   return { value };
 }

@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Elemente de lucru eliminate dintr-un sprint după începerea lui și neadăugate înapoi înainte de închidere.",
   "fn.incompleteInSprint": "Elemente de lucru care erau în sprint la închidere și nu sunt finalizate.",
   "fn.completeInSprint": "Elemente de lucru care erau în sprint la închidere și sunt finalizate.",
-  "fn.commented": "Elemente de lucru cu comentarii care corespund clauzelor: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Elemente de lucru cu comentarii care corespund clauzelor: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Elemente de lucru al căror ultim comentariu corespunde clauzelor.",
   "fn.hasComments": "Elemente de lucru cu comentarii: fără număr, oricâte; \"n\" pentru exact n, \"+n\" pentru mai mult de n, \"-n\" pentru mai puțin de n.",
   "fn.fileAttached": "Elemente de lucru cu atașamente care corespund clauzelor: by, after, before, on, ext.",

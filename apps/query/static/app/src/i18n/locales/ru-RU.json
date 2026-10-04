@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Задачи, убранные из спринта после его начала и не возвращённые до его закрытия.",
   "fn.incompleteInSprint": "Задачи, которые были в спринте при закрытии и не выполнены.",
   "fn.completeInSprint": "Задачи, которые были в спринте при закрытии и выполнены.",
-  "fn.commented": "Задачи с комментариями, подходящими под условия: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Задачи с комментариями, подходящими под условия: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Задачи, последний комментарий которых подходит под условия.",
   "fn.hasComments": "Задачи с комментариями: без числа — с любыми; \"n\" — ровно n, \"+n\" — больше n, \"-n\" — меньше n.",
   "fn.fileAttached": "Задачи с вложениями, подходящими под условия: by, after, before, on, ext.",

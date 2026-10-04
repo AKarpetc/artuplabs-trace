@@ -153,6 +153,21 @@ describe('backoff and roles', () => {
     expect(await createJira(request).roleMemberIds('A', 'developers')).toEqual(['u1', 'u2']);
     expect(calls[1].path).toBe('/rest/api/3/project/A/role/10');
   });
+  it('expands a role group once per shared cache and skips a role group Jira no longer knows', async () => {
+    const { request, calls } = scripted([
+      reply(200, { Developers: 'https://x/rest/api/3/project/1/role/10' }),
+      reply(200, { actors: [{ actorGroup: { name: 'devs' } }, { actorGroup: { name: 'gone' } }] }),
+      reply(200, { values: [{ accountId: 'u1' }], isLast: true }),
+      reply(404, { errorMessages: ['no group'] }),
+      reply(200, { Developers: 'https://x/rest/api/3/project/2/role/10' }),
+      reply(200, { actors: [{ actorGroup: { name: 'devs' } }] }),
+    ]);
+    const jira = createJira(request);
+    const groups = new Map();
+    expect(await jira.roleMemberIds('1', 'Developers', { groups })).toEqual(['u1']);
+    expect(await jira.roleMemberIds('2', 'Developers', { groups })).toEqual(['u1']);
+    expect(calls.filter((c) => c.path.includes('/group/member'))).toHaveLength(2);
+  });
 });
 
 describe('index reads', () => {

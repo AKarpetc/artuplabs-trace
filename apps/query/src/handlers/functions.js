@@ -92,8 +92,9 @@ async function evaluateClause(deps, functionName, payload, context) {
   const { args, userArgs, page } = parsed;
   const gate = await deps.ready(functionName);
   if (gate) return { error: gate, log: gate };
+  const operator = payload?.clause?.operator;
   const cached = await fromCache(deps, functionName, userArgs, page);
-  if (cached) return cached;
+  if (cached) return answer(deps, cached, operator, page);
   const work = computeGroup(deps, functionName, args, userArgs).catch((failed) => ({ failed }));
   const outcome = await Promise.race([work, deps.sleep(FUNCTION_BUDGET_MS).then(() => TIMEOUT)]);
   if (outcome === TIMEOUT) return defer(deps, functionName, userArgs);
@@ -101,7 +102,13 @@ async function evaluateClause(deps, functionName, payload, context) {
     console.error(`${functionName} failed: ${outcome.failed?.name} ${outcome.failed?.status ?? ''}`);
     return defer(deps, functionName, userArgs);
   }
-  return fragmentFor(functionName, userArgs, page, outcome, deps.levels);
+  return answer(deps, fragmentFor(functionName, userArgs, page, outcome, deps.levels), operator, page);
+}
+
+/** A fragment in the form of the clause's operator; the root also leaves out the excluded projects (a failed read of them throws, so the call defers). */
+async function answer(deps, fragment, operator, page) {
+  if (fragment.error) return fragment;
+  return { jql: forOperator(fragment.jql, operator, page ? [] : await deps.state.excluded()) };
 }
 
 /**
@@ -110,7 +117,7 @@ async function evaluateClause(deps, functionName, payload, context) {
  */
 export async function handleFunction(deps, functionName, payload, context) {
   const reply = await evaluateSafely(deps, functionName, payload, context);
-  if (!reply.error) return { jql: forOperator(reply.jql, payload?.clause?.operator) };
+  if (!reply.error) return { jql: reply.jql };
   if (reply.error !== ERR.computing()) await recordQuietly(deps, functionName, reply.log ?? LOG.rejected());
   return { error: reply.error, storeErrorAsPrecomputation: false };
 }

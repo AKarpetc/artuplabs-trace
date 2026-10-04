@@ -2,55 +2,79 @@ import { describe, expect, it, vi } from 'vitest';
 import { createCommentCompute } from '../../src/compute/comments.js';
 
 const NOW = Date.UTC(2026, 9, 8);
-const meta = (id, issueId, author, createdAt, extra = {}) => ({ id, issueId, projectId: '1', author, createdAt, visType: null, visValue: null, ext: '', ...extra });
+const DAY = 86400000;
 const A = '5b10ac8d82e05b22cc7d4ef5';
 const B = '5b10ac8d82e05b22cc7d4ef6';
-const METAS = [meta('1', '10', A, NOW - 86400000), meta('2', '11', B, NOW - 10 * 86400000), meta('3', '10', B, NOW - 3600000)];
+const C = '5b10ac8d82e05b22cc7d4ef7';
+
+/**
+ * Visible comments of a small index: issue 10 has A then B, issue 11 has B; restricted comments are not in this list because the
+ * repo never returns them, which the repo tests assert in SQL.
+ */
+const VISIBLE = [
+  { issueId: '10', projectId: '1', author: A, createdAt: NOW - DAY, id: 1 },
+  { issueId: '11', projectId: '2', author: B, createdAt: NOW - 10 * DAY, id: 2 },
+  { issueId: '10', projectId: '1', author: B, createdAt: NOW - 3600000, id: 3 },
+];
 const COUNTS = { atLeast: { 1: ['10', '11'], 2: ['10'] }, exactly: { 1: ['11'], 2: ['10'] }, more: { 1: ['10'] } };
 
-function make(extra = {}, { excluded = [] } = {}) {
-  const repo = {
-    commentMetas: vi.fn(async () => METAS),
-    lastCommentMetas: async () => [METAS[1], METAS[2]],
+function fakeRepo() {
+  const pass = (m, f) => (f.projectId === undefined || m.projectId === f.projectId) && (f.after === undefined || m.createdAt > f.after)
+    && (f.before === undefined || m.createdAt < f.before) && (!f.authors || f.authors.includes(m.author));
+  const latest = () => [...new Map([...VISIBLE].sort((x, y) => x.createdAt - y.createdAt || x.id - y.id).map((m) => [m.issueId, m])).values()];
+  return {
+    issuesWithComments: vi.fn(async (f = {}) => [...new Set((f.last ? latest() : VISIBLE).filter((m) => pass(m, f)).map((m) => m.issueId))].sort()),
+    commentProjects: vi.fn(async () => ['1', '2']),
     issuesWithCommentCount: vi.fn(async ({ op, n }) => COUNTS[op]?.[n] ?? []),
-    attachmentMetas: async ({ ext }) => [meta('9', '12', A, NOW - 1000, { ext: 'pdf' })].filter((m) => !ext || m.ext === ext),
+    issuesWithAttachments: vi.fn(async (f = {}) => ((!f.ext || f.ext === 'pdf') && pass({ author: A, createdAt: NOW - 1000 }, f) ? ['12'] : [])),
   };
+}
+
+function make(extra = {}) {
+  const repo = fakeRepo();
   const jira = {
     userIds: async (q) => (q === 'Ann' ? [A] : []),
-    groupMemberIds: async () => [B],
-    roleMemberIds: vi.fn(async () => [A]),
+    groupMemberIds: vi.fn(async () => [B]),
+    roleMemberIds: vi.fn(async (projectId) => (projectId === '1' ? [A] : [C])),
     ...extra,
   };
-  const state = { excluded: async () => excluded };
-  return { compute: createCommentCompute({ jira, repo, state, now: () => NOW }), repo, jira };
+  return { compute: createCommentCompute({ jira, repo, now: () => NOW }), repo, jira };
 }
-const compute = (extra, options) => make(extra, options).compute;
+const compute = (extra) => make(extra).compute;
 
 describe('comment compute', () => {
-  it('commented resolves a user name to account ids', async () => {
-    expect(await compute().commented({ clauses: 'by Ann after -2d' }, {})).toEqual({ ids: ['10'], field: 'id', watch: null });
-  });
-  it('commented reads only the comments of the named authors inside the date window', async () => {
+  it('commented resolves a user name to account ids and asks SQL for those authors in the window', async () => {
     const { compute: c, repo } = make();
-    await c.commented({ clauses: 'by Ann after -2d before -1h' }, {});
-    expect(repo.commentMetas).toHaveBeenCalledWith({ after: NOW - 2 * 86400000, before: NOW - 3600000, authors: [A] });
+    expect(await c.commented({ clauses: 'by Ann after -2d' }, {})).toEqual({ ids: ['10'], field: 'id', watch: null });
+    expect(repo.issuesWithComments).toHaveBeenCalledWith({ last: false, after: NOW - 2 * DAY, before: undefined, authors: [A] });
   });
-  it('commented reads the day of an on clause', async () => {
+  it('commented reads the day of an on clause as a window', async () => {
     const { compute: c, repo } = make();
     await c.commented({ clauses: 'on 2026-10-07' }, {});
-    expect(repo.commentMetas).toHaveBeenCalledWith({ after: Date.UTC(2026, 9, 7) - 1, before: Date.UTC(2026, 9, 8), authors: undefined });
+    expect(repo.issuesWithComments).toHaveBeenCalledWith({ last: false, after: Date.UTC(2026, 9, 7) - 1, before: Date.UTC(2026, 9, 8), authors: undefined });
   });
-  it('commented without clauses means any comment', async () => {
+  it('commented without clauses means any visible comment', async () => {
     expect((await compute().commented({}, {})).ids).toEqual(['10', '11']);
   });
-  it('lastComment checks only the latest comment of each issue', async () => {
-    expect((await compute().lastComment({ clauses: 'inGroup devs' }, {})).ids).toEqual(['10', '11']);
-    expect((await compute().lastComment({ clauses: `by ${A}` }, {})).ids).toEqual([]);
+  it('intersects by with the members of a group before asking SQL', async () => {
+    const { compute: c, repo } = make();
+    expect((await c.commented({ clauses: `by ${A} inGroup devs` }, {})).ids).toEqual([]);
+    expect(repo.issuesWithComments).not.toHaveBeenCalled();
+    expect((await c.commented({ clauses: 'inGroup devs' }, {})).ids).toEqual(['10', '11']);
+    expect(repo.issuesWithComments).toHaveBeenLastCalledWith({ last: false, after: undefined, before: undefined, authors: [B] });
   });
-  it('asks the role members of each project by its id', async () => {
-    const { compute: c, jira } = make();
+  it('asks the role members of each project with comments by its id, once per project, with one group cache for the call', async () => {
+    const { compute: c, jira, repo } = make();
     expect((await c.commented({ clauses: 'inRole Developers' }, {})).ids).toEqual(['10']);
-    expect(jira.roleMemberIds.mock.calls).toEqual([['1', 'Developers']]);
+    expect(jira.roleMemberIds.mock.calls.map(([p, r]) => [p, r])).toEqual([['1', 'Developers'], ['2', 'Developers']]);
+    expect(jira.roleMemberIds.mock.calls[0][2].groups).toBe(jira.roleMemberIds.mock.calls[1][2].groups);
+    expect(repo.issuesWithComments.mock.calls.map(([f]) => [f.projectId, f.authors])).toEqual([['1', [A]], ['2', [C]]]);
+  });
+  it('lastComment checks only the latest visible comment of each issue, in SQL', async () => {
+    const { compute: c, repo } = make();
+    expect((await c.lastComment({ clauses: 'inGroup devs' }, {})).ids).toEqual(['10', '11']);
+    expect((await c.lastComment({ clauses: `by ${A}` }, {})).ids).toEqual([]);
+    expect(repo.issuesWithComments.mock.calls.every(([f]) => f.last === true)).toBe(true);
   });
   it('names a user nobody matches, without the name in the log', async () => {
     expect(await compute().commented({ clauses: 'by Nobody' }, {})).toEqual({ error: 'commented: User "Nobody" not found', log: 'User not found' });
@@ -64,17 +88,18 @@ describe('comment compute', () => {
     const failed = Object.assign(new Error('boom'), { name: 'JiraError', status: 500 });
     await expect(compute({ groupMemberIds: async () => { throw failed; } }).commented({ clauses: 'inGroup devs' }, {})).rejects.toBe(failed);
   });
-  it('names a role that no project of the comments has', async () => {
+  it('names a role that no project with comments has', async () => {
     expect(await compute({ roleMemberIds: async () => null }).commented({ clauses: 'inRole Ghosts' }, {})).toEqual({ error: 'commented: Role "Ghosts" not found', log: 'Role not found' });
   });
   it('passes clause errors through with the function name and logs them without the text', async () => {
-    expect(await compute().commented({ clauses: 'text x' }, {})).toEqual({
-      error: 'commented: Unknown clause "text"; use by, after, before, on, inRole, inGroup, roleLevel, groupLevel',
-      log: 'Invalid conditions',
-    });
+    expect(await compute().commented({ clauses: 'text x' }, {})).toEqual({ error: 'commented: Unknown clause "text"; use by, after, before, on, inRole, inGroup', log: 'Invalid conditions' });
     expect(await compute().fileAttached({ clauses: 'after someday' }, {})).toEqual({ error: 'fileAttached: Invalid date "someday"', log: 'Invalid conditions' });
   });
-  it('hasComments without a count means any comment', async () => {
+  it('answers comment visibility clauses as not available yet', async () => {
+    expect(await compute().commented({ clauses: 'roleLevel Administrators' }, {})).toEqual({ error: 'commented: Clause "roleLevel" is not available yet', log: 'Invalid conditions' });
+    expect(await compute().lastComment({ clauses: 'groupLevel staff' }, {})).toEqual({ error: 'lastComment: Clause "groupLevel" is not available yet', log: 'Invalid conditions' });
+  });
+  it('hasComments without a count means any visible comment', async () => {
     const { compute: c, repo } = make();
     expect((await c.hasComments({}, {})).ids).toEqual(['10', '11']);
     expect(repo.issuesWithCommentCount).toHaveBeenCalledWith({ op: 'atLeast', n: 1 });
@@ -89,15 +114,16 @@ describe('comment compute', () => {
     expect(await c.hasComments({ count: { op: 'fewer', n: 1 } }, {})).toEqual({ native: 'NOT (issue in hasComments())' });
     expect(repo.issuesWithCommentCount).not.toHaveBeenCalled();
   });
-  it('hasComments fewer than n leaves out the projects outside the index', async () => {
-    expect(await compute({}, { excluded: ['OPS', 'HR'] }).hasComments({ count: { op: 'fewer', n: 2 } }, {})).toEqual({ native: 'NOT (issue in hasComments("+1")) AND project not in ("OPS", "HR")' });
+  it('hasAttachments without an extension is native JQL, with one it asks SQL', async () => {
+    const { compute: c, repo } = make();
+    expect(await c.hasAttachments({}, {})).toEqual({ native: 'attachments is not EMPTY' });
+    expect((await c.hasAttachments({ extension: 'pdf' }, {})).ids).toEqual(['12']);
+    expect(repo.issuesWithAttachments).toHaveBeenCalledWith({ ext: 'pdf' });
   });
-  it('hasAttachments without an extension is native JQL, with one it reads the index', async () => {
-    expect(await compute().hasAttachments({}, {})).toEqual({ native: 'attachments is not EMPTY' });
-    expect((await compute().hasAttachments({ extension: 'pdf' }, {})).ids).toEqual(['12']);
-  });
-  it('fileAttached applies attachment clauses', async () => {
-    expect((await compute().fileAttached({ clauses: 'ext pdf after -1d' }, {})).ids).toEqual(['12']);
-    expect((await compute().fileAttached({ clauses: 'ext png' }, {})).ids).toEqual([]);
+  it('fileAttached applies attachment clauses in SQL', async () => {
+    const { compute: c, repo } = make();
+    expect((await c.fileAttached({ clauses: 'ext pdf after -1d by Ann' }, {})).ids).toEqual(['12']);
+    expect(repo.issuesWithAttachments).toHaveBeenCalledWith({ ext: 'pdf', after: NOW - DAY, before: undefined, authors: [A] });
+    expect((await c.fileAttached({ clauses: 'ext png' }, {})).ids).toEqual([]);
   });
 });

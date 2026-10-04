@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "A sprintből annak kezdete után eltávolított munkaelemek, amelyek a lezárásig nem kerültek vissza.",
   "fn.incompleteInSprint": "A lezáráskor a sprintben lévő, el nem készült munkaelemek.",
   "fn.completeInSprint": "A lezáráskor a sprintben lévő, elkészült munkaelemek.",
-  "fn.commented": "A feltételeknek megfelelő megjegyzésekkel rendelkező munkaelemek: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "A feltételeknek megfelelő megjegyzésekkel rendelkező munkaelemek: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Munkaelemek, amelyek utolsó megjegyzése megfelel a feltételeknek.",
   "fn.hasComments": "Megjegyzésekkel rendelkező munkaelemek: szám nélkül bármennyi; \"n\" pontosan n, \"+n\" több mint n, \"-n\" kevesebb mint n.",
   "fn.fileAttached": "A feltételeknek megfelelő mellékletekkel rendelkező munkaelemek: by, after, before, on, ext.",

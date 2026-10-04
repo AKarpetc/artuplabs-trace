@@ -18,7 +18,12 @@ export function isNotIn(operator) {
   return String(operator ?? '').toLowerCase().replace(/[^a-z]/g, '') === 'notin';
 }
 
-/** Stored JQL of a clause with its operator: `not in` gets the complement of the function's result, so an empty result means every issue. */
-export function forOperator(jql, operator) {
-  return isNotIn(operator) ? `NOT (${jql})` : jql;
+/**
+ * Stored JQL of a clause with its operator: `not in` gets the complement of the function's result, so an empty result means every issue;
+ * issues of the excluded projects are left out under both operators.
+ */
+export function forOperator(jql, operator, excluded = []) {
+  const negated = isNotIn(operator);
+  if (!excluded.length) return negated ? `NOT (${jql})` : jql;
+  return `${negated ? `NOT (${jql})` : `(${jql})`} AND project not in (${excluded.map(quote).join(', ')})`;
 }

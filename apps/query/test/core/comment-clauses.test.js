@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { issuesWith, metaMatches, parseClauses, tokenize, extOf, normalizeExt } from '../../src/core/comment-clauses.js';
+import { extOf, normalizeExt, parseClauses, tokenize } from '../../src/core/comment-clauses.js';
 import { CLAUSES_MAX_LENGTH } from '../../src/core/limits.js';
 
 const NOW = Date.UTC(2026, 9, 8, 15, 0);
 const DAY = 86400000;
-const meta = (id, issueId, author, createdAt, extra = {}) => ({ id, issueId, projectId: '1', author, createdAt, visType: null, visValue: null, ext: '', ...extra });
 
 describe('tokenize', () => {
   it('keeps quoted words with spaces and function calls with inner quotes', () => {
@@ -46,7 +45,7 @@ describe('parseClauses', () => {
   });
   it('accepts ext only for attachments, without a dot and in lower case', () => {
     expect(parseClauses('ext .PDF', 'attachment', NOW)).toEqual({ clauses: { ext: 'pdf' } });
-    expect(parseClauses('ext pdf', 'comment', NOW)).toEqual({ error: 'Unknown clause "ext"; use by, after, before, on, inRole, inGroup, roleLevel, groupLevel' });
+    expect(parseClauses('ext pdf', 'comment', NOW)).toEqual({ error: 'Unknown clause "ext"; use by, after, before, on, inRole, inGroup' });
   });
   it('rejects an extension that is empty without its dots, so it never matches every file without one', () => {
     expect(parseClauses('ext .', 'attachment', NOW)).toEqual({ error: 'Clause "ext" needs a value' });
@@ -69,9 +68,15 @@ describe('parseClauses', () => {
 
 describe('parseClauses edges', () => {
   it('reads clause names in any case and the remaining comment clauses', () => {
-    expect(parseClauses('INGROUP "jira admins" ROLELEVEL Developers groupLevel staff before 2026-10-01', 'comment', NOW)).toEqual({
-      clauses: { inGroup: 'jira admins', roleLevel: 'Developers', groupLevel: 'staff', before: Date.UTC(2026, 9, 1) },
-    });
+    expect(parseClauses('INGROUP "jira admins" before 2026-10-01', 'comment', NOW)).toEqual({ clauses: { inGroup: 'jira admins', before: Date.UTC(2026, 9, 1) } });
+  });
+  it('answers comment visibility clauses as not available yet, in any case, before reading their value', () => {
+    expect(parseClauses('roleLevel Developers', 'comment', NOW)).toEqual({ error: 'Clause "roleLevel" is not available yet' });
+    expect(parseClauses('by a GROUPLEVEL', 'comment', NOW)).toEqual({ error: 'Clause "groupLevel" is not available yet' });
+    expect(parseClauses('roleLevel x', 'attachment', NOW)).toEqual({ error: 'Unknown clause "roleLevel"; use by, after, before, on, ext' });
+  });
+  it('rejects an extension with a dot inside, which no file extension can be', () => {
+    expect(parseClauses('ext tar.gz', 'attachment', NOW)).toEqual({ error: 'ext takes the part after the last dot, such as gz' });
   });
   it('lists the attachment clauses and rejects comment-only ones there', () => {
     expect(parseClauses('inRole Developers', 'attachment', NOW)).toEqual({ error: 'Unknown clause "inRole"; use by, after, before, on, ext' });
@@ -92,69 +97,5 @@ describe('parseClauses edges', () => {
   it('passes on tokenizer errors and rejects an unknown kind', () => {
     expect(parseClauses('by "x', 'comment', NOW)).toEqual({ error: 'Unclosed quote in "by "x"' });
     expect(parseClauses('by x', 'worklog', NOW)).toEqual({ error: 'Unknown clause "by"; use ' });
-  });
-});
-
-describe('matching', () => {
-  const metas = [
-    meta('1', '10', 'a', 100),
-    meta('2', '10', 'b', 200),
-    meta('3', '11', 'a', 150, { visType: 'role', visValue: 'Developers' }),
-    meta('4', '12', 'c', 50, { projectId: '2' }),
-  ];
-  it('finds issues with any matching comment', () => {
-    expect(issuesWith(metas, { by: 'a' }, { people: { by: new Set(['a']) } })).toEqual(['10', '11']);
-  });
-  it('checks only the last comment with last', () => {
-    expect(issuesWith(metas, { by: 'a' }, { last: true, people: { by: new Set(['a']) } })).toEqual(['11']);
-  });
-  it('reads visibility for roleLevel and author membership per project for inRole', () => {
-    expect(issuesWith(metas, { roleLevel: 'developers' }, {})).toEqual(['11']);
-    expect(issuesWith(metas, { inRole: 'Dev' }, { people: { inRole: new Map([['1', new Set(['b'])]]) } })).toEqual(['10']);
-  });
-  it('applies date windows strictly after and before', () => {
-    expect(metaMatches(metas[0], { after: 100 }, {})).toBe(false);
-    expect(metaMatches(metas[0], { before: 101 }, {})).toBe(true);
-    expect(metaMatches(metas[0], { onStart: 0, onEnd: 100 }, {})).toBe(false);
-  });
-});
-
-describe('matching edges', () => {
-  const metas = [
-    meta('9', '20', 'a', 300, { visType: 'group', visValue: 'Staff', ext: 'pdf' }),
-    meta('10', '20', 'b', 300, { ext: 'png' }),
-    meta('5', '21', 'a', 100, { projectId: 3, ext: 'pdf' }),
-    meta('6', '21', 'b', 90),
-  ];
-  it('matches every comment with no clauses and without options', () => {
-    expect(issuesWith(metas, {})).toEqual(['20', '21']);
-    expect(issuesWith([], {}, { last: true })).toEqual([]);
-  });
-  it('breaks a tie on the time by the larger numeric id for last', () => {
-    expect(issuesWith(metas, { ext: 'png' }, { last: true })).toEqual(['20']);
-    expect(issuesWith([...metas].reverse(), { ext: 'png' }, { last: true })).toEqual(['20']);
-  });
-  it('matches group visibility, group membership and the extension', () => {
-    expect(issuesWith(metas, { groupLevel: 'staff' }, {})).toEqual(['20']);
-    expect(issuesWith(metas, { roleLevel: 'staff' }, {})).toEqual([]);
-    expect(issuesWith(metas, { inGroup: 'g' }, { people: { inGroup: new Set(['b']) } })).toEqual(['20', '21']);
-    expect(issuesWith(metas, { ext: 'pdf' }, {})).toEqual(['20', '21']);
-  });
-  it('finds no one when people were not resolved', () => {
-    expect(metaMatches(metas[0], { by: 'a' }, undefined)).toBe(false);
-    expect(metaMatches(metas[0], { inGroup: 'g' }, {})).toBe(false);
-    expect(metaMatches(metas[0], { inRole: 'r' }, { inRole: new Map() })).toBe(false);
-  });
-  it('reads the role of an author in a numeric project id', () => {
-    expect(metaMatches(metas[2], { inRole: 'r' }, { inRole: new Map([['3', new Set(['a'])]]) })).toBe(true);
-  });
-  it('includes the start of an on day and excludes its end', () => {
-    expect(metaMatches(metas[2], { onStart: 100, onEnd: 200 }, {})).toBe(true);
-    expect(metaMatches(metas[2], { after: 99, before: 101 }, {})).toBe(true);
-    expect(metaMatches(metas[2], { after: 100 }, {})).toBe(false);
-    expect(metaMatches(metas[2], { before: 100 }, {})).toBe(false);
-  });
-  it('treats a missing visibility value as no match', () => {
-    expect(metaMatches(meta('1', '1', 'a', 1, { visType: 'role' }), { roleLevel: 'x' }, {})).toBe(false);
   });
 });

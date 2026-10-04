@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Work items removed from a sprint after it started and not returned before it closed.",
   "fn.incompleteInSprint": "Work items that were in the sprint when it closed and not done.",
   "fn.completeInSprint": "Work items that were in the sprint when it closed and done.",
-  "fn.commented": "Work items with comments matching the clauses: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Work items with comments matching the clauses: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Work items whose last comment matches the clauses.",
   "fn.hasComments": "Work items with comments: without a number, any; \"n\" for exactly n, \"+n\" for more than n, \"-n\" for fewer than n.",
   "fn.fileAttached": "Work items with attachments matching the clauses: by, after, before, on, ext.",

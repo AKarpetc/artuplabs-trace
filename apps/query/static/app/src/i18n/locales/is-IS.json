@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Verkatriði sem fjarlægð voru úr spretti eftir að hann hófst og ekki skilað aftur áður en honum var lokað.",
   "fn.incompleteInSprint": "Verkatriði sem voru í sprettinum þegar honum var lokað og eru ekki lokið.",
   "fn.completeInSprint": "Verkatriði sem voru í sprettinum þegar honum var lokað og er lokið.",
-  "fn.commented": "Verkatriði með athugasemdir sem passa við skilyrðin: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Verkatriði með athugasemdir sem passa við skilyrðin: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Verkatriði þar sem síðasta athugasemdin passar við skilyrðin.",
   "fn.hasComments": "Verkatriði með athugasemdir: án tölu hvaða fjöldi sem er; \"n\" fyrir nákvæmlega n, \"+n\" fyrir fleiri en n, \"-n\" fyrir færri en n.",
   "fn.fileAttached": "Verkatriði með viðhengi sem passa við skilyrðin: by, after, before, on, ext.",

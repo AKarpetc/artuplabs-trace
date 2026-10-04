@@ -46,7 +46,7 @@
   "fn.removedAfterSprintStart": "Pärast sprindi algust eemaldatud tööüksused, mida enne sulgemist tagasi ei lisatud.",
   "fn.incompleteInSprint": "Tööüksused, mis olid sulgemise ajal sprindis ja on lõpetamata.",
   "fn.completeInSprint": "Tööüksused, mis olid sulgemise ajal sprindis ja on lõpetatud.",
-  "fn.commented": "Tööüksused, mille kommentaarid vastavad tingimustele: by, after, before, on, inRole, inGroup, roleLevel, groupLevel.",
+  "fn.commented": "Tööüksused, mille kommentaarid vastavad tingimustele: by, after, before, on, inRole, inGroup.",
   "fn.lastComment": "Tööüksused, mille viimane kommentaar vastab tingimustele.",
   "fn.hasComments": "Kommentaaridega tööüksused: ilma arvuta ükskõik kui palju; \"n\" täpselt n, \"+n\" rohkem kui n, \"-n\" vähem kui n.",
   "fn.fileAttached": "Tööüksused, mille manused vastavad tingimustele: by, after, before, on, ext.",
