@@ -53,7 +53,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     cache: createValueCache({ kvs: meter.kvs, hash: sha1 }),
     journal: createJournal({ kvs: meter.kvs, beginsWith: WhereConditions.beginsWith }),
     meter,
-    logWrites: process.env.QUERY_LOG_WRITES === '1',
+    logKvs: { writes: process.env.QUERY_LOG_WRITES === '1', reads: process.env.QUERY_LOG_READS === '1' },
     queue: createQueueClient(new Queue({ key: 'query-refresh' })),
     backfillQueue: createQueueClient(new Queue({ key: 'query-backfill' })),
     compute: {

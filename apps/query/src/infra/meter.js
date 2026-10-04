@@ -15,15 +15,36 @@ export function keyFamily(key) {
   return String(key).split(':').map((part) => (HASHED.test(part) ? '*' : part)).join(':');
 }
 
-const empty = () => ({ sets: 0, bytes: 0, deletes: 0, families: {} });
+const empty = () => ({ sets: 0, bytes: 0, deletes: 0, families: {}, reads: { gets: 0, queries: 0, bytes: 0 } });
 
-/** KVS wrapper that counts writes: sets with their key and JSON bytes (in total and per record family), and deletes; `take` returns the counts since the last take. */
+const entryBytes = (key, value) => (value === undefined ? 0 : Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(value) ?? ''));
+
+const meteredQuery = (builder, count) => ({
+  where: (...args) => meteredQuery(builder.where(...args), count),
+  limit: (n) => meteredQuery(builder.limit(n), count),
+  cursor: (c) => meteredQuery(builder.cursor(c), count),
+  async getMany() {
+    const page = await builder.getMany();
+    count(page?.results ?? []);
+    return page;
+  },
+});
+
+/** KVS wrapper that counts writes (sets with their key and JSON bytes, in total and per record family, and deletes) and reads (gets, query pages and the key and JSON bytes they return); `take` returns the counts since the last take. */
 export function meterKvs(kvs) {
   let totals = empty();
   return {
     kvs: {
-      get: (key) => kvs.get(key),
-      query: () => kvs.query(),
+      async get(key) {
+        const value = await kvs.get(key);
+        totals.reads.gets += 1;
+        totals.reads.bytes += entryBytes(key, value);
+        return value;
+      },
+      query: () => meteredQuery(kvs.query(), (results) => {
+        totals.reads.queries += 1;
+        totals.reads.bytes += results.reduce((sum, r) => sum + entryBytes(r.key, r.value), 0);
+      }),
       async set(key, value) {
         const bytes = Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(value) ?? '');
         const family = keyFamily(key);
@@ -48,8 +69,8 @@ export function meterKvs(kvs) {
 
 const familyText = (families) => Object.entries(families).sort(([a], [b]) => a.localeCompare(b)).map(([name, f]) => `${name} ${f.sets}/${f.bytes}`).join(', ');
 
-/** Wraps a handler so that, when enabled, it logs the KVS writes of each invocation as counts per record family (never values); `name` may be a function of the handler arguments. */
-export function withWriteLog(name, meter, enabled, handler) {
+/** Wraps a handler so that it logs the KVS traffic of each invocation as counts, never values: writes per record family when `log.writes`, reads when `log.reads`; `name` may be a function of the handler arguments. */
+export function withKvsLog(name, meter, log, handler) {
   return async (...args) => {
     meter.take();
     try {
@@ -58,7 +79,8 @@ export function withWriteLog(name, meter, enabled, handler) {
       const w = meter.take();
       const label = typeof name === 'function' ? name(...args) : name;
       const detail = w.sets ? ` [${familyText(w.families)}]` : '';
-      if (enabled && w.sets + w.deletes) console.log(`kvs writes ${label}: ${w.sets} sets, ${w.bytes} bytes, ${w.deletes} deletes${detail}`);
+      if (log.writes && w.sets + w.deletes) console.log(`kvs writes ${label}: ${w.sets} sets, ${w.bytes} bytes, ${w.deletes} deletes${detail}`);
+      if (log.reads && w.reads.gets + w.reads.queries) console.log(`kvs reads ${label}: ${w.reads.gets} gets, ${w.reads.queries} query pages, ${w.reads.bytes} bytes`);
     }
   };
 }
