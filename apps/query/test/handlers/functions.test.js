@@ -7,7 +7,7 @@ import { createFieldCompute } from '../../src/compute/fields.js';
 import { createHierarchyCompute } from '../../src/compute/hierarchy.js';
 import { createJira } from '../../src/infra/jira.js';
 import { fakeJira } from '../fakeJira.js';
-import { PAGE_CACHE_MS } from '../../src/core/limits.js';
+import { PAGE_CACHE_MS, QUEUE_DELAY_MAX_S } from '../../src/core/limits.js';
 
 const fnDeps = (compute, extra = {}) => makeDeps({ compute, ...extra });
 const ids = (n) => Array.from({ length: n }, (_, i) => String(i + 1));
@@ -122,7 +122,7 @@ describe('handleFunction', () => {
     const deps = fnDeps({ subtasksOf: async () => { throw limited; } });
     expect((await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV)).error).toBe('Computing, retry in a minute');
     error.mockRestore();
-    expect([await deps.state.brake.get(), deps.pushed]).toEqual([1000000 + 425000, [[{ kind: 'wake' }, 425]]]);
+    expect([await deps.state.brake.get(), deps.pushed]).toEqual([1000000 + 425000, [[{ kind: 'wake' }, Math.min(425, QUEUE_DELAY_MAX_S)]]]);
   });
   it('queues the computation when Jira keeps failing', async () => {
     const deps = fnDeps({ subtasksOf: async () => { throw Object.assign(new Error('down'), { name: 'JiraError', status: 503 }); } });

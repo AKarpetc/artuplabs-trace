@@ -54,8 +54,8 @@ export const WORKER_RETRY_MAX_MS = 30 * 1000;
 export const RATE_BRAKE_MIN_MS = 60 * 1000;
 /** Longest pause of the app's background work after a 429: Jira's quota windows reset every hour. */
 export const RATE_BRAKE_MAX_MS = 60 * 60 * 1000;
-/** Longest delay of a queued event (the Forge queue limit). */
-export const QUEUE_DELAY_MAX_S = 900;
+/** Longest delay of a wake or a resumed fill: shorter than the Forge queue limit (900 s), since 900-s wakes were not delivered on the dev site. */
+export const QUEUE_DELAY_MAX_S = 300;
 /** Delay of the follow-up refresh after a pass that kept its journal rows (a failed group or a later pass wrote first). */
 export const REFRESH_RETRY_DELAY_S = 60;
 /** Age after which journal rows are dropped even though a group keeps failing; the hourly reconcile covers them. */

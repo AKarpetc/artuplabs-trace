@@ -22,7 +22,7 @@ describe('brake', () => {
   it('pauses the background work until the instant Jira named and schedules one wake for it', async () => {
     const deps = makeDeps();
     expect(await brake(deps, NOW + 425000)).toEqual(NOW + 425000);
-    expect([await brakedUntil(deps), deps.pushed]).toEqual([NOW + 425000, [[{ kind: 'wake' }, 425]]]);
+    expect([await brakedUntil(deps), deps.pushed]).toEqual([NOW + 425000, [[{ kind: 'wake' }, Math.min(425, QUEUE_DELAY_MAX_S)]]]);
   });
   it('pauses for the shortest pause when Jira named no instant', async () => {
     const deps = makeDeps();
@@ -81,7 +81,7 @@ describe('refresh under a rate limit', () => {
     const result = await quietly(() => onRefresh(deps, { body: { kind: 'refresh', ts: NOW } }));
     expect(result.braked).toBe(true);
     expect([deps.written, (await deps.journal.read(10)).length, await brakedUntil(deps), await deps.state.lease.get()]).toEqual([[], 1, NOW + 425000, null]);
-    expect(deps.pushed).toEqual([[{ kind: 'wake' }, 425]]);
+    expect(deps.pushed).toEqual([[{ kind: 'wake' }, Math.min(425, QUEUE_DELAY_MAX_S)]]);
     expect(deps.pushed.some(([, delay]) => delay === REFRESH_RETRY_DELAY_S)).toBe(false);
   });
   it('records no error for a group a 429 stopped', async () => {
@@ -167,7 +167,7 @@ describe('heavy lane under a rate limit', () => {
     expect(result).toEqual({ heavy: { computed: 'childIssuesOf["q"]', braked: true } });
     expect(await deps.state.heavy.oldest()).toEqual(heavyEntry('q', NOW, { tries: 1 }));
     expect(await deps.state.errors()).toEqual([{ at: NOW, functionName: 'childIssuesOf', message: 'Stopped by the Jira rate limit' }]);
-    expect([deps.pushed, await deps.state.heavy.lease.get()]).toEqual([[[{ kind: 'wake' }, 425]], null]);
+    expect([deps.pushed, await deps.state.heavy.lease.get()]).toEqual([[[{ kind: 'wake' }, Math.min(425, QUEUE_DELAY_MAX_S)]], null]);
   });
   it('gives a group up after as many rate-limited runs as the attempts allow', async () => {
     const deps = makeDeps({ pcs, compute: { childIssuesOf: async () => { throw rateLimit(null); } } });
