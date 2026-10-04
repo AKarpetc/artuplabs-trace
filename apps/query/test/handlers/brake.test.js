@@ -230,4 +230,12 @@ describe('heavy groups nobody uses', () => {
     expect(await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }))).toEqual({ heavy: null });
     expect([await brakedUntil(deps), await deps.state.heavy.oldest(), await deps.state.heavy.lease.get()]).toEqual([NOW + 60000, heavyEntry('q', 990000), null]);
   });
+  it('logs which functions a pass computed and handed over, by name only, when requests are logged', async () => {
+    const deps = makeDeps({ pcs: light, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) }, logKvs: { requests: true } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await refreshOnce(deps);
+    expect(log.mock.calls).toEqual([['refresh pass: 1 groups, computed hasSubtasks 1, handed none']]);
+    log.mockRestore();
+  });
 });

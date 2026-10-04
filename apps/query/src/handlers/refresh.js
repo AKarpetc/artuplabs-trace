@@ -80,9 +80,11 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   let failed = 0;
   let postponed = 0;
   let limited = null;
+  const names = { computed: [], handed: [] };
   const handOver = async (group) => {
     if (!usedWithin(group, startedAt, HEAVY_USED_MS)) return;
     handed += 1;
+    names.handed.push(group.functionName);
     if (await handOff(deps, group)) queued = true;
   };
   await pool(all, REFRESH_CONCURRENCY, async (group) => {
@@ -94,6 +96,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
         await handOver(group);
         return;
       }
+      names.computed.push(group.functionName);
       const ownDeadline = deps.now() + REFRESH_GROUP_BUDGET_MS;
       cutByWorker = ownDeadline > deadline;
       byGroup.push([group.key, await deps.withDeadline(Math.min(ownDeadline, deadline), () => rewrite(deps, group, reconcile))]);
@@ -118,6 +121,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
       await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
     }
   });
+  if (deps.logKvs?.requests) console.log(`refresh pass: ${all.length} groups, computed ${nameCounts(names.computed)}, handed ${nameCounts(names.handed)}${limited ? ', stopped by the rate limit' : ''}`);
   if (limited) return { limited, events: rows.length, groups: all.length, touched: [], kinds: summary.kinds, changed: 0, oldestEventMs: null };
   if (queued || (handed && (await laneIdle(deps)))) await pushQuietly(deps, { kind: 'heavy' });
   let stale = false;
@@ -146,6 +150,12 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
     oldestEventMs: summary.firstAt === null ? null : startedAt - summary.firstAt,
   };
 }
+
+const nameCounts = (list) => {
+  const counts = new Map();
+  for (const name of list) counts.set(name, (counts.get(name) ?? 0) + 1);
+  return counts.size ? [...counts].sort(([a], [b]) => a.localeCompare(b)).map(([name, n]) => `${name} ${n}`).join(', ') : 'none';
+};
 
 const expiredBefore = (now) => `t:${String(now - FAILED_ROWS_KEEP_MS).padStart(JOURNAL_TS_DIGITS, '0')}`;
 
