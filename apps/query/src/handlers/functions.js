@@ -5,6 +5,7 @@ import { ERR, LOG } from '../core/errors.js';
 import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, PAGE_CACHE_MS, VALUE_LIMIT } from '../core/limits.js';
 import { forOperator } from '../core/jql-build.js';
 import { buildFragment, valuesOf } from '../core/tree.js';
+import { brake, isRateLimit } from './brake.js';
 
 const TIMEOUT = Symbol('timeout');
 
@@ -69,11 +70,15 @@ async function fromCache(deps, functionName, userArgs, page) {
   return null;
 }
 
-/** Queues the computation of a group; never throws, so Jira always gets the Computing answer (a function that throws fails the whole search). */
-async function defer(deps, functionName, userArgs) {
+/**
+ * Queues the computation of a group, or, when Jira rate-limited the call, pauses the background until the reset and queues nothing (the
+ * next call asks again); never throws, so Jira always gets the Computing answer (a function that throws fails the whole search).
+ */
+async function defer(deps, functionName, userArgs, failure) {
   try {
     await deps.state.addJob({ key: groupKey(functionName, userArgs), functionName, userArgs, at: deps.now() });
-    await deps.queue.push({ kind: 'compute', functionName, userArgs });
+    if (isRateLimit(failure)) await brake(deps, failure.retryAt);
+    else await deps.queue.push({ kind: 'compute', functionName, userArgs });
   } catch (error) {
     console.error(`${functionName} defer failed: ${error?.name} ${error?.message}`);
   }
@@ -86,7 +91,7 @@ async function evaluateSafely(deps, functionName, payload, context) {
   } catch (error) {
     console.error(`${functionName} failed: ${error?.name} ${error?.status ?? ''}`);
     const parsed = parseArgs(functionName, payload?.clause?.arguments);
-    return parsed.error ? { error: ERR.computing() } : defer(deps, functionName, parsed.userArgs);
+    return parsed.error ? { error: ERR.computing() } : defer(deps, functionName, parsed.userArgs, error);
   }
 }
 
@@ -105,7 +110,7 @@ async function evaluateClause(deps, functionName, payload, context) {
   if (outcome === TIMEOUT) return defer(deps, functionName, userArgs);
   if (outcome.failed) {
     console.error(`${functionName} failed: ${outcome.failed?.name} ${outcome.failed?.status ?? ''}`);
-    return defer(deps, functionName, userArgs);
+    return defer(deps, functionName, userArgs, outcome.failed);
   }
   return answer(fragmentFor(functionName, userArgs, page, outcome, deps.levels), operator);
 }

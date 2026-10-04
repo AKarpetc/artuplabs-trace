@@ -6,7 +6,8 @@ import {
   ACTIVE_MS, FAILED_ROWS_KEEP_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
-import { handOff, isDeadline, isHeavy, laneIdle, pushQuietly, rewrite, runGroupJob, runHeavy, writeGroups } from './groups.js';
+import { handOff, isDeadline, isHeavy, laneIdle, pushQuietly, rewrite, runCompute, runHeavy, writeGroups } from './groups.js';
+import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
 export { rewrite };
 
@@ -60,7 +61,7 @@ async function isStale(deps, group, summary) {
  * background jobs), each within its own deadline,
  * hand slow groups to the heavy lane, write changes, then drop the rows; rows stay when the write fails, when a later pass wrote first,
  * when the worker budget stopped a group (it is not slow, so it stays out of the heavy lane and the next refresh computes it),
- * or (until FAILED_ROWS_KEEP_MS) when a group failed.
+ * or (until FAILED_ROWS_KEEP_MS) when a group failed. A 429 stops the pass: it writes nothing, keeps the rows and returns `limited`.
  */
 export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const startedAt = deps.now();
@@ -78,12 +79,14 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   let queued = false;
   let failed = 0;
   let postponed = 0;
+  let limited = null;
   const handOver = async (group) => {
     handed += 1;
     if (await handOff(deps, group)) queued = true;
   };
   await pool(all, REFRESH_CONCURRENCY, async (group) => {
     let cutByWorker = false;
+    if (limited) return;
     try {
       if (!(await isStale(deps, group, summary))) return;
       if (await isHeavy(deps, group)) {
@@ -95,6 +98,10 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
       byGroup.push([group.key, await deps.withDeadline(Math.min(ownDeadline, deadline), () => rewrite(deps, group, reconcile))]);
       recomputed += 1;
     } catch (error) {
+      if (isRateLimit(error)) {
+        limited = error;
+        return;
+      }
       if (isDeadline(error) && cutByWorker) {
         postponed += 1;
         return;
@@ -110,6 +117,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
       await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
     }
   });
+  if (limited) return { limited, events: rows.length, groups: all.length, touched: [], kinds: summary.kinds, changed: 0, oldestEventMs: null };
   if (queued || (handed && (await laneIdle(deps)))) await pushQuietly(deps, { kind: 'heavy' });
   let stale = false;
   let changed = 0;
@@ -140,27 +148,66 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
 
 const expiredBefore = (now) => `t:${String(now - FAILED_ROWS_KEEP_MS).padStart(JOURNAL_TS_DIGITS, '0')}`;
 
-/** Queue consumer: a compute job, the heavy lane, or refresh passes under a lease until the journal is empty or the budget is spent. */
+/**
+ * Queue consumer: a compute job, the heavy lane, a wake after a rate-limit pause, or refresh passes under a lease until the journal is
+ * empty or the budget is spent; while the background waits for Jira's rate limit, refresh waits for the wake, and a 429 pauses it.
+ */
 export async function onRefresh(deps, event) {
   const body = event?.body ?? {};
-  if (body.kind === 'compute') return runGroupJob(deps, body);
+  if (body.kind === 'compute') return runCompute(deps, body);
   if (body.kind === 'heavy') return runHeavy(deps);
+  if (body.kind === 'wake') return onWake(deps);
   if (body.verify?.length) await deps.journal.append({ ids: body.verify, kinds: body.kinds ?? ['issue-updated'] }, deps.now());
   else await deps.state.pending.clear();
+  return refreshPasses(deps, body);
+}
+
+/** Wake after a rate-limit pause: waits again while it lasts, else runs the journal first and then restarts the heavy lane. */
+async function onWake(deps) {
+  await deps.state.wake.clear();
+  const until = await brakedUntil(deps);
+  if (until) {
+    await scheduleWake(deps, until);
+    return { braked: until };
+  }
+  const result = await refreshPasses(deps, {});
+  if (!result.braked && (await deps.state.heavy.oldest()) && (await laneIdle(deps))) await pushQuietly(deps, { kind: 'heavy' });
+  return result;
+}
+
+async function refreshPasses(deps, body) {
+  const until = await brakedUntil(deps);
+  if (until) {
+    await scheduleWake(deps, until);
+    return { braked: until };
+  }
   if (deps.now() - ((await deps.state.lease.get()) ?? 0) < LEASE_MS) return { busy: true };
   const deadline = deps.now() + WORKER_BUDGET_MS;
   await deps.state.lease.set(deps.now());
   const passes = [];
+  let limited = null;
   try {
     while (deps.now() < deadline) {
       const pass = await refreshOnce(deps, { deadline });
       if (!pass) break;
+      if (pass.limited) {
+        limited = pass.limited;
+        break;
+      }
       passes.push(pass);
       await deps.state.lease.set(deps.now());
       if (pass.stale || pass.failed || pass.postponed) break;
     }
+  } catch (error) {
+    if (!isRateLimit(error)) throw error;
+    limited = error;
   } finally {
     await deps.state.lease.clear();
+  }
+  if (limited) {
+    console.error('refresh stopped by the Jira rate limit');
+    await brake(deps, limited.retryAt);
+    return { passes, braked: true };
   }
   const kept = passes.some((p) => p.stale || p.failed);
   if ((await deps.journal.read(1)).length && !(await deps.state.pending.get())) await pushRefresh(deps, deps.now(), kept ? REFRESH_RETRY_DELAY_S : undefined);

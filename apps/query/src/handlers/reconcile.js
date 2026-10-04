@@ -2,9 +2,29 @@ import { groupPrecomputations, reconcileTargets } from '../core/affected.js';
 import { ACTIVE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { handOff, isDeadline, isHeavy, pushQuietly, rewrite, writeGroups } from './groups.js';
+import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
-/** Hourly safety net: recompute used groups that missed an event, depend on the clock or need repair (slow ones go to the heavy lane), restart a stalled heavy lane, then fill index gaps. */
+/**
+ * Hourly safety net: recompute used groups that missed an event, depend on the clock or need repair (slow ones go to the heavy lane), restart
+ * a stalled heavy lane, then fill index gaps; it waits while the background is paused for Jira's rate limit, and a 429 pauses it.
+ */
 export async function onReconcile(deps) {
+  const until = await brakedUntil(deps);
+  if (until) {
+    await scheduleWake(deps, until);
+    return { braked: until };
+  }
+  try {
+    return await reconcileOnce(deps);
+  } catch (error) {
+    if (!isRateLimit(error)) throw error;
+    console.error('reconcile stopped by the Jira rate limit');
+    await brake(deps, error.retryAt);
+    return { braked: true };
+  }
+}
+
+async function reconcileOnce(deps) {
   const startedAt = deps.now();
   const groups = reconcileTargets(groupPrecomputations(await deps.jira.precomputations(), { now: startedAt, activeMs: ACTIVE_MS }), {
     now: startedAt, usedMs: RECONCILE_USED_MS, staleMs: RECONCILE_STALE_MS, max: RECONCILE_MAX_GROUPS,
@@ -14,7 +34,9 @@ export async function onReconcile(deps) {
   const handOver = async (group) => {
     if (await handOff(deps, group)) queued = true;
   };
+  let limited = null;
   await pool(groups, REFRESH_CONCURRENCY, async (group) => {
+    if (limited) return;
     try {
       if (await isHeavy(deps, group)) {
         await handOver(group);
@@ -22,10 +44,15 @@ export async function onReconcile(deps) {
       }
       byGroup.push([group.key, await deps.withDeadline(deps.now() + REFRESH_GROUP_BUDGET_MS, () => rewrite(deps, group, []))]);
     } catch (error) {
+      if (isRateLimit(error)) {
+        limited = error;
+        return;
+      }
       if (!isDeadline(error)) throw error;
       await handOver(group);
     }
   });
+  if (limited) throw limited;
   let changed = 0;
   if (byGroup.length && ((await deps.state.lastWrittenStart.get()) ?? 0) <= startedAt) {
     if (byGroup.some(([, r]) => r.updates.length)) await deps.state.lastWrittenStart.set(startedAt);

@@ -41,6 +41,7 @@ export const LOG = {
   excluded: () => 'Project is excluded',
   rejected: () => 'Function call rejected',
   refreshTimedOut: () => 'Refresh ran out of time',
+  rateLimited: () => 'Stopped by the Jira rate limit',
   refreshFailed: (status) => (status ? `Refresh failed: Jira answered ${status}` : 'Refresh failed'),
   indexRefreshNotQueued: () => 'Refresh after the index build was not queued',
   indexFailed: (status) => (status ? `Index write failed: Jira answered ${status}` : 'Index write failed'),

@@ -116,6 +116,14 @@ describe('handleFunction', () => {
     error.mockRestore();
     expect(deps.pushed).toEqual([[{ kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] }, null]]);
   });
+  it('answers Computing, pauses the background until the reset and queues no computation when Jira rate-limits the call', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const limited = Object.assign(new Error('rate limited'), { name: 'RateLimitError', status: 429, retryAt: 1000000 + 425000 });
+    const deps = fnDeps({ subtasksOf: async () => { throw limited; } });
+    expect((await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV)).error).toBe('Computing, retry in a minute');
+    error.mockRestore();
+    expect([await deps.state.brake.get(), deps.pushed]).toEqual([1000000 + 425000, [[{ kind: 'wake' }, 425]]]);
+  });
   it('queues the computation when Jira keeps failing', async () => {
     const deps = fnDeps({ subtasksOf: async () => { throw Object.assign(new Error('down'), { name: 'JiraError', status: 503 }); } });
     expect((await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV)).error).toBe('Computing, retry in a minute');

@@ -3,6 +3,7 @@ import { CHANGELOG_BATCH, WORKER_BUDGET_MS } from '../core/limits.js';
 import { REWRITE_ALL_KIND } from '../core/affected.js';
 import { indexReadyKind } from '../core/readiness.js';
 import { pushRefresh } from './refresh.js';
+import { brake, brakedUntil, delayUntil, isRateLimit } from './brake.js';
 
 const inList = (projects) => projects.map((p) => `"${p.key}"`).join(', ');
 const excludedNow = async (deps, project) => (await deps.state.excluded()).includes(project.key);
@@ -123,13 +124,31 @@ async function finish(deps, part, p) {
 /**
  * Backfill consumer: slices of issue ids, project by project, within the budget, leaving out projects excluded since the fill started;
  * then it queues itself to continue; it stops when a newer backfill started or another copy of this job finished the part; a finished
- * part starts the projects kept for it. A `purge` job deletes the rows of the excluded projects.
+ * part starts the projects kept for it; while the background waits for Jira's rate limit, or when a 429 stops a slice, it queues itself for
+ * the reset. A `purge` job deletes the rows of the excluded projects.
  */
 export async function onBackfill(deps, event) {
   if (event?.body?.kind === 'purge') return purgeExcluded(deps);
   const { part, generation } = event?.body ?? {};
   const p = part && deps.indexParts[part] ? await deps.state.progress.getPart(part) : null;
   if (!p || p.generation !== generation || p.finishedAt) return { skipped: true };
+  const until = await brakedUntil(deps);
+  if (until) {
+    await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, until));
+    return { braked: until };
+  }
+  try {
+    return await fillPart(deps, part, generation, p);
+  } catch (error) {
+    if (!isRateLimit(error)) throw error;
+    console.error('backfill stopped by the Jira rate limit');
+    const resume = await brake(deps, error.retryAt);
+    await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, resume));
+    return { braked: true, done: p.done };
+  }
+}
+
+async function fillPart(deps, part, generation, p) {
   const deadline = deps.now() + WORKER_BUDGET_MS;
   const c = p.cursor;
   let page = null;

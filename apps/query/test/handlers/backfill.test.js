@@ -13,6 +13,7 @@ function makeDeps({ pages, cost = 0 }) {
   const indexed = [];
   const counted = [];
   const queued = [];
+  const delays = [];
   return {
     state: createState({ kvs }),
     journal: createJournal({ kvs, beginsWith, random: () => 'r' }),
@@ -27,7 +28,8 @@ function makeDeps({ pages, cost = 0 }) {
       searchPage: async (jql, token) => pages[`${jql}|${token}`],
     },
     indexParts: { sprint: { prepare: vi.fn(async () => {}), index: async (ids, project) => { indexed.push([project.key, ids.length]); now += cost; } } },
-    backfillQueue: { push: async (body) => { pushed.push(body); } },
+    backfillQueue: { push: async (body, delay) => { pushed.push(body); delays.push(delay ?? null); } },
+    delays,
     now: () => now,
     pushed,
     indexed,
@@ -181,5 +183,22 @@ describe('backfill', () => {
     expect(p.partial).toBe(true);
     await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } });
     expect((await deps.journal.read(10)).map((r) => r.value)).toEqual([{ ids: [], kinds: [REWRITE_ALL_KIND] }]);
+  });
+  it('waits with its slice while the background is paused for the Jira rate limit, then goes on from the saved cursor', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await startBackfill(deps, 'sprint');
+    await deps.state.brake.set(1000 + 120000);
+    deps.indexed.length = 0;
+    expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ braked: 121000 });
+    expect([deps.indexed, deps.pushed.at(-1), deps.delays.at(-1)]).toEqual([[], { kind: 'backfill', part: 'sprint', generation: 1000 }, 120]);
+  });
+  it('pauses the background and queues itself for the reset when a 429 stops a slice, without throwing', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await startBackfill(deps, 'sprint');
+    deps.jira.searchPage = async () => { throw Object.assign(new Error('rate limited'), { name: 'RateLimitError', status: 429, retryAt: 1000 + 300000 }); };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } });
+    error.mockRestore();
+    expect([result, await deps.state.brake.get(), deps.pushed.at(-1), deps.delays.at(-1)]).toEqual([{ braked: true, done: 0 }, 301000, { kind: 'backfill', part: 'sprint', generation: 1000 }, 300]);
   });
 });

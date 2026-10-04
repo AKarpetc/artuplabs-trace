@@ -7,6 +7,11 @@ import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
 import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
+/** Runs the compute job of a parentsOf call that a function deferred just now (it records the job before queuing it). */
+async function deferred(deps) {
+  await deps.state.addJob({ key: 'parentsOf["q"]', functionName: 'parentsOf', userArgs: ['q'], at: deps.now() });
+  return onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } });
+}
 const jiraError = (status) => Object.assign(new Error(`Jira answered ${status}`), { name: 'JiraError', status });
 
 describe('refreshOnce', () => {
@@ -446,7 +451,7 @@ describe('onRefresh', () => {
   });
   it('runs a compute job into the cache', async () => {
     const deps = makeDeps({ compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
-    expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } })).toEqual({ computed: 'parentsOf["q"]', changed: 0 });
+    expect(await deferred(deps)).toEqual({ computed: 'parentsOf["q"]', changed: 0 });
     expect((await deps.cache.meta('parentsOf["q"]')).source).toBe('job');
   });
   it('keeps watching a compute job from the moment it completes', async () => {
@@ -682,20 +687,20 @@ describe('onRefresh compute job precomputations', () => {
   it('writes the value of a deferred group over the Computing error Jira stored', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], error: 'Computing, retry in a minute', used: RECENT }];
     const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
-    expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } })).toEqual({ computed: 'parentsOf["q"]', changed: 1 });
+    expect(await deferred(deps)).toEqual({ computed: 'parentsOf["q"]', changed: 1 });
     expect(deps.written).toEqual([{ id: 'root', value: 'id in (4)', error: null }]);
   });
   it('filters a deferred group written by the job through the exclusion', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], operator: 'not in', error: 'Computing, retry in a minute', used: RECENT }];
     const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4', '6'], field: 'id', watch: [] }) }, exclude: async (r) => ({ ...r, ids: ['4'] }) });
     await deps.state.setExcluded(['OPS']);
-    await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } });
+    await deferred(deps);
     expect(deps.written).toEqual([{ id: 'root', value: 'NOT (id in (4))', error: null }]);
   });
   it('writes the complement over the Computing error of a deferred not in call', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], operator: 'not in', error: 'Computing, retry in a minute', used: RECENT }];
     const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
-    await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } });
+    await deferred(deps);
     expect(deps.written).toEqual([{ id: 'root', value: 'NOT (id in (4))', error: null }]);
   });
 });

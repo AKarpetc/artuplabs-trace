@@ -3,8 +3,9 @@ import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
 import { groupPrecomputations } from '../core/affected.js';
 import { forOperator } from '../core/jql-build.js';
-import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
+import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, PAGE_CACHE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
 import { computeGroup, fragmentFor } from './functions.js';
+import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
 /** Whether a computation stopped because it ran past its deadline. */
 export const isDeadline = (error) => error?.name === 'DeadlineError';
@@ -126,6 +127,27 @@ export async function runGroupJob(deps, { functionName, userArgs }) {
   return { computed: key, changed: await writeGroups(deps, startedAt, [[key, { updates: updatesFor(group, result, deps.levels), entry: result.entry ?? null }]]) };
 }
 
+/**
+ * Queue job of a deferred function call: dropped while the background waits for Jira's rate limit and when no function call asked for
+ * the group within PAGE_CACHE_MS (the next call asks again); a 429 pauses the background instead of failing, so the queue does not retry it.
+ */
+export async function runCompute(deps, body) {
+  const until = await brakedUntil(deps);
+  if (until) return { braked: until };
+  const parsed = parseArgs(body.functionName, body.userArgs);
+  const key = parsed.error ? null : groupKey(body.functionName, parsed.userArgs);
+  const job = key ? await deps.state.job(key) : null;
+  if (key && !(job && deps.now() - job.at < PAGE_CACHE_MS)) return { skipped: key };
+  try {
+    return await runGroupJob(deps, body);
+  } catch (error) {
+    if (!isRateLimit(error)) throw error;
+    console.error(`${body.functionName} stopped by the Jira rate limit`);
+    await brake(deps, error.retryAt);
+    return { computed: key, braked: true };
+  }
+}
+
 /** Whether no heavy lane runner holds the lease. */
 export async function laneIdle(deps) {
   return deps.now() - ((await deps.state.heavy.lease.get()) ?? 0) >= HEAVY_LEASE_MS;
@@ -147,11 +169,20 @@ async function settle(deps, running, unfinished) {
   await deps.state.heavy.take(running.key);
 }
 
-/** Heavy lane runner: one waiting group per invocation under a lease; its entry stays until the group is written, so a failed run is retried. */
+/**
+ * Heavy lane runner: one waiting group per invocation under a lease; its entry stays until the group is written, so a failed run is retried.
+ * While the background waits for Jira's rate limit it runs nothing; a run a 429 stopped counts as a try and the lane goes on after the wake.
+ */
 export async function runHeavy(deps) {
+  const until = await brakedUntil(deps);
+  if (until) {
+    await scheduleWake(deps, until);
+    return { braked: until };
+  }
   if (!(await laneIdle(deps))) return { busy: true };
   await deps.state.heavy.lease.set(deps.now());
   let heavy = null;
+  let limited = null;
   try {
     const job = await deps.state.heavy.oldest();
     if (job) {
@@ -161,13 +192,18 @@ export async function runHeavy(deps) {
         heavy = await runGroupJob(deps, running);
       } catch (error) {
         await settle(deps, running, true);
-        throw error;
+        if (!isRateLimit(error)) throw error;
+        limited = error;
+        heavy = { computed: running.key, braked: true };
+        console.error(`${running.functionName} stopped by the Jira rate limit`);
+        await deps.state.recordError({ at: deps.now(), functionName: running.functionName, message: LOG.rateLimited() });
       }
-      await settle(deps, running, Boolean(heavy.timedOut));
+      if (!limited) await settle(deps, running, Boolean(heavy.timedOut));
     }
   } finally {
     await deps.state.heavy.lease.clear();
   }
-  if (await deps.state.heavy.oldest()) await pushQuietly(deps, { kind: 'heavy' });
+  if (limited) await brake(deps, limited.retryAt);
+  else if (await deps.state.heavy.oldest()) await pushQuietly(deps, { kind: 'heavy' });
   return { heavy };
 }

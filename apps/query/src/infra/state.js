@@ -5,7 +5,7 @@ const HEAVY_PREFIX = 'q:hq:';
 
 const INDEX_PARTS = ['sprint', 'comments'];
 
-/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`, each group waiting in the heavy lane `q:hq:<hash(group)>`, the start of the computation that last wrote a group `q:gw:<hash(group)>`, and the projects an index part fills once its running fill ends `idx:waiting:<part>`. */
+/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`, each group waiting in the heavy lane `q:hq:<hash(group)>`, the start of the computation that last wrote a group `q:gw:<hash(group)>`, and the projects an index part fills once its running fill ends `idx:waiting:<part>`, the end of a pause of the background work after a Jira rate limit `q:brake` and the time of the wake scheduled for it `q:wake`. */
 export function createState({ kvs, hash, beginsWith }) {
   const record = (key) => ({
     get: async () => (await kvs.get(key)) ?? null,
@@ -32,6 +32,8 @@ export function createState({ kvs, hash, beginsWith }) {
     lease: record('q:running'),
     lastWrittenStart: record('q:lastWrittenStart'),
     lastRefresh: record('log:refresh'),
+    brake: record('q:brake'),
+    wake: record('q:wake'),
     sprintFields: record('cfg:sprintFields'),
     progress: {
       async get() {
@@ -64,6 +66,7 @@ export function createState({ kvs, hash, beginsWith }) {
     },
     errors: async () => (await kvs.get('log:errors')) ?? [],
     addJob: (job) => kvs.set(jobKey(job.key), job),
+    job: async (key) => (await kvs.get(jobKey(key))) ?? null,
     heavy: {
       lease: record('q:heavy'),
       get: async (key) => (await kvs.get(heavyKey(key))) ?? null,
