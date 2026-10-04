@@ -3,6 +3,7 @@ import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createJournal } from '../../src/infra/journal.js';
 import { createState } from '../../src/infra/state.js';
 import { backfillProjects, onBackfill, startBackfill } from '../../src/handlers/backfill.js';
+import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
 
 function makeDeps({ pages, cost = 0 }) {
   let now = 1000;
@@ -173,5 +174,12 @@ describe('backfill', () => {
     expect(await deps.state.waiting.get('sprint')).toEqual([{ id: '2', key: 'B' }, { id: '3', key: 'C' }]);
     await deps.state.progress.setPart('sprint', { generation: 1, finishedAt: 5, readyAt: 5 });
     expect((await backfillProjects(deps, 'sprint', [{ id: '2', key: 'B' }])).cursor.projects).toEqual([{ id: '2', key: 'B' }]);
+  });
+  it('asks a rewrite of every stored root once a fill of chosen projects finishes', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    const p = await startBackfill(deps, 'sprint', { projects: [{ id: '2', key: 'B' }] });
+    expect(p.partial).toBe(true);
+    await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } });
+    expect((await deps.journal.read(10)).map((r) => r.value)).toEqual([{ ids: [], kinds: [REWRITE_ALL_KIND] }]);
   });
 });

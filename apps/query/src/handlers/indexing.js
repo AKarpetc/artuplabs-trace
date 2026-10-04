@@ -161,7 +161,9 @@ export function createIndexing(deps) {
   }
 
   async function recentByProject() {
-    const excluded = await deps.state.excluded();
+    const stored = await deps.state.excluded();
+    const known = stored.length ? new Set((await deps.jira.projects()).map((p) => p.key)) : new Set();
+    const excluded = stored.filter((k) => known.has(k));
     const scope = excluded.length ? `${RECENT_JQL} AND project not in (${excluded.map((k) => `"${k}"`).join(', ')})` : RECENT_JQL;
     const recent = (await deps.jira.searchPage(`${scope}${RECENT_ORDER}`, null)).ids.slice(0, RECONCILE_RECENT_MAX);
     const byProject = new Map();

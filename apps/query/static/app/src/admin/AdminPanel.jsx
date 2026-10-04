@@ -58,16 +58,21 @@ export function AdminPanel() {
   const [reset, setReset] = useState(null);
 
   const refreshStatus = useCallback(async () => {
-    const status = await call('adminStatus', {});
-    setLoad((current) => (current.status === 'ready' ? { ...current, status: 'ready', data: status } : current));
-    return status;
+    try {
+      const status = await call('adminStatus', {});
+      setLoad((current) => (current.status === 'ready' ? { ...current, data: status } : current));
+      return status;
+    } catch {
+      return null;
+    }
   }, []);
 
   const start = useCallback(async () => {
     setLoad({ status: 'loading' });
     try {
       const [status, projects] = await Promise.all([call('adminStatus', {}), loadProjects()]);
-      setExcluded(status.excluded);
+      const known = new Set(projects.map((p) => p.key));
+      setExcluded(status.excluded.filter((key) => known.has(key)));
       setReindexKey(projects.find((p) => !status.excluded.includes(p.key))?.key ?? null);
       setLoad({ status: 'ready', data: status, projects });
     } catch (error) {

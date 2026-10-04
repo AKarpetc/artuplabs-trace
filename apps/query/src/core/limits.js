@@ -92,3 +92,7 @@ export const EXT_MAX_LENGTH = 32;
 export const FIELD_EVAL_CHUNK = 5000;
 /** Projects one save may exclude from the index. */
 export const EXCLUDED_MAX = 200;
+/** Issues of excluded projects one result may leave out by an `id not in (…)` clause; more turn the result into the matching ids. */
+export const EXCLUDED_IDS_MAX = 1000;
+/** Characters of a Jira project key. */
+export const PROJECT_KEY_MAX_LENGTH = 100;

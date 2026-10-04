@@ -6,15 +6,16 @@ import { createAdminActions } from './admin.js';
 
 const ADMIN_ACTIONS = ['adminStatus', 'setExcluded', 'reindexProject', 'resetIndex'];
 const PASSED = new Set([CODE.unlicensed, CODE.forbidden, CODE.badRequest, CODE.notFound, CODE.busy]);
+const CONSENT = 'NEEDS_AUTHENTICATION_ERR';
 
 const licensed = (context) => decideLicence({ environmentType: context?.environmentType, license: context?.license }).licensed;
 
-/** An admin action as a resolver: its known error codes pass through, anything else is logged without values and answered `internal`. */
+/** An admin action as a resolver: its known error codes and the platform's consent request pass through, anything else is logged without values and answered `internal`. */
 const adminResolver = (actions, key) => async ({ payload, context }) => {
   try {
     return await actions[key](payload ?? {}, context);
   } catch (error) {
-    if (PASSED.has(error?.message)) throw error;
+    if (PASSED.has(error?.message) || error?.name === CONSENT) throw error;
     console.error(`${key} failed: ${error?.name}`);
     throw new Error(CODE.internal);
   }

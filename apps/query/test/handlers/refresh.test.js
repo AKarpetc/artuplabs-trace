@@ -3,7 +3,7 @@ import { ids, makeDeps, RECENT } from './makeDeps.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
 import { handOff, writeGroups } from '../../src/handlers/groups.js';
 import { createFieldCompute } from '../../src/compute/fields.js';
-import { EXCLUDED_KIND } from '../../src/core/affected.js';
+import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
 import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
@@ -20,7 +20,7 @@ describe('refreshOnce', () => {
       { id: 'idle', functionName: 'hasLinks', arguments: [], operator: 'not in', value: 'NOT (id in (5))', used: OLD },
       { id: 'page', functionName: 'parentsOf', arguments: ['q', '__aq:l2'], operator: 'in', value: 'id = -1', used: RECENT },
     ];
-    const compute = { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }), hasLinks: async () => ({ ids: ['5'], field: 'id', watch: null }) };
+    const compute = { parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }), hasLinks: async () => ({ ids: ['6'], field: 'id', watch: null }) };
     let refuse = true;
     const write = async (updates) => {
       if (refuse) throw new Error('Jira answered 503');
@@ -28,15 +28,15 @@ describe('refreshOnce', () => {
     };
     const deps = makeDeps({ pcs, compute, write });
     await deps.state.setExcluded(['OPS']);
-    await deps.journal.append({ ids: [], kinds: [EXCLUDED_KIND] }, 999500);
+    await deps.journal.append({ ids: [], kinds: [REWRITE_ALL_KIND] }, 999500);
     await expect(refreshOnce(deps)).rejects.toThrow('503');
     expect((await deps.journal.read(10)).length).toBe(1);
     refuse = false;
     deps.advance(1000);
     expect(await refreshOnce(deps)).toMatchObject({ all: true, recomputed: 2, changed: 2 });
     expect(deps.written).toEqual([
-      { id: 'never', value: '(id in (4)) AND project not in ("OPS")' },
-      { id: 'idle', value: 'NOT (id in (5)) AND project not in ("OPS")' },
+      { id: 'never', value: 'id in (3)' },
+      { id: 'idle', value: 'NOT (id in (6))' },
     ]);
     expect(await deps.journal.read(10)).toEqual([]);
   });
@@ -328,13 +328,13 @@ describe('rewrite', () => {
     expect((await rewrite(deps, group('parentsOf', ['q'], items), [])).updates).toEqual([{ id: 'a', value: 'id in (4)' }, { id: 'b', value: 'NOT (id in (4))' }]);
     expect(compute.parentsOf).toHaveBeenCalledTimes(1);
   });
-  it('leaves excluded projects out of the stored roots under both operators', async () => {
-    const deps = makeDeps({ compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
+  it('stores roots filtered by the app, with no project clause, under both operators', async () => {
+    const deps = makeDeps({ compute: { parentsOf: async () => ({ ids: ['4', '5'], field: 'id', watch: [] }) }, exclude: async (r) => ({ ...r, ids: ['4'] }) });
     await deps.state.setExcluded(['OPS']);
     const items = [{ id: 'a', arguments: ['q'], operator: 'in' }, { id: 'b', arguments: ['q'], operator: 'not in' }];
     expect((await rewrite(deps, group('parentsOf', ['q'], items), [])).updates).toEqual([
-      { id: 'a', value: '(id in (4)) AND project not in ("OPS")' },
-      { id: 'b', value: 'NOT (id in (4)) AND project not in ("OPS")' },
+      { id: 'a', value: 'id in (4)' },
+      { id: 'b', value: 'NOT (id in (4))' },
     ]);
   });
   it('stores the same error for a not in precomputation as for in', async () => {
@@ -680,12 +680,12 @@ describe('onRefresh compute job precomputations', () => {
     expect(await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } })).toEqual({ computed: 'parentsOf["q"]', changed: 1 });
     expect(deps.written).toEqual([{ id: 'root', value: 'id in (4)', error: null }]);
   });
-  it('leaves excluded projects out of a deferred group written by the job', async () => {
+  it('filters a deferred group written by the job through the exclusion', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], operator: 'not in', error: 'Computing, retry in a minute', used: RECENT }];
-    const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4'], field: 'id', watch: [] }) } });
+    const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['4', '6'], field: 'id', watch: [] }) }, exclude: async (r) => ({ ...r, ids: ['4'] }) });
     await deps.state.setExcluded(['OPS']);
     await onRefresh(deps, { body: { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] } });
-    expect(deps.written).toEqual([{ id: 'root', value: 'NOT (id in (4)) AND project not in ("OPS")', error: null }]);
+    expect(deps.written).toEqual([{ id: 'root', value: 'NOT (id in (4))', error: null }]);
   });
   it('writes the complement over the Computing error of a deferred not in call', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], operator: 'not in', error: 'Computing, retry in a minute', used: RECENT }];

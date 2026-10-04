@@ -19,6 +19,7 @@ import { createBoardCompute } from './compute/boards.js';
 import { createSprintCompute } from './compute/sprints.js';
 import { createCommentCompute } from './compute/comments.js';
 import { createFieldCompute } from './compute/fields.js';
+import { createExclusion } from './compute/exclusion.js';
 import { createIndexing } from './handlers/indexing.js';
 
 const sha1 = (text) => createHash('sha1').update(text).digest('hex');
@@ -63,6 +64,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
       ...createCommentCompute({ jira, repo, now: () => Date.now() }),
       ...createFieldCompute({ jira, repo, commentsShipped: () => SHIPPED_GROUPS.includes('comment'), commentGate: async () => readinessError(await state.progress.get(), 'comment') }),
     },
+    exclude: createExclusion({ jira, state }),
     withDeadline,
     migrate: runMigrations,
     hash: sha1,

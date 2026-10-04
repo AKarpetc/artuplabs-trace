@@ -168,17 +168,15 @@ describe('handleFunction with not in', () => {
     const deps = fnDeps({ hasComments: async () => ({ native: 'NOT (issue in hasComments("+2"))' }) });
     expect(await handleFunction(deps, 'hasComments', notIn('-3'), DEV)).toEqual({ jql: 'NOT (NOT (issue in hasComments("+2")))' });
   });
-  it('leaves excluded projects out of the root under both operators, but not out of a page', async () => {
-    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) });
+  it('leaves the issues of excluded projects out of the computed set, with no project clause, so not in is its exact complement', async () => {
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3', '4'], field: 'id', watch: [] }) }, { exclude: async (r) => ({ ...r, ids: r.ids.filter((id) => id !== '4') }) });
     await deps.state.setExcluded(['OPS']);
-    expect(await handleFunction(deps, 'parentsOf', payload('q'), DEV)).toEqual({ jql: '(id in (3)) AND project not in ("OPS")' });
-    expect(await handleFunction(deps, 'parentsOf', notIn('q'), DEV)).toEqual({ jql: 'NOT (id in (3)) AND project not in ("OPS")' });
-    await deps.cache.write(SUBTASK_GROUP, jobEntry(ids(1500)));
-    expect((await handleFunction(deps, 'subtasksOf', payload('project = A', '__aq:l2'), DEV)).jql).not.toContain('OPS');
+    expect(await handleFunction(deps, 'parentsOf', payload('q'), DEV)).toEqual({ jql: 'id in (3)' });
+    expect(await handleFunction(deps, 'parentsOf', notIn('q'), DEV)).toEqual({ jql: 'NOT (id in (3))' });
+    expect(await deps.cache.values('parentsOf["q"]', await deps.cache.meta('parentsOf["q"]'), 0, 10)).toEqual(['3']);
   });
   it('answers Computing when the excluded projects cannot be read, never an unfiltered result', async () => {
-    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) });
-    deps.state.excluded = async () => { throw new Error('kvs down'); };
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) }, { exclude: async () => { throw new Error('kvs down'); } });
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(await handleFunction(deps, 'parentsOf', notIn('q'), DEV)).toEqual({ error: 'Computing, retry in a minute', storeErrorAsPrecomputation: false });
     error.mockRestore();
@@ -274,11 +272,11 @@ describe('handleFunction for dateCompare and expression', () => {
     expect(await handleFunction(deps, 'dateCompare', notIn('q', 'resolutiondate > duedate'), DEV)).toEqual({ jql: 'NOT (id in (1))' });
     expect(await handleFunction(deps, 'expression', notIn('q', 'timespent > 1h'), DEV)).toEqual({ jql: 'NOT (id in (1))' });
   });
-  it('leaves excluded projects out under both operators', async () => {
+  it('returns no project clause under either operator when projects are excluded', async () => {
     const deps = fnDeps(fieldCompute());
     await deps.state.setExcluded(['OPS']);
-    expect(await handleFunction(deps, 'expression', payload('q', 'timespent > 1h'), DEV)).toEqual({ jql: '(id in (1)) AND project not in ("OPS")' });
-    expect(await handleFunction(deps, 'expression', notIn('q', 'timespent > 1h'), DEV)).toEqual({ jql: 'NOT (id in (1)) AND project not in ("OPS")' });
+    expect(await handleFunction(deps, 'expression', payload('q', 'timespent > 1h'), DEV)).toEqual({ jql: 'id in (1)' });
+    expect(await handleFunction(deps, 'expression', notIn('q', 'timespent > 1h'), DEV)).toEqual({ jql: 'NOT (id in (1))' });
   });
   it('shows an unknown field under not in and logs it without the name', async () => {
     const deps = fnDeps(fieldCompute());

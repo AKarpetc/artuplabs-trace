@@ -3,7 +3,8 @@ import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createState } from '../../src/infra/state.js';
 import { createJournal } from '../../src/infra/journal.js';
 import { createAdminActions } from '../../src/handlers/admin.js';
-import { EXCLUDED_KIND } from '../../src/core/affected.js';
+import { onBackfill } from '../../src/handlers/backfill.js';
+import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
 import { EXCLUDED_MAX } from '../../src/core/limits.js';
 
 function makeDeps({ admin = true } = {}) {
@@ -28,9 +29,12 @@ describe('admin actions', () => {
   it('refuses a user who is not a Jira administrator', async () => {
     await expect(createAdminActions(makeDeps({ admin: false })).setExcluded({ projectKeys: ['A'] }, DEV)).rejects.toThrow('forbidden');
   });
-  it('excludes projects and deletes their index rows', async () => {
+  it('excludes projects and hands the deletion of their index rows to a queue job', async () => {
     const deps = makeDeps();
     expect(await createAdminActions(deps).setExcluded({ projectKeys: ['B', 'A', 'B'] }, DEV)).toEqual({ excluded: ['A', 'B'] });
+    expect(deps.repo.deleteProject).not.toHaveBeenCalled();
+    expect(deps.backfillQueue.push).toHaveBeenCalledWith({ kind: 'purge' });
+    await onBackfill(deps, { body: { kind: 'purge' } });
     expect(deps.repo.deleteProject.mock.calls).toEqual([['1', ['sprint_event', 'status_event']], ['2', ['sprint_event', 'status_event']]]);
   });
   it('rejects malformed project keys', async () => {
@@ -38,6 +42,7 @@ describe('admin actions', () => {
   });
   it('reindexes one project only when no full fill is running', async () => {
     const deps = makeDeps();
+    await expect(createAdminActions(deps).reindexProject({ projectKey: 'A' }, DEV)).rejects.toThrow('busy');
     await deps.state.progress.setPart('sprint', { generation: 1, finishedAt: null, readyAt: null });
     await expect(createAdminActions(deps).reindexProject({ projectKey: 'A' }, DEV)).rejects.toThrow('busy');
     await deps.state.progress.setPart('sprint', { generation: 1, finishedAt: 9, readyAt: 9 });
@@ -64,7 +69,7 @@ describe('admin actions', () => {
   it('refuses every action to a user who is not an administrator, changing nothing', async () => {
     const deps = makeDeps({ admin: false });
     const actions = createAdminActions(deps);
-    for (const key of ['adminStatus', 'reindexProject', 'resetIndex']) await expect(actions[key]({ projectKey: 'A' }, DEV)).rejects.toThrow('forbidden');
+    for (const key of ['adminStatus', 'setExcluded', 'reindexProject', 'resetIndex']) await expect(actions[key]({ projectKey: 'A', projectKeys: ['A'] }, DEV)).rejects.toThrow('forbidden');
     expect([deps.repo.clear.mock.calls.length, deps.repo.deleteProject.mock.calls.length, await deps.state.excluded()]).toEqual([0, 0, []]);
   });
   it('reports the excluded projects, the index progress and the shipped parts', async () => {
@@ -81,19 +86,60 @@ describe('admin actions', () => {
     await expect(actions.setExcluded({ projectKeys: many }, DEV)).rejects.toThrow('bad-request');
     await expect(actions.setExcluded({ projectKeys: [7] }, DEV)).rejects.toThrow('bad-request');
   });
-  it('deletes the rows of every shipped part of a newly excluded project only', async () => {
+  it('rejects a key Jira does not know with a value-free code and changes nothing', async () => {
+    const deps = makeDeps();
+    await expect(createAdminActions(deps).setExcluded({ projectKeys: ['A', 'GONE'] }, DEV)).rejects.toThrow(/^not-found$/);
+    expect([await deps.state.excluded(), (await deps.journal.read(10)).length, deps.backfillQueue.push.mock.calls.length]).toEqual([[], 0, 0]);
+  });
+  it('purges the rows of every excluded project in every shipped part, so a retried save repairs a failed one', async () => {
     const deps = makeDeps();
     deps.indexParts.comments = { tables: ['comment_meta', 'attachment_meta'], prepare: async () => {} };
     deps.shippedParts = () => ['comments', 'sprint'];
-    await deps.state.setExcluded(['A']);
-    await createAdminActions(deps).setExcluded({ projectKeys: ['A', 'B'] }, DEV);
+    await deps.state.setExcluded(['B']);
+    await createAdminActions(deps).setExcluded({ projectKeys: ['B'] }, DEV);
+    await onBackfill(deps, { body: { kind: 'purge' } });
     expect(deps.repo.deleteProject.mock.calls).toEqual([['2', ['comment_meta', 'attachment_meta']], ['2', ['sprint_event', 'status_event']]]);
+  });
+  it('purges nothing of a project that returned to the index before the job ran', async () => {
+    const deps = makeDeps();
+    await createAdminActions(deps).setExcluded({ projectKeys: ['A'] }, DEV);
+    await deps.state.setExcluded([]);
+    await onBackfill(deps, { body: { kind: 'purge' } });
+    expect(deps.repo.deleteProject).not.toHaveBeenCalled();
+  });
+  it('journals the rewrite of every root before anything else that can fail after the save', async () => {
+    const deps = makeDeps();
+    await deps.state.setExcluded(['A']);
+    await deps.state.progress.setPart('sprint', { generation: 1, finishedAt: 9, readyAt: 9 });
+    deps.backfillQueue.push = vi.fn(async () => { throw new Error('queue down'); });
+    await expect(createAdminActions(deps).setExcluded({ projectKeys: ['B'] }, DEV)).rejects.toThrow('queue down');
+    expect([await deps.state.excluded(), (await deps.journal.read(10)).map((r) => r.value.kinds)]).toEqual([['B'], [[REWRITE_ALL_KIND]]]);
+    expect(await deps.state.waiting.get('sprint')).toEqual([{ id: '1', key: 'A' }]);
+    deps.backfillQueue.push = vi.fn(async () => {});
+    await createAdminActions(deps).setExcluded({ projectKeys: ['B'] }, DEV);
+    expect(deps.backfillQueue.push).toHaveBeenCalledWith({ kind: 'purge' });
+    expect((await deps.state.progress.getPart('sprint')).cursor.projects).toEqual([{ id: '1', key: 'A' }]);
+  });
+  it('a retried save starts a fill kept for later that could not start', async () => {
+    const deps = makeDeps();
+    await deps.state.progress.setPart('sprint', { generation: 1, finishedAt: 9, readyAt: 9 });
+    await deps.state.waiting.add('sprint', [{ id: '1', key: 'A' }]);
+    await createAdminActions(deps).setExcluded({ projectKeys: [] }, DEV);
+    expect((await deps.state.progress.getPart('sprint')).cursor.projects).toEqual([{ id: '1', key: 'A' }]);
+    expect(await deps.state.waiting.get('sprint')).toEqual([]);
+  });
+  it('builds a part that has no progress at all in full instead of filling only the returning project', async () => {
+    const deps = makeDeps();
+    await deps.state.setExcluded(['A']);
+    await createAdminActions(deps).setExcluded({ projectKeys: [] }, DEV);
+    const p = await deps.state.progress.getPart('sprint');
+    expect([p.cursor.projects, p.partial ?? false, await deps.state.waiting.get('sprint')]).toEqual([[{ id: '1', key: 'A' }, { id: '2', key: 'B' }], false, []]);
   });
   it('rewrites every stored root after a change of the list: journals a change of all groups and queues a refresh', async () => {
     const deps = makeDeps();
     await createAdminActions(deps).setExcluded({ projectKeys: ['A'] }, DEV);
     const rows = await deps.journal.read(10);
-    expect(rows.map((r) => r.value)).toEqual([{ ids: [], kinds: [EXCLUDED_KIND] }]);
+    expect(rows.map((r) => r.value)).toEqual([{ ids: [], kinds: [REWRITE_ALL_KIND] }]);
     expect(deps.queue.push).toHaveBeenCalledWith({ kind: 'refresh', ts: 50 }, undefined);
     expect(await deps.state.pending.get()).toBe(50);
   });
@@ -116,7 +162,6 @@ describe('admin actions', () => {
     const p = await deps.state.progress.getPart('sprint');
     expect([p.cursor.projects, p.readyAt, p.finishedAt]).toEqual([[{ id: '1', key: 'A' }], 9, null]);
     expect(deps.backfillQueue.push).toHaveBeenCalledWith({ kind: 'backfill', part: 'sprint', generation: 50 });
-    expect(deps.repo.deleteProject).not.toHaveBeenCalled();
   });
   it('keeps a returning project for later while a fill of the part runs, without stopping that fill', async () => {
     const deps = makeDeps();
@@ -126,10 +171,12 @@ describe('admin actions', () => {
     await createAdminActions(deps).setExcluded({ projectKeys: [] }, DEV);
     expect(await deps.state.progress.getPart('sprint')).toEqual(running);
     expect(await deps.state.waiting.get('sprint')).toEqual([{ id: '1', key: 'A' }]);
-    expect(deps.backfillQueue.push).not.toHaveBeenCalled();
+    expect(deps.backfillQueue.push.mock.calls).toEqual([[{ kind: 'purge' }]]);
   });
   it('answers not-found for a project Jira does not know and bad-request for a malformed key', async () => {
-    const actions = createAdminActions(makeDeps());
+    const deps = makeDeps();
+    await deps.state.progress.setPart('sprint', { generation: 1, finishedAt: 9, readyAt: 9 });
+    const actions = createAdminActions(deps);
     await expect(actions.reindexProject({ projectKey: 'ZZ' }, DEV)).rejects.toThrow('not-found');
     await expect(actions.reindexProject({ projectKey: 'a-b' }, DEV)).rejects.toThrow('bad-request');
     await expect(actions.reindexProject({}, DEV)).rejects.toThrow('bad-request');

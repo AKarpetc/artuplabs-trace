@@ -61,6 +61,11 @@ describe('admin resolvers', () => {
     error.mockRestore();
     expect(lines).toEqual(['setExcluded failed: JiraError']);
   });
+  it('passes the platform\'s consent request through unchanged, so Jira can ask the user to allow access', async () => {
+    const consent = Object.assign(new Error('Authentication required'), { name: 'NEEDS_AUTHENTICATION_ERR' });
+    const defs = createResolverDefinitions(adminDeps({ isAdmin: async () => { throw consent; } }));
+    await expect(run(defs, 'adminStatus', { environmentType: 'DEVELOPMENT' })).rejects.toBe(consent);
+  });
   it('treats a missing payload as empty', async () => {
     const defs = createResolverDefinitions(adminDeps({ isAdmin: async () => true }));
     expect(await run(defs, 'adminStatus', { environmentType: 'DEVELOPMENT' }, undefined)).toEqual({ excluded: [], progress: null, parts: [] });

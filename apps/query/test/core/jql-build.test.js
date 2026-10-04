@@ -31,11 +31,8 @@ describe('forOperator', () => {
     expect(forOperator(EMPTY, 'not in')).toBe('NOT (id = -1)');
     expect(forOperator('NOT (issue in hasComments("+2"))', 'not in')).toBe('NOT (NOT (issue in hasComments("+2")))');
   });
-  it('leaves the excluded projects out under in and under not in', () => {
-    expect(forOperator('id in (1)', 'in', ['OPS', 'H"R'])).toBe('(id in (1)) AND project not in ("OPS", "H\\"R")');
-    expect(forOperator('id in (1)', 'not in', ['OPS'])).toBe('NOT (id in (1)) AND project not in ("OPS")');
-    expect(forOperator('NOT (issue in hasComments("+2"))', 'not in', ['OPS'])).toBe('NOT (NOT (issue in hasComments("+2"))) AND project not in ("OPS")');
-    expect(forOperator('id in (1)', 'in', [])).toBe('id in (1)');
+  it('never adds a project clause, whatever else is passed', () => {
+    expect([forOperator('id in (1)', 'in', ['OPS']), forOperator('id in (1)', 'not in', ['OPS'])]).toEqual(['id in (1)', 'NOT (id in (1))']);
   });
   it('tells a not in operator', () => {
     expect([isNotIn('not in'), isNotIn('NOT_IN'), isNotIn('in'), isNotIn(null)]).toEqual([true, true, false, false]);

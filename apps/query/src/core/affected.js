@@ -12,11 +12,11 @@ const FAMILY_KINDS = {
   comment: ['comment', 'issue-created', 'issue-deleted', 'index-comments'],
   attachment: ['attachment', 'issue-created', 'issue-deleted', 'index-comments'],
 };
-/** Journal change kind written when the excluded projects change: every stored root embeds that list, so all of them are rewritten. */
-export const EXCLUDED_KIND = 'excluded';
+/** Journal change kind that rewrites every stored precomputation, used or not: written when the excluded projects change and when a fill of chosen projects ends. */
+export const REWRITE_ALL_KIND = 'rewrite-all';
 const RELATIVE = /(^|[\s"(])[-+]\d+[mhdw]\b|\b(start|end)Of(Day|Week|Month|Year)\s*\(/i;
 
-/** A journal page → touched ids, change kinds, the oldest event time and whether everything must be recomputed (a full page, an unknown event, too many issues or new excluded projects). */
+/** A journal page → touched ids, change kinds, the oldest event time and whether everything must be recomputed (a full page, an unknown event, too many issues or a rewrite of all). */
 export function summarizeJournal(rows, { page = JOURNAL_PAGE, maxTouched = TOUCHED_CHECK_MAX } = {}) {
   const ids = new Set();
   const kinds = new Set();
@@ -28,7 +28,7 @@ export function summarizeJournal(rows, { page = JOURNAL_PAGE, maxTouched = TOUCH
     for (const kind of row.value?.kinds ?? ['unknown']) kinds.add(kind);
   }
   const touched = sortIds(ids);
-  const all = rows.length >= page || kinds.has('unknown') || kinds.has(EXCLUDED_KIND) || touched.length > maxTouched;
+  const all = rows.length >= page || kinds.has('unknown') || kinds.has(REWRITE_ALL_KIND) || touched.length > maxTouched;
   return { touched, kinds: [...kinds].sort(), all, firstAt };
 }
 

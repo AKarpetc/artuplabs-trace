@@ -159,13 +159,14 @@ describe('reconcileIndex', () => {
     expect(deps.backfillQueue.push.mock.calls).toEqual([[{ kind: 'backfill', part: 'sprint', generation: 5000 }], [{ kind: 'backfill', part: 'comments', generation: 5000 }]]);
     expect([indexing.parts.sprint.index.mock.calls, indexing.parts.comments.index.mock.calls]).toEqual([[], []]);
   });
-  it('re-reads recently updated issues project by project outside excluded projects', async () => {
+  it('re-reads recently updated issues project by project outside excluded projects, naming only projects Jira knows', async () => {
     const deps = reconcileDeps();
     await built(deps);
-    await deps.state.setExcluded(['X', 'Y']);
+    deps.jira.projects = async () => [{ id: '10', key: 'A' }, { id: '30', key: 'X' }];
+    await deps.state.setExcluded(['GONE', 'X']);
     const indexing = quiet(createIndexing(deps));
     expect(await indexing.reconcileIndex()).toEqual({ started: [], reindexed: 3 });
-    expect(deps.searched).toEqual(['updated >= -2h AND project not in ("X", "Y") ORDER BY updated DESC']);
+    expect(deps.searched).toEqual(['updated >= -2h AND project not in ("X") ORDER BY updated DESC']);
     const perProject = [[['7', '8'], { id: '10', key: 'A' }], [['9'], { id: '20', key: 'B' }]];
     expect([indexing.parts.sprint.index.mock.calls, indexing.parts.comments.index.mock.calls]).toEqual([perProject, perProject]);
   });

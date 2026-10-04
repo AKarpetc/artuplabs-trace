@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { commentTimesWanted, EXCLUDED_KIND, familyWants, groupPrecomputations, isTimeRelative, needsRepair, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
+import { commentTimesWanted, REWRITE_ALL_KIND, familyWants, groupPrecomputations, isTimeRelative, needsRepair, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
 
 const row = (ts, ids, kinds) => ({ key: `t:${String(ts).padStart(15, '0')}:abc`, value: { ids, kinds } });
 const NOW = Date.parse('2026-10-10T12:00:00Z');
@@ -19,7 +19,7 @@ describe('summarizeJournal', () => {
     expect(summarizeJournal([{ key: 't:000000000000001:x', value: { ids: ['1'] } }]).all).toBe(true);
   });
   it('recomputes everything after a change of the excluded projects', () => {
-    expect(summarizeJournal([row(1, [], [EXCLUDED_KIND])])).toEqual({ touched: [], kinds: [EXCLUDED_KIND], all: true, firstAt: 1 });
+    expect(summarizeJournal([row(1, [], [REWRITE_ALL_KIND])])).toEqual({ touched: [], kinds: [REWRITE_ALL_KIND], all: true, firstAt: 1 });
   });
   it('reads a row without ids as touching nothing', () => {
     expect(summarizeJournal([{ key: 't:000000000000005:x', value: { kinds: ['sprint'] } }])).toEqual({ touched: [], kinds: ['sprint'], all: false, firstAt: 5 });

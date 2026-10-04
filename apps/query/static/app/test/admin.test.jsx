@@ -38,16 +38,44 @@ describe('AdminPanel', () => {
     expect(await screen.findByText('Reports (RPT)')).toBeTruthy();
     expect(requestJira.mock.calls.slice(-2).map((c) => c[0])).toEqual(['/rest/api/3/project/search?maxResults=100&startAt=0', '/rest/api/3/project/search?maxResults=100&startAt=1']);
   });
-  it('shows a key Jira no longer knows as it is and says when the list is saved', async () => {
-    invoke.mockImplementation(async (key) => (key === 'adminStatus' ? { excluded: ['GONE'], progress: null, parts: ['sprint'] } : { excluded: ['GONE'] }));
+  it('drops a key Jira no longer knows from the list it saves and says when the list is saved', async () => {
+    invoke.mockImplementation(async (key) => (key === 'adminStatus' ? { excluded: ['GONE', 'RPT'], progress: null, parts: ['sprint'] } : { excluded: ['RPT'] }));
     view();
-    expect(await screen.findByText('GONE')).toBeTruthy();
+    expect(await screen.findByText('Reports (RPT)')).toBeTruthy();
+    expect(screen.queryByText('GONE')).toBeNull();
+    fireEvent.click(screen.getByTestId('save-excluded'));
+    expect(await screen.findByText('Saved')).toBeTruthy();
+    expect(invoke).toHaveBeenCalledWith('setExcluded', { projectKeys: ['RPT'] });
+  });
+  it('keeps the success of a save when reading the status afterwards fails', async () => {
+    let calls = 0;
+    invoke.mockImplementation(async (key) => {
+      if (key === 'adminStatus') {
+        calls += 1;
+        if (calls > 1) throw new Error('There was an error invoking the function - internal');
+      }
+      return DEFAULT(key);
+    });
+    view();
+    await screen.findByText('Reports (RPT)');
     fireEvent.click(screen.getByTestId('save-excluded'));
     expect(await screen.findByText('Saved')).toBeTruthy();
   });
+  it('keeps the dialog open while the reset is being sent', async () => {
+    let release;
+    invoke.mockImplementation(async (key) => (key === 'resetIndex' ? new Promise((r) => { release = r; }) : DEFAULT(key)));
+    view();
+    fireEvent.click(await screen.findByTestId('reset-index'));
+    fireEvent.click(screen.getByTestId('reset-confirm'));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('resetIndex', {}));
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape', code: 'Escape' });
+    expect(screen.getByText('Rebuild the whole index?')).toBeTruthy();
+    release({ started: ['sprint'] });
+    await waitFor(() => expect(screen.queryByText('Rebuild the whole index?')).toBeNull());
+  });
   it('explains that excluded projects leave every function and what a reindex repairs', async () => {
     view();
-    expect(await screen.findByText(/left out of the results of every ArtUp Query function/)).toBeTruthy();
+    expect(await screen.findByText(/never match any ArtUp Query function under in/)).toBeTruthy();
     expect(screen.getByText(/moved to another project/)).toBeTruthy();
   });
   it('keeps the reset when the dialog is cancelled', async () => {

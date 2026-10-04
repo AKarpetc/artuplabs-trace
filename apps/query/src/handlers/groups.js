@@ -35,13 +35,13 @@ async function keepEntry(deps, key, result) {
   if (result.entry) await deps.cache.write(key, result.entry);
 }
 
-/** Precomputation updates whose stored value or error changed, each in the form of its operator (`not in` stores the complement, a root leaves out the excluded projects); a value clears a stored error, which Jira keeps otherwise. */
-export function updatesFor(group, result, levels, excluded = []) {
+/** Precomputation updates whose stored value or error changed, each in the form of its operator (`not in` stores the complement); a value clears a stored error, which Jira keeps otherwise. */
+export function updatesFor(group, result, levels) {
   const updates = [];
   for (const pc of group.items) {
     const { page } = splitPage(pc.arguments);
     const fragment = fragmentFor(group.functionName, group.userArgs, page, result, levels);
-    const r = fragment.error ? fragment : { jql: forOperator(fragment.jql, pc.operator, page ? [] : excluded) };
+    const r = fragment.error ? fragment : { jql: forOperator(fragment.jql, pc.operator) };
     const storedError = pc.error ?? null;
     if ((r.jql ?? null) === (pc.value ?? null) && (r.error ?? null) === storedError) continue;
     if (r.error) updates.push({ id: pc.id, error: r.error });
@@ -61,7 +61,7 @@ export async function rewrite(deps, group, reconcile) {
     await keepJob(deps, group.functionName, group.userArgs, result);
     return { updates: [], entry: null };
   }
-  return { updates: updatesFor(group, result, deps.levels, await deps.state.excluded()), entry: result.entry ?? null };
+  return { updates: updatesFor(group, result, deps.levels), entry: result.entry ?? null };
 }
 
 /**
@@ -123,7 +123,7 @@ export async function runGroupJob(deps, { functionName, userArgs }) {
     await keepJob(deps, functionName, parsed.userArgs, result);
     return { computed: key, changed: 0 };
   }
-  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, { updates: updatesFor(group, result, deps.levels, await deps.state.excluded()), entry: result.entry ?? null }]]) };
+  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, { updates: updatesFor(group, result, deps.levels), entry: result.entry ?? null }]]) };
 }
 
 /** Whether no heavy lane runner holds the lease. */
