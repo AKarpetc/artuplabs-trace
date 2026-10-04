@@ -4,6 +4,7 @@ import {
   BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
   RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
+import { endpointOf, rateHeaderText, rateLimitOf } from '../core/rate.js';
 import { pool } from './pool.js';
 
 /** Jira answered with an error that a retry will not fix. */
@@ -47,12 +48,22 @@ function messagesOf(raw) {
 
 /** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff, each sleep capped at `retryMaxMs`; no request starts after the deadline of the current scope. */
 export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now } = {}) {
+  let counts = {};
+  function count(endpoint, res) {
+    const c = counts[endpoint] ?? { requests: 0, limited: 0, remaining: null };
+    const { remaining } = rateLimitOf((name) => res.headers?.get?.(name) ?? null, 0);
+    counts[endpoint] = { requests: c.requests + 1, limited: c.limited + (res.status === 429 ? 1 : 0), remaining: remaining ?? c.remaining };
+  }
+
   async function call(method, path, body) {
+    const endpoint = endpointOf(path);
     for (let attempt = 1; ; attempt += 1) {
       const deadline = deadlines.getStore();
       if (deadline !== undefined && clock() >= deadline) throw new DeadlineError();
       const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
       const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
+      count(`${method} ${endpoint}`, res);
+      if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rateHeaderText((name) => res.headers.get(name))}`);
       if ((res.status === 429 || res.status >= 500) && attempt < attempts) {
         await sleep(Math.min(Number(res.headers.get('retry-after')) * 1000 || RETRY_BASE_MS * 2 ** attempt, retryMaxMs));
         continue;
@@ -181,8 +192,16 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     return [...new Set(users)];
   }
 
+  /** Requests sent since the last call, by method and endpoint, with how many Jira rate-limited and the last remaining quota it reported. */
+  function takeRequests() {
+    const out = counts;
+    counts = {};
+    return out;
+  }
+
   return {
     call,
+    takeRequests,
     searchIds,
     searchPage,
     validateJql,

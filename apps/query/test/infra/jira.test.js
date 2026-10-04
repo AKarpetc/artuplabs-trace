@@ -230,3 +230,23 @@ describe('subquery validation', () => {
     expect(calls).toHaveLength(2);
   });
 });
+
+describe('rate-limit log', () => {
+  it('logs the rate headers of a 429 without the request body or ids', async () => {
+    const { request } = scripted([reply(429, {}, { 'retry-after': '1', 'ratelimit-reason': 'jira-quota-global-based' }), reply(200, {})]);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await createJira(request, { sleep: async () => {} }).call('GET', '/rest/api/3/issue/123?fields=a');
+    expect(warn.mock.calls).toEqual([['rate limited GET /rest/api/3/issue/* attempt 1: retry-after=1 ratelimit-reason=jira-quota-global-based']]);
+    warn.mockRestore();
+  });
+  it('counts requests by endpoint with the rate-limited ones and the remaining quota', async () => {
+    const { request } = scripted([reply(429, {}, {}), reply(200, {}, { 'beta-ratelimit': '"global-app-quota";r=900;t=60' }), reply(200, {})]);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const jira = createJira(request, { sleep: async () => {} });
+    await jira.call('GET', '/rest/api/3/field');
+    await jira.call('POST', '/rest/api/3/search/jql', {});
+    expect(jira.takeRequests()).toEqual({ 'GET /rest/api/3/field': { requests: 2, limited: 1, remaining: 900 }, 'POST /rest/api/3/search/jql': { requests: 1, limited: 0, remaining: null } });
+    expect(jira.takeRequests()).toEqual({});
+    warn.mockRestore();
+  });
+});

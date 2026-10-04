@@ -74,10 +74,13 @@ export function meterKvs(kvs, { readBytes = true } = {}) {
 
 const familyText = (families) => Object.entries(families).sort(([a], [b]) => a.localeCompare(b)).map(([name, f]) => `${name} ${f.sets}/${f.bytes}`).join(', ');
 
-/** Wraps a handler so that it logs the KVS traffic of each invocation as counts, never values: writes per record family when `log.writes`, reads when `log.reads`; `name` may be a function of the handler arguments. */
+const requestText = (counts) => Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([endpoint, c]) => `${endpoint} ${c.requests}${c.limited ? ` (429: ${c.limited})` : ''}${c.remaining === null ? '' : ` r=${c.remaining}`}`).join(', ');
+
+/** Wraps a handler so that it logs the KVS traffic of each invocation as counts, never values: writes per record family when `log.writes`, reads when `log.reads`, Jira requests per endpoint when `log.requests`; `name` may be a function of the handler arguments. */
 export function withKvsLog(name, meter, log, handler) {
   return async (...args) => {
     meter.take();
+    meter.takeRequests?.();
     try {
       return await handler(...args);
     } finally {
@@ -86,6 +89,8 @@ export function withKvsLog(name, meter, log, handler) {
       const detail = w.sets ? ` [${familyText(w.families)}]` : '';
       if (log.writes && w.sets + w.deletes) console.log(`kvs writes ${label}: ${w.sets} sets, ${w.bytes} bytes, ${w.deletes} deletes${detail}`);
       if (log.reads && w.reads.gets + w.reads.queries) console.log(`kvs reads ${label}: ${w.reads.gets} gets, ${w.reads.queries} query pages, ${w.reads.bytes} bytes`);
+      const r = log.requests && meter.takeRequests ? requestText(meter.takeRequests()) : '';
+      if (r) console.log(`jira requests ${label}: ${r}`);
     }
   };
 }
