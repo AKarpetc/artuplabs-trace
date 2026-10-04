@@ -55,4 +55,7 @@ describe('buildFragment', () => {
   it('explains an over-capacity result with numbers', () => {
     expect(buildFragment({ ...base, page: null, values: valuesOf(ids(9001)), levels: 1 })).toEqual({ error: 'The result needs 9,001 issues; one function returns at most 9,000. Narrow the subquery.' });
   });
+  it('explains an over-capacity result with numbers at a middle node too, instead of matching nothing', () => {
+    expect(buildFragment({ ...base, page: { kind: 'mid', index: 1 }, values: valuesOf(ids(81001)), levels: 2 })).toEqual({ error: 'The result needs 81,001 issues; one function returns at most 81,000. Narrow the subquery.' });
+  });
 });

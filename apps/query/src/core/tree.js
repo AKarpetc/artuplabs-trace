@@ -32,8 +32,9 @@ export function buildFragment({ functionName, userArgs, page, values, field, roo
   const leafCall = (index) => pageCall(functionName, userArgs, { kind: 'leaf', index });
   if (page?.kind === 'leaf') return { jql: list((page.index - 1) * VALUE_LIMIT, page.index * VALUE_LIMIT) };
   if (page?.kind === 'mid') {
+    if (shape.kind === 'over') return { error: ERR.tooMany(values.n, shape.capacity) };
     const first = (page.index - 1) * TREE_FANOUT + 1;
-    const last = Math.min(shape.leaves ?? 0, first + TREE_FANOUT - 1);
+    const last = Math.min(shape.leaves, first + TREE_FANOUT - 1);
     return { jql: first > last ? EMPTY : anyOf(span(first, last).map(leafCall)) };
   }
   if (!values.n) return { jql: EMPTY };
