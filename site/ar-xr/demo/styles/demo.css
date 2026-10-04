@@ -492,9 +492,19 @@ main { padding: 0 var(--gutter); max-width: 1320px; margin: 0 auto; }
 .loader-wrapper { background-color: var(--md-surface); opacity: .85; }
 .loader { border-color: var(--md-surface-container-highest); border-top-color: var(--md-primary); border-width: 6px; width: 56px; height: 56px; margin-top: 40vh; }
 
-@media (max-width: 900px) {
+/* Планшет в портрете (iPad 820–834 px) оставляет герой в две колонки: одной колонкой мозаика 3×3
+   занимает весь первый экран и уводит заголовок вниз. */
+@media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; }
   .hero__visual { order: -1; }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); }
+}
+
+@media (max-width: 900px) {
+  .stats li { min-width: 0; flex: 1; }
   .features { grid-template-columns: 1fr; }
   .contact__card { grid-template-columns: 1fr; }
 }

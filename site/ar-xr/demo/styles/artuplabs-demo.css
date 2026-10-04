@@ -69,7 +69,8 @@
 :where(.ax-header-actions) { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 
 /* ─── Шапка демо ─────────────────────────────────────────────────────────── */
-.demo-head { padding-top: env(safe-area-inset-top, 0px); }
+/* Вырез и, в приложении, его кнопки сверху слева: `--safe-top` из demo.css (те же правила, что у .top-bar). */
+.demo-head { padding-top: var(--safe-top); }
 .demo-head .ax-product img { border-radius: 6px; }
 .account-slot { display: flex; align-items: center; gap: 8px; }
 .account-slot[hidden] { display: none; }
@@ -149,7 +150,10 @@
 .admin-row--custom { border-color: var(--demo-accent); }
 .admin-row__form { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: end; gap: 8px 12px; }
 .admin-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--demo-muted); }
-.admin-field .ax-input { min-width: 9rem; width: auto; }
+/* Поля делят ширину ряда и сужаются: на планшете «Сбросить» не уходит одна на следующую строку. */
+.admin-field { flex: 1 1 8rem; min-width: 7rem; }
+.admin-field .ax-input { min-width: 0; width: 100%; }
+.admin-row__form .ax-btn, .admin-row__form .ax-checkbox { flex: none; white-space: nowrap; }
 .admin-row__result { flex-basis: 100%; }
 @media (min-width: 760px) {
   .admin-row { grid-template-columns: 96px minmax(0, 1fr) auto; }
@@ -197,7 +201,7 @@
 .design-card .plan-card__actions { margin-top: auto; }
 
 /* ─── Дизайн в 3D ────────────────────────────────────────────────────────── */
-main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-height: calc(100vh - 61px); max-width: none; margin: 0; padding: 0; }
+main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-height: calc(100vh - 61px - var(--safe-top)); max-width: none; margin: 0; padding: 0; }
 .planview__stage { position: relative; min-height: 60vh; background: #15191f; }
 .planview__stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .planview__status { position: absolute; left: 16px; top: 16px; z-index: 1; margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(13, 18, 28, .8); }
@@ -210,6 +214,9 @@ main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-
 .planview__items b { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .planview__quote .quote-table { display: none; }
 .planview__hint, .planview__contacts { margin: 0; }
+/* Узкая колонка панели: контакты столбцом, без висящих « · » в конце строки. */
+.planview__contacts[data-contacts] { flex-direction: column; align-items: flex-start; }
+.planview__contacts[data-contacts] > .contacts-sep { display: none; }
 #planview-currency { align-self: flex-start; }
 #planview-currency[hidden] { display: none; }
 @media (max-width: 860px) {
@@ -233,14 +240,16 @@ main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-
   background: var(--demo-accent); color: #0b1320; font: 700 12px/1 var(--demo-font); font-variant-numeric: tabular-nums;
 }
 .plans-button__badge[hidden] { display: none; }
-.plans-slot--floating { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); z-index: 50; }
+/* viewer.html: отступ сверху — `--avt-safe-top` из theme.css (вырез и кнопки приложения), как у кнопки «Назад» viewer.css. */
+.plans-slot--floating { position: fixed; top: calc(12px + var(--avt-safe-top)); right: calc(12px + env(safe-area-inset-right, 0px)); z-index: 50; }
 .plans-slot--floating .plans-button { background: rgba(13, 18, 28, .78); color: #f8fafc; border: 1px solid rgba(255, 255, 255, .2); text-decoration: none; padding: 6px 12px; border-radius: 999px; font: 600 14px/1.2 var(--demo-font); display: inline-flex; align-items: center; }
 .xr-hero__tools .plans-button { text-transform: none; letter-spacing: normal; }
 
 /* ─── Листы (sheet.js): шапка, верх с полем и кнопками, прокручиваемое тело ─ */
 .quote-whatsapp { margin-top: 8px; }
 .ax-sheet-overlay { z-index: 2100; }
-.ax-sheet-overlay--top { place-items: start center; padding: 8px 8px 0; align-content: start; }
+/* Сверху — ниже выреза и кнопок приложения: `--safe-top` (demo.css) или `--avt-safe-top` (theme.css), смотря что загрузила страница. */
+.ax-overlay.ax-sheet-overlay--top { place-items: start center; padding: calc(8px + var(--safe-top, var(--avt-safe-top, 0px))) 8px 0; align-content: start; }
 .app-sheet { display: flex; flex-direction: column; max-height: calc(100% - 16px); overflow: hidden; }
 .ax-sheet-overlay--top .app-sheet { border-radius: 16px; border-bottom: 1px solid var(--demo-border); max-height: calc(100% - 8px); }
 .ax-sheet-overlay--top .app-sheet::before { display: none; }
@@ -264,7 +273,8 @@ main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-
  */
 .ar-main {
   --xr-edge: 12px;
-  --xr-top: calc(var(--xr-edge) + env(safe-area-inset-top, 0px));
+  /* `--avt-safe-top` (theme.css): во время XR приложение задаёт `--arxr-app-bar: 0px`, остаётся только вырез. */
+  --xr-top: calc(var(--xr-edge) + var(--avt-safe-top));
   --xr-left: calc(var(--xr-edge) + env(safe-area-inset-left, 0px));
   --xr-right: calc(var(--xr-edge) + env(safe-area-inset-right, 0px));
   --xr-tools: 64px;
