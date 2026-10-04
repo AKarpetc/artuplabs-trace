@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import api, { assumeTrustedRoute } from '@forge/api';
 import {
-  BULK_BATCH, BULK_CONCURRENCY, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
+  BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
   RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
 import { endpointOf, rateHeaderText, rateLimitOf } from '../core/rate.js';
@@ -13,6 +13,16 @@ export class JiraError extends Error {
     super(messages.length ? messages.join('; ') : `Jira answered ${status}`);
     this.name = 'JiraError';
     this.status = status;
+  }
+}
+
+/** Jira rate-limited the app; `retryAt` (epoch ms, or null when Jira named none) is when the limit it hit resets. */
+export class RateLimitError extends JiraError {
+  constructor(facts, messages) {
+    super(429, messages);
+    this.name = 'RateLimitError';
+    this.retryAt = facts.retryAt;
+    this.reason = facts.reason;
   }
 }
 
@@ -46,13 +56,14 @@ function messagesOf(raw) {
   }
 }
 
-/** Jira REST client over `request(path, init)`; 429 and 5xx are retried with Retry-After or exponential backoff, each sleep capped at `retryMaxMs`; no request starts after the deadline of the current scope. */
+/** Jira REST client over `request(path, init)`; 5xx and a 429 whose wait fits `retryMaxMs` are retried (Retry-After or exponential backoff, each sleep capped); a longer 429 throws RateLimitError at once; bulkfetch narrows after a near-limit warning; no request starts after the deadline of the current scope. */
 export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now } = {}) {
   let counts = {};
-  function count(endpoint, res) {
+  let nearUntil = 0;
+  function count(endpoint, res, facts, at) {
     const c = counts[endpoint] ?? { requests: 0, limited: 0, remaining: null };
-    const { remaining } = rateLimitOf((name) => res.headers?.get?.(name) ?? null, 0);
-    counts[endpoint] = { requests: c.requests + 1, limited: c.limited + (res.status === 429 ? 1 : 0), remaining: remaining ?? c.remaining };
+    counts[endpoint] = { requests: c.requests + 1, limited: c.limited + (res.status === 429 ? 1 : 0), remaining: facts.remaining ?? c.remaining };
+    if (facts.near) nearUntil = Math.max(nearUntil, facts.retryAt ?? at + NEAR_LIMIT_MS);
   }
 
   async function call(method, path, body) {
@@ -62,13 +73,19 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
       if (deadline !== undefined && clock() >= deadline) throw new DeadlineError();
       const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
       const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
-      count(`${method} ${endpoint}`, res);
-      if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rateHeaderText((name) => res.headers.get(name))}`);
-      if ((res.status === 429 || res.status >= 500) && attempt < attempts) {
-        await sleep(Math.min(Number(res.headers.get('retry-after')) * 1000 || RETRY_BASE_MS * 2 ** attempt, retryMaxMs));
+      const header = (name) => res.headers?.get?.(name) ?? null;
+      const at = clock();
+      const facts = rateLimitOf(header, at);
+      count(`${method} ${endpoint}`, res, facts, at);
+      if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rateHeaderText(header)}`);
+      const wait = facts.retryAt === null ? RETRY_BASE_MS * 2 ** attempt : facts.retryAt - at;
+      const retry = (res.status === 429 || res.status >= 500) && attempt < attempts && (res.status !== 429 || wait <= retryMaxMs);
+      if (retry) {
+        await sleep(Math.min(wait, retryMaxMs));
         continue;
       }
       const raw = await res.text();
+      if (res.status === 429) throw new RateLimitError(facts, messagesOf(raw));
       if (res.status >= 400) throw new JiraError(res.status, messagesOf(raw));
       return raw ? JSON.parse(raw) : null;
     }
@@ -132,7 +149,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
   }
 
   async function bulkIssues(ids, fields) {
-    const pages = await pool(chunks(ids, BULK_BATCH), BULK_CONCURRENCY, (chunk) => call('POST', '/rest/api/3/issue/bulkfetch', { issueIdsOrKeys: chunk, fields }));
+    const pages = await pool(chunks(ids, BULK_BATCH), clock() < nearUntil ? BULK_CONCURRENCY_NEAR : BULK_CONCURRENCY, (chunk) => call('POST', '/rest/api/3/issue/bulkfetch', { issueIdsOrKeys: chunk, fields }));
     return pages.flatMap((p) => p?.issues ?? []);
   }
 

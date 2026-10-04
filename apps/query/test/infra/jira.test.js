@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
-const { createJira, JiraError, withDeadline } = await import('../../src/infra/jira.js');
-const { FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
+const { createJira, JiraError, RateLimitError, withDeadline } = await import('../../src/infra/jira.js');
+const { BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -114,11 +114,11 @@ describe('backoff and roles', () => {
     await createJira(request, { sleep }).call('GET', '/x');
     expect(sleep.mock.calls).toEqual([[600], [1200]]);
   });
-  it('caps a long Retry-After at the retry maximum', async () => {
-    const { request } = scripted([reply(429, {}, { 'retry-after': '120' }), reply(200, {})]);
+  it('caps the backoff of a 5xx at the retry maximum', async () => {
+    const { request } = scripted([reply(503, {}), reply(503, {}), reply(503, {}), reply(200, {})]);
     const sleep = vi.fn(async () => {});
     await createJira(request, { sleep }).call('GET', '/x');
-    expect(sleep.mock.calls).toEqual([[RETRY_MAX_MS]]);
+    expect(sleep.mock.calls).toEqual([[600], [1200], [RETRY_MAX_MS]]);
   });
   it('waits a longer Retry-After in a queue worker than in a function call', async () => {
     const { request } = scripted([reply(429, {}, { 'retry-after': '20' }), reply(200, {})]);
@@ -126,11 +126,8 @@ describe('backoff and roles', () => {
     await createJira(request, { sleep, retryMaxMs: WORKER_RETRY_MAX_MS }).call('GET', '/x');
     expect(sleep.mock.calls).toEqual([[20000]]);
   });
-  it('keeps a queue worker retry sleep inside the refresh lease', async () => {
-    const { request } = scripted([reply(429, {}, { 'retry-after': '600' }), reply(200, {})]);
-    const sleep = vi.fn(async () => {});
-    await createJira(request, { sleep, retryMaxMs: WORKER_RETRY_MAX_MS }).call('GET', '/x');
-    expect(sleep.mock.calls[0][0]).toBeLessThan(LEASE_MS);
+  it('keeps every queue worker retry sleep inside the refresh lease', async () => {
+    expect(WORKER_RETRY_MAX_MS).toBeLessThan(LEASE_MS);
   });
   it('keeps every retry sleep of one request inside the function budget', async () => {
     const { request } = scripted(Array.from({ length: REQUEST_ATTEMPTS }, () => reply(503, {})));
@@ -248,5 +245,54 @@ describe('rate-limit log', () => {
     expect(jira.takeRequests()).toEqual({ 'GET /rest/api/3/field': { requests: 2, limited: 1, remaining: 900 }, 'POST /rest/api/3/search/jql': { requests: 1, limited: 0, remaining: null } });
     expect(jira.takeRequests()).toEqual({});
     warn.mockRestore();
+  });
+});
+
+describe('rate limits', () => {
+  const quiet = () => vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('gives up at once with the instant to retry when Jira asks to wait longer than one retry may sleep', async () => {
+    const warn = quiet();
+    const { request, calls } = scripted([reply(429, {}, { 'retry-after': '425', 'ratelimit-reason': 'jira-quota-global-based' }), reply(200, {})]);
+    const sleep = vi.fn(async () => {});
+    const error = await createJira(request, { sleep, retryMaxMs: WORKER_RETRY_MAX_MS, clock: () => 1000 }).call('GET', '/x').catch((e) => e);
+    warn.mockRestore();
+    expect(error).toBeInstanceOf(RateLimitError);
+    expect(error).toBeInstanceOf(JiraError);
+    expect([error.name, error.status, error.retryAt, error.reason, calls.length, sleep.mock.calls.length]).toEqual(['RateLimitError', 429, 1000 + 425000, 'jira-quota-global-based', 1, 0]);
+  });
+  it('waits a short Retry-After and goes on', async () => {
+    const warn = quiet();
+    const { request } = scripted([reply(429, {}, { 'retry-after': '2' }), reply(200, { ok: 1 })]);
+    const sleep = vi.fn(async () => {});
+    expect(await createJira(request, { sleep, retryMaxMs: WORKER_RETRY_MAX_MS, clock: () => 0 }).call('GET', '/x')).toEqual({ ok: 1 });
+    warn.mockRestore();
+    expect(sleep.mock.calls).toEqual([[2000]]);
+  });
+  it('gives up a 429 that outlasts every attempt as a rate-limit error without an instant when Jira named none', async () => {
+    const warn = quiet();
+    const { request } = scripted([reply(429, {}), reply(429, {})]);
+    const error = await createJira(request, { sleep: async () => {}, attempts: 2 }).call('GET', '/x').catch((e) => e);
+    warn.mockRestore();
+    expect([error.name, error.retryAt]).toEqual(['RateLimitError', null]);
+  });
+  it('sends fewer bulkfetch requests at once after Jira warned that the limit is near', async () => {
+    let inFlight = 0;
+    let most = 0;
+    const answer = async (path, init) => {
+      if (!path.includes('bulkfetch')) return reply(200, {}, { 'x-ratelimit-nearlimit': 'true' });
+      inFlight += 1;
+      most = Math.max(most, inFlight);
+      await new Promise((resolve) => { setTimeout(resolve, 1); });
+      inFlight -= 1;
+      return reply(200, { issues: JSON.parse(init.body).issueIdsOrKeys.map((id) => ({ id })) });
+    };
+    const jira = createJira(answer, { clock: () => 0 });
+    const many = Array.from({ length: BULK_BATCH * BULK_CONCURRENCY * 2 }, (_, i) => String(i));
+    await jira.bulkIssues(many, ['x']);
+    const before = most;
+    most = 0;
+    await jira.call('GET', '/rest/api/3/field');
+    await jira.bulkIssues(many, ['x']);
+    expect([before, most]).toEqual([BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR]);
   });
 });

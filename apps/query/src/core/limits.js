@@ -7,6 +7,10 @@ export const TREE_LEVELS = 1;
 export const ID_PAGE = 5000;
 export const BULK_BATCH = 100;
 export const BULK_CONCURRENCY = 8;
+/** Bulkfetch requests sent at once after Jira warned that little of the app's rate limit is left. */
+export const BULK_CONCURRENCY_NEAR = 2;
+/** How long a near-limit warning narrows the bulkfetch when Jira names no reset instant. */
+export const NEAR_LIMIT_MS = 60 * 1000;
 export const CACHE_CHUNK = 5000;
 export const PAGE_CACHE_MS = 10 * 60 * 1000;
 /** Compute budget of one function call: Jira waits about 15 s for an answer (measured) before it calls again, so 10 s leaves time to queue the job and answer. */
@@ -42,6 +46,12 @@ export const RETRY_BASE_MS = 300;
 export const RETRY_MAX_MS = 1800;
 /** Longest retry sleep of a queue worker: a long Retry-After is mostly waited, yet one sleep stays well inside the refresh lease (LEASE_MS). */
 export const WORKER_RETRY_MAX_MS = 30 * 1000;
+/** Shortest pause of the app's background work after a 429 that names no instant to retry. */
+export const RATE_BRAKE_MIN_MS = 60 * 1000;
+/** Longest pause of the app's background work after a 429: Jira's quota windows reset every hour. */
+export const RATE_BRAKE_MAX_MS = 60 * 60 * 1000;
+/** Longest delay of a queued event (the Forge queue limit). */
+export const QUEUE_DELAY_MAX_S = 900;
 /** Delay of the follow-up refresh after a pass that kept its journal rows (a failed group or a later pass wrote first). */
 export const REFRESH_RETRY_DELAY_S = 60;
 /** Age after which journal rows are dropped even though a group keeps failing; the hourly reconcile covers them. */
