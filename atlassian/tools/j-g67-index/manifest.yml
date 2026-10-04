@@ -1,0 +1,85 @@
+modules:
+  jira:jqlFunction:
+    - key: g6-added-after-sprint-start
+      name: g6AddedAfterSprintStart
+      arguments:
+        - name: board
+          required: true
+        - name: sprint
+          required: true
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-added
+    - key: g7-commented
+      name: g7Commented
+      arguments:
+        - name: clauses
+          required: true
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-commented
+    - key: g7-has-attachments
+      name: g7HasAttachments
+      arguments:
+        - name: ext
+          required: true
+      types:
+        - issue
+      operators:
+        - in
+        - not in
+      function: fn-attachments
+  trigger:
+    - key: g67-events
+      function: on-event
+      events:
+        - avi:jira:updated:issue
+        - avi:jira-software:started:sprint
+        - avi:jira-software:closed:sprint
+        - avi:jira:commented:issue
+        - avi:jira:created:attachment
+  consumer:
+    - key: g67-backfill-consumer
+      queue: g67-backfill
+      function: on-backfill
+  webtrigger:
+    - key: g67-control
+      function: on-control
+  sql:
+    - key: main
+      engine: mysql
+  function:
+    - key: fn-added
+      handler: index.added
+    - key: fn-commented
+      handler: index.commented
+    - key: fn-attachments
+      handler: index.hasAttachments
+    - key: on-event
+      handler: index.onEvent
+    - key: on-backfill
+      handler: index.onBackfill
+      timeoutSeconds: 300
+    - key: on-control
+      handler: index.onControl
+permissions:
+  scopes:
+    - read:jira-work
+    - read:jira-user
+    - read:board-scope:jira-software
+    - read:sprint:jira-software
+    - read:app-data:jira
+    - write:app-data:jira
+    - storage:app
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/97fe3cb0-5695-45d4-8e65-05c7cfd00575
