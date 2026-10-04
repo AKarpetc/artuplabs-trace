@@ -576,22 +576,6 @@
     border-color: transparent;
 }
 
-.slider-container {
-    display: flex;
-    justify-content: center;
-    padding-bottom: var(--avt-space-3);
-}
-
-input[type=range][orient=vertical] {
-    writing-mode: vertical-lr;
-    direction: rtl;
-    appearance: slider-vertical;
-    width: 16px;
-    height: 200px;
-    vertical-align: bottom;
-    accent-color: var(--avt-accent);
-}
-
 .loading-model {
     position: absolute;
     top: 18px;
@@ -741,68 +725,6 @@ input[type=range][orient=vertical] {
     top: 40%;
     left: 20%;
 }
-
-/* ─── Джойстик перемещения ────────────────────────────────────────────────── */
-
-#joystick-container {
-    position: fixed;
-    bottom: calc(150px + var(--avt-safe-bottom));
-    left: calc(var(--avt-space-4) + var(--avt-safe-left));
-    z-index: 910;
-    /* Класс toolbar_button даёт стекло и тень; размер, рамка и раскладка — свои: площадка 100×100
-       вместе с рамкой, центр ручки и стрелок — ровно центр площадки. */
-    display: block;
-    box-sizing: border-box;
-    width: 100px;
-    height: 100px;
-    padding: 0;
-    background: var(--avt-glass);
-    border: 1px solid var(--avt-glass-border);
-    border-radius: 50%;
-    touch-action: none;
-    user-select: none;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-/* Селектор по id сильнее утилиты `.hidden`: скрытая площадка скрывается явно. */
-#joystick-container.hidden {
-    display: none;
-}
-
-/* Ручка: в покое — в центре; смещение пальца — переменные --dx/--dy (index.js, joystick.mjs). */
-#joystick {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    box-sizing: border-box;
-    width: 50px;
-    height: 50px;
-    background: rgba(var(--avt-tint-light), 0.45);
-    border-radius: 50%;
-    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)));
-    transition: transform 0.1s;
-    pointer-events: none;
-}
-
-.arrow-h {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    display: grid;
-    place-items: center;
-    width: 16px;
-    height: 16px;
-    color: var(--avt-ink-inverse);
-    line-height: 1;
-    pointer-events: none;
-}
-
-/* Стрелки симметричны относительно центра: по 40 px от него (между ручкой и краем площадки). */
-.arrow-h__left { transform: translate(calc(-50% - 40px), -50%); }
-.arrow-h__right { transform: translate(calc(-50% + 40px), -50%); }
-.arrow-h__up { transform: translate(-50%, calc(-50% - 40px)); }
-.arrow-h__down { transform: translate(-50%, calc(-50% + 40px)); }
 
 /* ─── Модальное окно «Что такое XR» ───────────────────────────────────────── */
 

@@ -16,7 +16,7 @@
     <link type="text/css" href="./styles/theme.css?v=2232987e58" rel="stylesheet" />
     <link type="text/css" href="./styles/styles.css?v=74c90549a7" rel="stylesheet" />
     <link type="text/css" href="./styles/loading.css?v=391a97178e" rel="stylesheet" />
-    <link type="text/css" href="./styles/xr.css?v=b87bd934f9" rel="stylesheet" />
+    <link type="text/css" href="./styles/xr.css?v=c222ffc22f" rel="stylesheet" />
     <link type="text/css" href="./styles/font-awesome-4.7.0/css/font-awesome.css?v=c495654869" rel="stylesheet" />
     <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
     <!-- Общие токены ArtUp AR XR (владелец — лендинг /ar-xr/); XR-страница работает и без них. -->
@@ -25,15 +25,6 @@
 </head>
 
 <body class="xr-body">
-
-    <div id="joystick-container" class="toolbar_button button_move hidden" data-xr-dom>
-        <span id="arrowHorizontalLeft" class="arrow-h arrow-h__left"><i class="fa fa-caret-left" aria-hidden="true"></i></span>
-        <span id="arrowHorizontalUp" class="arrow-h arrow-h__up"><i class="fa fa-caret-up" aria-hidden="true"></i></span>
-        <span id="arrowHorizontalRight" class="arrow-h arrow-h__right"><i class="fa fa-caret-right" aria-hidden="true"></i></span>
-        <span id="arrowHorizontalDown" class="arrow-h arrow-h__down"><i class="fa fa-caret-down" aria-hidden="true"></i></span>
-
-        <div id="joystick"></div>
-    </div>
 
     <!-- Путь без WebXR: страница предлагает открыть ссылку на устройстве, которое его поддерживает. -->
     <section id="xrFallback" class="xr-fallback hidden">
@@ -193,13 +184,6 @@
         </div>
 
         <div id="toolbar" class="toolbar">
-            <div id="toolbarSlider" class="toolbar__model-slider hidden">
-                <div class="slider-container">
-                    <input type="range" min="1" max="200" value="100" oninput="sliderChange(this)"
-                        class="vertical-slider" id="modelSlider" orient="vertical" />
-                </div>
-            </div>
-
             <button id="transformDoneBtn" onclick="transformDone()" class="toolbar_button hidden" title="Готово" aria-label="Готово" data-i18n-attr="title:xr.done;aria-label:xr.done">
                 <i class="fa fa-check" aria-hidden="true"></i>
             </button>
@@ -220,8 +204,8 @@
                 <button id="scaleModelButton" onclick="scaleModel()" class="toolbar_button toolbar_button__selected hidden" title="Масштаб" aria-label="Масштаб" data-i18n-attr="title:xr.scale;aria-label:xr.scale">
                     <i class="fa fa-expand" aria-hidden="true"></i>
                 </button>
-                <button onclick="moveModel()" class="toolbar_button toolbar_button__selected hidden" title="Переместить" aria-label="Переместить" data-i18n-attr="title:xr.move;aria-label:xr.move">
-                    <i class="fa fa-arrows-alt" aria-hidden="true"></i>
+                <button onclick="resetModel()" class="toolbar_button toolbar_button__selected hidden" title="Сбросить поворот и размер" aria-label="Сбросить поворот и размер" data-i18n-attr="title:xr.reset;aria-label:xr.reset">
+                    <i class="fa fa-undo" aria-hidden="true"></i>
                 </button>
                 <button onclick="removeModel()" class="toolbar_button toolbar_button__selected hidden" title="Удалить" aria-label="Удалить" data-i18n-attr="title:xr.remove;aria-label:xr.remove">
                     <i class="fa fa-trash" aria-hidden="true"></i>
@@ -268,7 +252,7 @@
     </div>
 
     <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
-    <script type="module" src="./dist/webXRScene.bandle.js?v=4dae8df18f"></script>
+    <script type="module" src="./dist/webXRScene.bandle.js?v=d4c1ee1afd"></script>
 
     <script>
         document.getElementById('openModal').addEventListener('click', function (event) {
