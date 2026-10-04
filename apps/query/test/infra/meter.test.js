@@ -113,11 +113,11 @@ describe('withKvsLog', () => {
     log.mockRestore();
   });
   it('logs the Jira requests of one invocation by endpoint when requests are enabled', async () => {
-    const taken = [{ old: { requests: 9, limited: 0, remaining: null } }, { 'GET /rest/api/3/field': { requests: 2, limited: 1, remaining: 40 }, 'POST /rest/api/3/search/jql': { requests: 3, limited: 0, remaining: null } }];
+    const taken = [{ old: { requests: 9, limited: 0, rate: null } }, { 'GET /rest/api/3/field': { requests: 2, limited: 1, rate: 'x-ratelimit-remaining=40' }, 'POST /rest/api/3/search/jql': { requests: 3, limited: 0, rate: null } }];
     const meter = { ...meterKvs(createFakeKvs()), takeRequests: () => taken.shift() };
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     await withKvsLog('expression', meter, { requests: true }, async () => null)();
-    expect(log.mock.calls).toEqual([['jira requests expression: GET /rest/api/3/field 2 (429: 1) r=40, POST /rest/api/3/search/jql 3']]);
+    expect(log.mock.calls).toEqual([['jira requests expression: GET /rest/api/3/field 2 (429: 1) [x-ratelimit-remaining=40], POST /rest/api/3/search/jql 3']]);
     log.mockRestore();
   });
 });

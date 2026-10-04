@@ -60,9 +60,10 @@ function messagesOf(raw) {
 export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now } = {}) {
   let counts = {};
   let nearUntil = 0;
-  function count(endpoint, res, facts, at) {
-    const c = counts[endpoint] ?? { requests: 0, limited: 0, remaining: null };
-    counts[endpoint] = { requests: c.requests + 1, limited: c.limited + (res.status === 429 ? 1 : 0), remaining: facts.remaining ?? c.remaining };
+  function count(endpoint, res, facts, at, rate) {
+    const c = counts[endpoint] ?? { requests: 0, limited: 0, rate: null };
+    const limited = res.status === 429;
+    counts[endpoint] = { requests: c.requests + 1, limited: c.limited + (limited ? 1 : 0), rate: !limited && rate ? rate : c.rate };
     if (facts.near) nearUntil = Math.max(nearUntil, facts.retryAt ?? at + NEAR_LIMIT_MS);
   }
 
@@ -76,8 +77,9 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
       const header = (name) => res.headers?.get?.(name) ?? null;
       const at = clock();
       const facts = rateLimitOf(header, at);
-      count(`${method} ${endpoint}`, res, facts, at);
-      if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rateHeaderText(header)}`);
+      const rate = rateHeaderText(header);
+      count(`${method} ${endpoint}`, res, facts, at, rate);
+      if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rate}`);
       const wait = facts.retryAt === null ? RETRY_BASE_MS * 2 ** attempt : facts.retryAt - at;
       const retry = (res.status === 429 || res.status >= 500) && attempt < attempts && (res.status !== 429 || wait <= retryMaxMs);
       if (retry) {
@@ -209,7 +211,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     return [...new Set(users)];
   }
 
-  /** Requests sent since the last call, by method and endpoint, with how many Jira rate-limited and the last remaining quota it reported. */
+  /** Requests sent since the last call, by method and endpoint, with how many Jira rate-limited and the rate headers of the last answer that was not a 429. */
   function takeRequests() {
     const out = counts;
     counts = {};

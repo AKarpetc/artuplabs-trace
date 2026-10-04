@@ -74,7 +74,7 @@ export function meterKvs(kvs, { readBytes = true } = {}) {
 
 const familyText = (families) => Object.entries(families).sort(([a], [b]) => a.localeCompare(b)).map(([name, f]) => `${name} ${f.sets}/${f.bytes}`).join(', ');
 
-const requestText = (counts) => Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([endpoint, c]) => `${endpoint} ${c.requests}${c.limited ? ` (429: ${c.limited})` : ''}${c.remaining === null ? '' : ` r=${c.remaining}`}`).join(', ');
+const requestText = (counts) => Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([endpoint, c]) => `${endpoint} ${c.requests}${c.limited ? ` (429: ${c.limited})` : ''}${c.rate ? ` [${c.rate}]` : ''}`).join(', ');
 
 /** Wraps a handler so that it logs the KVS traffic of each invocation as counts, never values: writes per record family when `log.writes`, reads when `log.reads`, Jira requests per endpoint when `log.requests`; `name` may be a function of the handler arguments. */
 export function withKvsLog(name, meter, log, handler) {
