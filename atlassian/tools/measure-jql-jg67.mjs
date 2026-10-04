@@ -25,6 +25,9 @@
  *   set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
  *   node atlassian/tools/measure-jql-jg67.mjs --phase <phase> [--part sprint|comments] [--url <webtrigger>] [--n 30]
  * --url defaults to the first line of atlassian/data/jg67-webtrigger.txt (gitignored; written after `forge webtrigger`).
+ * Every phase but backfill also uses the webtrigger: `evaluate` (the function's own answer, so an error fails fast instead
+ * of reading as an empty result) and, before a completeness phase, `recompute` (stored precomputations follow the index).
+ * A latency phase stops when its first change is not seen within 10 minutes (`aborted`, exit 1).
  * Writes atlassian/data/jg67-<phase>.json (backfill: jg67-backfill-<part>.json).
  */
 
@@ -78,6 +81,35 @@ async function control(query) {
   return JSON.parse(text);
 }
 
+/** The function's own answer through the webtrigger (`{ jql }` or `{ error }`): REST search hides errors as an empty 200. */
+async function evaluate(fn, fnArgs) {
+  const q = new URLSearchParams({ action: 'evaluate', fn });
+  for (const a of fnArgs) q.append('arg', a);
+  return (await control(q)).result;
+}
+
+/** Throws when the function answers an error for these arguments, so a phase never polls 10 minutes per change for nothing. */
+async function assertFn(fn, fnArgs) {
+  const r = await evaluate(fn, fnArgs);
+  if (r?.error || !r?.jql) throw new Error(`${fn}(${fnArgs.join(', ')}) answers an error: ${r?.error ?? JSON.stringify(r)}`);
+  return r;
+}
+
+/** Recomputes every stored precomputation of the app so a search reads the current index, not a snapshot. */
+async function recompute() {
+  const r = (await control({ action: 'recompute' })).recompute;
+  log(`recompute: ${JSON.stringify(r)}`);
+  return r;
+}
+
+/** Warms a clause: the function must answer without an error and the search must succeed. */
+async function warm(fn, fnArgs, clause) {
+  await assertFn(fn, fnArgs);
+  const r = await ids(clause);
+  if (r.error) throw new Error(`warm ${clause}: ${r.error}`);
+  log(`warm ${clause}: ${r.ids.length}`);
+}
+
 /** Ids of a JQL or throw with Jira's answer. */
 async function idsOf(jql) {
   const r = await ids(jql);
@@ -88,7 +120,10 @@ async function idsOf(jql) {
 /** key → id for a list of keys (bulkfetch accepts keys). */
 async function keyIds(keys) {
   const found = await bulk([...new Set(keys)], ['summary']);
-  return new Map(found.map((x) => [x.key, String(x.id)]));
+  const map = new Map(found.map((x) => [x.key, String(x.id)]));
+  const unresolved = [...new Set(keys)].filter((k) => !map.has(k));
+  if (unresolved.length) throw new Error(`keys that do not resolve: ${unresolved.join(', ')}`);
+  return map;
 }
 
 // ---------- backfill ----------
@@ -107,7 +142,11 @@ async function backfill() {
     if (Date.now() - t0 > 6 * 3600 * 1000) throw new Error('backfill did not finish within 6 h');
   }
   const minutes = Math.round((p.finishedAt - p.startedAt) / 600) / 100;
-  return { name: `jg67-backfill-${part}`, data: { part, minutes, done: p.done, total: p.total, startedAt: p.startedAt, finishedAt: p.finishedAt } };
+  // total is approximate-count; done counts the issues the pass walked.
+  const covered = p.done >= p.total;
+  if (!covered) log(`backfill ${part}: done ${p.done} < total ${p.total}`);
+  if (p.unparsable?.n) log(`backfill ${part}: ${p.unparsable.n} unparseable timestamps skipped, e.g. ${p.unparsable.samples.join(' | ')}`);
+  return { name: `jg67-backfill-${part}`, data: { part, minutes, done: p.done, total: p.total, covered, unparsable: p.unparsable ?? { n: 0, samples: [] }, recompute: p.recompute ?? null, startedAt: p.startedAt, finishedAt: p.finishedAt } };
 }
 
 // ---------- sprint ----------
@@ -146,6 +185,7 @@ async function sprintReference() {
   const seed = readJson('jg6-seed.json');
   const closed = (seed.sprints ?? []).filter((s) => s.closedAt || s.phase === 'closed');
   log(`closed seeded sprints: ${closed.length} (gate expects 30)`);
+  await recompute();
   const rows = [];
   for (const rec of closed) {
     const sprint = await api('GET', `/rest/agile/1.0/sprint/${rec.id}`);
@@ -157,6 +197,8 @@ async function sprintReference() {
     const refBKeys = await referenceB(sprint, candidateKeys);
     const byKey = await keyIds([...refAKeys, ...refBKeys]);
     const clause = `issue in g6AddedAfterSprintStart("${BOARD}", "${rec.name}")`;
+    const own = await evaluate('g6AddedAfterSprintStart', [BOARD, rec.name]);
+    if (own?.error) log(`function error ${rec.name}: ${own.error}`);
     const t0 = Date.now();
     const got = await idsOf(clause);
     const seconds = round(Date.now() - t0);
@@ -168,6 +210,7 @@ async function sprintReference() {
       startDate: sprint.startDate,
       completeDate: sprint.completeDate ?? null,
       seconds,
+      functionError: own?.error ?? null,
       vsB: compare(got, refB),
       vsA: compare(got, refA),
       seederCheck: compare(refA, refB),
@@ -177,7 +220,7 @@ async function sprintReference() {
     log(`${rec.name}: vs B ${JSON.stringify(row.vsB)} | vs A complete=${row.vsA.complete}`);
     if (!row.seederCheck.complete) log(`seeder-check ${rec.name}: A ${refAKeys.join(',')} | B ${refBKeys.join(',')}`);
   }
-  const completeB = rows.filter((r) => r.vsB.complete).length;
+  const completeB = rows.filter((r) => r.vsB.complete && !r.functionError).length;
   const seederMismatch = rows.filter((r) => !r.seederCheck.complete).map((r) => r.sprint);
   log(`gate J-G6 completeness: ${completeB} of ${rows.length} complete vs B (needs 30 of 30)`);
   log(`seeder-check: ${seederMismatch.length ? `A≠B in ${seederMismatch.join(', ')}` : 'A = B in every sprint'}`);
@@ -199,7 +242,7 @@ async function sprintLatency() {
   const sprint = await activeSprint();
   const field = await sprintField();
   const clause = `issue in g6AddedAfterSprintStart("${BOARD}", "${ACTIVE}")`;
-  log(`warm ${clause}: ${(await ids(clause)).ids?.length}`);
+  await warm('g6AddedAfterSprintStart', [BOARD, ACTIVE], clause);
   const pool0 = await idsOf('project = JQLG AND labels = jg-sprint AND sprint is EMPTY ORDER BY key');
   if (pool0.length < args.n) throw new Error(`only ${pool0.length} jg-sprint issues without a sprint`);
   const inSprint = async (id) => {
@@ -207,20 +250,28 @@ async function sprintLatency() {
     return (x.fields[field] ?? []).some((s) => String(s.id) === String(sprint.id)) ? { applied: true } : null;
   };
   const raw = [];
+  const skipped = [];
+  let aborted = null;
   const t0 = Date.now();
-  for (let i = 0; i < args.n; i += 1) {
-    const id = pool0[i];
+  for (let i = 0, k = 0; raw.length < args.n && k < pool0.length; k += 1) {
+    const id = pool0[k];
     if (await inSprint(id)) {
       log(`skip ${id}: already in ${ACTIVE}`);
+      skipped.push(id);
       continue;
     }
     const t = Date.now();
     await write('POST', `/rest/agile/1.0/sprint/${sprint.id}/issue`, { issues: [id] }, () => inSprint(id), { raw: true });
     raw.push({ id, seconds: await waitFor(clause, id, true, t) });
     log(`sprint ${i}: ${id} ${raw.at(-1).seconds} s`);
+    if (i === 0 && raw[0].seconds === null) {
+      aborted = 'first change not seen within 10 min';
+      break;
+    }
+    i += 1;
   }
   const seen = raw.map((r) => r.seconds).filter((s) => s !== null);
-  return { name: 'jg67-sprint-latency', data: { sprint: ACTIVE, sprintId: sprint.id, seconds: round(Date.now() - t0), summary: { ...summary(seen), timeouts: raw.length - seen.length }, raw } };
+  return { name: 'jg67-sprint-latency', data: { requested: args.n, clause, sprint: ACTIVE, sprintId: sprint.id, aborted, seconds: round(Date.now() - t0), summary: { ...summary(seen), timeouts: raw.length - seen.length }, skipped, raw } };
 }
 
 // ---------- comments ----------
@@ -247,13 +298,14 @@ async function commentLatency() {
   const day = todayUtc();
   const dayMs = Date.parse(day);
   const clause = `issue in g7Commented("by ${me} after ${day}")`;
-  log(`warm ${clause}: ${(await ids(clause)).ids?.length}`);
+  await warm('g7Commented', [`by ${me} after ${day}`], clause);
   const mid = await idsOf('project = JQLG AND labels = jg-mid ORDER BY key');
   const withMine = new Set((await commentsOf(await bulk(mid, ['comment']))).filter((x) => x.comments.some((c) => c.author?.accountId === me && ms(c.created) > dayMs)).map((x) => x.id));
   const targets = mid.filter((id) => !withMine.has(id));
   if (targets.length < args.n) throw new Error(`only ${targets.length} jg-mid issues without a comment of mine today`);
   const run = Date.now().toString(36);
   const raw = [];
+  let aborted = null;
   const t0 = Date.now();
   for (let i = 0; i < args.n; i += 1) {
     const id = targets[i];
@@ -266,9 +318,13 @@ async function commentLatency() {
     await write('POST', `/rest/api/3/issue/${id}/comment`, { body: adf(text) }, posted);
     raw.push({ id, seconds: await waitFor(clause, id, true, t) });
     log(`comment ${i}: ${id} ${raw.at(-1).seconds} s`);
+    if (i === 0 && raw[0].seconds === null) {
+      aborted = 'first change not seen within 10 min';
+      break;
+    }
   }
   const seen = raw.map((r) => r.seconds).filter((s) => s !== null);
-  return { name: 'jg67-comment-latency', data: { author: me, after: day, seconds: round(Date.now() - t0), summary: { ...summary(seen), timeouts: raw.length - seen.length }, raw } };
+  return { name: 'jg67-comment-latency', data: { requested: args.n, clause, author: me, after: day, aborted, seconds: round(Date.now() - t0), summary: { ...summary(seen), timeouts: raw.length - seen.length }, raw } };
 }
 
 function restrictedNote() {
@@ -288,16 +344,20 @@ async function commentComplete() {
   const after = '2020-01-01';
   const afterMs = Date.parse(after);
   const clause = `issue in g7Commented("by ${me} after ${after}")`;
+  await recompute();
+  const own = await evaluate('g7Commented', [`by ${me} after ${after}`]);
+  if (own?.error) log(`function error: ${own.error}`);
   const t0 = Date.now();
   const got = await idsOf(clause);
   const seconds = round(Date.now() - t0);
   const all = await idsOf(ALL);
   log(`reference over ${all.length} issues`);
   const ref = (await commentsOf(await bulk(all, ['comment']))).filter((x) => x.comments.some((c) => c.author?.accountId === me && ms(c.created) > afterMs)).map((x) => x.id);
-  const result = compare(got, ref);
+  const result = { ...compare(got, ref), functionError: own?.error ?? null };
+  if (own?.error) result.complete = false;
   const restricted = restrictedNote();
   log(`g7Commented: ${JSON.stringify(result)}; restricted: role ${restricted.role?.status}, group ${restricted.group?.status}`);
-  return { name: 'jg67-comment-complete', data: { author: me, after, issues: all.length, seconds, result, restricted } };
+  return { name: 'jg67-comment-complete', data: { clause, author: me, after, issues: all.length, seconds, result, restricted } };
 }
 
 // ---------- attachments ----------
@@ -329,13 +389,14 @@ const hasExt = (x, ext) => (x.fields.attachment ?? []).some((a) => String(a.file
 
 async function attachmentLatency() {
   const clause = 'issue in g7HasAttachments("jg7")';
-  log(`warm ${clause}: ${(await ids(clause)).ids?.length}`);
+  await warm('g7HasAttachments', ['jg7'], clause);
   const mid = await idsOf('project = JQLG AND labels = jg-mid ORDER BY key');
   const issues = await bulk(mid, ['attachment']);
   const without = new Set(issues.filter((x) => !hasExt(x, 'jg7')).map((x) => String(x.id)));
   const targets = mid.filter((id) => without.has(id));
   if (targets.length < args.n) throw new Error(`only ${targets.length} jg-mid issues without a .jg7 attachment`);
   const raw = [];
+  let aborted = null;
   const t0 = Date.now();
   for (let i = 0; i < args.n; i += 1) {
     const id = targets[i];
@@ -345,22 +406,30 @@ async function attachmentLatency() {
     await attach(id, name, landed);
     raw.push({ id, seconds: await waitFor(clause, id, true, t) });
     log(`attachment ${i}: ${id} ${raw.at(-1).seconds} s`);
+    if (i === 0 && raw[0].seconds === null) {
+      aborted = 'first change not seen within 10 min';
+      break;
+    }
   }
   const seen = raw.map((r) => r.seconds).filter((s) => s !== null);
-  return { name: 'jg67-attachment-latency', data: { seconds: round(Date.now() - t0), summary: { ...summary(seen), timeouts: raw.length - seen.length }, raw } };
+  return { name: 'jg67-attachment-latency', data: { requested: args.n, clause, aborted, seconds: round(Date.now() - t0), summary: { ...summary(seen), timeouts: raw.length - seen.length }, raw } };
 }
 
 async function attachmentComplete() {
   const all = await idsOf(ALL);
   log(`reference over ${all.length} issues`);
   const issues = await bulk(all, ['attachment']);
+  await recompute();
   const rows = [];
   for (const ext of EXTS) {
+    const own = await evaluate('g7HasAttachments', [ext]);
+    if (own?.error) log(`function error ${ext}: ${own.error}`);
     const t0 = Date.now();
     const got = await idsOf(`issue in g7HasAttachments("${ext}")`);
     const seconds = round(Date.now() - t0);
     const ref = issues.filter((x) => hasExt(x, ext)).map((x) => String(x.id));
-    rows.push({ ext, seconds, ...compare(got, ref) });
+    const c = compare(got, ref);
+    rows.push({ ext, seconds, ...c, complete: c.complete && !own?.error, functionError: own?.error ?? null });
     log(`${ext}: ${JSON.stringify(rows.at(-1))}`);
   }
   return { name: 'jg67-attachment-complete', data: { issues: all.length, allComplete: rows.every((r) => r.complete), rows } };
@@ -383,6 +452,7 @@ async function main() {
   if (!process.env.FORGE_EMAIL || !process.env.FORGE_API_TOKEN) throw new Error('FORGE_EMAIL / FORGE_API_TOKEN not set (source .env)');
   const { name, data } = await RUN[args.phase]();
   log(`wrote ${save(name, { phase: args.phase, ...data })} (requests ${stats.requests}, retries ${stats.retries})`);
+  if (data.aborted) throw new Error(`phase aborted: ${data.aborted}`);
 }
 
 main().catch((error) => {

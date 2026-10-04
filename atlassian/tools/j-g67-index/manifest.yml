@@ -74,6 +74,7 @@ permissions:
     - read:jira-user
     - read:board-scope:jira-software
     - read:sprint:jira-software
+    - read:project:jira
     - read:app-data:jira
     - write:app-data:jira
     - storage:app

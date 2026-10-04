@@ -50,11 +50,21 @@ async function insert(table, cols, rows) {
   }
 }
 
-/** Epoch ms of a number, a numeric string (event `timestamp` is a string) or a date string; now when unparseable. */
-const ms = (v) => {
+/**
+ * Epoch ms of a number, a numeric string (event `timestamp` is a string) or a date string; null when unparseable,
+ * counted in `bad` ({ n, samples }) so the row is skipped and the count reported, never replaced by a guess.
+ */
+const newBad = () => ({ n: 0, samples: [] });
+const ms = (v, bad) => {
   const n = typeof v === 'number' ? v : /^\d+$/.test(String(v ?? '')) ? Number(v) : Date.parse(v);
-  return Number.isFinite(n) ? n : Date.now();
+  if (Number.isFinite(n)) return n;
+  if (bad) {
+    bad.n += 1;
+    if (bad.samples.length < 5) bad.samples.push(String(v).slice(0, 40));
+  }
+  return null;
 };
+const addBad = (total, bad) => ({ n: (total?.n ?? 0) + bad.n, samples: [...(total?.samples ?? []), ...bad.samples].slice(0, 5) });
 const idSet = (v) => new Set(String(v ?? '').split(',').map((s) => s.trim()).filter((s) => /^\d+$/.test(s)));
 
 async function sprintFieldId() {
@@ -69,23 +79,25 @@ async function categories() {
   return new Map((await jira('GET', '/rest/api/3/status')).map((s) => [String(s.id), s.statusCategory.key]));
 }
 
-function rowsFromHistories(issueId, histories, cats) {
+function rowsFromHistories(issueId, histories, cats, bad) {
   const sprintRows = [];
   const statusRows = [];
   for (const h of histories) {
+    const at = ms(h.created, bad);
+    if (at === null) continue;
     for (const item of h.items ?? []) {
       if (item.field === 'Sprint') {
         const from = idSet(item.from);
         const to = idSet(item.to);
-        for (const s of to) if (!from.has(s)) sprintRows.push([issueId, s, 'a', ms(h.created), h.id]);
-        for (const s of from) if (!to.has(s)) sprintRows.push([issueId, s, 'r', ms(h.created), h.id]);
-      } else if (item.fieldId === 'status') statusRows.push([issueId, ms(h.created), cats.get(String(item.to)) ?? 'new', h.id]);
+        for (const s of to) if (!from.has(s)) sprintRows.push([issueId, s, 'a', at, h.id]);
+        for (const s of from) if (!to.has(s)) sprintRows.push([issueId, s, 'r', at, h.id]);
+      } else if (item.fieldId === 'status') statusRows.push([issueId, at, cats.get(String(item.to)) ?? 'new', h.id]);
     }
   }
   return { sprintRows, statusRows };
 }
 
-async function indexChangelogs(ids) {
+async function indexChangelogs(ids, bad) {
   const [field, cats] = [await sprintFieldId(), await categories()];
   let token;
   const sprintRows = [];
@@ -93,7 +105,7 @@ async function indexChangelogs(ids) {
   do {
     const page = await jira('POST', '/rest/api/3/changelog/bulkfetch', { issueIdsOrKeys: ids, fieldIds: [field, 'status'], maxResults: 10000, ...(token ? { nextPageToken: token } : {}) });
     for (const log of page.issueChangeLogs ?? []) {
-      const r = rowsFromHistories(log.issueId, log.changeHistories ?? [], cats);
+      const r = rowsFromHistories(log.issueId, log.changeHistories ?? [], cats, bad);
       sprintRows.push(...r.sprintRows);
       statusRows.push(...r.statusRows);
     }
@@ -114,7 +126,7 @@ async function allComments(issueId) {
   }
 }
 
-async function indexComments(ids) {
+async function indexComments(ids, bad) {
   const commentRows = [];
   const attachmentRows = [];
   const chunks = [];
@@ -125,8 +137,14 @@ async function indexComments(ids) {
       for (const x of page.issues ?? []) {
         let comments = x.fields.comment?.comments ?? [];
         if ((x.fields.comment?.total ?? 0) > comments.length) comments = await allComments(x.id);
-        for (const cm of comments) commentRows.push([cm.id, x.id, cm.author?.accountId ?? '', ms(cm.created)]);
-        for (const a of x.fields.attachment ?? []) attachmentRows.push([a.id, x.id, a.author?.accountId ?? '', ms(a.created), extOf(a.filename)]);
+        for (const cm of comments) {
+          const at = ms(cm.created, bad);
+          if (at !== null) commentRows.push([cm.id, x.id, cm.author?.accountId ?? '', at]);
+        }
+        for (const a of x.fields.attachment ?? []) {
+          const at = ms(a.created, bad);
+          if (at !== null) attachmentRows.push([a.id, x.id, a.author?.accountId ?? '', at, extOf(a.filename)]);
+        }
       }
     }
   }));
@@ -150,17 +168,21 @@ export async function onBackfill(event) {
         return;
       }
       const slice = ids.slice(offset, offset + 1000);
-      if (part === 'sprint') await indexChangelogs(slice);
-      else await indexComments(slice);
+      const bad = newBad();
+      if (part === 'sprint') await indexChangelogs(slice, bad);
+      else await indexComments(slice, bad);
       offset += slice.length;
       progress.done += slice.length;
+      progress.unparsable = addBad(progress.unparsable, bad);
       await kvs.set(`progress:${part}`, { ...progress, cursor: { token, offset } });
     }
     if (!page.nextPageToken) break;
     token = page.nextPageToken;
     offset = 0;
   }
-  await kvs.set(`progress:${part}`, { ...progress, cursor: null, finishedAt: Date.now() });
+  // Functions evaluated before or during the backfill keep their stored (partial) values until recomputed.
+  const recompute = await recomputeAll();
+  await kvs.set(`progress:${part}`, { ...progress, cursor: null, finishedAt: Date.now(), recompute });
 }
 
 async function boardSprint(boardName, sprintName) {
@@ -184,6 +206,7 @@ async function addedValue([board, sprint]) {
   // Sprint start = startDate: the site's Agile API returns no activatedDate (apps/query/docs/live-checks.md, Q-R37).
   const start = ms(s.startDate);
   const end = s.completeDate ? ms(s.completeDate) : Number.MAX_SAFE_INTEGER;
+  if (start === null || end === null) return { error: `unparseable sprint dates ${s.startDate} / ${s.completeDate}` };
   const rows = (await sql.prepare("SELECT DISTINCT issue_id FROM sprint_event WHERE sprint_id = ? AND kind = 'a' AND at > ? AND at <= ?").bindParams(s.id, start, end).execute()).rows;
   return rows.length > 1000 ? { error: `${rows.length} values` } : { jql: list(rows) };
 }
@@ -242,17 +265,21 @@ async function recomputeAll() {
 
 export async function onEvent(event) {
   const type = event.eventType;
+  const bad = newBad();
   if (type === 'avi:jira:updated:issue' && event.changelog) {
-    const r = rowsFromHistories(event.issue.id, [{ id: event.changelog.id, created: event.timestamp ?? Date.now(), items: event.changelog.items }], await categories());
+    const r = rowsFromHistories(event.issue.id, [{ id: event.changelog.id, created: event.timestamp ?? Date.now(), items: event.changelog.items }], await categories(), bad);
     await insert('sprint_event', ['issue_id', 'sprint_id', 'kind', 'at', 'change_id'], r.sprintRows);
     await insert('status_event', ['issue_id', 'at', 'to_cat', 'change_id'], r.statusRows);
   }
-  if (type === 'avi:jira:commented:issue' && event.comment) await insert('comment_meta', ['comment_id', 'issue_id', 'author', 'created_at'], [[event.comment.id, event.issue.id, event.comment.author?.accountId ?? '', ms(event.comment.created)]]);
+  const cAt = event.comment ? ms(event.comment.created, bad) : null;
+  if (type === 'avi:jira:commented:issue' && cAt !== null) await insert('comment_meta', ['comment_id', 'issue_id', 'author', 'created_at'], [[event.comment.id, event.issue.id, event.comment.author?.accountId ?? '', cAt]]);
   // Live attachment body: { id, issueId, projectId, fileName, createDate, size, mimeType, author } (live-checks.md).
   const a = event.attachment;
-  if (type === 'avi:jira:created:attachment' && a) await insert('attachment_meta', ['attachment_id', 'issue_id', 'author', 'created_at', 'ext'], [[a.id, a.issueId, a.author?.accountId ?? a.author ?? '', ms(a.createDate ?? a.created ?? event.timestamp), extOf(a.fileName ?? a.filename)]]);
+  const aAt = a ? ms(a.createDate ?? a.created ?? event.timestamp, bad) : null;
+  if (type === 'avi:jira:created:attachment' && aAt !== null) await insert('attachment_meta', ['attachment_id', 'issue_id', 'author', 'created_at', 'ext'], [[a.id, a.issueId, a.author?.accountId ?? a.author ?? '', aAt, extOf(a.fileName ?? a.filename)]]);
+  if (bad.n) await kvs.set('unparsable:events', addBad(await kvs.get('unparsable:events'), bad));
   const r = await recomputeAll();
-  console.log(JSON.stringify({ g67: 'event', type, lagMs: event.timestamp ? Date.now() - Number(event.timestamp) : null, ...r }));
+  console.log(JSON.stringify({ g67: 'event', type, lagMs: event.timestamp ? Date.now() - Number(event.timestamp) : null, unparsable: bad.n, ...r }));
 }
 
 const reply = (body, statusCode = 200) => ({ statusCode, headers: { 'Content-Type': ['application/json'] }, body: JSON.stringify(body) });
@@ -271,7 +298,14 @@ export async function onControl(request) {
   if (action === 'reset') {
     for (const t of ['sprint_event', 'status_event', 'comment_meta', 'attachment_meta']) await sql.prepare(`DELETE FROM ${t}`).execute();
     for (const p of PARTS) await kvs.delete(`progress:${p}`);
-    return reply({ reset: true });
+    await kvs.delete('unparsable:events');
+    return reply({ reset: true, recompute: await recomputeAll() });
   }
-  return reply({ sprint: (await kvs.get('progress:sprint')) ?? null, comments: (await kvs.get('progress:comments')) ?? null });
+  if (action === 'recompute') return reply({ recompute: await recomputeAll() });
+  if (action === 'evaluate') {
+    // The function's own answer (REST search answers a function error with an empty 200): lets the tool fail fast.
+    const fn = request.queryParameters?.fn?.[0];
+    return reply({ fn, result: await evaluate(fn, request.queryParameters?.arg ?? []) });
+  }
+  return reply({ sprint: (await kvs.get('progress:sprint')) ?? null, comments: (await kvs.get('progress:comments')) ?? null, unparsableEvents: (await kvs.get('unparsable:events')) ?? null });
 }
