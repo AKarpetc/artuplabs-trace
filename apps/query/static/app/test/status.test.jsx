@@ -15,7 +15,7 @@ describe('StatusPanel', () => {
   });
   it('shows index progress per part', () => {
     view({ ...BASE, progress: { sprint: { done: 12400, total: 50000 }, comments: { done: 5, total: 5, finishedAt: 1 } } });
-    expect(screen.getByText('12,400 of 50,000 issues')).toBeTruthy();
+    expect(screen.getByText('12,400 of 50,000 work items')).toBeTruthy();
     expect(screen.getByText('Ready')).toBeTruthy();
   });
   it('lists recent errors with the function name', () => {
@@ -39,7 +39,7 @@ describe('StatusPanel', () => {
   });
   it('never shows a part as more than complete', () => {
     view({ ...BASE, progress: { sprint: { done: 60, total: 50 } } });
-    expect(screen.getByText('50 of 50 issues')).toBeTruthy();
+    expect(screen.getByText('50 of 50 work items')).toBeTruthy();
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('1');
   });
 });

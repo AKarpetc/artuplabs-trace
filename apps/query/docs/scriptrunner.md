@@ -36,7 +36,7 @@ Cloud — ScriptRunner Enhanced Search (`https://docs.adaptavist.com/sr4jc/lates
 | `completeInSprint` | `completeInSprint` | нет | то же | то же | Q-R26 |
 | `previousSprint` | `previousSprint` | `previousSprint(Board)`: «issues from the last active sprint» | `(board name/ID)`: «assigned to the last completed sprint» | нет | как в §2 |
 | `nextSprint` | `nextSprint` | `nextSprint(Board)` | `(board name/ID)` | нет | как в §2 |
-| `commented` | `commented` | есть, но `inRole`/`inGroup` в Cloud не поддержаны | `("comment query")`; условия `by`, `after`, `before`, `on`, `inRole`, `inGroup`, `roleLevel`, `groupLevel`, `visibility` ([comments](https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/comments)) | вопрос 3; `by currentUser()` отклоняется (Q-R15); `visibility` (JSM) не в v1; `roleLevel`/`groupLevel` — в v1.1, ответ «not available yet», комментарии с ограниченной видимостью не учитываются (Q-R48); `after 2025/03/28` — у нас только `YYYY-MM-DD` и `-N[dhm]` | Q-R22 |
+| `commented` | `commented` | есть, но `inRole`/`inGroup` в Cloud не поддержаны | `("comment query")`; условия `by`, `after`, `before`, `on`, `inRole`, `inGroup`, `roleLevel`, `groupLevel`, `visibility` ([comments](https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/comments)) | вопрос 3; `by currentUser()` отклоняется (Q-R15); `visibility` (JSM) не в v1; `roleLevel`/`groupLevel` — в v1.1, ответ «not available yet», комментарии с ограниченной видимостью не учитываются (Q-R48); `after 2025/03/28` — у нас поддержано (форматы дат — в разделе «Форматы дат» ниже) | Q-R22 |
 | `lastComment` | `lastComment` | есть (без `inRole`/`inGroup`) | `("comment query")` — те же условия, к последнему комментарию | то же | Q-R22 |
 | `hasComments` | `hasComments` | есть | `()`, `(number)`, `('+5')`, `('-3')`: `hasComments(3)` — ровно 3, `'+5'` — больше 5, `'-3'` — меньше 3 | у нас §2: «≥ n» | Q-R17 |
 | `fileAttached` | `fileAttached` | нет в страницах Cloud | `("attachment query")`; предикаты `by`, `after`, `before`, `on` ([attachments](https://docs.adaptavist.com/sr4js/latest/features/jql-functions/included-jql-functions/attachments)) | у нас добавлен `ext` (расширение) — у DC его в `fileAttached` нет | Q-R22: `on` сохраняется, `ext` — наше добавление |
@@ -77,3 +77,11 @@ Cloud — ScriptRunner Enhanced Search (`https://docs.adaptavist.com/sr4jc/lates
 
 Страницы документации читал пересказ модели WebFetch, не сырой текст; дословность цитат — по этому пересказу.
 Версия страниц — `latest` на 2026-10-03.
+
+## Форматы дат
+
+Сверено с `src/core/dates.js`. Все даты считаются в UTC; неделя начинается в понедельник.
+
+- Абсолютная: `YYYY-MM-DD` или `YYYY/MM/DD`, необязательно со временем `HH:mm` (через пробел или `T`), например `2025-03-28`, `2025/03/28 14:30`. Несуществующая дата (`2025-02-30`) — ошибка.
+- Относительная к текущему моменту: `±N[mhdw]` (минуты, часы, дни, недели), например `-7d`, `+2w`, `-90m`; знак необязателен.
+- Начало и конец периода: `startOf(Day|Week|Month|Year)` и `endOf(Day|Week|Month|Year)`, регистр не важен. Без аргумента — текущий период, `startOfWeek(-1)` — прошлая неделя, `endOfMonth(1)` — конец следующего месяца. Со смещением единицей, `startOfDay(+9h)` или `endOfWeek(-2d)`, — от начала (конца) текущего периода. Аргумент можно взять в кавычки.

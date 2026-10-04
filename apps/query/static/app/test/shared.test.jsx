@@ -16,7 +16,7 @@ describe('Card', () => {
 describe('IndexProgress', () => {
   it('counts the issues of a part that is filling', () => {
     view({ sprint: { done: 5, total: 10 } });
-    expect(screen.getByText('5 of 10 issues')).toBeTruthy();
+    expect(screen.getByText('5 of 10 work items')).toBeTruthy();
   });
   it('says Ready for a finished part', () => {
     view({ comments: { done: 3, total: 3, finishedAt: 1 } });

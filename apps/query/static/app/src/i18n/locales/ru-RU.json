@@ -72,7 +72,7 @@
   "status.function": "Функция",
   "status.message": "Сообщение",
   "admin.excluded.title": "Проекты, исключённые из индекса",
-  "admin.excluded.help": "При in задачи этих проектов не подходят под функции, которые читают индекс ArtUp Query или собственные поиски приложения; при not in они видны, как любая другая задача вне результата. Их история спринтов, комментарии и вложения удаляются из индекса. Несколько функций отвечает сама Jira, и они не фильтруются: previousSprint, nextSprint, hasAttachments() without an extension, hasComments(\"-n\") и, в большинстве случаев, hasLinks, hasLinkType.",
+  "admin.excluded.help": "При in задачи этих проектов не подходят под функции, которые читают индекс ArtUp Query или собственные поиски приложения; при not in они видны, как любая другая задача вне результата. Их история спринтов, комментарии и вложения удаляются из индекса. Несколько функций отвечает сама Jira, и они не фильтруются: previousSprint, nextSprint, hasAttachments() без расширения, hasComments(\"-n\") и, в большинстве случаев, hasLinks, hasLinkType.",
   "admin.excluded.placeholder": "Выберите проекты",
   "admin.excluded.save": "Сохранить",
   "admin.excluded.saved": "Сохранено",

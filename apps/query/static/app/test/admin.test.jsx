@@ -105,7 +105,7 @@ describe('AdminPanel', () => {
   it('shows the index progress with the shared component', async () => {
     invoke.mockImplementation(async (key) => (key === 'adminStatus' ? { excluded: [], progress: { sprint: { done: 5, total: 10 } }, parts: ['sprint'] } : {}));
     view();
-    expect(await screen.findByText('5 of 10 issues')).toBeTruthy();
+    expect(await screen.findByText('5 of 10 work items')).toBeTruthy();
   });
   it('tells a user who is not a Jira administrator that only administrators can change these settings', async () => {
     invoke.mockImplementation(async () => {
