@@ -1,12 +1,13 @@
 import { groupPrecomputations, reconcileTargets, rewriteDue } from '../core/affected.js';
-import { ACTIVE_MS, HEAVY_RECONCILE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS } from '../core/limits.js';
+import { ACTIVE_MS, HEAVY_RECONCILE_MS, LEASE_MS, PENDING_STALE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { handOff, isDeadline, isHeavy, pushQuietly, rewrite, writeGroups } from './groups.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
+import { pushRefresh } from './refresh.js';
 
 /**
  * Hourly safety net: recompute used groups that missed an event, depend on the clock or need repair (slow ones go to the heavy lane once a day unless they need repair or follow the clock), restart
- * a stalled heavy lane, then fill index gaps; it waits while the background is paused for Jira's rate limit, and a 429 pauses it.
+ * a stalled heavy lane and a journal no refresh is pending for, then fill index gaps; it waits while the background is paused for Jira's rate limit, and a 429 pauses it.
  */
 export async function onReconcile(deps) {
   const until = await brakedUntil(deps);
@@ -59,5 +60,8 @@ async function reconcileOnce(deps) {
     changed = await writeGroups(deps, startedAt, byGroup);
   }
   if (queued || (await deps.state.heavy.oldest())) await pushQuietly(deps, { kind: 'heavy' });
+  const [pending, running] = await Promise.all([deps.state.pending.get(), deps.state.lease.get()]);
+  const idle = startedAt - (pending ?? 0) > PENDING_STALE_MS && startedAt - (running ?? 0) > LEASE_MS;
+  if (idle && (await deps.journal.read(1)).length) await pushRefresh(deps, startedAt);
   return { groups: groups.length, changed, index: await deps.indexReconcile() };
 }

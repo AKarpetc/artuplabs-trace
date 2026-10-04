@@ -70,4 +70,17 @@ describe('onReconcile', () => {
     expect(await handed(old)).toEqual([0, false]);
     expect(await handed(new Date(1000000 - HEAVY_RECONCILE_MS).toISOString())).toEqual([0, true]);
   });
+  it('pushes a refresh for journal rows no refresh is pending for, so a lost wake delays them an hour at most', async () => {
+    const deps = makeDeps();
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await onReconcile(deps);
+    expect(deps.pushed).toEqual([[{ kind: 'refresh', ts: 1000000 }, null]]);
+  });
+  it('leaves a pending refresh to run the journal', async () => {
+    const deps = makeDeps();
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await deps.state.pending.set(999900);
+    await onReconcile(deps);
+    expect(deps.pushed).toEqual([]);
+  });
 });
