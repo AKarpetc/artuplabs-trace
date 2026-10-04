@@ -5,14 +5,25 @@
     @media (prefers-color-scheme: dark) { .t { fill: #e3e8ef; } .l { fill: #6ea8ff; } }
   </style>
   <defs>
-    <linearGradient id="aull-g" x1="6" y1="58" x2="58" y2="6" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0b5cd5"/>
-      <stop offset="1" stop-color="#7c4dff"/>
+    <linearGradient id="aull-g" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7c4dff"/>
+      <stop offset="1" stop-color="#0b5cd5"/>
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="15" fill="url(#aull-g)"/>
-  <path d="M14 50 L29 15 L44 50" fill="none" stroke="#fff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M22.5 38 H34" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
-  <path d="M49 9 C49.9 14.2 50.8 15.1 56 16 C50.8 16.9 49.9 17.8 49 23 C48.1 17.8 47.2 16.9 42 16 C47.2 15.1 48.1 14.2 49 9 Z" fill="#ffd166"/>
+  <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
+    <path d="M10 20 V10 H20"/>
+    <path d="M44 10 H54 V20"/>
+    <path d="M54 44 V54 H44"/>
+    <path d="M20 54 H10 V44"/>
+  </g>
+  <path d="M32 31 L41 35.5 L32 40 L23 35.5 Z" fill="#fff" fill-opacity="0.9"/>
+  <path d="M23 35.5 L32 40 L23 44.5 L14 40 Z" fill="#fff" fill-opacity="0.4"/>
+  <path d="M41 35.5 L50 40 L41 44.5 L32 40 Z" fill="#fff" fill-opacity="0.4"/>
+  <path d="M32 40 L41 44.5 L32 49 L23 44.5 Z" fill="#fff" fill-opacity="0.9"/>
+  <path d="M32 19 L38 22.5 L32 26 L26 22.5 Z" fill="#fff"/>
+  <path d="M26 22.5 L32 26 V32 L26 28.5 Z" fill="#fff" fill-opacity="0.62"/>
+  <path d="M38 22.5 L32 26 V32 L38 28.5 Z" fill="#fff" fill-opacity="0.36"/>
+  <circle cx="47.5" cy="16.5" r="2.6" fill="#ffd166"/>
   <text class="t" x="78" y="43">ArtUp <tspan class="l">Labs</tspan></text>
 </svg>
