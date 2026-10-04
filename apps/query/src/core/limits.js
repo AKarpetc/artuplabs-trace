@@ -23,6 +23,8 @@ export const REFRESH_GROUP_BUDGET_MS = 10 * 1000;
 export const HEAVY_LEASE_MS = 300 * 1000;
 /** A heavy group is recomputed only while Jira used one of its precomputations this recently; the hourly reconcile rewrites it within an hour of its next use. */
 export const HEAVY_USED_MS = 24 * 60 * 60 * 1000;
+/** Age of its last rewrite after which the hourly reconcile hands a heavy group to the lane (one run costs Jira rate-limit points per issue); repairs and clock-relative groups go at once. */
+export const HEAVY_RECONCILE_MS = 24 * 60 * 60 * 1000;
 /** Runs a heavy group gets when it keeps running past the worker budget; each retry waits behind the other groups. */
 export const HEAVY_ATTEMPTS = 3;
 /** Age after which a group waiting in the heavy lane is queued again (its runner message was lost). */

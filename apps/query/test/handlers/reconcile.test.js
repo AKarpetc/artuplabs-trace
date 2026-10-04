@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { makeDeps, RECENT } from './makeDeps.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
+import { HEAVY_RECONCILE_MS, REFRESH_GROUP_BUDGET_MS } from '../../src/core/limits.js';
 
 const old = new Date(1000000 - 2 * 3600000).toISOString();
 
@@ -55,5 +56,18 @@ describe('onReconcile', () => {
   it('reports the index pass', async () => {
     const deps = makeDeps({ indexReconcile: async () => ({ started: ['sprint'] }) });
     expect(await onReconcile(deps)).toEqual({ groups: 0, changed: 0, index: { started: ['sprint'] } });
+  });
+  it('hands a group known to be slow to the heavy lane only once it was not rewritten for the heavy reconcile period', async () => {
+    const slow = { values: ['1'], watch: ['9'], field: 'parent', rootFilter: null, at: 1, source: 'refresh', ms: REFRESH_GROUP_BUDGET_MS };
+    const handed = async (updated) => {
+      const pcs = [{ id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'parent in (1)', used: RECENT, updated }];
+      const childIssuesOf = vi.fn();
+      const deps = makeDeps({ pcs, compute: { childIssuesOf } });
+      await deps.cache.write('childIssuesOf["q"]', slow);
+      await onReconcile(deps);
+      return [childIssuesOf.mock.calls.length, Boolean(await deps.state.heavy.get('childIssuesOf["q"]'))];
+    };
+    expect(await handed(old)).toEqual([0, false]);
+    expect(await handed(new Date(1000000 - HEAVY_RECONCILE_MS).toISOString())).toEqual([0, true]);
   });
 });

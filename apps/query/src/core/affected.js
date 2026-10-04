@@ -85,11 +85,16 @@ export function needsRepair(pc) {
 
 const lastWrite = (g) => Math.min(...g.items.map((pc) => Date.parse(pc.updated ?? pc.created ?? '') || 0));
 
-/** Groups the hourly reconcile recomputes: used within usedMs and not rewritten for staleMs, tied to the clock, or needing repair. */
+/** Whether the reconcile rewrites a group: not rewritten for staleMs, tied to the clock, or needing repair. */
+export function rewriteDue(group, { now, staleMs }) {
+  return now - lastWrite(group) >= staleMs || isTimeRelative(group.userArgs) || group.items.some(needsRepair);
+}
+
+/** Groups the hourly reconcile recomputes: used within usedMs and due for a rewrite after staleMs. */
 export function reconcileTargets(groups, { now, usedMs, staleMs, max }) {
   return groups
     .filter((g) => g.items.some((pc) => pc.used && now - Date.parse(pc.used) <= usedMs))
-    .filter((g) => now - lastWrite(g) >= staleMs || isTimeRelative(g.userArgs) || g.items.some(needsRepair))
+    .filter((g) => rewriteDue(g, { now, staleMs }))
     .sort((a, b) => lastWrite(a) - lastWrite(b))
     .slice(0, max);
 }
