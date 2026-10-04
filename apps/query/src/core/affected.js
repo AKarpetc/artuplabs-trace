@@ -47,6 +47,11 @@ export function groupPrecomputations(pcs, { now, activeMs }) {
   return [...groups.values()];
 }
 
+/** Whether Jira used a precomputation of the group within `ms` before `now`; a group without precomputations (a background job) counts as used. */
+export function usedWithin(group, now, ms) {
+  return !group.items.length || group.items.some((pc) => pc.used && now - Date.parse(pc.used) <= ms);
+}
+
 /** Whether changes of these kinds can make a result of this family stale; the query family is decided by overlap. */
 export function familyWants(family, kinds) {
   return (FAMILY_KINDS[family] ?? []).some((k) => kinds.includes(k));

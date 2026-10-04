@@ -21,6 +21,8 @@ export const WORKER_BUDGET_MS = 240 * 1000;
 export const REFRESH_GROUP_BUDGET_MS = 10 * 1000;
 /** Lease of the heavy lane runner: the consumer's 300 s limit, so a killed runner frees the lane. */
 export const HEAVY_LEASE_MS = 300 * 1000;
+/** A heavy group is recomputed only while Jira used one of its precomputations this recently; the hourly reconcile rewrites it within an hour of its next use. */
+export const HEAVY_USED_MS = 24 * 60 * 60 * 1000;
 /** Runs a heavy group gets when it keeps running past the worker budget; each retry waits behind the other groups. */
 export const HEAVY_ATTEMPTS = 3;
 /** Age after which a group waiting in the heavy lane is queued again (its runner message was lost). */

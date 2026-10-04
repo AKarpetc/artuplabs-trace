@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { makeDeps, RECENT } from './makeDeps.js';
 import { brake, brakedUntil, scheduleWake } from '../../src/handlers/brake.js';
-import { onRefresh } from '../../src/handlers/refresh.js';
+import { onRefresh, refreshOnce } from '../../src/handlers/refresh.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
-import { HEAVY_ATTEMPTS, PAGE_CACHE_MS, QUEUE_DELAY_MAX_S, RATE_BRAKE_MAX_MS, RATE_BRAKE_MIN_MS, REFRESH_RETRY_DELAY_S } from '../../src/core/limits.js';
+import { HEAVY_ATTEMPTS, HEAVY_USED_MS, PAGE_CACHE_MS, QUEUE_DELAY_MAX_S, RATE_BRAKE_MAX_MS, RATE_BRAKE_MIN_MS, REFRESH_RETRY_DELAY_S } from '../../src/core/limits.js';
 
 const rateLimit = (retryAt) => Object.assign(new Error('The request has been rate-limited.'), { name: 'RateLimitError', status: 429, retryAt });
 const NOW = 1000000;
@@ -201,5 +201,33 @@ describe('reconcile under a rate limit', () => {
   it('pauses the background when the index gap filler is rate-limited', async () => {
     const deps = makeDeps({ indexReconcile: async () => { throw rateLimit(NOW + 120000); } });
     expect(await onReconcile(deps)).toEqual({ braked: true });
+  });
+});
+
+describe('heavy groups nobody uses', () => {
+  const longAgo = new Date(NOW - HEAVY_USED_MS - 1000).toISOString();
+  const idle = [{ id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'parent in (1)', used: longAgo }];
+  it('leaves a slow group nobody used for a day out of the heavy lane (the hourly reconcile catches up once it is used again)', async () => {
+    const childIssuesOf = vi.fn();
+    const deps = makeDeps({ pcs: idle, compute: { childIssuesOf } });
+    await deps.cache.write('childIssuesOf["q"]', { values: ['1'], watch: ['9'], field: 'parent', rootFilter: null, at: 1, source: 'job', ms: 60000 });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-updated'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ recomputed: 0, handed: 0 });
+    expect([childIssuesOf.mock.calls.length, await deps.state.heavy.oldest(), deps.pushed, (await deps.journal.read(10)).length]).toEqual([0, null, [], 0]);
+  });
+  it('drops a waiting group nobody used for a day without computing it and goes on with the next', async () => {
+    const childIssuesOf = vi.fn();
+    const deps = makeDeps({ pcs: idle, compute: { childIssuesOf } });
+    await deps.state.heavy.put(heavyEntry('q', 990000));
+    await deps.state.heavy.put(heavyEntry('r', 995000));
+    expect(await onRefresh(deps, { body: { kind: 'heavy' } })).toEqual({ heavy: { computed: 'childIssuesOf["q"]', unused: true } });
+    expect([childIssuesOf.mock.calls.length, (await deps.state.heavy.oldest()).key, deps.pushed]).toEqual([0, 'childIssuesOf["r"]', [[{ kind: 'heavy' }, null]]]);
+  });
+  it('pauses the background without throwing when the lane cannot list the precomputations', async () => {
+    const deps = makeDeps();
+    deps.jira.precomputations = async () => { throw rateLimit(NOW + 60000); };
+    await deps.state.heavy.put(heavyEntry('q', 990000));
+    expect(await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }))).toEqual({ heavy: null });
+    expect([await brakedUntil(deps), await deps.state.heavy.oldest(), await deps.state.heavy.lease.get()]).toEqual([NOW + 60000, heavyEntry('q', 990000), null]);
   });
 });
