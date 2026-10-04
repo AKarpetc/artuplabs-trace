@@ -27,7 +27,11 @@ async function recompute(deps, group, reconcile, source) {
   const parsed = parseArgs(group.functionName, group.userArgs);
   const gate = parsed.error ? null : await deps.ready(group.functionName);
   if (parsed.error || gate) return { error: parsed.error ?? gate };
-  return computeGroup(deps, group.functionName, parsed.args, group.userArgs, { reconcile, source });
+  return computeGroup(deps, group.functionName, parsed.args, group.userArgs, { reconcile, source, keep: false });
+}
+
+async function keepEntry(deps, key, result) {
+  if (result.entry) await deps.cache.write(key, result.entry);
 }
 
 /** Precomputation updates whose stored value or error changed; a value clears a stored error, which Jira keeps otherwise. */
@@ -43,22 +47,37 @@ export function updatesFor(group, result, levels) {
   return updates;
 }
 
-/** Recomputes one group and returns its precomputation updates (a group without precomputations is a background job). */
+/**
+ * Recomputes one group: its precomputation updates and the cache entry to store after they are written (a group without precomputations
+ * is a background job, cached at once). Staleness is judged against the cache, so the cache must never run ahead of what Jira stores.
+ */
 export async function rewrite(deps, group, reconcile) {
   const result = await recompute(deps, group, reconcile, group.items.length ? 'refresh' : 'job');
-  if (!group.items.length) await keepJob(deps, group.functionName, group.userArgs, result);
-  return updatesFor(group, result, deps.levels);
+  if (!group.items.length) {
+    await keepEntry(deps, group.key, result);
+    await keepJob(deps, group.functionName, group.userArgs, result);
+    return { updates: [], entry: null };
+  }
+  return { updates: updatesFor(group, result, deps.levels), entry: result.entry ?? null };
 }
 
-/** Writes the updates of each group unless a computation that started later already wrote that group; returns how many were written. */
+/**
+ * Writes the updates of each group unless a computation that started later already wrote that group, then stores the cache entries of the
+ * groups it did not skip; returns how many updates were written.
+ */
 export async function writeGroups(deps, startedAt, byGroup) {
   const out = [];
-  for (const [key, updates] of byGroup) {
-    if (!updates.length || ((await deps.state.groupWrite.get(key)) ?? 0) > startedAt) continue;
-    await deps.state.groupWrite.set(key, startedAt);
-    out.push(...updates);
+  const entries = [];
+  for (const [key, { updates, entry }] of byGroup) {
+    if (((await deps.state.groupWrite.get(key)) ?? 0) > startedAt) continue;
+    if (updates.length) {
+      await deps.state.groupWrite.set(key, startedAt);
+      out.push(...updates);
+    }
+    if (entry) entries.push([key, entry]);
   }
   if (out.length) await deps.jira.writePrecomputations(out);
+  for (const [key, entry] of entries) await deps.cache.write(key, entry);
   return out.length;
 }
 
@@ -94,10 +113,11 @@ export async function runGroupJob(deps, { functionName, userArgs }) {
   }
   const group = groupPrecomputations(await deps.jira.precomputations(), { now: deps.now(), activeMs: ACTIVE_MS }).find((g) => g.key === key);
   if (!group) {
+    await keepEntry(deps, key, result);
     await keepJob(deps, functionName, parsed.userArgs, result);
     return { computed: key, changed: 0 };
   }
-  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, updatesFor(group, result, deps.levels)]]) };
+  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, { updates: updatesFor(group, result, deps.levels), entry: result.entry ?? null }]]) };
 }
 
 /** Whether no heavy lane runner holds the lease. */

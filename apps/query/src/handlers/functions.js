@@ -15,8 +15,11 @@ export function licenceInput(payload, context, app) {
   };
 }
 
-/** Runs a value source and caches a value list with its compute time; a Jira 400 (invalid subquery) becomes the function's error with a generic log line. */
-export async function computeGroup(deps, functionName, args, userArgs, { reconcile = [], source = 'function' } = {}) {
+/**
+ * Runs a value source and caches a value list with its compute time; a Jira 400 (invalid subquery) becomes the function's error with a generic log line.
+ * With `keep: false` the cache entry is returned as `entry` instead, for the caller to store once Jira holds the same value.
+ */
+export async function computeGroup(deps, functionName, args, userArgs, { reconcile = [], source = 'function', keep = true } = {}) {
   const startedAt = deps.now();
   let result;
   try {
@@ -25,9 +28,10 @@ export async function computeGroup(deps, functionName, args, userArgs, { reconci
     if (error?.name !== 'JiraError' || error.status !== 400) throw error;
     result = { error: ERR.withFunction(functionName, error.message), log: ERR.subqueryRejected() };
   }
-  if (result.ids) {
-    await deps.cache.write(groupKey(functionName, userArgs), { values: result.ids, watch: result.watch ?? null, field: result.field, rootFilter: result.rootFilter ?? null, at: deps.now(), source, ms: deps.now() - startedAt });
-  }
+  if (!result.ids) return result;
+  const entry = { values: result.ids, watch: result.watch ?? null, field: result.field, rootFilter: result.rootFilter ?? null, at: deps.now(), source, ms: deps.now() - startedAt };
+  if (!keep) return { ...result, entry };
+  await deps.cache.write(groupKey(functionName, userArgs), entry);
   return result;
 }
 

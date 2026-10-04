@@ -27,8 +27,8 @@ export async function onReconcile(deps) {
     }
   });
   let changed = 0;
-  if (byGroup.some(([, updates]) => updates.length) && ((await deps.state.lastWrittenStart.get()) ?? 0) <= startedAt) {
-    await deps.state.lastWrittenStart.set(startedAt);
+  if (byGroup.length && ((await deps.state.lastWrittenStart.get()) ?? 0) <= startedAt) {
+    if (byGroup.some(([, r]) => r.updates.length)) await deps.state.lastWrittenStart.set(startedAt);
     changed = await writeGroups(deps, startedAt, byGroup);
   }
   if (queued || (await deps.state.heavy.oldest())) await pushQuietly(deps, { kind: 'heavy' });

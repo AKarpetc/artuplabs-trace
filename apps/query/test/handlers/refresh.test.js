@@ -26,6 +26,33 @@ describe('refreshOnce', () => {
     expect(pass).toMatchObject({ touched: ['5'], kinds: ['link'], events: 1, recomputed: 1, changed: 2, stale: false, oldestEventMs: 500 });
     expect(await deps.journal.read(10)).toEqual([]);
   });
+  it('still recomputes a group after a pass that died before writing its precomputations', async () => {
+    const pcs = [{ id: 'root', functionName: 'subtasksOf', arguments: ['labels = in'], value: 'parent in (5)', used: RECENT }];
+    let refuse = true;
+    const write = async (updates) => {
+      if (refuse) throw Object.assign(new Error('Limits for the current installation have been exceeded'), { name: 'ForgeKvsError' });
+      deps.written.push(...updates);
+    };
+    const compute = { subtasksOf: vi.fn(async () => ({ ids: [], field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', watch: [] })) };
+    const deps = makeDeps({ pcs, compute, write });
+    await deps.cache.write('subtasksOf["labels = in"]', { values: ['5'], watch: ['5'], field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', at: 1, source: 'refresh' });
+    await deps.journal.append({ ids: ['5'], kinds: ['issue-updated'] }, 999500);
+    await expect(refreshOnce(deps)).rejects.toThrow('Limits');
+    refuse = false;
+    deps.advance(1000);
+    expect(await refreshOnce(deps)).toMatchObject({ recomputed: 1, changed: 1 });
+    expect(compute.subtasksOf).toHaveBeenCalledTimes(2);
+    expect(await deps.cache.watch('subtasksOf["labels = in"]')).toEqual(new Set());
+  });
+  it('keeps the cache of a group as Jira has it when a later pass already wrote', async () => {
+    const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['2'], field: 'id', watch: [] }) } });
+    await deps.cache.write('parentsOf["q"]', { values: ['1'], watch: ['5'], field: 'id', rootFilter: null, at: 1, source: 'refresh' });
+    await deps.state.lastWrittenStart.set(2000000);
+    await deps.journal.append({ ids: ['5'], kinds: ['issue-updated'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ stale: true });
+    expect(await deps.cache.watch('parentsOf["q"]')).toEqual(new Set(['5']));
+  });
   it('skips a group the touched issues cannot affect', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: RECENT }];
     const compute = { parentsOf: vi.fn() };
@@ -238,27 +265,27 @@ describe('rewrite', () => {
   const group = (functionName, userArgs, items) => ({ key: `${functionName}${JSON.stringify(userArgs)}`, functionName, family: 'query', userArgs, items });
   it('stores the argument error of a group whose arguments no longer parse', async () => {
     const deps = makeDeps();
-    expect(await rewrite(deps, group('parentsOf', [], [{ id: 'x', arguments: [], value: 'id in (1)' }]), [])).toEqual([{ id: 'x', error: 'Usage: parentsOf(subquery)' }]);
+    expect((await rewrite(deps, group('parentsOf', [], [{ id: 'x', arguments: [], value: 'id in (1)' }]), [])).updates).toEqual([{ id: 'x', error: 'Usage: parentsOf(subquery)' }]);
   });
   it('stores the readiness error while the index is building', async () => {
     const deps = makeDeps({ ready: async () => 'Index is building: 1 of 2 issues' });
-    expect(await rewrite(deps, group('hasSubtasks', [], [{ id: 'x', arguments: [], value: 'id in (1)' }]), [])).toEqual([{ id: 'x', error: 'Index is building: 1 of 2 issues' }]);
+    expect((await rewrite(deps, group('hasSubtasks', [], [{ id: 'x', arguments: [], value: 'id in (1)' }]), [])).updates).toEqual([{ id: 'x', error: 'Index is building: 1 of 2 issues' }]);
   });
   it('stores the error a value source answers', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ error: 'Board "B" not found', log: 'Board not found' }) } });
-    expect(await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1' }]), [])).toEqual([{ id: 'x', error: 'Board "B" not found' }]);
+    expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1' }]), [])).updates).toEqual([{ id: 'x', error: 'Board "B" not found' }]);
   });
   it('clears the error Jira kept next to a value when the value is written', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 1' }) } });
-    expect(await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1', error: 'Computing, retry in a minute' }]), [])).toEqual([{ id: 'x', value: 'sprint = 1', error: null }]);
+    expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1', error: 'Computing, retry in a minute' }]), [])).updates).toEqual([{ id: 'x', value: 'sprint = 1', error: null }]);
   });
   it('replaces a stored error with the value and clears the error', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 2' }) } });
-    expect(await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], error: 'Board "B" not found' }]), [])).toEqual([{ id: 'x', value: 'sprint = 2', error: null }]);
+    expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], error: 'Board "B" not found' }]), [])).updates).toEqual([{ id: 'x', value: 'sprint = 2', error: null }]);
   });
   it('writes nothing when the stored value is unchanged', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 1' }) } });
-    expect(await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1' }]), [])).toEqual([]);
+    expect((await rewrite(deps, group('previousSprint', ['B'], [{ id: 'x', arguments: ['B'], value: 'sprint = 1' }]), [])).updates).toEqual([]);
   });
 });
 
@@ -501,6 +528,13 @@ describe('onRefresh heavy lane', () => {
     expect(deps.written).toEqual([{ id: 'c', value: 'parent in (3)', error: null }]);
     expect([await deps.state.heavy.oldest(), await deps.state.heavy.lease.get(), deps.pushed]).toEqual([null, null, []]);
     expect(deps.deadlines).toEqual([1000000 + WORKER_BUDGET_MS]);
+  });
+  it('stores a heavy group in the cache only after its precomputations are written', async () => {
+    const write = async () => { throw new Error('write refused'); };
+    const deps = makeDeps({ pcs, write, compute: { childIssuesOf: async () => ({ ids: ['3'], field: 'parent', watch: ['9'] }) } });
+    await deps.state.heavy.put(queued('q', 990000));
+    await expect(onRefresh(deps, { body: { kind: 'heavy' } })).rejects.toThrow('write refused');
+    expect(await deps.cache.meta('childIssuesOf["q"]')).toBeNull();
   });
   it('pushes itself again while more groups wait', async () => {
     const deps = makeDeps({ compute: { childIssuesOf: async () => ({ ids: ['3'], field: 'parent', watch: ['9'] }) } });

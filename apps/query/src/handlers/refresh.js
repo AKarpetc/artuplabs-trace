@@ -109,10 +109,11 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   if (queued || (handed && (await laneIdle(deps)))) await pushQuietly(deps, { kind: 'heavy' });
   let stale = false;
   let changed = 0;
-  if (byGroup.some(([, updates]) => updates.length)) {
-    if (((await deps.state.lastWrittenStart.get()) ?? 0) > startedAt) stale = true;
+  if (byGroup.length) {
+    const anyUpdates = byGroup.some(([, r]) => r.updates.length);
+    if (((await deps.state.lastWrittenStart.get()) ?? 0) > startedAt) stale = anyUpdates;
     else {
-      await deps.state.lastWrittenStart.set(startedAt);
+      if (anyUpdates) await deps.state.lastWrittenStart.set(startedAt);
       changed = await writeGroups(deps, startedAt, byGroup);
     }
   }
