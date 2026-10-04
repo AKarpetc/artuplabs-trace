@@ -177,6 +177,7 @@ export async function onRefresh(deps, event) {
 async function onWake(deps) {
   await deps.state.wake.clear();
   const until = await brakedUntil(deps);
+  console.log(until ? `wake: background paused for ${Math.ceil((until - deps.now()) / 1000)} s more` : 'wake: running the journal');
   if (until) {
     await scheduleWake(deps, until);
     return { braked: until };

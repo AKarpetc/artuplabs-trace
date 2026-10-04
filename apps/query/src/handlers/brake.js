@@ -21,6 +21,7 @@ export async function scheduleWake(deps, until) {
   await deps.state.wake.set(deps.now() + delay * 1000);
   try {
     await deps.queue.push({ kind: 'wake' }, delay);
+    console.log(`wake queued in ${delay} s`);
     return true;
   } catch (error) {
     await deps.state.wake.clear();
