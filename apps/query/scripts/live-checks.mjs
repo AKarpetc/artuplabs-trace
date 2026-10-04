@@ -209,10 +209,11 @@ async function seededFixture(flags, sprintField) {
   const keys = flags.keys.split(',');
   const roles = (flags.roles ?? '').split(',');
   if (keys.length !== 3 || roles.length !== 3) throw new Error('--keys and --roles need three comma-separated values');
-  if (flags.sprint === undefined || flags['closed-at'] === undefined) throw new Error('--sprint and --closed-at are required with --keys');
+  if (!/^\d+$/.test(flags.sprint ?? '')) throw new Error('--sprint needs a numeric sprint id');
+  if (!/^\d+$/.test(flags['closed-at'] ?? '')) throw new Error('--closed-at needs epoch milliseconds');
   const ids = await idsForKeys(keys);
   const { issueChangeLogs } = await changelogAll(ids, [sprintField]);
-  const sprintId = Number.isNaN(Number(flags.sprint)) ? flags.sprint : Number(flags.sprint);
+  const sprintId = Number(flags.sprint);
   writeFixture({
     sprintFieldId: sprintField,
     sprintId,
@@ -384,7 +385,12 @@ async function agile() {
 function parseArgs(argv) {
   const [command, ...rest] = argv;
   const flags = {};
-  for (let i = 0; i < rest.length; i += 2) flags[rest[i].replace(/^--/, '')] = rest[i + 1];
+  for (let i = 0; i < rest.length; i += 2) {
+    const [name, value] = [rest[i], rest[i + 1]];
+    if (!name.startsWith('--')) throw new Error(`expected a --flag, got "${name}"`);
+    if (value === undefined || value.startsWith('--')) throw new Error(`flag ${name} needs a value`);
+    flags[name.slice(2)] = value;
+  }
   return { command, flags };
 }
 

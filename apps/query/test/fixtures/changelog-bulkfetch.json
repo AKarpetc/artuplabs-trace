@@ -1,3 +1,111 @@
 {
-  "issueChangeLogs": []
+  "sprintFieldId": "customfield_10020",
+  "sprintId": 102,
+  "closedAt": 1791098898902,
+  "roles": {
+    "28091": "removed",
+    "28093": "readded",
+    "28094": "added"
+  },
+  "issueChangeLogs": [
+    {
+      "issueId": "28093",
+      "changeHistories": [
+        {
+          "id": "75215",
+          "created": 1791098894523,
+          "items": [
+            {
+              "field": "Sprint",
+              "fieldId": "customfield_10020",
+              "from": "",
+              "to": "102"
+            }
+          ]
+        },
+        {
+          "id": "75214",
+          "created": 1791098893903,
+          "items": [
+            {
+              "field": "Sprint",
+              "fieldId": "customfield_10020",
+              "from": "102",
+              "to": ""
+            }
+          ]
+        },
+        {
+          "id": "75206",
+          "created": 1791098883544,
+          "items": [
+            {
+              "field": "Sprint",
+              "fieldId": "customfield_10020",
+              "from": "",
+              "to": "102"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "issueId": "28094",
+      "changeHistories": [
+        {
+          "id": "75207",
+          "created": 1791098888420,
+          "items": [
+            {
+              "field": "Sprint",
+              "fieldId": "customfield_10020",
+              "from": "",
+              "to": "102"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "issueId": "28091",
+      "changeHistories": [
+        {
+          "id": "83351",
+          "created": 1791104624574,
+          "items": [
+            {
+              "field": "Sprint",
+              "fieldId": "customfield_10020",
+              "from": "",
+              "to": "135"
+            }
+          ]
+        },
+        {
+          "id": "75212",
+          "created": 1791098892329,
+          "items": [
+            {
+              "field": "Sprint",
+              "fieldId": "customfield_10020",
+              "from": "102",
+              "to": ""
+            }
+          ]
+        },
+        {
+          "id": "75202",
+          "created": 1791098883218,
+          "items": [
+            {
+              "field": "Sprint",
+              "fieldId": "customfield_10020",
+              "from": "",
+              "to": "102"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
