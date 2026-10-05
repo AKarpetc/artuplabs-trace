@@ -12,6 +12,14 @@
  *   errors    the editor errors of invalid calls, read from the issue search the JQL editor uses (GraphQL issueSearchStable; the REST
  *             search answers an invalid query with no issues), function groups that are shipped only (--groups)
  *   sr        the 20 ScriptRunner samples against the reference, samples of groups not shipped skipped, empty references not passed (--groups)
+ *   load-hour a points load spread evenly over the minutes: new groups of one function over id slices of a project, each a cache miss
+ *             (--fn subtasksOf|expression, --n 1000, --points 52000, --minutes 60, --project JQLG); the count at the first near-limit
+ *             warning is read from the app log ("near limit …")
+ *   groups    n used query groups of subtasksOf over small id slices of jg-small, each with its own text (--n 100, --size 100)
+ *   index-progress  the "Index is building" numbers of the comment and sprint parts every --every seconds for --minutes (0 = until both
+ *             are ready); a project reindex is started in the admin page (scripts/lib/admin-invoke.browser.js)
+ *   fresh --group cut  10 used light groups over jg-in, --n edits (30) over --minutes (10), then minutes until every group holds every
+ *             edit (--wait 180); the labels are removed afterwards
  *
  * Usage:
  *   set -a && . /Users/artyomkarpets/IncomeApps/projects/DistributB2B/.env && set +a
@@ -23,12 +31,17 @@
  *   node apps/query/scripts/acceptance.mjs audit [--since -7d] [--app "ArtUp Query"]
  *   node apps/query/scripts/acceptance.mjs errors [--groups query,site,board,sprint,comment,attachment,fields]
  *   node apps/query/scripts/acceptance.mjs sr [--groups query,site,board,sprint,comment,attachment,fields]
+ *   node apps/query/scripts/acceptance.mjs load-hour [--fn subtasksOf] [--n 1000] [--points 52000] [--minutes 60] [--project JQLG]
+ *   node apps/query/scripts/acceptance.mjs groups [--n 100] [--size 100]
+ *   node apps/query/scripts/acceptance.mjs index-progress [--every 600] [--minutes 0]
+ *   node apps/query/scripts/acceptance.mjs fresh --group cut [--n 30] [--minutes 10] [--wait 180]
  */
 import { readFileSync } from 'node:fs';
 import { api, bulk, editorComputing, ids, pool, settledIds, sleep, stats, UnsafeRetryError, upload, write } from './lib/http.mjs';
 import { latency, latencyResult, linkId, waitFor } from './lib/latency.mjs';
 import { boardId, myAccountId, REFERENCES, sprintsOf } from './lib/reference.mjs';
 import { compare, save } from './lib/report.mjs';
+import { distinctSubquery, idSlices, loadPlan, progressOf } from './lib/budget.mjs';
 
 const args = { phase: process.argv[2], n: 30, tag: '', board: 'RPT board', group: 'query' };
 for (let i = 3; i < process.argv.length; i += 2) args[process.argv[i].replace(/^--/, '')] = process.argv[i + 1];
@@ -568,12 +581,118 @@ async function sr() {
   save(tagged('acceptance-sr'), { stats, groups: shipped, rows, passed: rows.filter((r) => r.pass === true).length, failed: rows.filter((r) => r.pass === false).length, vacuous: rows.filter((r) => r.vacuous).length, skipped: rows.filter((r) => r.skipped).length });
 }
 
+/** One function call by REST search: seconds, ids returned and the error, if any (a Computing answer returns no ids). */
+async function timedCall(jql) {
+  const t0 = Date.now();
+  const r = await ids(jql);
+  return { seconds: (Date.now() - t0) / 1000, count: r.ids?.length ?? null, error: r.error ?? null };
+}
+
+/** G1: new groups of one function over id slices, each a cache miss, at an even pace that spends the points target in the minutes. */
+async function loadHour() {
+  const fn = args.fn ?? 'subtasksOf';
+  const n = process.argv.includes('--n') ? args.n : 1000;
+  const plan = loadPlan({ fn, n, points: Number(args.points ?? 52000), minutes: Number(args.minutes ?? 60) });
+  const project = args.project ?? 'JQLG';
+  const slices = idSlices((await ids(`project = ${project}`)).ids, n);
+  log(`load-hour ${fn}: ${plan.calls} calls of about ${plan.cost} points, one every ${Math.round(plan.intervalMs / 1000)} s, ${slices.length} slices`);
+  const rows = [];
+  const t0 = Date.now();
+  for (let i = 0; i < plan.calls; i += 1) {
+    const { from, to } = slices[i % slices.length];
+    const sub = distinctSubquery(`project = ${project} AND id >= ${from} AND id <= ${to}`, i);
+    const userArgs = fn === 'expression' ? [sub, 'votes >= 0'] : [sub];
+    const row = { i, at: new Date().toISOString(), ...(await timedCall(clause(fn, userArgs))) };
+    rows.push(row);
+    log(`call ${i}: ${row.seconds} s, ${row.count} ids${row.error ? `, ${row.error.slice(0, 80)}` : ''}`);
+    const wait = t0 + (i + 1) * plan.intervalMs - Date.now();
+    if (wait > 0) await sleep(wait);
+  }
+  save(tagged(`budget-load-hour-${fn}`), { stats, fn, n, plan, rows });
+}
+
+/** G5b: n used query groups of subtasksOf over small id slices of jg-small, each with its own text. */
+async function manyGroups() {
+  const size = Number(args.size ?? 100);
+  const slices = idSlices((await ids('project = JQLG AND labels = jg-small')).ids, size);
+  const count = process.argv.includes('--n') ? args.n : 100;
+  const rows = [];
+  for (let i = 0; i < count; i += 1) {
+    const { from, to } = slices[i % slices.length];
+    const jql = clause('subtasksOf', [distinctSubquery(`project = JQLG AND labels = jg-small AND id >= ${from} AND id <= ${to}`, i)]);
+    rows.push({ i, ...(await timedCall(jql)) });
+    log(`group ${i}: ${JSON.stringify(rows.at(-1))}`);
+  }
+  save(tagged('budget-groups'), { stats, n: count, size, rows });
+}
+
+/**
+ * The "Index is building" numbers of the comment and sprint parts, read from the editor's issue search; null for a part that is ready. Each
+ * poll uses arguments of its own (a date, a sprint name), so no stored precomputation answers it.
+ */
+async function indexParts(cloudId, k) {
+  const me = await myAccountId();
+  const day = new Date(Date.UTC(2000, 0, 1) + k * 86400000).toISOString().slice(0, 10);
+  const probes = [['comments', clause('commented', [`by ${me} after ${day}`])], ['sprint', clause('addedAfterSprintStart', ['RPT board', `aq progress ${Date.now().toString(36)}`])]];
+  const out = {};
+  for (const [part, jql] of probes) out[part] = progressOf((await editorError(cloudId, jql)).message);
+  return out;
+}
+
+/** G7: the index progress of both parts every --every seconds, until both are ready or --minutes pass. */
+async function indexProgress() {
+  const { cloudId } = await api('GET', '/_edge/tenant_info');
+  const every = Number(args.every ?? 600) * 1000;
+  const until = Number(args.minutes ?? 0) > 0 ? Date.now() + Number(args.minutes) * 60000 : Infinity;
+  const rows = [];
+  for (let k = Math.floor(Date.now() / 60000) % 5000; ; k += 1) {
+    const parts = await indexParts(cloudId, k);
+    rows.push({ at: new Date().toISOString(), ...parts });
+    log(`index ${JSON.stringify(parts)}`);
+    save(tagged('budget-index-progress'), { stats, rows });
+    if ((!parts.comments && !parts.sprint) || Date.now() + every > until) return;
+    await sleep(every);
+  }
+}
+
+FRESH.cut = async () => {
+  const minutes = Number(args.minutes ?? 10);
+  const waitMin = Number(args.wait ?? 180);
+  const groups = Array.from({ length: 10 }, (_, i) => clause('subtasksOf', [distinctSubquery('project = JQLG AND labels = jg-in', i)]));
+  for (const g of groups) log(`warm ${g}: ${(await ids(g)).ids?.length}`);
+  const parents = (await bulk((await ids('project = JQLG AND labels = jg-small AND labels != jg-in ORDER BY key')).ids.slice(0, args.n + 5), ['subtasks'])).filter((x) => x.fields.subtasks?.length).slice(0, args.n);
+  const subs = parents.map((x) => String(x.fields.subtasks[0].id));
+  const t0 = Date.now();
+  try {
+    for (const [i, x] of parents.entries()) {
+      await api('PUT', `/rest/api/3/issue/${x.id}`, { update: { labels: [{ add: 'jg-in' }] } });
+      log(`edit ${i}`);
+      const wait = t0 + ((i + 1) * minutes * 60000) / parents.length - Date.now();
+      if (wait > 0) await sleep(wait);
+    }
+    const full = groups.map(() => null);
+    while (full.some((s) => s === null) && Date.now() - t0 < waitMin * 60000) {
+      for (const [k, g] of groups.entries()) {
+        if (full[k] !== null) continue;
+        const r = await ids(`(${g}) AND id in (${subs.join(',')})`);
+        if (r.ids?.length === subs.length) full[k] = Math.round((Date.now() - t0) / 1000);
+      }
+      log(`groups holding every edit: ${full.filter((s) => s !== null).length} of ${groups.length}`);
+      if (full.some((s) => s === null)) await sleep(60000);
+    }
+    save(tagged('acceptance-fresh-cut'), { stats, edits: parents.length, secondsToFull: full, lostGroups: full.filter((s) => s === null).length });
+  } finally {
+    for (const x of parents) await api('PUT', `/rest/api/3/issue/${x.id}`, { update: { labels: [{ remove: 'jg-in' }] } });
+    log('jg-in labels removed');
+  }
+};
+
 async function fresh() {
   if (!FRESH[args.group]) throw new Error(`groups: ${Object.keys(FRESH).join(', ')}`);
   await FRESH[args.group]();
 }
 
-const PHASES = { complete, fresh, 'seed-tm': seedTeamManaged, 'seed-fields': seedFields, burst, audit, errors, sr };
+const PHASES = { complete, fresh, 'seed-tm': seedTeamManaged, 'seed-fields': seedFields, burst, audit, errors, sr, 'load-hour': loadHour, groups: manyGroups, 'index-progress': indexProgress };
 if (!PHASES[args.phase]) {
   log(`phases: ${Object.keys(PHASES).join(', ')}`);
   process.exit(2);
