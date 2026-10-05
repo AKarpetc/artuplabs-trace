@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { makeDeps, spend, withBudget } from './makeDeps.js';
+import { BUDGET_AT, makeDeps, spend, withBudget } from './makeDeps.js';
 import { brakeNear } from '../../src/handlers/brake.js';
 import { changeId, onEvent } from '../../src/handlers/trigger.js';
 
@@ -127,6 +127,13 @@ describe('onEvent under the points budget', () => {
     await deps.points.add('index-event', 1000);
     await onEvent(deps, event);
     expect(written).toEqual(['row']);
+  });
+  it('sends no Jira request while the background waits for a 429 to reset', async () => {
+    let sent = false;
+    const deps = withBudget(makeDeps({ indexEvent: async () => { await spend(3); sent = true; } }));
+    await deps.state.brake.set({ until: BUDGET_AT + 60000, reason: 'rate' });
+    await onEvent(deps, { eventType: 'avi:jira:created:issuelink', issueLink: { sourceIssueId: 1, destinationIssueId: 2 } });
+    expect(sent).toBe(false);
   });
   it('sends no Jira request while Jira warns that the pool is nearly used', async () => {
     let sent = false;

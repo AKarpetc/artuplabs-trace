@@ -4,7 +4,7 @@ import { createJournal } from '../../src/infra/journal.js';
 import { createState } from '../../src/infra/state.js';
 import { backfillProjects, onBackfill, startBackfill } from '../../src/handlers/backfill.js';
 import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
-import { PointsError, withPoints } from '../../src/infra/jira.js';
+import { createJira, currentPoints, withPoints } from '../../src/infra/jira.js';
 import { createLedger, newProcessPoints } from '../../src/infra/points.js';
 
 function makeDeps({ pages, cost = 0 }) {
@@ -27,7 +27,12 @@ function makeDeps({ pages, cost = 0 }) {
         counted.push(jql);
         return jql.includes('"X"') ? 99 : 4500;
       },
-      searchPage: async (jql, token) => pages[`${jql}|${token}`],
+      searchPage: async (jql, token, { maxResults = 5000 } = {}) => {
+        const all = pages[/project = "([^"]+)"/.exec(jql)[1]] ?? [];
+        const from = Number(token ?? 0);
+        const next = from + maxResults;
+        return { ids: all.slice(from, next), nextPageToken: next < all.length ? String(next) : null };
+      },
     },
     indexParts: { sprint: { prepare: vi.fn(async () => {}), index: async (ids, project) => { indexed.push([project.key, ids.length]); now += cost; } } },
     backfillQueue: { push: async (body, delay) => { pushed.push(body); delays.push(delay ?? null); } },
@@ -39,11 +44,7 @@ function makeDeps({ pages, cost = 0 }) {
   };
 }
 const ids = (n, from = 1) => Array.from({ length: n }, (_, i) => String(from + i));
-const PAGES = {
-  'project = "A" ORDER BY id ASC|null': { ids: ids(5000), nextPageToken: 't2' },
-  'project = "A" ORDER BY id ASC|t2': { ids: ids(1500, 5001), nextPageToken: null },
-  'project = "B" ORDER BY id ASC|null': { ids: ids(10, 9001), nextPageToken: null },
-};
+const PAGES = { A: ids(6500), B: ids(10, 9001) };
 
 describe('backfill', () => {
   it('starts with the projects that are not excluded (X) and keeps an earlier readyAt', async () => {
@@ -68,7 +69,7 @@ describe('backfill', () => {
     await startBackfill(deps, 'sprint');
     expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ continued: true, done: 3000 });
     const saved = await deps.state.progress.getPart('sprint');
-    expect(saved.cursor).toEqual({ projects: [{ id: '1', key: 'A' }, { id: '2', key: 'B' }], index: 0, token: null, offset: 3000 });
+    expect(saved.cursor).toEqual({ projects: [{ id: '1', key: 'A' }, { id: '2', key: 'B' }], index: 0, token: '3000', offset: 0 });
     expect(saved.savedAt).toBe(301000);
     expect(deps.pushed.at(-1)).toEqual({ kind: 'backfill', part: 'sprint', generation: 1000 });
   });
@@ -79,7 +80,7 @@ describe('backfill', () => {
     deps.indexed.length = 0;
     expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ continued: true, done: 6000 });
     expect(deps.indexed).toEqual([['A', 1000], ['A', 1000], ['A', 1000]]);
-    expect((await deps.state.progress.getPart('sprint')).cursor).toMatchObject({ index: 0, token: 't2', offset: 1000 });
+    expect((await deps.state.progress.getPart('sprint')).cursor).toMatchObject({ index: 0, token: '6000', offset: 0 });
   });
   it('ignores a job of an older generation', async () => {
     const deps = makeDeps({ pages: PAGES });
@@ -150,7 +151,7 @@ describe('backfill', () => {
     expect(deps.repo.deleteProject).not.toHaveBeenCalled();
   });
   it('deletes what it wrote of a project excluded while its slice was being written', async () => {
-    const deps = makeDeps({ pages: { 'project = "B" ORDER BY id ASC|null': { ids: ids(10, 9001), nextPageToken: null } } });
+    const deps = makeDeps({ pages: { B: ids(10, 9001) } });
     deps.repo = { deleteProject: vi.fn(async () => {}) };
     deps.indexParts.sprint.tables = ['sprint_event', 'status_event'];
     await startBackfill(deps, 'sprint', { projects: [{ id: '2', key: 'B' }] });
@@ -206,34 +207,60 @@ describe('backfill', () => {
 });
 
 describe('backfill under the points budget', () => {
-  const AT = Date.parse('2026-10-05T07:10:00Z');
-  function budgeted({ backfillSpent = 0, index } = {}) {
-    const deps = makeDeps({ pages: PAGES });
-    let now = AT;
+  const AT = Date.parse('2026-10-05T07:01:00Z');
+  const big = ids(20000);
+  function budgeted({ backfillSpent = 0, at = AT } = {}) {
+    const deps = makeDeps({ pages: { A: big } });
+    let now = at;
     deps.now = () => now;
-    deps.siteCap = 10000;
+    deps.advance = (ms) => { now += ms; };
+    deps.siteCap = 9000;
     deps.withPoints = withPoints;
+    deps.currentPoints = currentPoints;
     deps.points = createLedger({ kvs: createFakeKvs(), beginsWith, clock: () => now, own: newProcessPoints('b') });
-    if (index) deps.indexParts.sprint.index = index;
+    const request = async (path, init) => {
+      const body = JSON.parse(init.body);
+      if (path.includes('search/jql')) {
+        const from = Number(body.nextPageToken ?? 0);
+        const next = from + body.maxResults;
+        return { status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ issues: big.slice(from, next).map((id) => ({ id })), ...(next < big.length ? { nextPageToken: String(next) } : {}) }) };
+      }
+      return { status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ issueChangeLogs: body.issueIdsOrKeys.map((id) => ({ issueId: id })) }) };
+    };
+    const jira = createJira(request);
+    deps.jira.searchPage = jira.searchPage;
+    deps.indexParts.sprint.index = async (slice, project) => {
+      deps.indexed.push([project.key, ...slice]);
+      await jira.changelogs(slice, ['status']);
+    };
     return { deps, ready: async () => { if (backfillSpent) await deps.points.add('backfill', backfillSpent); } };
   }
-  it('starts no slice once the backfill reserve is spent and queues itself for just after half past', async () => {
-    const index = vi.fn();
-    const { deps, ready } = budgeted({ backfillSpent: 1000, index });
+  const indexedIds = (deps) => deps.indexed.flatMap(([, ...slice]) => slice);
+  it('starts no slice once the backfill reserve is spent, keeps its progress fresh and queues itself for just after half past', async () => {
+    const { deps, ready } = budgeted({ backfillSpent: 900 });
     await ready();
     const p = await startBackfill(deps, 'sprint');
     deps.pushed.length = 0;
     deps.delays.length = 0;
+    deps.advance(1000);
     expect(await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } })).toEqual({ waiting: Date.parse('2026-10-05T07:31:00Z'), done: 0 });
-    expect([index.mock.calls.length, deps.pushed, deps.delays]).toEqual([0, [{ kind: 'backfill', part: 'sprint', generation: p.generation }], [300]]);
+    expect([deps.indexed, deps.pushed, deps.delays, (await deps.state.progress.getPart('sprint')).savedAt]).toEqual([[], [{ kind: 'backfill', part: 'sprint', generation: p.generation }], [300], AT + 1000]);
   });
-  it('keeps its progress when the reserve runs out within a slice and queues itself for the next allowance', async () => {
-    const index = vi.fn(async () => { throw new PointsError('pass', 900, 900); });
-    const { deps } = budgeted({ index });
+  it('fills slices that fit its reserve before half past and counts only the issues it indexed', async () => {
+    const { deps } = budgeted();
     const p = await startBackfill(deps, 'sprint');
-    deps.pushed.length = 0;
     const result = await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
-    expect(result).toEqual({ stopped: true, done: 0 });
-    expect([(await deps.state.progress.getPart('sprint')).done, deps.pushed]).toEqual([0, [{ kind: 'backfill', part: 'sprint', generation: p.generation }]]);
+    const saved = await deps.state.progress.getPart('sprint');
+    expect(result.done).toBeGreaterThan(0);
+    expect([saved.done, saved.cursor.token]).toEqual([indexedIds(deps).length, String(indexedIds(deps).length)]);
+  });
+  it('never indexes an issue twice across runs of different allowances', async () => {
+    const { deps } = budgeted();
+    const p = await startBackfill(deps, 'sprint');
+    await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
+    deps.advance(30 * 60 * 1000);
+    await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
+    const all = indexedIds(deps);
+    expect([new Set(all).size, (await deps.state.progress.getPart('sprint')).done]).toEqual([all.length, all.length]);
   });
 });

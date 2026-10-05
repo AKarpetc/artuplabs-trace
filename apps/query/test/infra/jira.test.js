@@ -170,12 +170,12 @@ describe('backoff and roles', () => {
 describe('index reads', () => {
   it('returns one search page with its token', async () => {
     const { request, calls } = scripted([reply(200, { issues: [{ id: 1 }], nextPageToken: 'x' })]);
-    expect(await createJira(request).searchPage('project = "A" ORDER BY id ASC', null)).toEqual({ ids: ['1'], nextPageToken: 'x' });
+    expect(await createJira(request).searchPage('project = "A" ORDER BY id ASC', null)).toMatchObject({ ids: ['1'], nextPageToken: 'x' });
     expect(calls[0].body).toEqual({ jql: 'project = "A" ORDER BY id ASC', fields: ['id'], maxResults: 5000 });
   });
   it('asks the next search page by its token and reads the last page', async () => {
     const { request, calls } = scripted([reply(200, {})]);
-    expect(await createJira(request).searchPage('x', 'tok')).toEqual({ ids: [], nextPageToken: null });
+    expect(await createJira(request).searchPage('x', 'tok')).toMatchObject({ ids: [], nextPageToken: null });
     expect(calls[0].body.nextPageToken).toBe('tok');
   });
   it('lists projects as id and key', async () => {
@@ -433,5 +433,13 @@ describe('search page size', () => {
     const { request, calls } = scripted([reply(200, { issues: [] })]);
     await createJira(request).searchPage('a', null, { maxResults: 2000 });
     expect(calls[0].body.maxResults).toEqual(2000);
+  });
+});
+
+describe('search page fields', () => {
+  it('returns the issues with the fields asked for', async () => {
+    const { request, calls } = scripted([reply(200, { issues: [{ id: '1', fields: { project: { id: '10', key: 'A' }, updated: '2026-10-05T07:00:00.000+0000' } }], nextPageToken: 'n' })]);
+    const page = await createJira(request).searchPage('a', null, { maxResults: 50, fields: ['project', 'updated'] });
+    expect([calls[0].body.fields, page.ids, page.issues[0].fields.project.key, page.nextPageToken]).toEqual([['project', 'updated'], ['1'], 'A', 'n']);
   });
 });

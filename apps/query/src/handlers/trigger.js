@@ -11,12 +11,12 @@ export function changeId(event, hash) {
   return hash(JSON.stringify([event?.eventType ?? null, event?.issue?.id ?? null, event?.timestamp ?? null, items]));
 }
 
-/** Points the index work of one event may spend: what the index-event lane has left, none while Jira warns that the pool is nearly used. */
+/** Points the index work of one event may spend: what the index-event lane has left, none while the background is paused (429 or near limit). */
 async function eventRoom(deps) {
   if (!deps.points || !deps.siteCap || !deps.withPoints) return Infinity;
   const at = deps.now();
   const [pause, { byLane }] = await Promise.all([brakeOf(deps), deps.points.siteSpent(hourKey(at))]);
-  return pause?.reason === 'near' ? 0 : laneRoom('index-event', byLane, at, deps.siteCap);
+  return pause ? 0 : laneRoom('index-event', byLane, at, deps.siteCap);
 }
 
 async function indexWithin(deps, event) {

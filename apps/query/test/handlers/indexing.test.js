@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { createFakeKvs } from '../fakeKvs.js';
 import { createState } from '../../src/infra/state.js';
 import { createIndexing } from '../../src/handlers/indexing.js';
-import { PointsError } from '../../src/infra/jira.js';
-import { RECONCILE_RECENT_MAX, STATUS_TTL_MS } from '../../src/core/limits.js';
+import { createJira, currentPoints, PointsError, withPoints } from '../../src/infra/jira.js';
+import { INDEX_ISSUE_POINTS, RECONCILE_RECENT_MAX, STATUS_REREAD_MS, STATUS_TTL_MS } from '../../src/core/limits.js';
 
 function makeDeps() {
   let now = 5000;
@@ -133,9 +133,9 @@ describe('reconcileIndex', () => {
     deps.searched = [];
     deps.jira.searchPage = async (jql) => {
       deps.searched.push(jql);
-      return { ids: ['7', '8', '9'], nextPageToken: null };
+      const issues = ['7', '8', '9'].map((id) => ({ id, fields: { project: id === '9' ? { id: '20', key: 'B' } : { id: '10', key: 'A' } } }));
+      return { ids: ['7', '8', '9'], issues, nextPageToken: null };
     };
-    deps.jira.bulkIssues = async (ids) => ids.map((id) => ({ id, fields: { project: id === '9' ? { id: '20', key: 'B' } : { id: '10', key: 'A' } } }));
     deps.jira.projects = async () => [{ id: '10', key: 'A' }];
     deps.jira.approximateCount = async () => 3;
     deps.jira.allBoards = async () => [];
@@ -168,24 +168,24 @@ describe('reconcileIndex', () => {
     await deps.state.setExcluded(['GONE', 'X']);
     const indexing = quiet(createIndexing(deps));
     expect(await indexing.reconcileIndex()).toEqual({ started: [], reindexed: 3 });
-    expect(deps.searched).toEqual(['updated >= -120m AND project not in ("X") ORDER BY updated DESC']);
+    expect(deps.searched).toEqual(['updated >= -120m AND project not in ("X") ORDER BY updated ASC']);
     const perProject = [[['7', '8'], { id: '10', key: 'A' }], [['9'], { id: '20', key: 'B' }]];
     expect([indexing.parts.sprint.index.mock.calls, indexing.parts.comments.index.mock.calls]).toEqual([perProject, perProject]);
   });
-  it('re-reads at most 2 000 issues without a project filter when none is excluded', async () => {
+  it('re-reads at most 2 000 issues a run, without a project filter when none is excluded, and keeps the rest for the next run', async () => {
     const deps = reconcileDeps();
     await built(deps);
-    deps.jira.searchPage = async (jql) => {
-      deps.searched.push(jql);
-      return { ids: Array.from({ length: 2500 }, (_, i) => String(i)), nextPageToken: 'n' };
+    deps.jira.searchPage = async (jql, token, { maxResults }) => {
+      deps.searched.push([jql, token, maxResults]);
+      const issues = Array.from({ length: maxResults }, (_, i) => ({ id: String(i), fields: { project: { id: '10', key: 'A' } } }));
+      return { ids: issues.map((x) => x.id), issues, nextPageToken: 'n' };
     };
-    let asked = 0;
-    deps.jira.bulkIssues = async (ids) => {
-      asked = ids.length;
-      return [];
-    };
-    expect(await createIndexing(deps).reconcileIndex()).toEqual({ started: [], reindexed: 2000 });
-    expect([deps.searched, asked]).toEqual([['updated >= -120m ORDER BY updated DESC'], 2000]);
+    const indexing = createIndexing(deps);
+    indexing.parts.sprint.index = vi.fn();
+    indexing.parts.comments.index = vi.fn();
+    expect(await indexing.reconcileIndex()).toEqual({ started: [], reindexed: 2000 });
+    expect(deps.searched).toEqual([['updated >= -120m ORDER BY updated ASC', null, 2000]]);
+    expect((await deps.state.recentIndex.get()).run).toMatchObject({ token: 'n' });
   });
   it('queues a backfill again when it saved nothing for half an hour', async () => {
     const deps = reconcileDeps();
@@ -343,9 +343,8 @@ describe('reconcileIndex window and budget', () => {
     deps.searched = [];
     deps.jira.searchPage = async (jql, token, options) => {
       deps.searched.push([jql, options?.maxResults ?? null]);
-      return { ids: ['7'], nextPageToken: null };
+      return { ids: ['7'], issues: [{ id: '7', fields: { project: { id: '10', key: 'A' } } }], nextPageToken: null };
     };
-    deps.jira.bulkIssues = async (ids) => ids.map((id) => ({ id, fields: { project: { id: '10', key: 'A' } } }));
     deps.jira.projects = async () => [{ id: '10', key: 'A' }];
     deps.jira.allBoards = async () => [];
     deps.backfillQueue = { push: vi.fn(async () => {}) };
@@ -361,7 +360,7 @@ describe('reconcileIndex window and budget', () => {
     indexing.parts.sprint.index = vi.fn();
     indexing.parts.comments.index = vi.fn();
     await indexing.reconcileIndex();
-    expect(deps.searched).toEqual([['updated >= -120m ORDER BY updated DESC', RECONCILE_RECENT_MAX]]);
+    expect(deps.searched).toEqual([['updated >= -120m ORDER BY updated ASC', RECONCILE_RECENT_MAX]]);
   });
   it('widens its window to the last check it finished', async () => {
     const deps = windowDeps();
@@ -372,7 +371,7 @@ describe('reconcileIndex window and budget', () => {
     await indexing.reconcileIndex();
     deps.advance(3 * 60 * 60 * 1000);
     await indexing.reconcileIndex();
-    expect(deps.searched[1][0]).toEqual('updated >= -190m ORDER BY updated DESC');
+    expect(deps.searched[1][0]).toEqual('updated >= -190m ORDER BY updated ASC');
   });
   it('stops when the reconcile points run out and keeps the window for the next hour', async () => {
     const deps = windowDeps();
@@ -387,6 +386,87 @@ describe('reconcileIndex window and budget', () => {
     deps.advance(2 * 60 * 60 * 1000);
     indexing.parts.sprint.index = vi.fn();
     await indexing.reconcileIndex();
-    expect(deps.searched[2][0]).toEqual('updated >= -190m ORDER BY updated DESC');
+    expect(deps.searched[2][0]).toEqual('updated >= -190m ORDER BY updated ASC');
+  });
+});
+
+describe('new statuses', () => {
+  const change = (from, to, id) => ({ ...updated([{ field: 'status', fieldId: 'status', from, to }]), changelog: { id, items: [{ field: 'status', fieldId: 'status', from, to }] } });
+  it('reads the statuses again when an event names one the cache does not know', async () => {
+    const deps = makeDeps();
+    const indexing = createIndexing(deps);
+    await indexing.indexEvent(change('1', '2', '900'));
+    deps.jira.statusCategories = vi.fn(async () => new Map([['1', 'new'], ['2', 'done'], ['3', 'indeterminate']]));
+    deps.advance(STATUS_REREAD_MS);
+    await indexing.indexEvent(change('2', '3', '901'));
+    expect(deps.repo.addStatusEvents.mock.calls.at(-1)[0]).toEqual([{ issueId: '7', projectId: '10', at: 4000, from: 'done', to: 'indeterminate', changeId: '901' }]);
+  });
+  it('writes no status row for a status it still does not know, so the index check reads it later', async () => {
+    const deps = makeDeps();
+    const indexing = createIndexing(deps);
+    await indexing.indexEvent(change('1', '2', '900'));
+    deps.repo.addStatusEvents.mockClear();
+    await indexing.indexEvent(change('2', '9', '901'));
+    expect([deps.repo.addStatusEvents.mock.calls, deps.jira.statusCategories.mock.calls.length]).toEqual([[], 1]);
+  });
+});
+
+describe('index check with the real points scope', () => {
+  const T0 = Date.parse('2026-10-05T07:10:00Z');
+  function realDeps(total) {
+    const deps = makeDeps();
+    let now = T0;
+    deps.now = () => now;
+    deps.advance = (ms) => { now += ms; };
+    deps.currentPoints = currentPoints;
+    deps.migrate = vi.fn(async () => {});
+    deps.backfillQueue = { push: vi.fn(async () => {}) };
+    deps.repo.addSprintEvents = vi.fn();
+    deps.repo.addStatusEvents = vi.fn();
+    deps.searched = [];
+    const issues = Array.from({ length: total }, (_, i) => ({ id: String(i + 1), fields: { project: { id: '10', key: 'A' }, updated: new Date(T0 - (total - i) * 1000).toISOString() } }));
+    const ok = (body) => ({ status: 200, headers: { get: () => null }, text: async () => JSON.stringify(body) });
+    deps.jira = createJira(async (path, init) => {
+      const body = init.body ? JSON.parse(init.body) : {};
+      if (path.includes('search/jql')) {
+        deps.searched.push(body);
+        const from = Number(body.nextPageToken ?? 0);
+        const next = from + body.maxResults;
+        return ok({ issues: issues.slice(from, next), ...(next < issues.length ? { nextPageToken: String(next) } : {}) });
+      }
+      if (path.includes('changelog/bulkfetch')) return ok({ issueChangeLogs: [] });
+      if (path.includes('issue/bulkfetch')) return ok({ issues: body.issueIdsOrKeys.map((id) => ({ id, fields: { comment: { comments: [], total: 0 }, attachment: [] } })) });
+      if (path.includes('/status')) return ok([]);
+      if (path.includes('/field')) return ok([]);
+      return ok({ values: [], isLast: true });
+    });
+    return deps;
+  }
+  const built = async (deps) => {
+    for (const part of ['sprint', 'comments']) await deps.state.progress.setPart(part, { readyAt: 1, finishedAt: 1 });
+  };
+  const run = (deps, indexing, limit) => withPoints(limit, () => indexing.reconcileIndex(), { scope: 'pass', lane: 'reconcile' });
+  it('reads slices that fit what the points have left, oldest first', async () => {
+    const deps = realDeps(500);
+    await built(deps);
+    await run(deps, createIndexing(deps), 800);
+    expect(deps.searched[0].maxResults).toBeLessThanOrEqual(Math.floor(800 / INDEX_ISSUE_POINTS));
+    expect(deps.searched[0].jql).toContain('ORDER BY updated ASC');
+  });
+  it('goes on from where it stopped and finishes a window larger than its points, reading each issue once', async () => {
+    const deps = realDeps(500);
+    await built(deps);
+    const indexing = createIndexing(deps);
+    const results = [];
+    for (let hour = 0; hour < 4 && !(await deps.state.recentIndex.get())?.at; hour += 1) {
+      results.push(await run(deps, indexing, 800));
+      deps.advance(60 * 60 * 1000);
+    }
+    const read = deps.searched.reduce((sum, b) => sum + Math.min(b.maxResults, 500), 0);
+    expect((await deps.state.recentIndex.get()).at).toBeGreaterThan(0);
+    expect(results.length).toBeGreaterThan(1);
+    expect(deps.searched.map((b) => b.jql).every((jql) => jql === deps.searched[0].jql)).toBe(true);
+    expect(read).toBeGreaterThanOrEqual(500);
+    expect(deps.searched.slice(1).every((b) => b.nextPageToken)).toBe(true);
   });
 });

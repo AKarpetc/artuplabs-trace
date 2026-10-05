@@ -1,5 +1,5 @@
 import { LOG } from '../core/errors.js';
-import { BACKFILL_WAKE_DELAY_MS, CHANGELOG_BATCH, POINTS_OVERHEAD, WORKER_BUDGET_MS } from '../core/limits.js';
+import { BACKFILL_WAKE_DELAY_MS, CHANGELOG_BATCH, INDEX_ISSUE_POINTS, INDEX_SLICE_MIN, POINTS_OVERHEAD, WORKER_BUDGET_MS } from '../core/limits.js';
 import { admit, hourKey, laneRoom, retryAfter } from '../core/points.js';
 import { REWRITE_ALL_KIND } from '../core/affected.js';
 import { indexReadyKind } from '../core/readiness.js';
@@ -93,26 +93,34 @@ const skipProject = (c) => {
   c.offset = 0;
 };
 
-/** Indexes the next slice of the current page and moves the cursor; rows of a project excluded meanwhile are deleted and the project is left. Returns the page to go on with, or null. */
-async function fillSlice(deps, part, p, project, page) {
+/** Issues the next slice may read: CHANGELOG_BATCH, or fewer when the points scope of the run has less room left. */
+export function sliceSize(deps) {
+  const scope = deps.currentPoints?.();
+  const room = scope && Number.isFinite(scope.limit) ? scope.limit - scope.spent : Infinity;
+  return Math.min(CHANGELOG_BATCH, Math.floor(room / INDEX_ISSUE_POINTS));
+}
+
+/**
+ * Reads and indexes the next slice of a project (one search page of the slice size, from the saved token) and moves the cursor past it;
+ * rows of a project excluded meanwhile are deleted and the project is left.
+ */
+async function fillSlice(deps, part, p, project, size) {
   const c = p.cursor;
-  const slice = page.ids.slice(c.offset, c.offset + CHANGELOG_BATCH);
+  const page = await deps.jira.searchPage(`project = "${project.key}" ORDER BY id ASC`, c.token, { maxResults: size });
+  const slice = page.ids.slice(0, size);
   if (slice.length) {
     await deps.indexParts[part].index(slice, project);
     if (await excludedNow(deps, project)) {
       await deps.repo.deleteProject(project.id, deps.indexParts[part].tables);
       skipProject(c);
-      return null;
+      return;
     }
     p.done += slice.length;
-    c.offset += slice.length;
   }
-  if (c.offset < page.ids.length) return page;
   if (page.nextPageToken) {
     c.token = page.nextPageToken;
     c.offset = 0;
   } else skipProject(c);
-  return null;
 }
 
 async function finish(deps, part, p) {
@@ -141,22 +149,30 @@ export async function onBackfill(deps, event) {
   }
   const room = await backfillRoom(deps);
   if (room.waitUntil) {
+    await deps.state.progress.setPart(part, { ...p, savedAt: deps.now() });
     await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, room.waitUntil));
     return { waiting: room.waitUntil, done: p.done };
   }
   try {
-    return await (room.limit === Infinity ? fillPart(deps, part, generation, p) : deps.withPoints(room.limit, () => fillPart(deps, part, generation, p), { scope: 'pass' }));
+    const run = await (room.limit === Infinity ? fillPart(deps, part, generation, p) : deps.withPoints(room.limit, () => fillPart(deps, part, generation, p), { scope: 'pass' }));
+    if (!run.short) return run;
+    return await waitForPoints(deps, part, generation);
   } catch (error) {
-    if (error?.name === 'PointsError') {
-      await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, retryAfter(deps.now()) + BACKFILL_WAKE_DELAY_MS));
-      return { stopped: true, done: (await deps.state.progress.getPart(part))?.done ?? p.done };
-    }
+    if (error?.name === 'PointsError') return waitForPoints(deps, part, generation);
     if (!isRateLimit(error)) throw error;
     console.error('backfill stopped by the Jira rate limit');
     const resume = await brake(deps, error.retryAt);
     await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, resume));
     return { braked: true, done: p.done };
   }
+}
+
+/** Keeps the saved progress fresh, so the hourly check queues no second copy, and queues the job for just after the next allowance. */
+async function waitForPoints(deps, part, generation) {
+  const saved = await deps.state.progress.getPart(part);
+  if (saved?.generation === generation && !saved.finishedAt) await deps.state.progress.setPart(part, { ...saved, savedAt: deps.now() });
+  await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, retryAfter(deps.now()) + BACKFILL_WAKE_DELAY_MS));
+  return { stopped: true, done: saved?.done ?? 0 };
 }
 
 /** Points the next backfill run may spend: what the backfill lane has left, or the instant to try again (just after half past or the hour). */
@@ -172,15 +188,14 @@ async function backfillRoom(deps) {
 async function fillPart(deps, part, generation, p) {
   const deadline = deps.now() + WORKER_BUDGET_MS;
   const c = p.cursor;
-  let page = null;
   while (deps.now() < deadline) {
     const project = c.projects[c.index];
     if (!project) return finish(deps, part, p);
-    if (await excludedNow(deps, project)) {
-      skipProject(c);
-      page = null;
-    } else {
-      page = await fillSlice(deps, part, p, project, page ?? (await deps.jira.searchPage(`project = "${project.key}" ORDER BY id ASC`, c.token)));
+    if (await excludedNow(deps, project)) skipProject(c);
+    else {
+      const size = sliceSize(deps);
+      if (size < INDEX_SLICE_MIN) return { short: true };
+      await fillSlice(deps, part, p, project, size);
     }
     const current = await deps.state.progress.getPart(part);
     if (current?.generation !== generation || current.finishedAt) return { skipped: true };

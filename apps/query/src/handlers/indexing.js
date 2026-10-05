@@ -1,13 +1,15 @@
 import { SHIPPED_GROUPS } from '../core/catalog.js';
 import { sprintWindow } from '../core/boards.js';
 import { extOf } from '../core/comment-clauses.js';
-import { BACKFILL_STALE_MS, COMMENT_PAGE, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_TTL_MS } from '../core/limits.js';
+import {
+  BACKFILL_STALE_MS, COMMENT_PAGE, INDEX_ISSUE_POINTS, INDEX_SLICE_MIN, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_REREAD_MS, STATUS_TTL_MS,
+} from '../core/limits.js';
 import { indexPartOf } from '../core/readiness.js';
 import { sprintEvents, statusEvents, toMs } from '../core/sprint-history.js';
 import { startBackfill, startWaiting } from './backfill.js';
 
 const SPRINT_FIELD = 'com.pyxis.greenhopper.jira:gh-sprint';
-const RECENT_ORDER = ' ORDER BY updated DESC';
+const RECENT_ORDER = ' ORDER BY updated ASC';
 const NUMERIC = /^\d+$/;
 
 const sprintRow = (s, boardId) => ({ id: String(s.id), boardId: String(boardId ?? s.originBoardId ?? 0), name: s.name ?? '', state: s.state ?? '', ...sprintWindow(s) });
@@ -48,13 +50,23 @@ export function createIndexing(deps) {
     return new Set(ids);
   }
 
-  async function statusCategories() {
+  /** Status categories from `cfg:status`; read again when stale, or when a needed status is missing and the last read is STATUS_REREAD_MS old. */
+  async function statusCategories(needed = []) {
     const cached = await deps.state.statuses.get();
-    if (cached && deps.now() - cached.at < STATUS_TTL_MS) return new Map(cached.categories);
+    const age = cached ? deps.now() - cached.at : Infinity;
+    const map = cached ? new Map(cached.categories) : null;
+    const missing = map ? needed.some((id) => !map.has(String(id))) : true;
+    if (map && age < STATUS_TTL_MS && !(missing && age >= STATUS_REREAD_MS)) return map;
     const categories = await deps.jira.statusCategories();
     await deps.state.statuses.set({ at: deps.now(), categories: [...categories] });
     return categories;
   }
+
+  const statusIdsOf = (histories) => histories.flatMap((h) => (h.items ?? []).filter(isStatus).flatMap((i) => [String(i.from), String(i.to)]));
+  const knownOnly = (histories, categories) => histories.map((h) => ({
+    ...h,
+    items: (h.items ?? []).filter((i) => !isStatus(i) || (categories.has(String(i.from)) && categories.has(String(i.to)))),
+  }));
 
   async function projectOf(event) {
     return event.issue?.fields?.project ?? (await deps.jira.issue(String(event.issue.id), ['project'])).fields.project;
@@ -91,13 +103,13 @@ export function createIndexing(deps) {
       },
       async index(ids, project) {
         const fields = await sprintFieldIds();
-        const categories = await statusCategories();
         const logs = await deps.jira.changelogs(ids, [...fields, 'status']);
+        const categories = await statusCategories([...logs.values()].flatMap(statusIdsOf));
         const sprintRows = [];
         const statusRows = [];
         for (const [issueId, histories] of logs) {
           sprintRows.push(...withProject(sprintEvents(issueId, histories, fields), project));
-          statusRows.push(...withProject(statusEvents(issueId, histories, categories), project));
+          statusRows.push(...withProject(statusEvents(issueId, knownOnly(histories, categories), categories), project));
         }
         await deps.repo.addSprintEvents(sprintRows);
         await deps.repo.addStatusEvents(statusRows);
@@ -121,7 +133,8 @@ export function createIndexing(deps) {
     if ((await deps.state.excluded()).includes(project.key)) return;
     if (sprintRows.length) await deps.repo.addSprintEvents(withProject(sprintRows, project));
     if (!statusChanged) return;
-    const statusRows = statusEvents(event.issue.id, histories, await statusCategories());
+    const categories = await statusCategories(statusIdsOf(histories));
+    const statusRows = statusEvents(event.issue.id, knownOnly(histories, categories), categories);
     if (statusRows.length) await deps.repo.addStatusEvents(withProject(statusRows, project));
   }
 
@@ -167,28 +180,60 @@ export function createIndexing(deps) {
     await deps.backfillQueue.push({ kind: 'backfill', part, generation: progress.generation });
   }
 
-  async function recentByProject() {
-    const last = (await deps.state.recentIndex.get())?.at ?? null;
+  /** The query of a new check: issues updated since the last finished one (at least RECENT_WINDOW_MIN), oldest first, outside excluded projects. */
+  async function windowQuery(last) {
     const minutes = last === null ? RECENT_WINDOW_MIN : Math.max(RECENT_WINDOW_MIN, Math.ceil((deps.now() - last) / 60000) + RECENT_WINDOW_MARGIN_MIN);
     const window = `updated >= -${minutes}m`;
     const stored = await deps.state.excluded();
     const known = stored.length ? new Set((await deps.jira.projects()).map((p) => p.key)) : new Set();
     const excluded = stored.filter((k) => known.has(k));
-    const scope = excluded.length ? `${window} AND project not in (${excluded.map((k) => `"${k}"`).join(', ')})` : window;
-    const recent = (await deps.jira.searchPage(`${scope}${RECENT_ORDER}`, null, { maxResults: RECONCILE_RECENT_MAX })).ids.slice(0, RECONCILE_RECENT_MAX);
-    const byProject = new Map();
-    for (const issue of await deps.jira.bulkIssues(recent, ['project'])) {
-      const p = issue.fields.project;
-      if (!byProject.has(p.id)) byProject.set(p.id, { project: p, ids: [] });
-      byProject.get(p.id).ids.push(String(issue.id));
-    }
-    return { recent, byProject };
+    return `${excluded.length ? `${window} AND project not in (${excluded.map((k) => `"${k}"`).join(', ')})` : window}${RECENT_ORDER}`;
+  }
+
+  /** Issues the next slice may read: what is left of RECONCILE_RECENT_MAX for this run, or fewer when the points scope has less room. */
+  function recentSlice(read) {
+    const scope = deps.currentPoints?.();
+    const room = scope && Number.isFinite(scope.limit) ? scope.limit - scope.spent : Infinity;
+    return Math.min(RECONCILE_RECENT_MAX - read, Math.floor(room / INDEX_ISSUE_POINTS));
   }
 
   /**
-   * Hourly gap filler: starts, resumes or continues the fill of each shipped part, then re-reads the issues updated since its last finished
-   * run (at least RECENT_WINDOW_MIN, at most RECONCILE_RECENT_MAX issues); when the reconcile points run out it stops and the next hour
-   * re-reads the wider window.
+   * Re-reads the recently updated issues in slices that fit the points left, saving the query and page token after each slice in
+   * `idx:recent`, so a run the points stop is continued by the next one; a finished run moves the window start to its own start.
+   */
+  async function checkRecent(parts2, startedAt) {
+    const saved = (await deps.state.recentIndex.get()) ?? { at: null, run: null };
+    const run = saved.run ?? { jql: await windowQuery(saved.at), token: null, startedAt };
+    for (const part of parts2) await parts[part].prepare();
+    let read = 0;
+    for (;;) {
+      const size = recentSlice(read);
+      if (size < INDEX_SLICE_MIN) {
+        await deps.state.recentIndex.set({ at: saved.at, run });
+        return read < RECONCILE_RECENT_MAX ? { reindexed: read, stopped: true } : { reindexed: read };
+      }
+      const page = await deps.jira.searchPage(run.jql, run.token, { maxResults: size, fields: ['project'] });
+      const byProject = new Map();
+      for (const issue of page.issues.slice(0, size)) {
+        const p = issue.fields?.project;
+        if (!p) continue;
+        if (!byProject.has(p.id)) byProject.set(p.id, { project: p, ids: [] });
+        byProject.get(p.id).ids.push(String(issue.id));
+      }
+      for (const part of parts2) for (const { project, ids } of byProject.values()) await parts[part].index(ids, project);
+      read += page.ids.length;
+      if (!page.nextPageToken) {
+        await deps.state.recentIndex.set({ at: run.startedAt, run: null });
+        return { reindexed: read };
+      }
+      run.token = page.nextPageToken;
+      await deps.state.recentIndex.set({ at: saved.at, run });
+    }
+  }
+
+  /**
+   * Hourly gap filler: starts, resumes or continues the fill of each shipped part, then re-reads the recently updated issues in slices
+   * (`checkRecent`); a run the reconcile points stop is continued by the next one.
    */
   async function reconcileIndex() {
     try {
@@ -213,14 +258,8 @@ export function createIndexing(deps) {
         started.push(part);
       }
     }
-    const { recent, byProject } = await recentByProject();
-    for (const part of shipped) {
-      if (started.includes(part)) continue;
-      await parts[part].prepare();
-      for (const { project, ids } of byProject.values()) await parts[part].index(ids, project);
-    }
-    await deps.state.recentIndex.set({ at: startedAt });
-    return { started, reindexed: recent.length };
+    const recent = await checkRecent(shipped.filter((part) => !started.includes(part)), startedAt);
+    return { started, ...recent };
   }
 
   return { parts, indexEvent, reconcileIndex, shippedParts, shippedTables };
