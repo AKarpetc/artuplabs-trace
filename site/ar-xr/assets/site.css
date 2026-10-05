@@ -90,6 +90,9 @@
 /* Pricing */
 .lx-pricing-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; margin-bottom: 2rem; }
 .lx-pricing-head .ax-section-head { margin: 0; }
+.lx-allplans { gap: 0.9rem; margin-bottom: 1.5rem; }
+.lx-allplans h3 { font-size: 1.2rem; margin: 0; }
+.lx-allplans .lx-feat { grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); column-gap: 2rem; }
 .lx-plans { align-items: stretch; }
 .lx-plan { gap: 0.9rem; }
 .lx-plan h3 { font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
@@ -109,7 +112,7 @@
 .lx-now { background: var(--ax-ok-soft); color: var(--ax-ok); }
 .lx-soon { background: transparent; color: var(--ax-muted); border-color: var(--ax-border); }
 .lx-terms { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.4rem; font-size: 0.95rem; }
-.lx-terms li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.lx-terms li { display: block; }
 .lx-terms li::before { content: "•"; color: var(--ax-accent); font-weight: 700; margin-right: 0.15rem; }
 .lx-terms .lx-status { margin: 0 0 0 0.25rem; }
 .lx-note { margin: 1.25rem 0 0; color: var(--ax-muted); font-size: 0.92rem; }
