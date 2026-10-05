@@ -206,9 +206,9 @@ describe('reconcileTargets with skipped and heavy groups', () => {
     const stale = group('a', HOUR, 5 * HOUR);
     expect(reconcileTargets([stale, skipped], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50, skips: new Map([['s', NOW - 20 * 60000]]) })).toEqual([skipped, stale]);
   });
-  it('leaves a group used before the pass skipped it to the usual rule', () => {
+  it('takes a group used within the day that a pass skipped or failed, whenever it was used', () => {
     const skipped = group('s', 30 * 60000, 40 * 60000);
-    expect(reconcileTargets([skipped], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50, skips: new Map([['s', NOW - 20 * 60000]]) })).toEqual([]);
+    expect(reconcileTargets([skipped], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50, skips: new Map([['s', NOW - 20 * 60000]]) })).toEqual([skipped]);
   });
   it('drops heavy groups rewritten within the heavy period before it keeps at most max groups', () => {
     const heavy = group('h', HOUR, 3 * HOUR);

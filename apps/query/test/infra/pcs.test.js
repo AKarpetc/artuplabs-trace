@@ -88,4 +88,14 @@ describe('precomputation list cache', () => {
     await cache.list();
     expect([...kvs.data.keys()].some((k) => k.startsWith('q:pcs:add:'))).toBe(false);
   });
+  it('drops its own chunks when another reader wrote the meta last', async () => {
+    const { cache, kvs } = setup([pc(1)]);
+    const set = kvs.set;
+    kvs.set = async (key, value) => {
+      await set(key, value);
+      if (key === 'q:pcs:m') await set('q:pcs:m', { at: 999, n: 1, gen: 999 });
+    };
+    await cache.list();
+    expect([...kvs.data.keys()].filter((k) => k.startsWith('q:pcs:1000:'))).toEqual([]);
+  });
 });

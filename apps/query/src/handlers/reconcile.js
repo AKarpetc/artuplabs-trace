@@ -1,6 +1,7 @@
 import { groupPrecomputations, reconcileTargets, rewriteDue } from '../core/affected.js';
+import { LOG } from '../core/errors.js';
 import { admit, groupClass, hourKey, laneRoom, lightLimit } from '../core/points.js';
-import { ACTIVE_MS, HEAVY_RECONCILE_MS, HEAVY_STOPS_MAX, LEASE_MS, PENDING_STALE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, POINTS_OVERHEAD, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS } from '../core/limits.js';
+import { ACTIVE_MS, HEAVY_RECONCILE_MS, LEASE_MS, PENDING_STALE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, POINTS_OVERHEAD, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { groupWrite, handOff, isDeadline, isHeavy, knownCost, listPrecomputations, overLimit, pushQuietly, rewrite, writeGroups } from './groups.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
@@ -15,9 +16,8 @@ async function prunePoints(deps) {
 }
 
 /**
- * Hourly safety net: deletes past points ledger keys, restarts a journal no refresh is pending for, then within the reconcile points rewrites
- * used groups that missed an event, follow the clock, need repair or were skipped and used since (heavy ones via the lane), restarts the lane
- * and fills index gaps; it waits while the background is paused for Jira's rate limit, and a 429 pauses it.
+ * Hourly safety net: restarts the journal, rewrites due, skipped or failed groups within the reconcile points (heavy ones via the lane),
+ * restarts the lane and checks the index; it waits while the background is paused, and a 429 pauses it.
  */
 export async function onReconcile(deps) {
   await prunePoints(deps);
@@ -73,10 +73,8 @@ async function reconcileGroups(deps, startedAt, limit) {
   let queued = false;
   let limited = null;
   let stopped = false;
-  const handOver = async (group, points) => {
-    const waiting = await deps.state.heavy.get(group.key);
-    if ((waiting?.stops ?? 0) >= HEAVY_STOPS_MAX && startedAt - waiting.at < HEAVY_RECONCILE_MS) return;
-    if (await handOff(deps, group, points)) queued = true;
+  const handOver = async (group, points, extra) => {
+    if (await handOff(deps, group, points, extra)) queued = true;
   };
   const visit = async ({ group, heavy }) => {
     if (limited || stopped) return;
@@ -87,7 +85,7 @@ async function reconcileGroups(deps, startedAt, limit) {
         return;
       }
       if (heavy) {
-        await handOver(group);
+        await handOver(group, {}, { force: true });
         return;
       }
       const light = cap ? lightLimit(cap) : Infinity;
@@ -105,8 +103,12 @@ async function reconcileGroups(deps, startedAt, limit) {
         await handOver(group, { pts: error.spent, floor: true });
         return;
       }
-      if (!isDeadline(error)) throw error;
-      await handOver(group);
+      if (!isDeadline(error)) {
+        const status = error?.name === 'JiraError' ? error.status : null;
+        console.error(`reconcile of ${group.functionName} failed: ${error?.name} ${status ?? ''}`);
+        await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
+      }
+      await handOver(group, {}, { force: true });
     }
   };
   await withPass(deps, limit, async () => {

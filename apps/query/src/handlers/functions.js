@@ -227,6 +227,8 @@ async function listCreated(deps, functionName, payload, reply) {
   const record = { id: payload.precomputationId, functionName, arguments: payload.clause?.arguments ?? [], operator: payload.clause?.operator, hasValue: !reply.error, errorKind: reply.error ? errorKindOf(reply.error) : null };
   try {
     await deps.pcList.add(record);
+    const parsed = parseArgs(functionName, record.arguments);
+    if (!parsed.error) await deps.cache.unpost(groupKey(functionName, parsed.userArgs));
   } catch (error) {
     console.error(`precomputation list add failed: ${error?.name}`);
     try {

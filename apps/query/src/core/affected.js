@@ -109,10 +109,10 @@ export function rewriteDue(group, { now, staleMs }) {
 
 /**
  * Groups the reconcile rewrites, at most `max`: used within `usedMs` and due by `rewriteDue` (a heavy one, in `heavy`, only after `heavyMs`),
- * or used after a pass skipped them (`skips`: key → when), those first, then the oldest rewrites; groups that store the too-expensive error never.
+ * or marked by a pass that skipped or failed them (`skips`), those first, then the oldest rewrites; groups that store the too-expensive error never.
  */
 export function reconcileTargets(groups, { now, usedMs, staleMs, max, skips = new Map(), heavy = new Set(), heavyMs = staleMs }) {
-  const usedAfterSkip = (g) => skips.has(g.key) && g.items.some((pc) => pc.used && Date.parse(pc.used) > skips.get(g.key));
+  const usedAfterSkip = (g) => skips.has(g.key);
   return groups
     .filter((g) => !pricedOut(g))
     .filter((g) => g.items.some((pc) => pc.used && now - Date.parse(pc.used) <= usedMs))

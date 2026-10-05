@@ -29,7 +29,8 @@ export async function pushRefresh(deps, ts, delay) {
 const isUsed = (group) => group.items.some((pc) => pc.used);
 
 /** Whether the changes may make a group outside the used window stale: a query group on any touched issue, another on the kinds it wants. */
-const skipWanted = (group, summary) => (group.family === 'query' ? summary.all || summary.touched.length > 0 : familyWants(group.family, summary.kinds));
+const skipWanted = (group, summary) => summary.all
+  || (group.family === 'query' ? summary.touched.length > 0 || commentTimesWanted(group, summary.kinds) : familyWants(group.family, summary.kinds));
 
 function jobGroups(jobs, groups) {
   const known = new Set(groups.map((g) => g.key));
@@ -131,14 +132,14 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const markSkip = async (group) => {
     if (!(await deps.state.skip.get(group.key))) await deps.state.skip.set(group.key, startedAt);
   };
-  const handOver = async (group, points) => {
+  const handOver = async (group, points, extra) => {
     if (!usedWithin(group, startedAt, REFRESH_USED_MS)) {
       await markSkip(group);
       return;
     }
     counts.handed += 1;
     names.handed.push(group.functionName);
-    if (await handOff(deps, group, points)) queued = true;
+    if (await handOff(deps, group, points, extra)) queued = true;
   };
   const reconcile = summary.touched.slice(0, RECONCILE_MAX);
   try {
@@ -207,7 +208,8 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
           const status = error?.name === 'JiraError' ? error.status : null;
           console.error(`refresh of ${group.functionName} failed: ${error?.name} ${status ?? ''}`);
           await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
-          await handOver(group);
+          if (((await deps.state.skip.get(group.key)) ?? Infinity) > startedAt) await deps.state.skip.set(group.key, startedAt);
+          await handOver(group, {}, { retry: true, notBefore: startedAt + REFRESH_RETRY_DELAY_S * 1000 });
           done.push(group.key);
         } finally {
           await deps.state.lease.set(deps.now());

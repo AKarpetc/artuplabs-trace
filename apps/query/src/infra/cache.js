@@ -68,6 +68,13 @@ export function createValueCache({ kvs, hash, chunkHash = hash, costClass = (pts
 
   return {
     meta,
+    /** Takes the posted mark off a group's meta: a precomputation Jira creates may hold a value its other writes never saw. */
+    async unpost(key) {
+      const m = await meta(key);
+      if (!m?.posted) return;
+      const { posted, ...rest } = m;
+      await kvs.set(`${base(key)}:m`, rest);
+    },
     /** Whether a computed entry holds what the meta describes: the same value chunks, count, field, filter and tree levels. */
     matches(m, entry) {
       if (!m) return false;

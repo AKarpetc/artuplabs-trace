@@ -3,9 +3,9 @@ import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { ERR, LOG } from '../core/errors.js';
 import { groupPrecomputations, usedWithin } from '../core/affected.js';
 import { forOperator } from '../core/jql-build.js';
-import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_MIN_INTERVAL_MS, HEAVY_QUEUED_STALE_MS, HEAVY_WAIT_MAX_MS, REFRESH_USED_MS, PAGE_CACHE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
+import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_MIN_INTERVAL_MS, HEAVY_QUEUED_STALE_MS, HEAVY_WAIT_MAX_MS, REFRESH_RETRY_DELAY_S, REFRESH_USED_MS, PAGE_CACHE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
 import { computeGroup, costOf, fragmentFor, rejectedByJira } from './functions.js';
-import { admit, groupClass, groupLimit, hourKey, issuesWithin, laneRoom, lightLimit, retryAfter } from '../core/points.js';
+import { admit, groupClass, groupLimit, HOUR_MS, hourKey, issuesWithin, laneRoom, lightLimit, retryAfter } from '../core/points.js';
 import { keptPoints } from '../infra/state.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
@@ -96,9 +96,8 @@ export async function rewrite(deps, group, reconcile, { limit = Infinity, compar
 export const listPrecomputations = (deps) => (deps.pcList?.list ? deps.pcList.list() : deps.jira.precomputations());
 
 /**
- * Writes the updates of each group unless a computation that started later already wrote or confirmed that group (or, for `keepIfSame`, its
- * current posted meta holds the same value), then stores the cache entries of the groups it did not skip; a group found unchanged is
- * confirmed too, so an older computation finishing later cannot roll it back. Returns how many updates were written.
+ * Writes each group a later computation has not written (skipping one whose current posted meta holds the same value) and then its cache
+ * entry; returns how many updates were written.
  */
 export async function writeGroups(deps, startedAt, byGroup) {
   const out = [];
@@ -145,12 +144,12 @@ export function overLimit(group, cost, cap) {
  * an entry whose run already started is replaced, so the group runs again, keeping the points it spent (`pts`, `floor`) unless `points` names
  * new ones. True when it queued, and the caller then pushes one runner.
  */
-export async function handOff(deps, group, points = {}) {
+export async function handOff(deps, group, points = {}, extra = {}) {
   const waiting = await deps.state.heavy.get(group.key);
   if (waiting && !waiting.runningSince && deps.now() - waiting.at < HEAVY_QUEUED_STALE_MS) return false;
   const kept = points.pts === undefined ? keptPoints(waiting) : keptPoints(points);
   const history = { since: waiting?.since ?? waiting?.at ?? deps.now(), ...(waiting?.stops ? { stops: waiting.stops } : {}) };
-  await deps.state.heavy.put({ key: group.key, functionName: group.functionName, userArgs: group.userArgs, at: deps.now(), ...history, ...kept });
+  await deps.state.heavy.put({ key: group.key, functionName: group.functionName, userArgs: group.userArgs, at: deps.now(), ...history, ...kept, ...extra });
   return true;
 }
 
@@ -158,7 +157,7 @@ export async function handOff(deps, group, points = {}) {
  * Computes one group within the worker budget and `limit` Jira points and writes its precomputations (clearing a stored Computing error); a
  * group still without precomputations stays a background job; `group` is its precomputation group when the caller has the list (null: none).
  */
-export async function runGroupJob(deps, { functionName, userArgs }, { limit = Infinity, group: known } = {}) {
+export async function runGroupJob(deps, { functionName, userArgs }, { limit = Infinity, group: known, compare = true } = {}) {
   const startedAt = deps.now();
   const parsed = parseArgs(functionName, userArgs);
   if (parsed.error) return { error: parsed.error };
@@ -179,7 +178,7 @@ export async function runGroupJob(deps, { functionName, userArgs }, { limit = In
     await keepJob(deps, functionName, parsed.userArgs, result);
     return { computed: key, changed: 0 };
   }
-  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, groupWrite(group, result, deps.levels)]]) };
+  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, groupWrite(group, result, deps.levels, compare)]]) };
 }
 
 /**
@@ -250,18 +249,18 @@ async function settle(deps, running, unfinished) {
   const tries = (running.tries ?? 0) + 1;
   if (unfinished && tries < HEAVY_ATTEMPTS) {
     const { runningSince, ...job } = running;
-    await deps.state.heavy.put({ ...job, tries, at: deps.now() });
+    await deps.state.heavy.put({ ...job, tries, at: deps.now(), retry: true, notBefore: deps.now() + REFRESH_RETRY_DELAY_S * 1000 });
     return;
   }
   await deps.state.heavy.take(running.key);
 }
 
 /** Puts a run the rate limit or the points budget stopped back as it was (same place, same tries), counting the stop. */
-async function putBack(deps, running) {
+async function putBack(deps, running, points = {}) {
   const current = await deps.state.heavy.get(running.key);
   if (!current || current.runningSince !== running.runningSince) return;
   const { runningSince, ...job } = running;
-  await deps.state.heavy.put({ ...job, stops: (job.stops ?? 0) + 1 });
+  await deps.state.heavy.put({ ...job, stops: (job.stops ?? 0) + 1, ...points });
 }
 
 /** Writes an error into every precomputation of a group, as of `startedAt`. */
@@ -272,7 +271,7 @@ async function writeError(deps, group, startedAt, error) {
 function waitedError(deps, job, meta) {
   const cap = deps.siteCap;
   const points = knownCost(meta, job)?.points ?? (cap ? lightLimit(cap) : 0);
-  return ERR.waited(job.functionName, { hours: HEAVY_WAIT_MAX_MS / 3600000, points, perFunction: cap ? groupLimit(cap) : 0, perHour: cap ?? 0, issues: cap ? issuesWithin(job.functionName, lightLimit(cap)) : 0 });
+  return ERR.waited(job.functionName, { hours: HEAVY_WAIT_MAX_MS / HOUR_MS, points, perFunction: cap ? groupLimit(cap) : 0, perHour: cap ?? 0, issues: cap ? issuesWithin(job.functionName, lightLimit(cap)) : 0 });
 }
 
 /**
@@ -288,6 +287,7 @@ async function pickHeavy(deps, queued, groups) {
   for (const job of queued) {
     const group = groups.get(job.key) ?? null;
     if (group && !usedWithin(group, now, REFRESH_USED_MS)) {
+      if ((await deps.state.skip.get(job.key)) === null) await deps.state.skip.set(job.key, job.at);
       await deps.state.heavy.take(job.key);
       return { result: { computed: job.key, unused: true } };
     }
@@ -297,7 +297,11 @@ async function pickHeavy(deps, queued, groups) {
       await deps.state.heavy.take(job.key);
       return { result: { computed: job.key, waited: true } };
     }
-    const written = await deps.state.groupWrite.get(job.key);
+    if ((job.notBefore ?? 0) > now) {
+      waits.push(job.notBefore);
+      continue;
+    }
+    const written = job.retry ? null : await deps.state.groupWrite.get(job.key);
     if (written && now - written < HEAVY_MIN_INTERVAL_MS) {
       waits.push(written + HEAVY_MIN_INTERVAL_MS);
       continue;
@@ -313,9 +317,8 @@ async function pickHeavy(deps, queued, groups) {
 }
 
 /**
- * Heavy lane runner: one step per invocation under a lease (see `pickHeavy`), from one precomputation list; a run is limited to the group
- * limit and what the heavy reserve has left. A run that passes the group limit writes the error with its numbers; a stop by the reserve or a
- * 429 puts the group back as it was (not a try) and waits for the wake; a failure or a timeout counts a try.
+ * Heavy lane runner: one step of `pickHeavy` per invocation under a lease, within the group limit and the heavy reserve; a stop by the
+ * reserve or a 429 is not a try, a failure is (retried after a minute).
  */
 export async function runHeavy(deps) {
   const until = await brakedUntil(deps);
@@ -364,7 +367,7 @@ async function runPicked(deps, { job, group, room }) {
   await deps.state.heavy.put(running);
   let heavy;
   try {
-    heavy = await runGroupJob(deps, running, { limit: Math.min(most, room), group });
+    heavy = await runGroupJob(deps, running, { limit: Math.min(most, room), group, compare: !running.force });
   } catch (error) {
     if (error?.name === 'PointsError' && room >= most) {
       console.error(`${running.functionName} passed the group limit in the heavy lane`);
@@ -373,7 +376,7 @@ async function runPicked(deps, { job, group, room }) {
       return { heavy: { computed: running.key, tooExpensive: true } };
     }
     if (error?.name === 'PointsError') {
-      await putBack(deps, running);
+      await putBack(deps, running, { pts: Math.max(error.spent, running.pts ?? 0), floor: true });
       return { heavy: { computed: running.key, stopped: 'lane' }, wake: retryAfter(deps.now()) };
     }
     if (isRateLimit(error)) {
@@ -386,6 +389,6 @@ async function runPicked(deps, { job, group, room }) {
     throw error;
   }
   await settle(deps, running, Boolean(heavy.timedOut));
-  if (!heavy.timedOut) await deps.state.skip.clear(running.key);
+  if (!heavy.timedOut && ((await deps.state.skip.get(running.key)) ?? Infinity) <= running.runningSince) await deps.state.skip.clear(running.key);
   return { heavy };
 }

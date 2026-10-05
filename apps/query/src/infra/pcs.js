@@ -50,7 +50,9 @@ export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
     const count = Math.ceil(list.length / PCS_CHUNK);
     for (let i = 0; i < count; i += 1) await kvs.set(chunkKey(at, i), list.slice(i * PCS_CHUNK, (i + 1) * PCS_CHUNK));
     await kvs.set(META, { at, n: list.length, gen: at });
-    if (old && old.gen !== at) for (let i = 0; i < Math.ceil(old.n / PCS_CHUNK); i += 1) await kvs.delete(chunkKey(old.gen, i));
+    const won = (await kvs.get(META))?.gen === at;
+    const stale = won ? old : { gen: at, n: list.length };
+    if (stale && stale.gen !== (won ? at : null)) for (let i = 0; i < Math.ceil(stale.n / PCS_CHUNK); i += 1) await kvs.delete(chunkKey(stale.gen, i));
     const listed = new Set(list.map((pc) => pc.id));
     for (const row of await added()) if (listed.has(row.value.id) || at - row.value.at >= PCS_CACHE_MS) await kvs.delete(row.key);
     return list;

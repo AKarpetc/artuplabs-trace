@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BUDGET_AT, makeDeps, spend, withBudget } from './makeDeps.js';
-import { onRefresh } from '../../src/handlers/refresh.js';
+import { onRefresh, refreshOnce } from '../../src/handlers/refresh.js';
+import { handleFunction } from '../../src/handlers/functions.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
 import { ERR } from '../../src/core/errors.js';
 import { HEAVY_MIN_INTERVAL_MS, HEAVY_WAIT_MAX_MS } from '../../src/core/limits.js';
@@ -65,7 +66,7 @@ describe('heavy lane under the points budget', () => {
     await deps.points.add('heavy', 600);
     await deps.state.heavy.put(entry('a', BUDGET_AT - 2000, { tries: 1 }));
     expect((await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }))).heavy).toMatchObject({ computed: key('a'), stopped: 'lane' });
-    expect(await deps.state.heavy.get(key('a'))).toEqual(entry('a', BUDGET_AT - 2000, { tries: 1, stops: 1 }));
+    expect(await deps.state.heavy.get(key('a'))).toEqual(entry('a', BUDGET_AT - 2000, { tries: 1, stops: 1, pts: 1900, floor: true }));
     expect(deps.pushed).toEqual([[{ kind: 'wake' }, 300]]);
   });
   it('writes the error with its numbers and drops the group when it passes the group limit', async () => {
@@ -120,13 +121,93 @@ describe('reconcile and the heavy lane', () => {
     await onReconcile(deps);
     expect((await deps.state.heavy.get(key('a')))?.key).toEqual(key('a'));
   });
-  it('does not hand a heavy group the lane stopped twice again within a day', async () => {
-    const pcs = [{ ...pcOf('a'), value: 'parent in (1)', error: 'Computing, retry in a minute', used: new Date(999000).toISOString(), updated: new Date(990000).toISOString() }];
-    const deps = makeDeps({ pcs, compute: { childIssuesOf: spending([1]) } });
+});
+
+describe('heavy lane fixes', () => {
+  it('keeps what a run the heavy reserve stopped spent as a lower bound and leaves the group while the reserve cannot hold it', async () => {
+    const compute = spending([1900, 1]);
+    const deps = laneDeps({ queries: ['a'], compute });
+    await deps.points.add('heavy', 600);
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000));
+    await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }));
+    expect(await deps.state.heavy.get(key('a'))).toMatchObject({ pts: 1900, floor: true });
+    await deps.points.add('heavy', 1000);
+    await onRefresh(deps, { body: { kind: 'heavy' } });
+    expect(compute).toHaveBeenCalledTimes(1);
+  });
+  it('marks a group it drops for nobody using it, so the reconcile rewrites it once it is used again', async () => {
+    const longAgo = new Date(BUDGET_AT - 2 * 24 * 3600000).toISOString();
+    const deps = withBudget(makeDeps({ pcs: [{ ...pcOf('a'), used: longAgo }] }));
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000));
+    await onRefresh(deps, { body: { kind: 'heavy' } });
+    expect(await deps.state.skip.get(key('a'))).toEqual(BUDGET_AT - 2000);
+  });
+  it('runs a group a failure handed over within a minute, however recently it was written', async () => {
+    const deps = laneDeps({ queries: ['a'], compute: spending([10]) });
+    await deps.state.groupWrite.set(key('a'), BUDGET_AT - 5 * 60000);
+    await deps.state.heavy.put(entry('a', BUDGET_AT, { retry: true, notBefore: BUDGET_AT + 60000 }));
+    expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy).toEqual({ waiting: BUDGET_AT + 60000 });
+    deps.advance(60000);
+    expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy).toMatchObject({ computed: key('a') });
+  });
+  it('waits a minute before it runs a failed group again', async () => {
+    const deps = laneDeps({ queries: ['a'], compute: vi.fn(async () => { throw Object.assign(new Error('down'), { name: 'JiraError', status: 503 }); }) });
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000));
+    await expect(quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }))).rejects.toThrow('down');
+    expect(await deps.state.heavy.get(key('a'))).toMatchObject({ tries: 1, retry: true, notBefore: BUDGET_AT + 60000 });
+  });
+  it('rewrites without comparing with the meta a group the reconcile handed over', async () => {
+    const deps = laneDeps({ queries: ['a'], compute: spending([10]) });
+    await deps.cache.write(key('a'), { values: ['3'], watch: ['9'], field: 'parent', rootFilter: null, at: 1, source: 'job', lv: 1, posted: true });
+    await deps.jira.precomputations().then(() => null);
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000, { force: true }));
+    await onRefresh(deps, { body: { kind: 'heavy' } });
+    expect(deps.written.map((u) => u.id)).toEqual(['a']);
+  });
+  it('keeps the skip mark set after the run started', async () => {
+    let deps;
+    const compute = vi.fn(async () => { await deps.state.skip.set(key('a'), deps.now() + 1); return { ids: ['3'], field: 'parent', watch: ['9'] }; });
+    deps = laneDeps({ queries: ['a'], compute });
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000));
+    await onRefresh(deps, { body: { kind: 'heavy' } });
+    expect(await deps.state.skip.get(key('a'))).toEqual(BUDGET_AT + 1);
+  });
+});
+
+describe('reconcile and failing groups', () => {
+  it('logs a failing group, hands it to the lane and still restarts the lane and checks the index', async () => {
+    const old = new Date(1000000 - 2 * 3600000).toISOString();
+    const pcs = [{ id: 's', functionName: 'previousSprint', arguments: ['B'], value: 'sprint = 1', used: new Date(999000).toISOString(), updated: old }];
+    const indexReconcile = vi.fn(async () => 'checked');
+    const deps = makeDeps({ pcs, indexReconcile, compute: { previousSprint: async () => { throw Object.assign(new Error('no'), { name: 'JiraError', status: 403 }); } } });
+    const result = await quietly(() => onReconcile(deps));
+    expect([result.index, (await deps.state.errors())[0].message, (await deps.state.heavy.get('previousSprint["B"]'))?.key]).toEqual(['checked', 'Refresh failed: Jira answered 403', 'previousSprint["B"]']);
+  });
+  it('hands heavy groups over to be written without comparing with the meta', async () => {
+    const old = new Date(1000000 - 25 * 3600000).toISOString();
+    const pcs = [{ ...pcOf('a'), used: new Date(999000).toISOString(), updated: old }];
+    const deps = makeDeps({ pcs });
     await deps.cache.write(key('a'), { values: ['1'], watch: [], field: 'parent', rootFilter: null, at: 1, source: 'job', ms: 60000 });
-    const stopped = { ...entry('a', 1000000 - 40 * 60000), stops: 2 };
-    await deps.state.heavy.put(stopped);
     await onReconcile(deps);
-    expect(await deps.state.heavy.get(key('a'))).toEqual(stopped);
+    expect(await deps.state.heavy.get(key('a'))).toMatchObject({ force: true });
+  });
+});
+
+describe('a failure in a pass', () => {
+  it('marks the group for the reconcile and hands it to the lane for a retry after a minute', async () => {
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: new Date(999000).toISOString() }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => { throw Object.assign(new Error('down'), { name: 'JiraError', status: 503 }); } } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await quietly(() => refreshOnce(deps));
+    expect([await deps.state.skip.get('hasSubtasks[]'), await deps.state.heavy.get('hasSubtasks[]')]).toEqual([1000000, expect.objectContaining({ retry: true, notBefore: 1060000 })]);
+  });
+});
+
+describe('a function answer and the group meta', () => {
+  it('takes the posted mark off the meta of the group whose precomputation Jira creates', async () => {
+    const deps = makeDeps({ compute: { parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) } });
+    await deps.cache.write('parentsOf["q"]', { values: ['3'], watch: [], field: 'id', rootFilter: null, at: 1000000, source: 'job', lv: 1, posted: true });
+    await handleFunction(deps, 'parentsOf', { precomputationId: 'n1', clause: { field: 'issue', operator: 'not in', arguments: ['q'] } }, { environmentType: 'DEVELOPMENT' });
+    expect((await deps.cache.meta('parentsOf["q"]')).posted).toBeUndefined();
   });
 });

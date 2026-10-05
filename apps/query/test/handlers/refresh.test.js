@@ -673,7 +673,7 @@ describe('onRefresh heavy lane', () => {
     for (let i = 0; i < HEAVY_ATTEMPTS; i += 1) {
       await onRefresh(deps, { body: { kind: 'heavy' } });
       tries.push((await deps.state.heavy.oldest())?.tries ?? null);
-      deps.advance(1000);
+      deps.advance(REFRESH_RETRY_DELAY_S * 1000);
     }
     error.mockRestore();
     expect(tries).toEqual([...Array.from({ length: HEAVY_ATTEMPTS - 1 }, (_, i) => i + 1), null]);

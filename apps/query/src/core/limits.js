@@ -164,8 +164,6 @@ export const PASS_INTERVAL_MAX_S = 300;
 export const HEAVY_MIN_INTERVAL_MS = 60 * 60 * 1000;
 /** Longest wait of a group in the heavy lane; then its precomputations get the waited error with its numbers. */
 export const HEAVY_WAIT_MAX_MS = 6 * 60 * 60 * 1000;
-/** Stops by the rate limit or the points budget after which the reconcile hands a heavy group needing repair to the lane once a day. */
-export const HEAVY_STOPS_MAX = 2;
 /** How long the status categories of the site stay cached (`cfg:status`). */
 export const STATUS_TTL_MS = 60 * 60 * 1000;
 /** Shortest window, in minutes, of recently updated issues the hourly index check re-reads. */
