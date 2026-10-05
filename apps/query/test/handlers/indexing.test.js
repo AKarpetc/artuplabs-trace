@@ -423,12 +423,13 @@ describe('new statuses', () => {
 
 describe('index check with the real points scope', () => {
   const T0 = Date.parse('2026-10-05T07:10:00Z');
-  function realDeps(total, { projects = 1, tokenLife = 30 * 60 * 1000 } = {}) {
+  function realDeps(total, { projects = 1, tokenLife = 30 * 60 * 1000, fieldCap = Infinity, boards = 0, sprintsPer = 0 } = {}) {
     const deps = makeDeps();
     let now = T0;
     deps.now = () => now;
     deps.advance = (ms) => { now += ms; };
     deps.currentPoints = currentPoints;
+    deps.withPoints = withPoints;
     deps.migrate = vi.fn(async () => {});
     deps.backfillQueue = { push: vi.fn(async () => {}) };
     deps.repo.addSprintEvents = vi.fn();
@@ -449,8 +450,9 @@ describe('index check with the real points scope', () => {
         if (/id > [^\d]/.test(body.jql)) return bad('The value is not valid.');
         const after = Number(/id > (\d+)/.exec(body.jql)?.[1] ?? 0);
         const from = body.nextPageToken ? Number(body.nextPageToken) : issues.findIndex((x) => Number(x.id) > after);
-        const page = from < 0 ? [] : issues.slice(from, from + body.maxResults);
-        const next = from + body.maxResults;
+        const step = Math.min(body.maxResults, body.fields.includes('project') ? fieldCap : Infinity);
+        const page = from < 0 ? [] : issues.slice(from, from + step);
+        const next = from + step;
         if (next < issues.length) tokens.set(String(next), now);
         return ok({ issues: page, ...(from >= 0 && next < issues.length ? { nextPageToken: String(next) } : {}) });
       }
@@ -461,8 +463,16 @@ describe('index check with the real points scope', () => {
       if (path.includes('issue/bulkfetch')) return ok({ issues: body.issueIdsOrKeys.map((id) => ({ id, fields: { comment: { comments: [], total: 0 }, attachment: [] } })) });
       if (path.includes('/status')) return ok([]);
       if (path.includes('/field')) return ok([]);
+      const sprintsOf = /\/board\/(\d+)\/sprint/.exec(path);
+      if (sprintsOf) return ok({ values: Array.from({ length: sprintsPer }, (_, i) => ({ id: Number(sprintsOf[1]) * 100 + i, name: 's', state: 'closed' })), isLast: true });
+      if (path.includes('/agile/1.0/board')) {
+        const startAt = Number(/startAt=(\d+)/.exec(path)?.[1] ?? 0);
+        const all = Array.from({ length: boards }, (_, i) => ({ id: i + 1, type: 'scrum' }));
+        return ok({ values: all.slice(startAt, startAt + 50), isLast: startAt + 50 >= all.length });
+      }
       return ok({ values: [], isLast: true });
     });
+    deps.repo.upsertSprints = vi.fn();
     return deps;
   }
   const built = async (deps) => {
@@ -507,5 +517,33 @@ describe('index check with the real points scope', () => {
     const first = await run(deps, indexing, 800);
     error.mockRestore();
     expect([first.failed, (await deps.state.recentIndex.get()).run]).toEqual([true, null]);
+  });
+  it('reads the whole window when Jira returns pages shorter than asked', async () => {
+    const deps = realDeps(500, { fieldCap: 100 });
+    await built(deps);
+    await hours(deps, 800);
+    expect([(await deps.state.recentIndex.get()).run, new Set(deps.read).size]).toEqual([null, 500]);
+  });
+  it('still reads issue slices while preparing many boards a part at a time', async () => {
+    const deps = realDeps(300, { boards: 100, sprintsPer: 10 });
+    await built(deps);
+    const indexing = createIndexing(deps);
+    for (let hour = 0; hour < 3; hour += 1) {
+      await run(deps, indexing, 200);
+      deps.advance(60 * 60 * 1000);
+    }
+    expect([deps.read.length > 0, (await deps.state.prepared.get()).sprint.next > 0]).toEqual([true, true]);
+    for (let hour = 0; hour < 24 && !((await deps.state.prepared.get()).sprint.at > 0); hour += 1) {
+      await run(deps, indexing, 200);
+      deps.advance(60 * 60 * 1000);
+    }
+    expect((await deps.state.prepared.get()).sprint.at).toBeGreaterThan(0);
+  });
+  it('grows a halved slice back after slices that went through', async () => {
+    const deps = realDeps(300);
+    await built(deps);
+    await deps.state.recentIndex.set({ at: null, run: { since: T0 - 7200000, startedAt: T0, after: null, cap: 10 } });
+    await run(deps, createIndexing(deps), 900);
+    expect(deps.searched.slice(0, 3).map((b) => b.maxResults)).toEqual([10, 20, 40]);
   });
 });

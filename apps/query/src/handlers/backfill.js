@@ -101,7 +101,8 @@ export function sliceSize(deps) {
 
 /**
  * Reads and indexes the next slice of a project (the issues after the last one indexed, by id, as many as the slice size) and moves the
- * cursor past it; a project Jira no longer finds (400) is left; rows of a project excluded meanwhile are deleted and the project is left.
+ * cursor past it; a project Jira no longer finds (400) is logged and kept for a later fill; rows of a project excluded meanwhile are deleted
+ * and the project is left; a project ends only when Jira names no next page.
  */
 async function fillSlice(deps, part, p, project, size) {
   const c = p.cursor;
@@ -111,7 +112,9 @@ async function fillSlice(deps, part, p, project, size) {
     page = await deps.jira.searchPage(`project = "${project.key}"${after} ORDER BY id ASC`, null, { maxResults: size });
   } catch (error) {
     if (error?.name !== 'JiraError' || error.status !== 400) throw error;
-    console.error(`backfill search failed: ${error.status}`);
+    console.error(LOG.indexProjectMissing());
+    await deps.state.recordError({ at: deps.now(), functionName: null, message: LOG.indexProjectMissing() });
+    await deps.state.waiting.add(part, [project]);
     skipProject(c);
     return;
   }
@@ -126,7 +129,7 @@ async function fillSlice(deps, part, p, project, size) {
     p.done += slice.length;
     c.after = slice[slice.length - 1];
   }
-  if (slice.length < size || !page.nextPageToken) skipProject(c);
+  if (!slice.length || !page.nextPageToken) skipProject(c);
 }
 
 async function finish(deps, part, p) {

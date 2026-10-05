@@ -80,6 +80,7 @@ export const LOG = {
   tooExpensive: () => 'Too expensive for the Jira rate limit',
   allowanceUsed: () => 'Hourly Jira allowance used',
   waited: () => 'Waited too long for the Jira rate limit',
+  indexProjectMissing: () => 'Index fill skipped a project Jira did not find',
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

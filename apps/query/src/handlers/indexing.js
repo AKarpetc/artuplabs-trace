@@ -2,7 +2,7 @@ import { SHIPPED_GROUPS } from '../core/catalog.js';
 import { sprintWindow } from '../core/boards.js';
 import { extOf } from '../core/comment-clauses.js';
 import {
-  BACKFILL_STALE_MS, COMMENT_PAGE, INDEX_ISSUE_POINTS, INDEX_PREPARE_TTL_MS, INDEX_SLICE_MIN, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_REREAD_MS, STATUS_TTL_MS,
+  BACKFILL_STALE_MS, COMMENT_PAGE, INDEX_ISSUE_POINTS, INDEX_PREPARE_TTL_MS, INDEX_SLICE_MIN, POINTS_OVERHEAD, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_REREAD_MS, STATUS_TTL_MS,
 } from '../core/limits.js';
 import { indexPartOf } from '../core/readiness.js';
 import { sprintEvents, statusEvents, toMs } from '../core/sprint-history.js';
@@ -98,10 +98,12 @@ export function createIndexing(deps) {
     },
     sprint: {
       tables: ['sprint_event', 'status_event'],
-      async prepare() {
-        for (const board of await deps.jira.allBoards()) {
-          if (board.type !== 'scrum') continue;
-          await deps.repo.upsertSprints((await deps.jira.sprints(board.id)).map((s) => sprintRow(s, board.id)));
+      async prepare({ from = 0, boards: known = null, onProgress = async () => {} } = {}) {
+        const boards = known ?? (await deps.jira.allBoards()).filter((b) => b.type === 'scrum').map((b) => b.id);
+        if (!known) await onProgress(from, boards);
+        for (let i = from; i < boards.length; i += 1) {
+          await deps.repo.upsertSprints((await deps.jira.sprints(boards[i])).map((s) => sprintRow(s, boards[i])));
+          await onProgress(i + 1, boards);
         }
       },
       async index(ids, project) {
@@ -206,13 +208,32 @@ export function createIndexing(deps) {
     return Math.min(RECONCILE_RECENT_MAX - read, cap ?? Infinity, Math.floor(room / INDEX_ISSUE_POINTS));
   }
 
-  async function prepareParts(list) {
+  async function prepareStep(list) {
     const prepared = (await deps.state.prepared.get()) ?? {};
     for (const part of list) {
-      if (deps.now() - (prepared[part] ?? 0) < INDEX_PREPARE_TTL_MS) continue;
-      await parts[part].prepare();
-      prepared[part] = deps.now();
+      const p = prepared[part] ?? { at: 0, next: 0, boards: null };
+      if (deps.now() - p.at < INDEX_PREPARE_TTL_MS) continue;
+      await parts[part].prepare({
+        from: p.next,
+        boards: p.boards ?? null,
+        onProgress: async (next, boards) => {
+          prepared[part] = { at: p.at, next, boards };
+          await deps.state.prepared.set(prepared);
+        },
+      });
+      prepared[part] = { at: deps.now(), next: 0, boards: null };
       await deps.state.prepared.set(prepared);
+    }
+  }
+
+  /** Prepares the parts (boards and sprints) once a day, resuming board by board, leaving one smallest issue slice of the points scope. */
+  async function prepareParts(list) {
+    const scope = deps.currentPoints?.();
+    const room = scope && Number.isFinite(scope.limit) ? scope.limit - scope.spent : Infinity;
+    try {
+      await (room === Infinity || !deps.withPoints ? prepareStep(list) : deps.withPoints(Math.max(0, room - INDEX_SLICE_MIN * INDEX_ISSUE_POINTS - POINTS_OVERHEAD), () => prepareStep(list), { scope: 'prepare' }));
+    } catch (error) {
+      if (error?.name !== 'PointsError') throw error;
     }
   }
 
@@ -229,8 +250,8 @@ export function createIndexing(deps) {
 
   /**
    * Re-reads the recently updated issues in slices by id that fit the points left, saving the run (window start, last id read, slice cap) in
-   * `idx:recent` after each slice, so a stopped run goes on with the next one; a slice the points stop halves the cap; a query Jira
-   * rejects starts the window over; a finished run moves the next window start to its own start.
+   * `idx:recent` after each slice, so a stopped run goes on with the next one; a slice the points stop halves the cap, and each slice that
+   * goes through doubles it back; a query Jira rejects starts the window over; the run ends when Jira names no next page.
    */
   async function checkRecent(list, startedAt) {
     const saved = (await deps.state.recentIndex.get()) ?? { at: null, run: null };
@@ -262,11 +283,12 @@ export function createIndexing(deps) {
         return { reindexed: read, stopped: true };
       }
       read += issues.length;
-      if (issues.length < size) {
+      if (!issues.length || !page.nextPageToken) {
         await deps.state.recentIndex.set({ at: run.startedAt, run: null });
         return { reindexed: read };
       }
       run.after = String(issues[issues.length - 1].id);
+      if (run.cap) run.cap = run.cap * 2 >= RECONCILE_RECENT_MAX ? null : run.cap * 2;
       await keep(run);
     }
   }
