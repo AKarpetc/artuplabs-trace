@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { KVS_PAGE, POINTS_FLUSH, POINTS_KEY_MIN, POINTS_READ_MS } from '../core/limits.js';
-import { HOUR_MS, hourKey } from '../core/points.js';
+import { HOUR_MS, hourKey, totalOf } from '../core/points.js';
 
 const PREFIX = 'q:pts:';
 
@@ -12,7 +12,6 @@ export function newProcessPoints(proc = randomBytes(8).toString('hex')) {
 const PROCESS = newProcessPoints();
 
 const addTo = (map, lane, n) => ({ ...map, [lane]: (map[lane] ?? 0) + n });
-const totalOf = (byLane) => Object.values(byLane).reduce((sum, n) => sum + n, 0);
 
 /**
  * Ledger of the Jira points this process spends, per hour and lane: the process keeps a running total and overwrites its own key

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createFieldCompute, createFieldList } from '../../src/compute/fields.js';
 import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createState } from '../../src/infra/state.js';
@@ -140,8 +140,8 @@ describe('field list', () => {
     const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
     return { calls, list: createFieldList({ jira, state, now: () => now }), advance: (ms) => { now += ms; } };
   };
-  it('keeps only the id, name and custom type of each field', async () => {
-    expect(await setup().list()).toEqual([{ id: 'customfield_1', name: 'Sprint', custom: 'sprint' }, { id: 'duedate', name: 'Due date', custom: null }]);
+  it('keeps only the id and name of each field', async () => {
+    expect(await setup().list()).toEqual([{ id: 'customfield_1', name: 'Sprint' }, { id: 'duedate', name: 'Due date' }]);
   });
   it('asks Jira once within the cache time', async () => {
     const { calls, list, advance } = setup();
@@ -156,5 +156,20 @@ describe('field list', () => {
     advance(FIELDS_TTL_MS);
     await list();
     expect(calls).toEqual(['fields', 'fields']);
+  });
+  it('answers the list it read when the cache write fails', async () => {
+    const state = { fields: { get: async () => null, set: async () => { throw new Error('too big'); } } };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const list = createFieldList({ jira: { fields: async () => [{ id: 'a', name: 'A' }] }, state, now: () => 1 });
+    expect(await list()).toEqual([{ id: 'a', name: 'A' }]);
+    expect(error.mock.calls).toEqual([['field list cache write failed: Error']]);
+    error.mockRestore();
+  });
+  it('does not cache a list larger than a KVS value may be', async () => {
+    const sets = [];
+    const state = { fields: { get: async () => null, set: async (v) => { sets.push(v); } } };
+    const many = Array.from({ length: 20000 }, (_, i) => ({ id: `customfield_${i}`, name: `Field number ${i}` }));
+    await createFieldList({ jira: { fields: async () => many }, state, now: () => 1 })();
+    expect(sets).toEqual([]);
   });
 });

@@ -4,7 +4,7 @@ import { LOG } from '../core/errors.js';
 import { groupPrecomputations, usedWithin } from '../core/affected.js';
 import { forOperator } from '../core/jql-build.js';
 import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, REFRESH_USED_MS, PAGE_CACHE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
-import { computeGroup, costOf, fragmentFor } from './functions.js';
+import { computeGroup, costOf, fragmentFor, pastLimit, rejectedByJira } from './functions.js';
 import { admit, groupLimit, hourKey, laneRoom } from '../core/points.js';
 import { keptPoints } from '../infra/state.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
@@ -133,8 +133,10 @@ export async function runGroupJob(deps, { functionName, userArgs }, { limit = In
 
 /**
  * Queue job of a deferred function call, spent from the function lane: dropped while the background waits for Jira's rate limit and when no
- * function call asked for the group within PAGE_CACHE_MS (the next call asks again), left until the lane can hold it; a stop by the points
- * budget keeps what it spent as a lower bound, and a 429 pauses the background instead of failing, so the queue does not retry it.
+ * function call asked for the group within PAGE_CACHE_MS (the next call asks again), and when the lane cannot hold it now or it is dearer than
+ * the group limit (nothing queues it again: the next function call or journal pass picks it up); a subquery Jira rejects ends with its error;
+ * a stop by the points budget keeps what it spent as a lower bound (the group limit, when that stopped it), and a 429 pauses the background
+ * instead of failing, so the queue does not retry it.
  */
 export async function runCompute(deps, body) {
   const until = await brakedUntil(deps);
@@ -143,15 +145,20 @@ export async function runCompute(deps, body) {
   const key = parsed.error ? null : groupKey(body.functionName, parsed.userArgs);
   const job = key ? await deps.state.job(key) : null;
   if (key && !(job && deps.now() - job.at < PAGE_CACHE_MS)) return { skipped: key };
-  const budget = key ? await jobBudget(deps, body.functionName, parsed.args, key) : { limit: Infinity };
-  if (budget.waitUntil) return { computed: key, waitUntil: budget.waitUntil };
-  const release = budget.cost ? deps.points.reserve('fn', budget.cost) : () => {};
+  let budget = { limit: Infinity };
   try {
+    if (key) budget = await deps.withDeadline(deps.now() + WORKER_BUDGET_MS, () => jobBudget(deps, body.functionName, parsed.args, key, job));
+    if (budget.waitUntil) return { computed: key, waitUntil: budget.waitUntil };
+    if (budget.tooExpensive) return { computed: key, tooExpensive: true };
     return await runGroupJob(deps, body, { limit: budget.limit });
   } catch (error) {
+    const rejected = rejectedByJira(body.functionName, error);
+    if (rejected) return { computed: key, error: rejected.error };
+    if (isDeadline(error)) return { computed: key, timedOut: true };
     if (error?.name === 'PointsError') {
       console.error(`${body.functionName} stopped by the Jira points budget`);
-      await deps.state.addJob({ ...job, pts: error.spent, floor: true });
+      const pts = error.limit >= groupLimit(deps.siteCap) ? Math.max(error.spent, error.limit) : error.spent;
+      await deps.state.addJob({ ...job, pts, floor: true });
       return { computed: key, stopped: error.scope };
     }
     if (!isRateLimit(error)) throw error;
@@ -159,19 +166,22 @@ export async function runCompute(deps, body) {
     await brake(deps, error.retryAt);
     return { computed: key, braked: true };
   } finally {
-    release();
+    budget.release?.();
   }
 }
 
-/** Points a deferred computation may spend from the function lane: its cost by `costOf`, within the group limit and what the lane has left; `waitUntil` when the lane cannot hold it now. */
-async function jobBudget(deps, functionName, args, key) {
+/**
+ * Points a deferred computation may spend from the function lane: its cost by `costOf`, within the group limit and what the lane has left,
+ * reserved until `release`; `waitUntil` when the lane cannot hold it now, `tooExpensive` when it passes the group limit.
+ */
+async function jobBudget(deps, functionName, args, key, job) {
   if (!deps.points) return { limit: Infinity };
   const at = deps.now();
-  const cost = await costOf(deps, functionName, args, key, await deps.cache.meta(key));
-  const { byLane } = await deps.points.siteSpent(hourKey(at));
+  const [cost, { byLane }] = await Promise.all([costOf(deps, functionName, args, key, await deps.cache.meta(key), job), deps.points.siteSpent(hourKey(at))]);
+  if (pastLimit(cost, groupLimit(deps.siteCap))) return { tooExpensive: true };
   const step = admit('fn', cost.points, byLane, at, deps.siteCap);
   if (!step.ok) return { waitUntil: step.waitUntil };
-  return { limit: Math.min(groupLimit(deps.siteCap), laneRoom('fn', byLane, at, deps.siteCap)), cost: cost.points };
+  return { limit: Math.min(groupLimit(deps.siteCap), laneRoom('fn', byLane, at, deps.siteCap)), release: deps.points.reserve('fn', cost.points) };
 }
 
 /** Whether no heavy lane runner holds the lease. */

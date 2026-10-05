@@ -1,20 +1,28 @@
 import { ERR, FAIL, LOG } from '../core/errors.js';
 import { evaluate, fieldValue, parseExpression } from '../core/expression.js';
 import { sortIds } from '../core/ids.js';
-import { FIELD_EVAL_CHUNK, FIELDS_TTL_MS } from '../core/limits.js';
+import { FIELD_EVAL_CHUNK, FIELDS_CACHE_MAX_BYTES, FIELDS_TTL_MS } from '../core/limits.js';
 
 const PSEUDO_NAME = { firstcommented: 'firstCommented', lastcommented: 'lastCommented' };
 const pseudoOf = (name) => PSEUDO_NAME[String(name).toLowerCase()] ?? null;
 const lower = (v) => String(v ?? '').toLowerCase();
 const named = (functionName, failure) => ({ error: ERR.withFunction(functionName, failure.error), log: failure.log });
 
-/** Jira's field list as id, name and custom type, kept in `cfg:fields` for FIELDS_TTL_MS so a function call rarely asks Jira for it. */
+/**
+ * Jira's field list as id and name, kept in `cfg:fields` for FIELDS_TTL_MS so a function call rarely asks Jira for it; a list larger than
+ * FIELDS_CACHE_MAX_BYTES is not kept, and a failed write is logged without values while the list read is still answered.
+ */
 export function createFieldList({ jira, state, now }) {
   return async () => {
     const cached = await state.fields.get();
     if (cached && now() - cached.at < FIELDS_TTL_MS) return cached.list;
-    const list = ((await jira.fields()) ?? []).map((f) => ({ id: f.id, name: f.name, custom: f.schema?.custom ?? null }));
-    await state.fields.set({ at: now(), list });
+    const list = ((await jira.fields()) ?? []).map((f) => ({ id: f.id, name: f.name }));
+    if (Buffer.byteLength(JSON.stringify(list)) > FIELDS_CACHE_MAX_BYTES) return list;
+    try {
+      await state.fields.set({ at: now(), list });
+    } catch (error) {
+      console.error(`field list cache write failed: ${error?.name}`);
+    }
     return list;
   };
 }

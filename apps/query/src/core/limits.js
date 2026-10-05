@@ -146,3 +146,7 @@ export const GROUP_POINTS_SHARE = 0.2;
 export const NEAR_FN_POINTS = 300;
 /** How long the list of Jira fields stays cached. */
 export const FIELDS_TTL_MS = 60 * 60 * 1000;
+/** Points one computation may pass its limit by: a scope admits a request by 1 point, so one parallel bulkfetch round can return more. */
+export const POINTS_OVERRUN = BULK_CONCURRENCY * (BULK_BATCH + 1);
+/** Largest field list kept in `cfg:fields`, below the Forge KVS value limit (240 KiB). */
+export const FIELDS_CACHE_MAX_BYTES = 200 * 1024;

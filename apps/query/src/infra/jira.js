@@ -122,7 +122,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     if (ledger) await ledger.add(scope?.lane ?? DEFAULT_LANE, points);
   }
 
-  async function call(method, path, body) {
+  async function call(method, path, body, { tries = attempts } = {}) {
     const endpoint = endpointOf(path);
     for (let attempt = 1; ; attempt += 1) {
       const deadline = deadlines.getStore();
@@ -137,7 +137,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
       count(`${method} ${endpoint}`, res, facts, at, rate);
       if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rate}`);
       const wait = facts.retryAt === null ? RETRY_BASE_MS * 2 ** attempt : facts.retryAt - at;
-      const retry = (res.status === 429 || res.status >= 500) && attempt < attempts && (res.status !== 429 || wait <= retryMaxMs);
+      const retry = (res.status === 429 || res.status >= 500) && attempt < tries && (res.status !== 429 || wait <= retryMaxMs);
       if (retry) {
         await charge(1);
         await sleep(Math.min(wait, retryMaxMs));
@@ -300,7 +300,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
       for (const batch of chunks(updates, PRECOMPUTATION_BATCH)) await call('POST', '/rest/api/3/jql/function/computation?skipNotFoundPrecomputations=true', { values: batch });
     },
     userIds: async (query) => ((await call('GET', `/rest/api/3/user/search?query=${enc(query)}&maxResults=${USER_SEARCH_MAX}`)) ?? []).map((u) => u.accountId),
-    approximateCount: async (jql) => (await call('POST', '/rest/api/3/search/approximate-count', { jql }))?.count ?? 0,
+    approximateCount: async (jql, { attempts: tries } = {}) => (await call('POST', '/rest/api/3/search/approximate-count', { jql }, tries ? { tries } : {}))?.count ?? 0,
   };
 }
 

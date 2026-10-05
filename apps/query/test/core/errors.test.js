@@ -52,6 +52,9 @@ describe('Jira points errors', () => {
     expect(ERR.tooExpensive('expression', { n: null, points: 2500, limit: 1800 }))
       .toEqual("expression: the result needs about 2,500 Jira API points; on this site ArtUp Query may spend at most 1,800 on one function (Jira's rate limit for apps). Narrow the subquery.");
   });
+  it('gives no advice to narrow a subquery to a function without one', () => {
+    expect(ERR.tooExpensive('hasLinks', { n: null, points: null, limit: 1800 })).toEqual("hasLinks: the result needs more than 1,800 Jira API points; on this site ArtUp Query may spend at most 1,800 on one function (Jira's rate limit for apps).");
+  });
   it('names the UTC time to retry after the hourly allowance', () => {
     expect(ERR.allowanceUsed(Date.parse('2026-10-05T14:00:00Z'))).toEqual("ArtUp Query has used this site's Jira API allowance for this hour; retry after 14:00 UTC.");
   });

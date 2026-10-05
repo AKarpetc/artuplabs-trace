@@ -43,6 +43,9 @@ export const FUNCTIONS = [
 /** Functions by name. */
 export const FUNCTION_BY_NAME = new Map(FUNCTIONS.map((f) => [f.name, f]));
 
+/** Whether a function takes a JQL subquery. */
+export const takesSubquery = (functionName) => FUNCTION_BY_NAME.get(functionName)?.args.some((a) => a.type === 'jql') ?? false;
+
 /** Groups whose code is built and declared in the manifest. */
 export const SHIPPED_GROUPS = ['query', 'site', 'board', 'sprint', 'comment', 'attachment', 'fields'];
 

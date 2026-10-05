@@ -1,6 +1,7 @@
 import {
   BORROW_CAP_SHARE, BORROW_MINUTE, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, GROUP_POINTS_SHARE, LANE_SHARES, POINTS_OVERHEAD, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT,
 } from './limits.js';
+import { quote } from './jql-build.js';
 
 /** One hour in ms: Jira's rate-limit windows reset at the start of each UTC hour. */
 export const HOUR_MS = 60 * 60 * 1000;
@@ -74,6 +75,7 @@ const SUBQUERY_READERS = new Set(['subtasksOf', 'parentsOf', 'issuesInEpics', 'l
 /** The JQL whose approximate count is the `n` of a function's estimate, or null when its cost does not follow a query Jira can count. */
 export function countQueryOf(functionName, args) {
   if (SUBQUERY_READERS.has(functionName)) return args.subquery;
+  if ((functionName === 'hasLinks' || functionName === 'hasLinkType') && args.linkType) return `issueLinkType = ${quote(args.linkType)}`;
   if (functionName === 'hasSubtasks') return 'issuetype in subTaskIssueTypes()';
   return null;
 }
@@ -84,19 +86,25 @@ export function groupLimit(cap) {
 }
 
 const spentOn = (spentByLane, lane) => spentByLane[lane] ?? 0;
-const totalSpent = (spentByLane) => Object.values(spentByLane).reduce((sum, n) => sum + n, 0);
+/** The sum of the points of every lane. */
+export const totalOf = (byLane) => Object.values(byLane).reduce((sum, n) => sum + n, 0);
 const minuteOf = (at) => new Date(at).getUTCMinutes();
+
+const reserveOf = (lane, cap) => Math.floor((LANE_SHARES[lane] ?? 0) * cap);
 
 /**
  * Points a lane may still spend this hour as of `at` (the start of its step): what is left of its own reserve, and from half past also what
- * the hour has left, other lanes than function answers only up to BORROW_CAP_SHARE of the cap.
+ * the hour has left, other lanes than function answers only up to BORROW_CAP_SHARE of the cap; never more than the cap leaves, and for other
+ * lanes than function answers never what the function reserve has left.
  */
 export function laneRoom(lane, spentByLane, at, cap) {
-  const own = Math.floor((LANE_SHARES[lane] ?? 0) * cap) - spentOn(spentByLane, lane);
-  if (minuteOf(at) < BORROW_MINUTE) return Math.max(0, own);
-  const total = totalSpent(spentByLane);
-  const borrow = Math.min(cap - total, lane === DEFAULT_LANE ? Infinity : Math.floor(BORROW_CAP_SHARE * cap) - total);
-  return Math.max(0, own, borrow);
+  const own = reserveOf(lane, cap) - spentOn(spentByLane, lane);
+  const total = totalOf(spentByLane);
+  const fnLeft = lane === DEFAULT_LANE ? 0 : Math.max(0, reserveOf(DEFAULT_LANE, cap) - spentOn(spentByLane, DEFAULT_LANE));
+  const ceiling = cap - total - (minuteOf(at) < BORROW_MINUTE ? 0 : fnLeft);
+  if (minuteOf(at) < BORROW_MINUTE) return Math.max(0, Math.min(own, ceiling));
+  const borrow = lane === DEFAULT_LANE ? cap - total : Math.floor(BORROW_CAP_SHARE * cap) - total;
+  return Math.max(0, Math.min(Math.max(own, borrow), ceiling));
 }
 
 /** When a lane refused at `at` may try again: half past the hour before it, else the next hour. */
@@ -104,7 +112,7 @@ export function retryAfter(at) {
   return minuteOf(at) < BORROW_MINUTE ? nextHour(at) - HOUR_MS + BORROW_MINUTE * 60 * 1000 : nextHour(at);
 }
 
-/** Whether a step of a lane that should cost `cost` may start at `at`: `{ ok: true }`, or `{ waitUntil }` (half past, or the next hour). */
+/** Whether a step of a lane that should cost `cost` may start at `at`: `{ ok: true }`, or `{ waitUntil }`, the instant to try again (half past, or the next hour). */
 export function admit(lane, cost, spentByLane, at, cap) {
   if (cost <= laneRoom(lane, spentByLane, at, cap)) return { ok: true };
   return { waitUntil: retryAfter(at) };

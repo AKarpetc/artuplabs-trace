@@ -1,15 +1,14 @@
-import { FUNCTION_BY_NAME } from './catalog.js';
+import { takesSubquery } from './catalog.js';
 import { EXPRESSION_SNIPPET } from './limits.js';
 
 const fmt = (n) => Number(n).toLocaleString('en-US');
 const RATE_NOTE = "Jira's rate limit for apps";
-const takesSubquery = (functionName) => FUNCTION_BY_NAME.get(functionName)?.args.some((a) => a.type === 'jql') ?? false;
 const utcTime = (at) => new Date(at).toISOString().slice(11, 16);
 
 function tooExpensive(functionName, { n, points, limit, issues, floor = false }) {
   const cap = `on this site ArtUp Query may spend at most ${fmt(limit)} on one function (${RATE_NOTE}).`;
   const need = points === null || points === undefined ? `needs more than ${fmt(limit)} Jira API points` : `needs ${floor ? 'at least' : 'about'} ${fmt(points)} Jira API points`;
-  if (n === null || n === undefined) return `${functionName}: the result ${need}; ${cap} Narrow the subquery.`;
+  if (n === null || n === undefined) return `${functionName}: the result ${need}; ${cap}${takesSubquery(functionName) ? ' Narrow the subquery.' : ''}`;
   if (!takesSubquery(functionName)) return `${functionName}: the site has about ${fmt(n)} matching issues and ${need}; ${cap}`;
   return `${functionName}: the subquery has about ${fmt(n)} issues and ${need}; ${cap} Narrow the subquery to about ${fmt(issues)} issues.`;
 }

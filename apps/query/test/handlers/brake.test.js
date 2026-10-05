@@ -308,4 +308,17 @@ describe('compute job under the points budget', () => {
     error.mockRestore();
     expect(await deps.state.job(key)).toMatchObject({ pts: 1500, floor: true });
   });
+  it('ends with the parser error, without throwing, for an invalid subquery', async () => {
+    const deps = withBudget(makeDeps({ compute: { parentsOf: parentsOf([]) }, invalid: { q: 'bad jql' } }));
+    await deps.state.addJob({ key, functionName: 'parentsOf', userArgs: ['q'], at: BUDGET_AT });
+    expect(await onRefresh(deps, { body: job })).toEqual({ computed: key, error: 'parentsOf: bad jql' });
+  });
+  it('keeps the group limit as the lower bound when the group limit stops it', async () => {
+    const deps = withBudget(makeDeps({ compute: { parentsOf: parentsOf([1500, 1]) } }), { at: Date.parse('2026-10-05T07:40:00Z'), cap: 7500 });
+    await deps.state.addJob({ key, functionName: 'parentsOf', userArgs: ['q'], at: Date.parse('2026-10-05T07:40:00Z') });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await onRefresh(deps, { body: job })).toEqual({ computed: key, stopped: 'group' });
+    error.mockRestore();
+    expect(await deps.state.job(key)).toMatchObject({ pts: 1500, floor: true });
+  });
 });

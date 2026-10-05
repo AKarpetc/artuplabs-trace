@@ -8,7 +8,7 @@ import { createFieldCompute } from '../../src/compute/fields.js';
 import { createHierarchyCompute } from '../../src/compute/hierarchy.js';
 import { createJira } from '../../src/infra/jira.js';
 import { fakeJira } from '../fakeJira.js';
-import { PAGE_CACHE_MS, QUEUE_DELAY_MAX_S } from '../../src/core/limits.js';
+import { NEAR_FN_POINTS, PAGE_CACHE_MS, POINTS_OVERRUN, QUEUE_DELAY_MAX_S } from '../../src/core/limits.js';
 
 const fnDeps = (compute, extra = {}) => makeDeps({ compute, ...extra });
 const ids = (n) => Array.from({ length: n }, (_, i) => String(i + 1));
@@ -369,8 +369,8 @@ describe('function call under the Jira points budget', () => {
   });
   it('takes the points the group last cost instead of counting its subquery', async () => {
     const deps = withBudget(fnDeps(expression([])));
-    await deps.cache.write('expression["project = A","a > b"]', { values: ['1'], watch: [], field: 'id', rootFilter: null, at: BUDGET_AT - PAGE_CACHE_MS, source: 'function', pts: 2500 });
-    expect((await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).error).toContain('needs about 2,500 Jira API points');
+    await deps.cache.write('expression["project = A","a > b"]', { values: ['1'], watch: [], field: 'id', rootFilter: null, at: BUDGET_AT - PAGE_CACHE_MS, source: 'function', pts: 3000 });
+    expect((await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).error).toContain('needs about 3,000 Jira API points');
     expect(deps.counted).toEqual([]);
   });
   it('takes the points a stopped computation spent as a lower bound', async () => {
@@ -437,5 +437,39 @@ describe('function call under the Jira points budget', () => {
     const deps = withBudget(fnDeps(createBoardCompute({ jira: fakeJira({ boards: [{ id: 1, name: 'B' }], sprints: { 1: [] } }) })));
     await handleFunction(deps, 'previousSprint', payload('B'), DEV);
     expect(deps.counted).toEqual([]);
+  });
+  it('shows the parser error of Jira for an invalid subquery instead of counting it', async () => {
+    const deps = withBudget(fnDeps(expression([])), { count: 10 });
+    deps.jira.validateJql = async () => { throw Object.assign(new Error('bad jql'), { name: 'JiraError', status: 400 }); };
+    expect(await handleFunction(deps, 'expression', payload('x = 1', 'a > b'), DEV)).toEqual({ error: 'expression: bad jql', storeErrorAsPrecomputation: false });
+    expect([deps.counted, deps.pushed]).toEqual([[], []]);
+  });
+  it('computes a group whose last run passed the limit by no more than one request round', async () => {
+    const deps = withBudget(fnDeps(expression([30])), { at: Date.parse('2026-10-05T07:40:00Z') });
+    await deps.cache.write('expression["project = A","a > b"]', { values: ['1'], watch: [], field: 'id', rootFilter: null, at: 1, source: 'function', pts: 2001 + POINTS_OVERRUN });
+    expect((await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).error).toContain('needs about');
+    await deps.cache.write('expression["project = A","a > b"]', { values: ['1'], watch: [], field: 'id', rootFilter: null, at: 2, source: 'function', pts: 2000 + POINTS_OVERRUN, startedAt: 1 });
+    expect(await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).toEqual({ jql: 'id in (3)' });
+  });
+  it('stops a computation at the near-limit allowance while Jira warns that the pool is nearly used', async () => {
+    const deps = withBudget(fnDeps(expression([NEAR_FN_POINTS, 1])));
+    await brakeNear(deps);
+    expect(await quiet(() => handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV))).toEqual({
+      error: "ArtUp Query has used this site's Jira API allowance for this hour; retry after 08:00 UTC.",
+      storeErrorAsPrecomputation: false,
+    });
+    expect(await deps.cache.meta('expression["project = A","a > b"]')).toBe(null);
+  });
+  it('defers the call when preparing the budget takes the whole function time', async () => {
+    const deps = withBudget(fnDeps(expression([])), { count: 10 });
+    deps.jira.approximateCount = never;
+    deps.sleep = async () => {};
+    expect((await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).error).toEqual('Computing, retry in a minute');
+    expect(deps.pushed).toHaveLength(1);
+  });
+  it('computes with an unknown size when the count fails', async () => {
+    const deps = withBudget(fnDeps(expression([30])));
+    deps.jira.approximateCount = async () => { throw Object.assign(new Error('busy'), { name: 'JiraError', status: 503 }); };
+    expect(await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).toEqual({ jql: 'id in (3)' });
   });
 });

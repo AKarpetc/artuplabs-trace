@@ -415,3 +415,15 @@ describe('near-limit warning', () => {
     expect(seen).toEqual([0, NEAR_LIMIT_MS]);
   });
 });
+
+describe('approximate count', () => {
+  it('tries once when asked to, without retrying a 5xx', async () => {
+    const { request, calls } = scripted([reply(503, {}), reply(200, { count: 5 })]);
+    await expect(createJira(request, { sleep: async () => {} }).approximateCount('q', { attempts: 1 })).rejects.toMatchObject({ status: 503 });
+    expect(calls).toHaveLength(1);
+  });
+  it('retries by default', async () => {
+    const { request } = scripted([reply(503, {}), reply(200, { count: 5 })]);
+    expect(await createJira(request, { sleep: async () => {} }).approximateCount('q')).toEqual(5);
+  });
+});

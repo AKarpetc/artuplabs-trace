@@ -173,11 +173,11 @@ describe('admit', () => {
     expect(admit('fn', 900, { fn: 1500, refresh: 7500 }, at(40), C)).toEqual({ ok: true });
   });
   it('lends other lanes only up to nine tenths of the hour', () => {
-    expect([admit('heavy', 600, { heavy: 2500, refresh: 6000 }, at(45), C), admit('heavy', 500, { heavy: 2500, refresh: 6000 }, at(45), C)])
+    expect([admit('heavy', 600, { heavy: 2500, refresh: 4500, fn: 1500 }, at(45), C), admit('heavy', 500, { heavy: 2500, refresh: 4500, fn: 1500 }, at(45), C)])
       .toEqual([{ waitUntil: NEXT }, { ok: true }]);
   });
-  it('still admits a step within its own reserve late in a spent hour', () => {
-    expect(admit('reconcile', 500, { reconcile: 0, refresh: 9500 }, at(50), C)).toEqual({ ok: true });
+  it('refuses a step even within its own reserve once the hour is spent', () => {
+    expect(admit('reconcile', 500, { reconcile: 0, refresh: 9500 }, at(50), C)).toEqual({ waitUntil: NEXT });
   });
 });
 
@@ -227,5 +227,28 @@ describe('estimate without a count', () => {
   });
   it('is the overhead for a function that reads none', () => {
     expect(estimate('commented', null)).toEqual({ points: POINTS_OVERHEAD, floor: false });
+  });
+});
+
+describe('laneRoom keeps the hour within the cap', () => {
+  const C = 9000;
+  const late = Date.parse('2026-10-05T07:31:00Z');
+  const cases = [{ fn: 9000 }, { refresh: 8100 }, { fn: 1350, refresh: 2700 }, { heavy: 100 }, {}, { 'index-event': 900, backfill: 4000, fn: 200 }];
+  it('leaves no lane room past the cap after half past', () => {
+    const over = cases.flatMap((spent) => LANES.filter((lane) => Object.values(spent).reduce((a, b) => a + b, 0) + laneRoom(lane, spent, late, C) > C).map((lane) => [lane, spent]));
+    expect(over).toEqual([]);
+  });
+  it('keeps what the function reserve has left out of the room of other lanes after half past', () => {
+    expect(laneRoom('refresh', { refresh: 2700, heavy: 2250, reconcile: 900, backfill: 900, 'index-event': 900 }, late, C)).toEqual(0);
+  });
+  it('still lends the function lane what the hour has left', () => {
+    expect(laneRoom('fn', { refresh: 6000 }, late, C)).toEqual(3000);
+  });
+});
+
+describe('countQueryOf for link functions', () => {
+  it('counts the issues with the link type', () => {
+    expect([countQueryOf('hasLinks', { linkType: 'blocks' }), countQueryOf('hasLinkType', { linkType: 'Duplicate' }), countQueryOf('hasLinks', {})])
+      .toEqual(['issueLinkType = "blocks"', 'issueLinkType = "Duplicate"', null]);
   });
 });

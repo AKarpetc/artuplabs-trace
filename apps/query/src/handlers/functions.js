@@ -1,8 +1,8 @@
 import { decideLicence } from '../access.js';
 import { groupKey, parseArgs } from '../core/args.js';
-import { FUNCTION_BY_NAME, FUNCTIONS } from '../core/catalog.js';
+import { FUNCTIONS, takesSubquery } from '../core/catalog.js';
 import { ERR, LOG } from '../core/errors.js';
-import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, NEAR_FN_POINTS, PAGE_CACHE_MS, VALUE_LIMIT } from '../core/limits.js';
+import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, NEAR_FN_POINTS, PAGE_CACHE_MS, POINTS_OVERRUN, VALUE_LIMIT } from '../core/limits.js';
 import { admit, countQueryOf, estimate, groupLimit, hourKey, issuesWithin, laneRoom, retryAfter } from '../core/points.js';
 import { forOperator } from '../core/jql-build.js';
 import { buildFragment, valuesOf } from '../core/tree.js';
@@ -18,15 +18,20 @@ export function licenceInput(payload, context, app) {
   };
 }
 
-const takesSubquery = (functionName) => FUNCTION_BY_NAME.get(functionName)?.args.some((a) => a.type === 'jql') ?? false;
+/** The function's error for a Jira 400 (Jira's text with the function name, a generic log line), or null for any other failure. */
+export function rejectedByJira(functionName, error) {
+  if (error?.name !== 'JiraError' || error.status !== 400) return null;
+  return { error: ERR.withFunction(functionName, error.message), log: ERR.subqueryRejected() };
+}
 
 async function runSource(deps, functionName, args, reconcile) {
   try {
     if (takesSubquery(functionName)) await deps.jira.validateJql(args.subquery);
     return await deps.compute[functionName](args, { reconcile });
   } catch (error) {
-    if (error?.name !== 'JiraError' || error.status !== 400) throw error;
-    return { error: ERR.withFunction(functionName, error.message), log: ERR.subqueryRejected() };
+    const rejected = rejectedByJira(functionName, error);
+    if (!rejected) throw error;
+    return rejected;
   }
 }
 
@@ -93,15 +98,33 @@ const tooExpensive = (functionName, cost, limit) => ({
   store: true,
 });
 const allowanceUsed = (retryAt) => ({ error: ERR.allowanceUsed(retryAt), log: LOG.allowanceUsed() });
-const pastLimit = (cost, limit) => cost.points > limit || (cost.floor && cost.points >= limit);
+/** Whether a cost passes the group limit: a finished computation only by more than one request round could, an estimate or a lower bound at once. */
+export function pastLimit(cost, limit) {
+  if (cost.measured) return cost.points > limit + POINTS_OVERRUN;
+  return cost.points > limit || (cost.floor && cost.points >= limit);
+}
 
-/** What computing a group should cost: the points it last cost or spent before it stopped, else the estimate over Jira's approximate count of its query. */
-export async function costOf(deps, functionName, args, key, meta) {
-  if (meta?.pts !== undefined && meta?.pts !== null) return { n: null, points: meta.pts, floor: false };
-  const job = await deps.state.job(key);
-  if (job?.pts !== undefined) return { n: null, points: job.pts, floor: Boolean(job.floor) };
+async function countOf(deps, query) {
+  try {
+    return await deps.jira.approximateCount(query, { attempts: 1 });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What computing a group should cost: the points its last finished computation cost, or what a stopped one spent (a lower bound), else the
+ * estimate over Jira's approximate count of its query (one try; unknown when it fails). A subquery is checked by Jira's strict parser before
+ * it is counted, so an invalid one throws its Jira 400. `job` is the group's stored job when the caller has read it.
+ */
+export async function costOf(deps, functionName, args, key, meta, job) {
+  if (meta?.pts !== undefined && meta?.pts !== null) return { n: null, points: meta.pts, floor: false, measured: true };
+  const stored = job === undefined ? await deps.state.job(key) : job;
+  if (stored?.pts !== undefined) return { n: null, points: stored.pts, floor: Boolean(stored.floor) };
   const query = countQueryOf(functionName, args);
-  const n = query && estimate(functionName, 1).points > estimate(functionName, 0).points ? await deps.jira.approximateCount(query) : null;
+  if (!query || estimate(functionName, 1).points === estimate(functionName, 0).points) return { n: null, ...estimate(functionName, null) };
+  if (takesSubquery(functionName)) await deps.jira.validateJql(args.subquery);
+  const n = await countOf(deps, query);
   return { n, ...estimate(functionName, n) };
 }
 
@@ -114,22 +137,43 @@ async function budgetFor(deps, functionName, args, key, meta) {
   if (!deps.points) return { limit: Infinity };
   const cap = deps.siteCap;
   const most = groupLimit(cap);
-  const cost = await costOf(deps, functionName, args, key, meta);
-  if (pastLimit(cost, most)) return { refused: tooExpensive(functionName, cost, most) };
-  const pause = await brakeOf(deps);
-  if (pause?.reason === 'near' && cost.points > NEAR_FN_POINTS) return { refused: allowanceUsed(pause.until) };
   const at = deps.now();
-  const { byLane } = await deps.points.siteSpent(hourKey(at));
+  let found;
+  try {
+    found = await Promise.all([costOf(deps, functionName, args, key, meta), brakeOf(deps), deps.points.siteSpent(hourKey(at))]);
+  } catch (error) {
+    const rejected = rejectedByJira(functionName, error);
+    if (rejected) return { refused: rejected };
+    throw error;
+  }
+  const [cost, pause, { byLane }] = found;
+  if (pastLimit(cost, most)) return { refused: tooExpensive(functionName, cost, most) };
+  const near = pause?.reason === 'near';
+  if (near && cost.points > NEAR_FN_POINTS) return { refused: allowanceUsed(pause.until) };
   const step = admit('fn', cost.points, byLane, at, cap);
   if (!step.ok) return { refused: allowanceUsed(step.waitUntil) };
   const room = laneRoom('fn', byLane, at, cap);
-  return { limit: Math.min(most, room), most, at, cost };
+  const limits = [['group', most], ['lane', room], ...(near ? [['near', NEAR_FN_POINTS]] : [])];
+  const [cause, limit] = limits.reduce((a, b) => (b[1] < a[1] ? b : a));
+  return { limit, cause, most, at, pause, release: deps.points.reserve('fn', cost.points) };
 }
 
 function failedOnPoints(functionName, budget, failure) {
   if (failure?.name !== 'PointsError') return null;
-  if (budget.limit >= budget.most) return tooExpensive(functionName, { n: null, points: null }, budget.most);
-  return allowanceUsed(retryAfter(budget.at));
+  if (budget.cause === 'group') return tooExpensive(functionName, { n: null, points: null }, budget.most);
+  return allowanceUsed(budget.cause === 'near' ? budget.pause.until : retryAfter(budget.at));
+}
+
+async function budgetedCompute(deps, functionName, args, userArgs, key, meta) {
+  const budget = await budgetFor(deps, functionName, args, key, meta);
+  if (budget.refused) return { refused: budget.refused };
+  try {
+    return { result: await computeGroup(deps, functionName, args, userArgs, { limit: budget.limit }) };
+  } catch (failed) {
+    return { failed, refused: failedOnPoints(functionName, budget, failed) };
+  } finally {
+    budget.release?.();
+  }
 }
 
 /**
@@ -167,19 +211,15 @@ async function evaluateClause(deps, functionName, payload, context) {
   const operator = payload?.clause?.operator;
   const cached = await fromCache(deps, functionName, userArgs, page);
   if (cached.fragment) return answer(cached.fragment, operator);
-  const budget = await budgetFor(deps, functionName, args, groupKey(functionName, userArgs), cached.meta);
-  if (budget.refused) return budget.refused;
-  const release = budget.cost ? deps.points.reserve('fn', budget.cost.points) : () => {};
-  const work = computeGroup(deps, functionName, args, userArgs, { limit: budget.limit }).catch((failed) => ({ failed })).finally(release);
+  const work = budgetedCompute(deps, functionName, args, userArgs, groupKey(functionName, userArgs), cached.meta).catch((failed) => ({ failed }));
   const outcome = await Promise.race([work, deps.sleep(FUNCTION_BUDGET_MS).then(() => TIMEOUT)]);
   if (outcome === TIMEOUT) return defer(deps, functionName, userArgs);
-  const refused = failedOnPoints(functionName, budget, outcome.failed);
-  if (refused) return refused;
+  if (outcome.refused) return outcome.refused;
   if (outcome.failed) {
     console.error(`${functionName} failed: ${outcome.failed?.name} ${outcome.failed?.status ?? ''}`);
     return defer(deps, functionName, userArgs, outcome.failed);
   }
-  return answer(fragmentFor(functionName, userArgs, page, outcome, deps.levels), operator);
+  return answer(fragmentFor(functionName, userArgs, page, outcome.result, deps.levels), operator);
 }
 
 /** A fragment in the form of the clause's operator. */
