@@ -1,3 +1,4 @@
+import { DEFAULT_LANE } from '../core/points.js';
 import { withPoints } from './jira.js';
 
 const FAMILIES = [
@@ -83,7 +84,7 @@ const requestText = (counts) => Object.entries(counts).sort(([a], [b]) => a.loca
  * default), writes the points ledger when it ends, and logs the KVS traffic of each invocation as counts, never values: writes per record
  * family when `log.writes`, reads when `log.reads`, Jira requests per endpoint when `log.requests`; `name` may be a function of the handler arguments.
  */
-export function withKvsLog(name, meter, log, handler, lane = 'fn') {
+export function withKvsLog(name, meter, log, handler, lane = DEFAULT_LANE) {
   return async (...args) => {
     meter.take();
     meter.takeRequests?.();

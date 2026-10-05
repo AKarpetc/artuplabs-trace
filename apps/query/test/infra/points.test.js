@@ -9,7 +9,7 @@ const HOUR = '2026100507';
 function setup({ pageSize = 100, kvs = createFakeKvs({ pageSize }) } = {}) {
   let now = AT;
   const clock = () => now;
-  const make = (tag) => createLedger({ kvs, beginsWith, clock, process: newProcessPoints(tag) });
+  const make = (tag) => createLedger({ kvs, beginsWith, clock, own: newProcessPoints(tag) });
   return { kvs, make, advance: (ms) => { now += ms; } };
 }
 
@@ -36,7 +36,7 @@ describe('points ledger', () => {
     await ledger.add('refresh', POINTS_FLUSH - 1);
     expect(kvs.data.size).toEqual(0);
     await ledger.add('refresh', 1);
-    await ledger.add('refresh', 5);
+    await ledger.flush(Infinity);
     expect(Object.fromEntries(kvs.data)).toEqual({ [`q:pts:${HOUR}:refresh:a`]: POINTS_FLUSH });
   });
   it('overwrites its key with the running total instead of adding to it', async () => {
@@ -152,5 +152,29 @@ describe('points ledger', () => {
   it('tags each process with its own hex tag', () => {
     expect(newProcessPoints().proc).toMatch(/^[0-9a-f]{16}$/);
     expect(newProcessPoints().proc).not.toEqual(newProcessPoints().proc);
+  });
+  it('adds points without waiting for the write the flush size starts, which the end-of-invocation flush waits for', async () => {
+    const kvs = createFakeKvs();
+    const set = kvs.set;
+    let open;
+    kvs.set = (key, value) => new Promise((resolve) => { open = () => resolve(set(key, value)); });
+    const { make } = setup({ kvs });
+    const a = make('a');
+    await a.add('fn', POINTS_FLUSH);
+    expect(kvs.data.size).toEqual(0);
+    const flushed = a.flush();
+    await new Promise((resolve) => { setTimeout(resolve, 0); });
+    open();
+    await flushed;
+    expect(kvs.data.get(`q:pts:${HOUR}:fn:a`)).toEqual(POINTS_FLUSH);
+  });
+  it('keeps writing after a write step failed unexpectedly', async () => {
+    const kvs = createFakeKvs();
+    const own = newProcessPoints('a');
+    own.chain = Promise.reject(new Error('broken'));
+    const a = createLedger({ kvs, beginsWith, clock: () => AT, own });
+    await a.add('fn', 30);
+    await a.flush();
+    expect(kvs.data.get(`q:pts:${HOUR}:fn:a`)).toEqual(30);
   });
 });

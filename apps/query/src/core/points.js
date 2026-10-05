@@ -1,6 +1,10 @@
 import { CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, POINTS_OVERHEAD, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from './limits.js';
 
-const HOUR_MS = 60 * 60 * 1000;
+/** One hour in ms: Jira's rate-limit windows reset at the start of each UTC hour. */
+export const HOUR_MS = 60 * 60 * 1000;
+
+/** The lane of Jira requests sent outside any points scope, and of a handler that names none. */
+export const DEFAULT_LANE = 'fn';
 
 const lengthOf = (value) => (Array.isArray(value) ? value.length : 0);
 const holdsComments = (issues) => Array.isArray(issues) && issues.some((i) => i?.fields && 'comment' in i.fields);
@@ -38,7 +42,7 @@ const PER_ISSUE = new Map([
   ['expression', () => 2],
   ['dateCompare', () => 2],
   ['hasSubtasks', () => 2],
-  ['addedAfterSprintStart', () => 2],
+  ['addedAfterSprintStart', () => 1],
   ['incompleteInSprint', () => 2],
   ['completeInSprint', () => 2],
   ...[...FAN_OUT].map((name) => [name, () => 2]),

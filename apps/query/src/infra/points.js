@@ -1,9 +1,8 @@
 import { randomBytes } from 'node:crypto';
-import { JOB_PAGE, POINTS_FLUSH, POINTS_KEY_MIN, POINTS_READ_MS } from '../core/limits.js';
-import { hourKey } from '../core/points.js';
+import { KVS_PAGE, POINTS_FLUSH, POINTS_KEY_MIN, POINTS_READ_MS } from '../core/limits.js';
+import { HOUR_MS, hourKey } from '../core/points.js';
 
 const PREFIX = 'q:pts:';
-const HOUR_MS = 60 * 60 * 1000;
 
 /** Points state of one process: its tag, its totals per hour and lane with the part already written, its reserved steps and its read memo. */
 export function newProcessPoints(proc = randomBytes(8).toString('hex')) {
@@ -21,19 +20,19 @@ const totalOf = (byLane) => Object.values(byLane).reduce((sum, n) => sum + n, 0)
  * POINTS_KEY_MIN; the site's spending is the sum of every process's keys of the hour, read at most once per POINTS_READ_MS, plus the own
  * running totals and reserved steps. A failed write is logged and retried with the next write.
  */
-export function createLedger({ kvs, beginsWith, clock = Date.now, process = PROCESS }) {
-  const keyOf = (hour, lane) => `${PREFIX}${hour}:${lane}:${process.proc}`;
+export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS }) {
+  const keyOf = (hour, lane) => `${PREFIX}${hour}:${lane}:${own.proc}`;
 
   function laneOf(hour, lane) {
-    if (!process.hours.has(hour)) process.hours.set(hour, new Map());
-    const lanes = process.hours.get(hour);
+    if (!own.hours.has(hour)) own.hours.set(hour, new Map());
+    const lanes = own.hours.get(hour);
     if (!lanes.has(lane)) lanes.set(lane, { total: 0, written: 0 });
     return lanes.get(lane);
   }
 
   async function writeDue(min) {
     const keep = hourKey(clock() - HOUR_MS);
-    for (const [hour, lanes] of process.hours) {
+    for (const [hour, lanes] of own.hours) {
       for (const [lane, entry] of lanes) {
         const total = entry.total;
         if (total - entry.written < min) continue;
@@ -44,13 +43,15 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, process = PROC
           console.error(`points ledger write failed: ${error?.name}`);
         }
       }
-      if (hour < keep) process.hours.delete(hour);
+      if (hour < keep) own.hours.delete(hour);
     }
   }
 
   function flush(min = POINTS_KEY_MIN) {
-    process.chain = process.chain.then(() => writeDue(min));
-    return process.chain;
+    own.chain = own.chain.catch(() => null).then(() => writeDue(min)).catch((error) => {
+      console.error(`points ledger write failed: ${error?.name}`);
+    });
+    return own.chain;
   }
 
   async function rows(prefix) {
@@ -58,7 +59,7 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, process = PROC
     let cursor;
     let pages = 0;
     do {
-      const query = kvs.query().where('key', beginsWith(prefix)).limit(JOB_PAGE);
+      const query = kvs.query().where('key', beginsWith(prefix)).limit(KVS_PAGE);
       const page = await (cursor ? query.cursor(cursor) : query).getMany();
       pages += 1;
       out.push(...(page.results ?? []));
@@ -68,42 +69,42 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, process = PROC
   }
 
   async function others(hour) {
-    const memo = process.memo;
+    const memo = own.memo;
     if (memo && memo.hour === hour && clock() - memo.at < POINTS_READ_MS) return memo.byLane;
     const at = clock();
     const read = await rows(`${PREFIX}${hour}:`);
     if (read.pages > 1) console.log(`points ledger pages ${read.pages}`);
     const byLane = read.rows.reduce((acc, { key, value }) => {
       const [, , , lane, proc] = key.split(':');
-      return proc === process.proc ? acc : addTo(acc, lane, Number(value) || 0);
+      return proc === own.proc ? acc : addTo(acc, lane, Number(value) || 0);
     }, {});
-    process.memo = { hour, at, byLane };
+    own.memo = { hour, at, byLane };
     return byLane;
   }
 
   return {
-    /** Adds the points of one answer to a lane of the current hour; writes the lane's key once its unwritten part reaches POINTS_FLUSH. */
+    /** Adds the points of one answer to a lane of the current hour; once the lane's unwritten part reaches POINTS_FLUSH it queues the write of its key without waiting for it (`flush` waits for every queued write). */
     async add(lane, points) {
       const entry = laneOf(hourKey(clock()), lane);
       entry.total += points;
-      if (entry.total - entry.written >= POINTS_FLUSH) await flush(POINTS_FLUSH);
+      if (entry.total - entry.written >= POINTS_FLUSH) flush(POINTS_FLUSH);
     },
     flush,
     /** Points spent on the site in `hour` by lane and in total, with the steps this process has reserved. */
     async siteSpent(hour) {
       let byLane = { ...(await others(hour)) };
-      for (const [lane, entry] of process.hours.get(hour) ?? []) byLane = addTo(byLane, lane, entry.total);
-      for (const [lane, n] of Object.entries(process.reserved)) if (n) byLane = addTo(byLane, lane, n);
+      for (const [lane, entry] of own.hours.get(hour) ?? []) byLane = addTo(byLane, lane, entry.total);
+      for (const [lane, n] of Object.entries(own.reserved)) if (n) byLane = addTo(byLane, lane, n);
       return { byLane, total: totalOf(byLane) };
     },
     /** Counts the estimate of a step as spent on a lane until the returned release is called. */
     reserve(lane, points) {
-      process.reserved = addTo(process.reserved, lane, points);
+      own.reserved = addTo(own.reserved, lane, points);
       let released = false;
       return () => {
         if (released) return;
         released = true;
-        process.reserved = addTo(process.reserved, lane, -points);
+        own.reserved = addTo(own.reserved, lane, -points);
       };
     },
     /** Deletes the ledger keys of the hours before the past one; returns how many. */

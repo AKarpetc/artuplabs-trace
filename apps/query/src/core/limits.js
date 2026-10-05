@@ -132,3 +132,5 @@ export const POINTS_FLUSH = 200;
 export const POINTS_KEY_MIN = 20;
 /** How long a process reuses the points it read from the other processes' ledger keys. */
 export const POINTS_READ_MS = 15 * 1000;
+/** Keys one KVS query page returns at most. */
+export const KVS_PAGE = 100;

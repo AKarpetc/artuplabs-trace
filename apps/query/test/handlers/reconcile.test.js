@@ -6,6 +6,13 @@ import { HEAVY_RECONCILE_MS, REFRESH_GROUP_BUDGET_MS } from '../../src/core/limi
 const old = new Date(1000000 - 2 * 3600000).toISOString();
 
 describe('onReconcile', () => {
+  it('goes on when deleting the past points ledger keys fails, and logs it without values', async () => {
+    const deps = makeDeps({ points: { prune: async () => { throw new Error('kvs down'); } } });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await onReconcile(deps)).toEqual({ groups: 0, changed: 0, index: null });
+    expect(error.mock.calls).toEqual([['points ledger prune failed: Error']]);
+    error.mockRestore();
+  });
   it('deletes the points ledger keys of past hours, also while the background waits for the rate limit', async () => {
     const prune = vi.fn(async () => 0);
     const deps = makeDeps({ points: { prune } });

@@ -80,8 +80,11 @@ describe('estimate', () => {
     expect(['hasLinks', 'hasLinkType'].map((f) => estimate(f, 300))).toEqual(Array(2).fill({ points: 300 + POINTS_OVERHEAD, floor: false }));
   });
   it('reads twice per sprint issue for a sprint function that fetches its issues', () => {
-    expect(['addedAfterSprintStart', 'incompleteInSprint', 'completeInSprint'].map((f) => estimate(f, 40)))
-      .toEqual(Array(3).fill({ points: 80 + POINTS_OVERHEAD, floor: false }));
+    expect(['incompleteInSprint', 'completeInSprint'].map((f) => estimate(f, 40)))
+      .toEqual(Array(2).fill({ points: 80 + POINTS_OVERHEAD, floor: false }));
+  });
+  it('reads a sprint once per issue for the issues added after its start', () => {
+    expect(estimate('addedAfterSprintStart', 40)).toEqual({ points: 40 + POINTS_OVERHEAD, floor: false });
   });
   it('knows the cost of every function of the catalog', () => {
     expect(FUNCTIONS.filter((f) => estimate(f.name, 1).floor && !['epicsOf', 'childIssuesOf', 'linkedIssuesOfRecursive', 'linkedIssuesOfRecursiveLimited'].includes(f.name)).map((f) => f.name)).toEqual([]);

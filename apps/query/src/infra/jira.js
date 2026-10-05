@@ -4,7 +4,7 @@ import {
   BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
   POINTS_PAGE_MIN, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
-import { pointsOf } from '../core/points.js';
+import { DEFAULT_LANE, pointsOf } from '../core/points.js';
 import { endpointOf, rateHeaderText, rateLimitOf } from '../core/rate.js';
 import { pool } from './pool.js';
 
@@ -48,9 +48,12 @@ export class PointsError extends Error {
 
 const deadlines = new AsyncLocalStorage();
 const scopes = new AsyncLocalStorage();
-const DEFAULT_LANE = 'fn';
 
-/** Runs task in a points scope inside the current one: its Jira requests count toward it and every scope around it, and a request that would take it past `limit` is refused (PointsError); the lane is inherited unless given. */
+/**
+ * Runs task in a points scope inside the current one: its Jira requests count toward it and every scope around it, and a request that would
+ * take it past `limit` is refused (PointsError); the lane is inherited unless given. A request is judged by 1 point (a bulkfetch by 1 per issue
+ * too), so a search page of at least POINTS_PAGE_MIN issues and one parallel bulkfetch round may pass the limit by what they return.
+ */
 export function withPoints(limit, task, { scope = 'group', lane } = {}) {
   const parent = scopes.getStore() ?? null;
   return scopes.run({ scope, limit, spent: 0, lane: lane ?? parent?.lane ?? DEFAULT_LANE, parent }, task);
