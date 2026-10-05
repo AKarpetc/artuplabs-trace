@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { commentTimesWanted, REWRITE_ALL_KIND, familyWants, groupPrecomputations, isTimeRelative, needsRepair, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
+import { commentTimesWanted, errorKindOf, REWRITE_ALL_KIND, familyWants, groupPrecomputations, isTimeRelative, needsRepair, pricedOut, queryOverlap, reconcileTargets, summarizeJournal } from '../../src/core/affected.js';
+import { ERR } from '../../src/core/errors.js';
 
 const row = (ts, ids, kinds) => ({ key: `t:${String(ts).padStart(15, '0')}:abc`, value: { ids, kinds } });
 const NOW = Date.parse('2026-10-10T12:00:00Z');
@@ -151,5 +152,39 @@ describe('commentTimesWanted', () => {
       commentTimesWanted({ functionName: 'expression', userArgs: [] }, ['comment']),
       commentTimesWanted({ functionName: 'expression' }, ['comment']),
     ]).toEqual([false, false, false, false, false]);
+  });
+});
+
+describe('needsRepair from a cached list record', () => {
+  it('reads whether a value and an error are stored from the record', () => {
+    expect([
+      needsRepair({ hasValue: true, errorKind: 'other' }),
+      needsRepair({ hasValue: false, errorKind: null }),
+      needsRepair({ hasValue: true, errorKind: null }),
+      needsRepair({ hasValue: false, errorKind: 'other' }),
+    ]).toEqual([true, true, false, false]);
+  });
+});
+
+describe('errorKindOf', () => {
+  it('names a stored error by kind', () => {
+    expect([errorKindOf(undefined), errorKindOf(null), errorKindOf(ERR.tooExpensive('hasSubtasks', { n: null, points: null, limit: 9 })), errorKindOf('Board "B" not found')])
+      .toEqual([null, null, 'tooExpensive', 'other']);
+  });
+});
+
+describe('pricedOut', () => {
+  const pc = (extra) => ({ id: 'x', ...extra });
+  it('is a group whose every precomputation stores the too-expensive error', () => {
+    const text = ERR.tooExpensive('hasSubtasks', { n: null, points: null, limit: 9 });
+    expect([
+      pricedOut({ items: [pc({ errorKind: 'tooExpensive' }), pc({ error: text })] }),
+      pricedOut({ items: [pc({ errorKind: 'tooExpensive' }), pc({ hasValue: true, errorKind: null })] }),
+      pricedOut({ items: [] }),
+    ]).toEqual([true, false, false]);
+  });
+  it('leaves a priced-out group out of the reconcile', () => {
+    const group = { key: 'a', functionName: 'a', family: 'query', userArgs: ['x'], items: [{ id: 'x', used: iso(HOUR), updated: iso(5 * HOUR), errorKind: 'tooExpensive', hasValue: false }] };
+    expect(reconcileTargets([group], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50 })).toEqual([]);
   });
 });

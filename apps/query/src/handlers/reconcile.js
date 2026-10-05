@@ -1,7 +1,7 @@
 import { groupPrecomputations, reconcileTargets, rewriteDue } from '../core/affected.js';
 import { ACTIVE_MS, HEAVY_RECONCILE_MS, LEASE_MS, PENDING_STALE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
-import { handOff, isDeadline, isHeavy, pushQuietly, rewrite, writeGroups } from './groups.js';
+import { handOff, isDeadline, isHeavy, listPrecomputations, pushQuietly, rewrite, writeGroups } from './groups.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 import { pushRefresh } from './refresh.js';
 
@@ -36,7 +36,7 @@ export async function onReconcile(deps) {
 
 async function reconcileOnce(deps) {
   const startedAt = deps.now();
-  const groups = reconcileTargets(groupPrecomputations(await deps.jira.precomputations(), { now: startedAt, activeMs: ACTIVE_MS }), {
+  const groups = reconcileTargets(groupPrecomputations(await listPrecomputations(deps), { now: startedAt, activeMs: ACTIVE_MS }), {
     now: startedAt, usedMs: RECONCILE_USED_MS, staleMs: RECONCILE_STALE_MS, max: RECONCILE_MAX_GROUPS,
   });
   const byGroup = [];

@@ -119,6 +119,29 @@ describe('value cache', () => {
     await cache.write('g', entry(ids(10), { pts: 30, lv: 1, at: 2 }));
     expect(kvs.calls.ops).toEqual([]);
   });
+  it('matches a result to the meta of the same values, field, filter and tree levels', async () => {
+    const { cache } = make();
+    await cache.write('g', entry(ids(12000), { lv: 1 }));
+    const meta = await cache.meta('g');
+    expect([
+      cache.matches(meta, entry(ids(12000), { lv: 1 })),
+      cache.matches(meta, entry(ids(11999), { lv: 1 })),
+      cache.matches(meta, entry(ids(12000), { lv: 2 })),
+      cache.matches(meta, entry(ids(12000), { lv: 1, field: 'parent' })),
+      cache.matches(meta, entry(ids(12000), { lv: 1, rootFilter: 'x' })),
+      cache.matches(null, entry(ids(12000), { lv: 1 })),
+    ]).toEqual([true, false, false, false, false, false]);
+  });
+  it('keeps the meta when the cost stays in the same class', async () => {
+    const kvs = createFakeKvs({ pageSize: 100 });
+    const cache = createValueCache({ kvs, hash: (s) => s, chunkHash: sha, costClass: (pts) => (pts > 100 ? 'dear' : 'cheap') });
+    await cache.write('g', entry(ids(10), { pts: 30 }));
+    kvs.calls.ops.length = 0;
+    await cache.write('g', entry(ids(10), { pts: 60, at: 2 }));
+    expect(kvs.calls.ops).toEqual([]);
+    await cache.write('g', entry(ids(10), { pts: 200, at: 3 }));
+    expect((await cache.meta('g')).pts).toEqual(200);
+  });
   it('knows nothing about a group never written', async () => {
     const { cache } = make();
     expect([await cache.meta('x'), await cache.watch('x')]).toEqual([null, null]);

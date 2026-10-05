@@ -267,7 +267,7 @@ describe('heavy groups nobody uses', () => {
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     await refreshOnce(deps);
-    expect(log.mock.calls).toEqual([['refresh pass: 1 groups, computed hasSubtasks@0h 1, handed none']]);
+    expect(log.mock.calls).toEqual([['refresh pass: 1 groups, computed hasSubtasks@0h 1, handed none, overhead 0']]);
     log.mockRestore();
   });
   it('recomputes no group, light or slow, that Jira has not used for a day; the reconcile rewrites it within an hour of its next use', async () => {

@@ -16,12 +16,13 @@ const sameChunks = (a, b) => Boolean(a) && Boolean(b) && sameList(a.c ?? [], b.c
  * each stored once as `v:<h>:k<hash>` (≤ 5 000 ids). A write stores only chunks it does not have yet, rewrites the meta only when something
  * a reader uses changed, then deletes chunks nothing references; a read that meets a missing chunk answers null, never a partial list.
  * The meta also keeps the lowest and highest id of each watch chunk (`wr`), so a membership check reads only the chunks that can hold an id,
- * and, when given, the Jira points the computation cost (`pts`) and the levels of the stored tree (`lv`).
+ * and, when given, the Jira points the computation cost (`pts`; the meta is rewritten only when `costClass` of it changes) and the levels of
+ * the stored tree (`lv`).
  * Writers are ordered by the start of their computation (`startedAt` in the meta): an older computation never replaces a newer one, a writer
  * re-stores reused chunks a concurrent writer removed, deletes chunks only while its own meta is the current one, and a read that finds a
  * chunk of the current meta gone drops that meta, so the group is computed and stored again.
  */
-export function createValueCache({ kvs, hash, chunkHash = hash }) {
+export function createValueCache({ kvs, hash, chunkHash = hash, costClass = (pts) => pts }) {
   const base = (key) => `v:${hash(key)}`;
   const chunkKey = (key, h) => `${base(key)}:k${h}`;
 
@@ -67,6 +68,13 @@ export function createValueCache({ kvs, hash, chunkHash = hash }) {
 
   return {
     meta,
+    /** Whether a computed entry holds what the meta describes: the same value chunks, count, field, filter and tree levels. */
+    matches(m, entry) {
+      if (!m) return false;
+      const c = chunksOf(entry.values).map((chunk) => chunkHash(JSON.stringify(chunk)));
+      return m.n === entry.values.length && sameList(m.c ?? [], c) && m.field === entry.field && (m.rootFilter ?? null) === (entry.rootFilter ?? null)
+        && (m.lv ?? null) === (entry.lv ?? null);
+    },
     values: (key, m, from, to) => readChunks(key, m.c ?? [], from, Math.min(to, m.n)),
     async watchHit(key, ids) {
       const m = await meta(key);
@@ -102,7 +110,7 @@ export function createValueCache({ kvs, hash, chunkHash = hash }) {
       const next = { at, startedAt, n: values.length, nw: watch ? watch.length : null, field, rootFilter: rootFilter ?? null, source, c, w, ...(wr ? { wr } : {}), ...(ms === null ? {} : { ms }), ...(pts === null ? {} : { pts }), ...(lv === null ? {} : { lv }) };
       const unchanged = old && old.n === next.n && old.nw === next.nw && old.field === next.field && old.rootFilter === next.rootFilter
         && old.source === source && sameList(old.c ?? [], c) && sameList(old.w ?? [], w) && isHeavy(old.ms) === isHeavy(next.ms)
-        && (wr === null || Array.isArray(old.wr)) && (old.pts ?? null) === pts && (old.lv ?? null) === lv;
+        && (wr === null || Array.isArray(old.wr)) && costClass(old.pts ?? null) === costClass(pts) && (old.lv ?? null) === lv;
       if (unchanged && source !== 'job') return;
       const current = await meta(key);
       if ((current?.startedAt ?? 0) > startedAt) return;

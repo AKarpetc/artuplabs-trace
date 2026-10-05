@@ -1,14 +1,14 @@
 import { parseArgs } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
-import { commentTimesWanted, REWRITE_ALL_KIND, familyWants, groupPrecomputations, needsRepair, queryOverlap, summarizeJournal, usedWithin } from '../core/affected.js';
+import { commentTimesWanted, REWRITE_ALL_KIND, familyWants, groupPrecomputations, needsRepair, pricedOut, queryOverlap, summarizeJournal, usedWithin } from '../core/affected.js';
 import {
   ACTIVE_MS, FAILED_ROWS_KEEP_MS, REFRESH_USED_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, POINTS_OVERHEAD, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, TOUCHED_CHECK_MAX, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { keptPoints } from '../infra/state.js';
-import { handOff, isDeadline, isHeavy, knownCost, laneIdle, overLimit, pushQuietly, rewrite, runCompute, runHeavy, updatesFor, writeGroups } from './groups.js';
-import { admit, groupClass, hourKey, laneRoom, lightLimit, retryAfter } from '../core/points.js';
+import { handOff, isDeadline, isHeavy, knownCost, laneIdle, listPrecomputations, overLimit, pushQuietly, rewrite, runCompute, runHeavy, updatesFor, writeGroups } from './groups.js';
+import { admit, groupClass, hourKey, laneRoom, lightLimit, passInterval, retryAfter } from '../core/points.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
 export { rewrite };
@@ -35,6 +35,7 @@ function jobGroups(jobs, groups) {
 
 /** Whether a group must be recomputed for this journal page: a query group when a touched issue is watched or now matches its subquery, checked in searches of RECONCILE_MAX. */
 async function isStale(deps, group, summary) {
+  if (pricedOut(group)) return false;
   if (summary.all || group.items.some(needsRepair)) return true;
   if (group.family !== 'query') return familyWants(group.family, summary.kinds);
   if (commentTimesWanted(group, summary.kinds)) return true;
@@ -121,7 +122,15 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   let queued = false;
   let limited = null;
   let stopped = false;
+  const spent = { pass: 0, runs: 0 };
   const names = { computed: [], handed: [] };
+  const measured = (task) => (deps.withPoints ? deps.withPoints(Infinity, async () => {
+    try {
+      return await task();
+    } finally {
+      spent.runs += deps.currentPoints().spent;
+    }
+  }, { scope: 'run' }) : task());
   const handOver = async (group, points) => {
     if (!usedWithin(group, startedAt, REFRESH_USED_MS)) return;
     counts.handed += 1;
@@ -132,7 +141,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   try {
     await inScope(deps, room.limit, async () => {
       const every = summary.kinds.includes(REWRITE_ALL_KIND);
-      const stored = groupPrecomputations(await deps.jira.precomputations(), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
+      const stored = groupPrecomputations(await listPrecomputations(deps), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
       const groups = every ? stored : stored.filter((g) => isUsed(g) && usedWithin(g, startedAt, REFRESH_USED_MS));
       const all = [...groups, ...jobGroups(await deps.state.jobs(startedAt), groups)].filter((g) => !skip.has(deps.hash(g.key)));
       counts.groups = all.length;
@@ -163,7 +172,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
           const ownDeadline = deps.now() + REFRESH_GROUP_BUDGET_MS;
           cutByWorker = ownDeadline > deadline;
           const limit = cap ? lightLimit(cap) : Infinity;
-          byGroup.push([group.key, await deps.withDeadline(Math.min(ownDeadline, deadline), () => rewrite(deps, group, reconcile, { limit }))]);
+          byGroup.push([group.key, await deps.withDeadline(Math.min(ownDeadline, deadline), () => measured(() => rewrite(deps, group, reconcile, { limit, meta })))]);
           counts.recomputed += 1;
         } catch (error) {
           if (isRateLimit(error)) {
@@ -197,13 +206,15 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
           await deps.state.lease.set(deps.now());
         }
       });
+      spent.pass = deps.currentPoints?.()?.spent ?? 0;
     });
   } catch (error) {
     if (error?.name !== 'PointsError' || error.scope !== 'pass') throw error;
     stopped = true;
   }
   const { recomputed, handed, failed, postponed } = counts;
-  if (deps.logKvs?.requests) console.log(`refresh pass: ${counts.groups} groups, computed ${nameCounts(names.computed)}, handed ${nameCounts(names.handed)}${limited ? ', stopped by the rate limit' : ''}${stopped ? ', stopped by the points budget' : ''}`);
+  const overhead = Math.max(0, spent.pass - spent.runs);
+  if (deps.logKvs?.requests) console.log(`refresh pass: ${counts.groups} groups, computed ${nameCounts(names.computed)}, handed ${nameCounts(names.handed)}${limited ? ', stopped by the rate limit' : ''}${stopped ? ', stopped by the points budget' : ''}, overhead ${overhead}`);
   if (limited) return { limited, events: rows.length, groups: counts.groups, touched: [], kinds: summary.kinds, changed: 0, oldestEventMs: null };
   if (queued || (handed && (await laneIdle(deps)))) await pushQuietly(deps, { kind: 'heavy' });
   let stale = false;
@@ -220,7 +231,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const doneHashes = done.map((key) => deps.hash(key));
   if (stopped) {
     await saveCut(deps, { key: lastKey, startedAt, done: doneHashes, under: cut?.key ?? null });
-    return { budgeted: retryAfter(startedAt), events: rows.length, groups: counts.groups, recomputed, handed, changed, stale, failed, postponed, touched: [], kinds: summary.kinds, oldestEventMs: null };
+    return { budgeted: retryAfter(startedAt), events: rows.length, groups: counts.groups, recomputed, handed, changed, stale, failed, postponed, touched: [], kinds: summary.kinds, oldestEventMs: null, overhead };
   }
   const finished = !stale && !postponed;
   if (finished) await deps.journal.remove((failed ? rows.filter((r) => r.key < expiredBefore(startedAt)) : rows).map((r) => r.key));
@@ -239,6 +250,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
     stale,
     failed,
     postponed,
+    overhead,
     oldestEventMs: summary.firstAt === null ? null : startedAt - summary.firstAt,
   };
 }
@@ -293,6 +305,13 @@ async function pushVerify(deps, passes) {
   }
 }
 
+/** The end of the pause the last passes set by their overhead (`log:refresh`), or null once it has passed. */
+async function pauseAfterLastPass(deps) {
+  const last = await deps.state.lastRefresh.get();
+  const end = last?.interval ? last.at + last.interval * 1000 : 0;
+  return end > deps.now() ? end : null;
+}
+
 /** Passes whose touched issues get a verify job: every pass, or inside a verify job only a pass that finished a cut. */
 const toVerify = (body, passes) => (body.verify ? passes.filter((p) => p.cutFinished) : passes);
 
@@ -301,6 +320,11 @@ async function refreshPasses(deps, body) {
   if (until) {
     await scheduleWake(deps, until);
     return { braked: until };
+  }
+  const pauseEnd = await pauseAfterLastPass(deps);
+  if (pauseEnd) {
+    if (!(await deps.state.pending.get())) await pushRefresh(deps, deps.now(), Math.ceil((pauseEnd - deps.now()) / 1000));
+    return { debounced: pauseEnd };
   }
   if (deps.now() - ((await deps.state.lease.get()) ?? 0) < LEASE_MS) return { busy: true };
   const deadline = deps.now() + WORKER_BUDGET_MS;
@@ -341,7 +365,15 @@ async function refreshPasses(deps, body) {
   else if ((await deps.journal.read(1)).length && !(await deps.state.pending.get())) await pushRefresh(deps, deps.now(), kept ? REFRESH_RETRY_DELAY_S : undefined);
   await pushVerify(deps, toVerify(body, passes));
   if (passes.length) {
-    await deps.state.lastRefresh.set({ at: deps.now(), passes: passes.length, changed: passes.reduce((s, p) => s + p.changed, 0), oldestEventMs: Math.max(...passes.map((p) => p.oldestEventMs ?? 0)) });
+    const overhead = passes[passes.length - 1].overhead ?? 0;
+    await deps.state.lastRefresh.set({
+      at: deps.now(),
+      passes: passes.length,
+      changed: passes.reduce((s, p) => s + p.changed, 0),
+      oldestEventMs: Math.max(...passes.map((p) => p.oldestEventMs ?? 0)),
+      overhead,
+      ...(deps.siteCap ? { interval: passInterval(overhead, deps.siteCap) } : {}),
+    });
   }
   return budgeted ? { passes, budgeted } : { passes };
 }

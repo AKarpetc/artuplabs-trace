@@ -1,5 +1,5 @@
 import {
-  BORROW_CAP_SHARE, BORROW_MINUTE, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, GROUP_POINTS_SHARE, LANE_SHARES, LIGHT_GROUP_SHARE, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT,
+  BORROW_CAP_SHARE, BORROW_MINUTE, PASS_INTERVAL_MAX_S, PASS_INTERVAL_MIN_S, REFRESH_OVERHEAD_SHARE, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, GROUP_POINTS_SHARE, LANE_SHARES, LIGHT_GROUP_SHARE, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT,
 } from './limits.js';
 import { quote } from './jql-build.js';
 
@@ -159,4 +159,10 @@ export function laneOfRefresh(body) {
   if (body?.kind === 'compute') return 'fn';
   if (body?.kind === 'heavy') return 'heavy';
   return 'refresh';
+}
+
+/** Seconds between journal passes so that their fixed cost `overhead` (points per pass) takes at most REFRESH_OVERHEAD_SHARE of the hour's refresh reserve. */
+export function passInterval(overhead, cap) {
+  const seconds = Math.round((3600 * overhead) / (REFRESH_OVERHEAD_SHARE * reserveOf('refresh', cap)));
+  return Math.min(PASS_INTERVAL_MAX_S, Math.max(PASS_INTERVAL_MIN_S, seconds));
 }

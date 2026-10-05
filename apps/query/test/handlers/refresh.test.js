@@ -4,6 +4,7 @@ import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers
 import { handOff, writeGroups } from '../../src/handlers/groups.js';
 import { createFieldCompute } from '../../src/compute/fields.js';
 import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
+import { passInterval } from '../../src/core/points.js';
 import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
@@ -395,7 +396,7 @@ describe('onRefresh', () => {
     const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
     await onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } });
-    expect(await deps.state.lastRefresh.get()).toEqual({ at: 1000000, passes: 1, changed: 1, oldestEventMs: 500 });
+    expect(await deps.state.lastRefresh.get()).toEqual({ at: 1000000, passes: 1, changed: 1, oldestEventMs: 500, overhead: 0 });
   });
   it('turns a verify job into a journal record and pushes no further verify', async () => {
     const deps = makeDeps();
@@ -954,5 +955,76 @@ describe('verify after a rate limit', () => {
     await onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } });
     error.mockRestore();
     expect(deps.pushed.filter(([body]) => body.verify).map(([body]) => body.verify)).toEqual([['9']]);
+  });
+});
+
+describe('write decision by the cache meta', () => {
+  const slim = (extra = {}) => ({ id: 'h', functionName: 'hasSubtasks', arguments: [], operator: 'in', used: RECENT, updated: null, created: null, hasValue: true, errorKind: null, ...extra });
+  const result = (ids2) => async () => ({ ids: ids2, field: 'id', watch: null });
+  const cached = (values) => ({ values, watch: null, field: 'id', rootFilter: null, at: 1, source: 'refresh', lv: 1 });
+  async function pass(pcs, compute, meta) {
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: compute } });
+    if (meta) await deps.cache.write('hasSubtasks[]', meta);
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    return deps;
+  }
+  it('writes nothing when the result matches the cache meta and every precomputation holds a value alone', async () => {
+    const deps = await pass([slim()], result(['2']), cached(['2']));
+    expect(deps.written).toEqual([]);
+  });
+  it('writes every precomputation of the group when the result differs from the cache meta', async () => {
+    const deps = await pass([slim(), slim({ id: 'n', operator: 'not in' })], result(['3']), cached(['2']));
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (3)' }, { id: 'n', value: 'NOT (id in (3))' }]);
+  });
+  it('writes when a precomputation stores an error although the result matches the meta', async () => {
+    const deps = await pass([slim({ errorKind: 'other' })], result(['2']), cached(['2']));
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)', error: null }]);
+  });
+  it('writes the older result a pass computed after the heavy lane wrote a newer one, so Jira holds what the pass saw', async () => {
+    const deps = await pass([slim()], result(['1']), cached(['2']));
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (1)' }]);
+  });
+  it('leaves a group whose precomputations store the too-expensive error', async () => {
+    const compute = vi.fn(result(['2']));
+    await pass([slim({ hasValue: false, errorKind: 'tooExpensive' })], compute, null);
+    expect(compute).not.toHaveBeenCalled();
+  });
+  it('keeps the tree levels in the cache meta', async () => {
+    const deps = await pass([slim()], result(['3']), null);
+    expect((await deps.cache.meta('hasSubtasks[]')).lv).toEqual(1);
+  });
+});
+
+describe('pass overhead and the pause between passes', () => {
+  const USED = new Date(BUDGET_AT - 1000).toISOString();
+  const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: USED }];
+  async function overheadDeps({ overhead = 30, computeCost = 40 } = {}) {
+    const deps = withBudget(makeDeps({ pcs, compute: { hasSubtasks: async () => { await spend(computeCost); return { ids: ['2'], field: 'id', watch: null }; } } }));
+    const list = deps.jira.precomputations;
+    deps.jira.precomputations = async () => { await spend(overhead); return list(); };
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, BUDGET_AT - 500);
+    return deps;
+  }
+  it('counts what a pass spent besides its recomputations', async () => {
+    const deps = await overheadDeps();
+    expect((await refreshOnce(deps)).overhead).toEqual(30);
+  });
+  it('records the overhead of the last pass and the pause it sets', async () => {
+    const deps = await overheadDeps({ overhead: 50 });
+    await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT } });
+    expect(await deps.state.lastRefresh.get()).toMatchObject({ overhead: 50, interval: passInterval(50, 10000) });
+  });
+  it('runs no pass before the pause after the last one ends and pushes a refresh for its end', async () => {
+    const deps = await overheadDeps();
+    await deps.state.lastRefresh.set({ at: BUDGET_AT - 1000, passes: 1, changed: 0, oldestEventMs: 0, overhead: 50, interval: 60 });
+    const result = await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT } });
+    expect(result).toEqual({ debounced: BUDGET_AT + 59000 });
+    expect([deps.pushed, (await deps.journal.read(10)).length]).toEqual([[[{ kind: 'refresh', ts: BUDGET_AT }, 59]], 1]);
+  });
+  it('runs a pass once the pause has passed', async () => {
+    const deps = await overheadDeps();
+    await deps.state.lastRefresh.set({ at: BUDGET_AT - 60000, passes: 1, changed: 0, oldestEventMs: 0, overhead: 50, interval: 60 });
+    expect((await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT } })).passes).toHaveLength(1);
   });
 });

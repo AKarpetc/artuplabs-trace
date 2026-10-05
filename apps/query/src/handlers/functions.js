@@ -57,7 +57,7 @@ export async function computeGroup(deps, functionName, args, userArgs, { reconci
   });
   const { result, pts } = run;
   if (!result.ids) return result;
-  const entry = { values: result.ids, watch: result.watch ?? null, field: result.field, rootFilter: result.rootFilter ?? null, at: deps.now(), source, ms: deps.now() - startedAt, startedAt, ...(pts === null ? {} : { pts }) };
+  const entry = { values: result.ids, watch: result.watch ?? null, field: result.field, rootFilter: result.rootFilter ?? null, at: deps.now(), source, ms: deps.now() - startedAt, startedAt, lv: deps.levels, ...(pts === null ? {} : { pts }) };
   if (!keep) return { ...result, entry };
   await deps.cache.write(groupKey(functionName, userArgs), entry);
   return result;
@@ -214,7 +214,17 @@ async function evaluateClause(deps, functionName, payload, context) {
     console.error(`${functionName} failed: ${outcome.failed?.name} ${outcome.failed?.status ?? ''}`);
     return defer(deps, functionName, userArgs, outcome.failed);
   }
+  if (!page) await markListStale(deps);
   return answer(fragmentFor(functionName, userArgs, page, outcome.result, deps.levels), operator);
+}
+
+/** Marks the cached precomputation list stale after a root was computed: Jira creates its precomputation from this answer. */
+async function markListStale(deps) {
+  try {
+    await deps.pcList?.markDirty();
+  } catch (error) {
+    console.error(`precomputation list mark failed: ${error?.name}`);
+  }
 }
 
 /** A fragment in the form of the clause's operator. */

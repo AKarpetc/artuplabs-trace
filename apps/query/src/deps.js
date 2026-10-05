@@ -7,7 +7,8 @@ import { RETRY_MAX_MS, TREE_LEVELS } from './core/limits.js';
 import { readinessError } from './core/readiness.js';
 import { appJira, currentPoints, withDeadline, withPoints } from './infra/jira.js';
 import { createLedger } from './infra/points.js';
-import { capOf } from './core/points.js';
+import { capOf, groupClass } from './core/points.js';
+import { createPcsCache } from './infra/pcs.js';
 import { createValueCache } from './infra/cache.js';
 import { createJournal } from './infra/journal.js';
 import { createState } from './infra/state.js';
@@ -54,17 +55,19 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
   const jira = appJira({ retryMaxMs, ledger: points, onNear });
   const meter = { ...metered, takeRequests: jira.takeRequests, points };
   const state = createState({ kvs: meter.kvs, hash: sha1, beginsWith: WhereConditions.beginsWith });
+  const siteCap = capOf(Number(process.env.QUERY_POINTS_TIER), Number(process.env.QUERY_SITE_POINTS));
   const repo = createIndexRepo();
   const deps = {
     jira,
     state,
     repo,
-    cache: createValueCache({ kvs: meter.kvs, hash: sha1 }),
+    cache: createValueCache({ kvs: meter.kvs, hash: sha1, costClass: (pts) => (pts === null ? null : groupClass({ points: pts, measured: true }, siteCap)) }),
+    pcList: createPcsCache({ kvs: meter.kvs, jira }),
     journal: createJournal({ kvs: meter.kvs, beginsWith: WhereConditions.beginsWith }),
     meter,
     logKvs,
     points,
-    siteCap: capOf(Number(process.env.QUERY_POINTS_TIER), Number(process.env.QUERY_SITE_POINTS)),
+    siteCap,
     queue: createQueueClient(new Queue({ key: 'query-refresh' })),
     backfillQueue: createQueueClient(new Queue({ key: 'query-backfill' })),
     compute: {

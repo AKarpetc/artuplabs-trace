@@ -481,3 +481,19 @@ describe('function call under the Jira points budget', () => {
     });
   });
 });
+
+describe('precomputation list after a function call', () => {
+  it('marks the cached list stale after computing a root', async () => {
+    const marked = [];
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) }, { pcList: { markDirty: async () => { marked.push(1); } } });
+    await handleFunction(deps, 'parentsOf', payload('q'), DEV);
+    expect(marked).toEqual([1]);
+  });
+  it('leaves the cached list alone when it answers from the cache', async () => {
+    const marked = [];
+    const deps = fnDeps({ subtasksOf: async () => ({ ids: ['3'], field: 'parent', watch: [] }) }, { pcList: { markDirty: async () => { marked.push(1); } } });
+    await deps.cache.write(SUBTASK_GROUP, jobEntry(['3']));
+    await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV);
+    expect(marked).toEqual([]);
+  });
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { admit, capOf, countQueryOf, estimate, groupClass, groupLimit, lightLimit, hourKey, issuesWithin, LANES, laneOfRefresh, laneRoom, nextHour, pointsOf } from '../../src/core/points.js';
+import { admit, capOf, countQueryOf, passInterval, estimate, groupClass, groupLimit, lightLimit, hourKey, issuesWithin, LANES, laneOfRefresh, laneRoom, nextHour, pointsOf } from '../../src/core/points.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
 import { CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from '../../src/core/limits.js';
 
@@ -272,5 +272,14 @@ describe('groupClass', () => {
   });
   it('is a twentieth of the cap for the light limit', () => {
     expect(lightLimit(SITE_POINTS_TIER1)).toEqual(450);
+  });
+});
+
+describe('passInterval', () => {
+  it('spreads the overhead of a pass over half of the refresh reserve of an hour', () => {
+    expect(passInterval(50, 9000)).toEqual(Math.round(3600 * 50 / (0.5 * 2700)));
+  });
+  it('waits at least 5 s and at most 300 s', () => {
+    expect([passInterval(0, 9000), passInterval(1, 9000), passInterval(400, 9000), passInterval(100000, 9000)]).toEqual([5, 5, 300, 300]);
   });
 });

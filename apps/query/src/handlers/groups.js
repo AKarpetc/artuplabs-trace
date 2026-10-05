@@ -38,8 +38,16 @@ async function keepEntry(deps, key, result) {
   if (result.entry) await deps.cache.write(key, result.entry);
 }
 
-/** Precomputation updates whose stored value or error changed, each in the form of its operator (`not in` stores the complement); a value clears a stored error, which Jira keeps otherwise. */
-export function updatesFor(group, result, levels) {
+const listed = (pc) => pc.hasValue !== undefined;
+const clean = (pc) => pc.hasValue && pc.errorKind === null;
+
+/**
+ * Precomputation updates, each in the form of its operator (`not in` stores the complement); a value clears a stored error, which Jira keeps
+ * otherwise. Precomputations from the cached list (no stored value) are all written unless the result is `same` as the group's cache meta and
+ * each holds a value alone; precomputations read from Jira with their values get an update only where the stored value or error changed.
+ */
+export function updatesFor(group, result, levels, same = false) {
+  if (group.items.length && group.items.every(listed)) return listedUpdates(group, result, levels, same);
   const updates = [];
   for (const pc of group.items) {
     const { page } = splitPage(pc.arguments);
@@ -53,20 +61,41 @@ export function updatesFor(group, result, levels) {
   return updates;
 }
 
+function listedUpdates(group, result, levels, same) {
+  if (same && !result.error && group.items.every(clean)) return [];
+  return group.items.map((pc) => {
+    const { page } = splitPage(pc.arguments);
+    const fragment = fragmentFor(group.functionName, group.userArgs, page, result, levels);
+    if (fragment.error) return { id: pc.id, error: fragment.error };
+    const value = forOperator(fragment.jql, pc.operator);
+    return pc.errorKind === null ? { id: pc.id, value } : { id: pc.id, value, error: null };
+  });
+}
+
+/** Whether a group's new result holds what its cache meta (`meta`, read when undefined) describes. */
+async function sameAsCache(deps, key, result, meta) {
+  if (!result.entry) return false;
+  const m = meta === undefined ? await deps.cache.meta(key) : meta;
+  return deps.cache.matches(m, result.entry);
+}
+
 /**
  * Recomputes one group within `limit` Jira points: its precomputation updates and the cache entry to store after they are written (a group
  * without precomputations is a background job, cached at once). Staleness is judged against the cache, so the cache must never run ahead of
  * what Jira stores.
  */
-export async function rewrite(deps, group, reconcile, { limit = Infinity } = {}) {
+export async function rewrite(deps, group, reconcile, { limit = Infinity, meta } = {}) {
   const result = await recompute(deps, group, reconcile, group.items.length ? 'refresh' : 'job', limit);
   if (!group.items.length) {
     await keepEntry(deps, group.key, result);
     await keepJob(deps, group.functionName, group.userArgs, result);
     return { updates: [], entry: null };
   }
-  return { updates: updatesFor(group, result, deps.levels), entry: result.entry ?? null };
+  return { updates: updatesFor(group, result, deps.levels, await sameAsCache(deps, group.key, result, meta)), entry: result.entry ?? null };
 }
+
+/** The precomputation list: the cached one when the dependencies keep it, else Jira's own. */
+export const listPrecomputations = (deps) => (deps.pcList?.list ? deps.pcList.list() : deps.jira.precomputations());
 
 /**
  * Writes the updates of each group unless a computation that started later already wrote or confirmed that group, then stores the cache
@@ -141,13 +170,14 @@ export async function runGroupJob(deps, { functionName, userArgs }, { limit = In
     await deps.state.recordError({ at: deps.now(), functionName, message: LOG.refreshTimedOut() });
     return { computed: key, timedOut: true };
   }
-  const group = groupPrecomputations(await deps.jira.precomputations(), { now: deps.now(), activeMs: ACTIVE_MS }).find((g) => g.key === key);
+  const group = groupPrecomputations(await listPrecomputations(deps), { now: deps.now(), activeMs: ACTIVE_MS }).find((g) => g.key === key);
   if (!group) {
     await keepEntry(deps, key, result);
     await keepJob(deps, functionName, parsed.userArgs, result);
     return { computed: key, changed: 0 };
   }
-  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, { updates: updatesFor(group, result, deps.levels), entry: result.entry ?? null }]]) };
+  const same = await sameAsCache(deps, key, result);
+  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, { updates: updatesFor(group, result, deps.levels, same), entry: result.entry ?? null }]]) };
 }
 
 /**
@@ -241,7 +271,7 @@ export async function runHeavy(deps) {
   let limited = null;
   try {
     const job = await deps.state.heavy.oldest();
-    const group = job ? groupPrecomputations(await deps.jira.precomputations(), { now: deps.now(), activeMs: Infinity }).find((g) => g.key === job.key) : null;
+    const group = job ? groupPrecomputations(await listPrecomputations(deps), { now: deps.now(), activeMs: Infinity }).find((g) => g.key === job.key) : null;
     if (group && !usedWithin(group, deps.now(), REFRESH_USED_MS)) {
       await deps.state.heavy.take(job.key);
       heavy = { computed: job.key, unused: true };

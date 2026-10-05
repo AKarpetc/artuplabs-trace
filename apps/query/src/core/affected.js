@@ -2,6 +2,7 @@ import { JOURNAL_PAGE, TOUCHED_CHECK_MAX } from './limits.js';
 import { FUNCTION_BY_NAME } from './catalog.js';
 import { groupKey, splitPage } from './args.js';
 import { sortIds } from './ids.js';
+import { isTooExpensiveError } from './errors.js';
 
 const FAMILY_KINDS = {
   query: [],
@@ -79,8 +80,22 @@ export function isTimeRelative(userArgs) {
 
 /** A stored precomputation Jira cannot answer from: a value that still carries an error (Jira keeps the error and returns no issues), or neither. */
 export function needsRepair(pc) {
-  const hasError = pc.error !== undefined && pc.error !== null;
-  return Boolean(pc.value) === hasError;
+  const hasError = pc.errorKind !== undefined ? pc.errorKind !== null : pc.error !== undefined && pc.error !== null;
+  const hasValue = pc.hasValue !== undefined ? pc.hasValue : Boolean(pc.value);
+  return hasValue === hasError;
+}
+
+/** The kind of a stored precomputation error: null without one, 'tooExpensive' for the error of the Jira points budget, else 'other'. */
+export function errorKindOf(error) {
+  if (error === undefined || error === null) return null;
+  return isTooExpensiveError(error) ? 'tooExpensive' : 'other';
+}
+
+const kindOf = (pc) => (pc.errorKind !== undefined ? pc.errorKind : errorKindOf(pc.error));
+
+/** Whether every precomputation of a group stores the too-expensive error: the background leaves it until the user narrows the query. */
+export function pricedOut(group) {
+  return group.items.length > 0 && group.items.every((pc) => kindOf(pc) === 'tooExpensive');
 }
 
 const lastWrite = (g) => Math.min(...g.items.map((pc) => Date.parse(pc.updated ?? pc.created ?? '') || 0));
@@ -93,6 +108,7 @@ export function rewriteDue(group, { now, staleMs }) {
 /** Groups the hourly reconcile recomputes: used within usedMs and due for a rewrite after staleMs. */
 export function reconcileTargets(groups, { now, usedMs, staleMs, max }) {
   return groups
+    .filter((g) => !pricedOut(g))
     .filter((g) => g.items.some((pc) => pc.used && now - Date.parse(pc.used) <= usedMs))
     .filter((g) => rewriteDue(g, { now, staleMs }))
     .sort((a, b) => lastWrite(a) - lastWrite(b))
