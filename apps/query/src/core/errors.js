@@ -81,6 +81,7 @@ export const LOG = {
   allowanceUsed: () => 'Hourly Jira allowance used',
   waited: () => 'Waited too long for the Jira rate limit',
   indexProjectMissing: () => 'Index fill skipped a project Jira did not find',
+  indexFillNotStarted: () => 'Index fill could not be started',
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

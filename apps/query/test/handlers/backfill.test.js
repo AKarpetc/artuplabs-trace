@@ -274,7 +274,7 @@ describe('backfill under the points budget', () => {
     const all = indexedIds(deps);
     expect([new Set(all).size, all.length > 900]).toEqual([all.length, true]);
   });
-  it('logs a project Jira no longer finds without its key and fills it again once the running fill ends', async () => {
+  it('logs a project Jira no longer finds without its key, leaves it and finishes the part', async () => {
     const { deps } = budgeted();
     deps.jira.searchPage = async (jql) => {
       if (jql.includes('"A"')) throw Object.assign(new Error('The value A does not exist'), { name: 'JiraError', status: 400 });
@@ -282,9 +282,9 @@ describe('backfill under the points budget', () => {
     };
     const p = await startBackfill(deps, 'sprint');
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-    await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
+    const result = await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
     expect(error.mock.calls.map((c) => c.join(' ')).some((l) => l.includes('value A'))).toBe(false);
     error.mockRestore();
-    expect([(await deps.state.progress.getPart('sprint')).cursor.projects.map((x) => x.key), (await deps.state.errors())[0].message]).toEqual([['A'], 'Index fill skipped a project Jira did not find']);
+    expect([result.finished, await deps.state.waiting.get('sprint'), (await deps.state.errors())[0].message]).toEqual([true, [], 'Index fill skipped a project Jira did not find']);
   });
 });

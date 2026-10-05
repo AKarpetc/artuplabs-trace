@@ -106,7 +106,7 @@ describe('shipped parts', () => {
 describe('sprint part', () => {
   it('reads the sprints of scrum boards only', async () => {
     const deps = makeDeps();
-    deps.jira.allBoards = async () => [{ id: 1, type: 'scrum' }, { id: 2, type: 'kanban' }];
+    deps.jira.boardPage = async () => ({ values: [{ id: 1, type: 'scrum' }, { id: 2, type: 'kanban' }], isLast: true });
     deps.jira.sprints = vi.fn(async () => [{ id: 3, name: 'S3', state: 'future' }]);
     await createIndexing(deps).parts.sprint.prepare();
     expect(deps.jira.sprints.mock.calls).toEqual([[1]]);
@@ -136,9 +136,9 @@ describe('reconcileIndex', () => {
       const issues = ['7', '8', '9'].map((id) => ({ id, fields: { project: id === '9' ? { id: '20', key: 'B' } : { id: '10', key: 'A' } } }));
       return { ids: ['7', '8', '9'], issues, nextPageToken: null };
     };
-    deps.jira.projects = async () => [{ id: '10', key: 'A' }];
+    deps.jira.projects = async () => [{ id: '10', key: 'A' }, { id: '20', key: 'B' }];
     deps.jira.approximateCount = async () => 3;
-    deps.jira.allBoards = async () => [];
+    deps.jira.boardPage = async () => ({ values: [], isLast: true });
     deps.backfillQueue = { push: vi.fn(async () => {}) };
     return deps;
   }
@@ -346,7 +346,7 @@ describe('reconcileIndex window and budget', () => {
       return { ids: ['7'], issues: [{ id: '7', fields: { project: { id: '10', key: 'A' } } }], nextPageToken: null };
     };
     deps.jira.projects = async () => [{ id: '10', key: 'A' }];
-    deps.jira.allBoards = async () => [];
+    deps.jira.boardPage = async () => ({ values: [], isLast: true });
     deps.backfillQueue = { push: vi.fn(async () => {}) };
     return deps;
   }
@@ -466,6 +466,7 @@ describe('index check with the real points scope', () => {
       const sprintsOf = /\/board\/(\d+)\/sprint/.exec(path);
       if (sprintsOf) return ok({ values: Array.from({ length: sprintsPer }, (_, i) => ({ id: Number(sprintsOf[1]) * 100 + i, name: 's', state: 'closed' })), isLast: true });
       if (path.includes('/agile/1.0/board')) {
+        deps.boardReads = (deps.boardReads ?? 0) + 1;
         const startAt = Number(/startAt=(\d+)/.exec(path)?.[1] ?? 0);
         const all = Array.from({ length: boards }, (_, i) => ({ id: i + 1, type: 'scrum' }));
         return ok({ values: all.slice(startAt, startAt + 50), isLast: startAt + 50 >= all.length });
@@ -532,7 +533,7 @@ describe('index check with the real points scope', () => {
       await run(deps, indexing, 200);
       deps.advance(60 * 60 * 1000);
     }
-    expect([deps.read.length > 0, (await deps.state.prepared.get()).sprint.next > 0]).toEqual([true, true]);
+    expect([deps.read.length > 0, (await deps.state.prepared.get()).sprint.progress.listAt > 0]).toEqual([true, true]);
     for (let hour = 0; hour < 24 && !((await deps.state.prepared.get()).sprint.at > 0); hour += 1) {
       await run(deps, indexing, 200);
       deps.advance(60 * 60 * 1000);
@@ -545,5 +546,32 @@ describe('index check with the real points scope', () => {
     await deps.state.recentIndex.set({ at: null, run: { since: T0 - 7200000, startedAt: T0, after: null, cap: 10 } });
     await run(deps, createIndexing(deps), 900);
     expect(deps.searched.slice(0, 3).map((b) => b.maxResults)).toEqual([10, 20, 40]);
+  });
+  it('reads issue slices every hour while a list of a thousand boards is read a page at a time', async () => {
+    const deps = realDeps(300, { boards: 1000, sprintsPer: 1 });
+    await built(deps);
+    const indexing = createIndexing(deps);
+    const perHour = [];
+    for (let hour = 0; hour < 4; hour += 1) {
+      const before = deps.read.length;
+      await run(deps, indexing, 200);
+      perHour.push(deps.read.length - before);
+      deps.advance(60 * 60 * 1000);
+    }
+    expect(perHour.every((n) => n > 0)).toBe(true);
+    expect((await deps.state.prepared.get()).sprint.progress.listAt).toBeGreaterThan(0);
+  });
+  it('goes on with the recent issues when a project kept for later is gone from Jira', async () => {
+    const deps = realDeps(20);
+    await built(deps);
+    await deps.state.waiting.add('sprint', [{ id: '99', key: 'GONE' }]);
+    deps.jira.projects = async () => [{ id: '10', key: 'P0' }];
+    deps.jira.approximateCount = async () => { throw Object.assign(new Error('gone'), { name: 'JiraError', status: 400 }); };
+    const results = [];
+    for (let hour = 0; hour < 3; hour += 1) {
+      results.push(await run(deps, createIndexing(deps), 800));
+      deps.advance(60 * 60 * 1000);
+    }
+    expect([results[0].reindexed, await deps.state.waiting.get('sprint')]).toEqual([20, []]);
   });
 });

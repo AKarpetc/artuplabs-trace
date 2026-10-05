@@ -1,8 +1,9 @@
 import { SHIPPED_GROUPS } from '../core/catalog.js';
+import { LOG } from '../core/errors.js';
 import { sprintWindow } from '../core/boards.js';
 import { extOf } from '../core/comment-clauses.js';
 import {
-  BACKFILL_STALE_MS, COMMENT_PAGE, INDEX_ISSUE_POINTS, INDEX_PREPARE_TTL_MS, INDEX_SLICE_MIN, POINTS_OVERHEAD, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_REREAD_MS, STATUS_TTL_MS,
+  BACKFILL_STALE_MS, COMMENT_PAGE, INDEX_ISSUE_POINTS, INDEX_PREPARE_TTL_MS, INDEX_SLICE_MIN, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_REREAD_MS, STATUS_TTL_MS,
 } from '../core/limits.js';
 import { indexPartOf } from '../core/readiness.js';
 import { sprintEvents, statusEvents, toMs } from '../core/sprint-history.js';
@@ -98,12 +99,20 @@ export function createIndexing(deps) {
     },
     sprint: {
       tables: ['sprint_event', 'status_event'],
-      async prepare({ from = 0, boards: known = null, onProgress = async () => {} } = {}) {
-        const boards = known ?? (await deps.jira.allBoards()).filter((b) => b.type === 'scrum').map((b) => b.id);
-        if (!known) await onProgress(from, boards);
-        for (let i = from; i < boards.length; i += 1) {
-          await deps.repo.upsertSprints((await deps.jira.sprints(boards[i])).map((s) => sprintRow(s, boards[i])));
-          await onProgress(i + 1, boards);
+      async prepare({ progress = {}, onProgress = async () => {} } = {}) {
+        const p = { listAt: 0, boards: [], listed: false, next: 0, ...progress };
+        while (!p.listed) {
+          const page = await deps.jira.boardPage(p.listAt);
+          const values = page?.values ?? [];
+          p.boards = [...p.boards, ...values.filter((b) => b.type === 'scrum').map((b) => b.id)];
+          p.listAt += values.length;
+          p.listed = page?.isLast === true || !values.length;
+          await onProgress(p);
+        }
+        for (; p.next < p.boards.length; p.next += 1) {
+          const board = p.boards[p.next];
+          await deps.repo.upsertSprints((await deps.jira.sprints(board)).map((s) => sprintRow(s, board)));
+          await onProgress({ ...p, next: p.next + 1 });
         }
       },
       async index(ids, project) {
@@ -211,27 +220,24 @@ export function createIndexing(deps) {
   async function prepareStep(list) {
     const prepared = (await deps.state.prepared.get()) ?? {};
     for (const part of list) {
-      const p = prepared[part] ?? { at: 0, next: 0, boards: null };
+      const p = prepared[part] ?? { at: 0 };
       if (deps.now() - p.at < INDEX_PREPARE_TTL_MS) continue;
       await parts[part].prepare({
-        from: p.next,
-        boards: p.boards ?? null,
-        onProgress: async (next, boards) => {
-          prepared[part] = { at: p.at, next, boards };
+        progress: p.progress ?? {},
+        onProgress: async (progress) => {
+          prepared[part] = { at: p.at, progress };
           await deps.state.prepared.set(prepared);
         },
       });
-      prepared[part] = { at: deps.now(), next: 0, boards: null };
+      prepared[part] = { at: deps.now() };
       await deps.state.prepared.set(prepared);
     }
   }
 
-  /** Prepares the parts (boards and sprints) once a day, resuming board by board, leaving one smallest issue slice of the points scope. */
+  /** Prepares the parts (boards and sprints) once a day with what the issue slices left, resuming the board list and the boards where it stopped. */
   async function prepareParts(list) {
-    const scope = deps.currentPoints?.();
-    const room = scope && Number.isFinite(scope.limit) ? scope.limit - scope.spent : Infinity;
     try {
-      await (room === Infinity || !deps.withPoints ? prepareStep(list) : deps.withPoints(Math.max(0, room - INDEX_SLICE_MIN * INDEX_ISSUE_POINTS - POINTS_OVERHEAD), () => prepareStep(list), { scope: 'prepare' }));
+      await prepareStep(list);
     } catch (error) {
       if (error?.name !== 'PointsError') throw error;
     }
@@ -254,10 +260,15 @@ export function createIndexing(deps) {
    * goes through doubles it back; a query Jira rejects starts the window over; the run ends when Jira names no next page.
    */
   async function checkRecent(list, startedAt) {
+    const done = await readRecent(list, startedAt);
+    await prepareParts(list);
+    return done;
+  }
+
+  async function readRecent(list, startedAt) {
     const saved = (await deps.state.recentIndex.get()) ?? { at: null, run: null };
     const run = saved.run ?? newRun(saved.at, startedAt);
     const keep = (r) => deps.state.recentIndex.set({ at: saved.at, run: r });
-    await prepareParts(list);
     let read = 0;
     for (;;) {
       const size = recentSlice(read, run.cap);
@@ -312,12 +323,18 @@ export function createIndexing(deps) {
     await deps.migrate();
     const started = [];
     for (const part of shipped) {
-      const progress = await deps.state.progress.getPart(part);
-      if (progress?.finishedAt) await startWaiting(deps, part);
-      else if (progress) await resumeStalled(part, progress);
-      else {
-        await startBackfill(deps, part);
-        started.push(part);
+      try {
+        const progress = await deps.state.progress.getPart(part);
+        if (progress?.finishedAt) await startWaiting(deps, part);
+        else if (progress) await resumeStalled(part, progress);
+        else {
+          await startBackfill(deps, part);
+          started.push(part);
+        }
+      } catch (error) {
+        if (error?.name === 'PointsError' || error?.name === 'RateLimitError') throw error;
+        console.error(LOG.indexFillNotStarted());
+        await deps.state.recordError({ at: deps.now(), functionName: null, message: LOG.indexFillNotStarted() });
       }
     }
     const recent = await checkRecent(shipped.filter((part) => !started.includes(part)), startedAt);

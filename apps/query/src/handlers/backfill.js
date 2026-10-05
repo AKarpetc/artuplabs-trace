@@ -78,9 +78,14 @@ export async function purgeExcluded(deps) {
   return { purged };
 }
 
-/** Starts the fill of the projects kept for one part, then forgets them; null when none wait. */
+/** Starts the fill of the projects kept for one part that Jira still knows, then forgets them all; null when none wait. */
 export async function startWaiting(deps, part) {
-  const projects = await deps.state.waiting.get(part);
+  const waiting = await deps.state.waiting.get(part);
+  if (!waiting.length) return null;
+  const known = new Set((await deps.jira.projects()).map((p) => p.key));
+  const gone = waiting.filter((p) => !known.has(p.key));
+  if (gone.length) await deps.state.waiting.remove(part, gone.map((p) => p.key));
+  const projects = waiting.filter((p) => known.has(p.key));
   if (!projects.length) return null;
   const progress = await startBackfill(deps, part, { projects });
   await deps.state.waiting.remove(part, projects.map((p) => p.key));
@@ -101,7 +106,7 @@ export function sliceSize(deps) {
 
 /**
  * Reads and indexes the next slice of a project (the issues after the last one indexed, by id, as many as the slice size) and moves the
- * cursor past it; a project Jira no longer finds (400) is logged and kept for a later fill; rows of a project excluded meanwhile are deleted
+ * cursor past it; a project Jira no longer finds (400) is logged and left; rows of a project excluded meanwhile are deleted
  * and the project is left; a project ends only when Jira names no next page.
  */
 async function fillSlice(deps, part, p, project, size) {
@@ -114,7 +119,6 @@ async function fillSlice(deps, part, p, project, size) {
     if (error?.name !== 'JiraError' || error.status !== 400) throw error;
     console.error(LOG.indexProjectMissing());
     await deps.state.recordError({ at: deps.now(), functionName: null, message: LOG.indexProjectMissing() });
-    await deps.state.waiting.add(part, [project]);
     skipProject(c);
     return;
   }
