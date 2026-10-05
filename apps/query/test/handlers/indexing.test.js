@@ -423,7 +423,7 @@ describe('new statuses', () => {
 
 describe('index check with the real points scope', () => {
   const T0 = Date.parse('2026-10-05T07:10:00Z');
-  function realDeps(total, { projects = 1, tokenLife = 30 * 60 * 1000, fieldCap = Infinity, boards = 0, sprintsPer = 0 } = {}) {
+  function realDeps(total, { projects = 1, tokenLife = 30 * 60 * 1000, fieldCap = Infinity, boards = 0, sprintsPer = 0, goneBoards = new Set() } = {}) {
     const deps = makeDeps();
     let now = T0;
     deps.now = () => now;
@@ -464,6 +464,7 @@ describe('index check with the real points scope', () => {
       if (path.includes('/status')) return ok([]);
       if (path.includes('/field')) return ok([]);
       const sprintsOf = /\/board\/(\d+)\/sprint/.exec(path);
+      if (sprintsOf && goneBoards.has(Number(sprintsOf[1]))) return { status: 404, headers: { get: () => null }, text: async () => JSON.stringify({ errorMessages: ['Board does not exist'] }) };
       if (sprintsOf) return ok({ values: Array.from({ length: sprintsPer }, (_, i) => ({ id: Number(sprintsOf[1]) * 100 + i, name: 's', state: 'closed' })), isLast: true });
       if (path.includes('/agile/1.0/board')) {
         deps.boardReads = (deps.boardReads ?? 0) + 1;
@@ -573,5 +574,29 @@ describe('index check with the real points scope', () => {
       deps.advance(60 * 60 * 1000);
     }
     expect([results[0].reindexed, await deps.state.waiting.get('sprint')]).toEqual([20, []]);
+  });
+  it('goes past a board deleted while the boards are prepared, without stopping the reconcile', async () => {
+    const goneBoards = new Set();
+    const deps = realDeps(10, { boards: 100, sprintsPer: 1, goneBoards });
+    await built(deps);
+    const indexing = createIndexing(deps);
+    await run(deps, indexing, 300);
+    const next = (await deps.state.prepared.get()).sprint.progress.next;
+    goneBoards.add(next + 1);
+    for (let hour = 0; hour < 24 && !((await deps.state.prepared.get()).sprint.at > 0); hour += 1) {
+      deps.advance(60 * 60 * 1000);
+      await run(deps, indexing, 300);
+    }
+    expect((await deps.state.prepared.get()).sprint.at).toBeGreaterThan(0);
+  });
+  it('logs a failure while preparing the boards without its text and goes on with the reconcile', async () => {
+    const deps = realDeps(10, { boards: 5, sprintsPer: 1 });
+    await built(deps);
+    deps.jira.boardPage = async () => { throw Object.assign(new Error('secret board name'), { name: 'JiraError', status: 500 }); };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = await run(deps, createIndexing(deps), 300);
+    expect(error.mock.calls.map((c) => c.join(' ')).some((l) => l.includes('secret'))).toBe(false);
+    error.mockRestore();
+    expect([result.reindexed, (await deps.state.errors())[0].message]).toEqual([10, 'Index boards could not be read']);
   });
 });

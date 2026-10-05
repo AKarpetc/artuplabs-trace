@@ -84,7 +84,10 @@ export async function startWaiting(deps, part) {
   if (!waiting.length) return null;
   const known = new Set((await deps.jira.projects()).map((p) => p.key));
   const gone = waiting.filter((p) => !known.has(p.key));
-  if (gone.length) await deps.state.waiting.remove(part, gone.map((p) => p.key));
+  if (gone.length) {
+    await deps.state.waiting.remove(part, gone.map((p) => p.key));
+    await deps.state.recordError({ at: deps.now(), functionName: null, message: LOG.indexProjectDropped() });
+  }
   const projects = waiting.filter((p) => known.has(p.key));
   if (!projects.length) return null;
   const progress = await startBackfill(deps, part, { projects });

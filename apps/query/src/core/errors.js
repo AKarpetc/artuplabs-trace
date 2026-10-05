@@ -82,6 +82,8 @@ export const LOG = {
   waited: () => 'Waited too long for the Jira rate limit',
   indexProjectMissing: () => 'Index fill skipped a project Jira did not find',
   indexFillNotStarted: () => 'Index fill could not be started',
+  indexProjectDropped: () => 'Index fill dropped a project Jira did not find',
+  indexBoardsFailed: () => 'Index boards could not be read',
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

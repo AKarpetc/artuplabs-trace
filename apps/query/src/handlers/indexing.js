@@ -111,7 +111,13 @@ export function createIndexing(deps) {
         }
         for (; p.next < p.boards.length; p.next += 1) {
           const board = p.boards[p.next];
-          await deps.repo.upsertSprints((await deps.jira.sprints(board)).map((s) => sprintRow(s, board)));
+          let sprints = [];
+          try {
+            sprints = await deps.jira.sprints(board);
+          } catch (error) {
+            if (error?.name !== 'JiraError' || ![403, 404].includes(error.status)) throw error;
+          }
+          if (sprints.length) await deps.repo.upsertSprints(sprints.map((s) => sprintRow(s, board)));
           await onProgress({ ...p, next: p.next + 1 });
         }
       },
@@ -239,7 +245,10 @@ export function createIndexing(deps) {
     try {
       await prepareStep(list);
     } catch (error) {
-      if (error?.name !== 'PointsError') throw error;
+      if (error?.name === 'PointsError') return;
+      if (error?.name === 'RateLimitError') throw error;
+      console.error(LOG.indexBoardsFailed());
+      await deps.state.recordError({ at: deps.now(), functionName: null, message: LOG.indexBoardsFailed() });
     }
   }
 

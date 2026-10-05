@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createJournal } from '../../src/infra/journal.js';
 import { createState } from '../../src/infra/state.js';
-import { backfillProjects, onBackfill, startBackfill } from '../../src/handlers/backfill.js';
+import { backfillProjects, onBackfill, startBackfill, startWaiting } from '../../src/handlers/backfill.js';
 import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
 import { createJira, currentPoints, withPoints } from '../../src/infra/jira.js';
 import { createLedger, newProcessPoints } from '../../src/infra/points.js';
@@ -286,5 +286,13 @@ describe('backfill under the points budget', () => {
     expect(error.mock.calls.map((c) => c.join(' ')).some((l) => l.includes('value A'))).toBe(false);
     error.mockRestore();
     expect([result.finished, await deps.state.waiting.get('sprint'), (await deps.state.errors())[0].message]).toEqual([true, [], 'Index fill skipped a project Jira did not find']);
+    expect((await deps.state.progress.getPart('sprint')).cursor).toBe(null);
+  });
+  it('logs the projects it drops from the waiting list because Jira no longer knows them', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await deps.state.progress.setPart('sprint', { generation: 1, finishedAt: 5, readyAt: 5 });
+    await deps.state.waiting.add('sprint', [{ id: '9', key: 'GONE' }]);
+    await startWaiting(deps, 'sprint');
+    expect([await deps.state.waiting.get('sprint'), (await deps.state.errors())[0]?.message]).toEqual([[], 'Index fill dropped a project Jira did not find']);
   });
 });
