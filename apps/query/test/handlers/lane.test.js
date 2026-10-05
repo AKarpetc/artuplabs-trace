@@ -66,7 +66,7 @@ describe('heavy lane under the points budget', () => {
     await deps.points.add('heavy', 600);
     await deps.state.heavy.put(entry('a', BUDGET_AT - 2000, { tries: 1 }));
     expect((await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }))).heavy).toMatchObject({ computed: key('a'), stopped: 'lane' });
-    expect(await deps.state.heavy.get(key('a'))).toEqual(entry('a', BUDGET_AT - 2000, { tries: 1, stops: 1, pts: 1900, floor: true }));
+    expect(await deps.state.heavy.get(key('a'))).toEqual(entry('a', BUDGET_AT - 2000, { tries: 1, stops: 1, pts: 1900, floor: true, floorAt: BUDGET_AT }));
     expect(deps.pushed).toEqual([[{ kind: 'wake' }, 300]]);
   });
   it('writes the error with its numbers and drops the group when it passes the group limit', async () => {
@@ -232,12 +232,21 @@ describe('heavy lane, second round', () => {
     expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy).toEqual({ waiting: Date.parse('2026-10-05T07:30:00Z') });
     expect(compute).not.toHaveBeenCalled();
   });
-  it('retries a failed light group whatever the heavy reserve has left', async () => {
+  it('leaves a failed light group waiting while the heavy reserve is spent, instead of a run stopped at once', async () => {
     const compute = spending([10]);
     const deps = laneDeps({ queries: ['a'], compute });
     await deps.cache.write(key('a'), { values: ['3'], watch: ['9'], field: 'parent', rootFilter: null, at: 1, source: 'job', pts: 100 });
     await deps.points.add('heavy', 2500);
     await deps.state.heavy.put(entry('a', BUDGET_AT - 2000, { retry: true }));
+    expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy).toEqual({ waiting: Date.parse('2026-10-05T07:30:00Z') });
+    expect(compute).not.toHaveBeenCalled();
+  });
+  it('trusts a finished run over a lower bound that a stop left before it', async () => {
+    const compute = spending([10]);
+    const deps = laneDeps({ queries: ['a'], compute });
+    await deps.cache.write(key('a'), { values: ['3'], watch: ['9'], field: 'parent', rootFilter: null, at: 1, source: 'job', pts: 300, startedAt: BUDGET_AT - 1000 });
+    await deps.points.add('heavy', 2000);
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000, { pts: 700, floor: true, floorAt: BUDGET_AT - 5000 }));
     expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy).toMatchObject({ computed: key('a') });
   });
 });

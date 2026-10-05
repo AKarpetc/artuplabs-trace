@@ -6,7 +6,7 @@ const HEAVY_PREFIX = 'q:hq:';
 const INDEX_PARTS = ['sprint', 'comments'];
 
 /** The points a stored job or lane entry keeps (`pts`, `floor`), when it has them. */
-export const keptPoints = (record) => (record?.pts === undefined ? {} : { pts: record.pts, floor: Boolean(record.floor) });
+export const keptPoints = (record) => (record?.pts === undefined ? {} : { pts: record.pts, floor: Boolean(record.floor), ...(record.floorAt ? { floorAt: record.floorAt } : {}) });
 
 /** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`, each group waiting in the heavy lane `q:hq:<hash(group)>` (both may keep the Jira points the group spent, `pts`, and whether they are a lower bound, `floor`; a job added again without them keeps the stored ones), the start of the computation that last wrote a group `q:gw:<hash(group)>`, the start of the pass that skipped a group outside the used window `q:skip:<hash(group)>`, and the projects an index part fills once its running fill ends `idx:waiting:<part>`, the journal cut of a pass the points budget stopped `q:cut` (`{ key, startedAt, done }`), the end and reason of a pause of the background work for Jira's rate limit `q:brake` and the time of the wake scheduled for it `q:wake`, and the cached Jira field list `cfg:fields`. */
 export function createState({ kvs, hash, beginsWith }) {

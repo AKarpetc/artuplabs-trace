@@ -4,7 +4,7 @@ import { FUNCTIONS, takesSubquery } from '../core/catalog.js';
 import { ERR, LOG } from '../core/errors.js';
 import { errorKindOf } from '../core/affected.js';
 import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, NEAR_FN_POINTS, PAGE_CACHE_MS, VALUE_LIMIT } from '../core/limits.js';
-import { admit, countQueryOf, estimate, groupClass, groupLimit, hourKey, issuesWithin, laneRoom, retryAfter } from '../core/points.js';
+import { admit, countQueryOf, estimate, groupClass, groupLimit, hourKey, issuesWithin, knownCost, laneRoom, retryAfter } from '../core/points.js';
 import { forOperator } from '../core/jql-build.js';
 import { buildFragment, valuesOf } from '../core/tree.js';
 import { brake, brakeOf, isRateLimit } from './brake.js';
@@ -114,9 +114,9 @@ async function countOf(deps, query) {
  * it is counted, so an invalid one throws its Jira 400. `job` is the group's stored job when the caller has read it.
  */
 export async function costOf(deps, functionName, args, key, meta, job) {
-  if (meta?.pts !== undefined && meta?.pts !== null) return { n: null, points: meta.pts, floor: false, measured: true };
   const stored = job === undefined ? await deps.state.job(key) : job;
-  if (stored?.pts !== undefined) return { n: null, points: stored.pts, floor: Boolean(stored.floor) };
+  const known = knownCost(meta, stored);
+  if (known) return { n: null, ...known };
   const query = countQueryOf(functionName, args);
   if (!query || estimate(functionName, 1).points === estimate(functionName, 0).points) return { n: null, ...estimate(functionName, null) };
   if (takesSubquery(functionName)) await deps.jira.validateJql(args.subquery);

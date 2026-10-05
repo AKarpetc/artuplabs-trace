@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BUDGET_AT, makeDeps, never, spend, withBudget } from './makeDeps.js';
 import { brakeNear } from '../../src/handlers/brake.js';
-import { computeGroup, createFunctionHandlers, fragmentFor, handleFunction, licenceInput } from '../../src/handlers/functions.js';
+import { computeGroup, costOf, createFunctionHandlers, fragmentFor, handleFunction, licenceInput } from '../../src/handlers/functions.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
 import { createBoardCompute } from '../../src/compute/boards.js';
 import { createFieldCompute } from '../../src/compute/fields.js';
@@ -522,5 +522,15 @@ describe('precomputation list after a function call', () => {
     await handleFunction(deps, 'parentsOf', withId(payload('q')), DEV);
     error.mockRestore();
     expect(l.marked).toEqual([1]);
+  });
+});
+
+describe('cost of a group', () => {
+  it('takes a lower bound newer than the last finished run, and the finished run over an older one', async () => {
+    const deps = withBudget(fnDeps({}));
+    await deps.state.addJob({ key: 'k', functionName: 'parentsOf', userArgs: ['q'], at: 1, pts: 700, floor: true, floorAt: 50 });
+    const newer = await costOf(deps, 'parentsOf', { subquery: 'q' }, 'k', { pts: 300, startedAt: 10 });
+    const older = await costOf(deps, 'parentsOf', { subquery: 'q' }, 'k', { pts: 300, startedAt: 100 });
+    expect([newer.points, older.points]).toEqual([700, 300]);
   });
 });

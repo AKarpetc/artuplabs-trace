@@ -5,7 +5,7 @@ import { groupPrecomputations, usedWithin } from '../core/affected.js';
 import { forOperator } from '../core/jql-build.js';
 import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_MIN_INTERVAL_MS, HEAVY_QUEUED_STALE_MS, HEAVY_WAIT_MAX_MS, REFRESH_RETRY_DELAY_S, REFRESH_USED_MS, PAGE_CACHE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
 import { computeGroup, costOf, fragmentFor, rejectedByJira } from './functions.js';
-import { admit, groupClass, groupLimit, HOUR_MS, hourKey, issuesWithin, laneRoom, lightLimit, retryAfter } from '../core/points.js';
+import { admit, groupClass, groupLimit, HOUR_MS, knownCost, hourKey, issuesWithin, laneRoom, lightLimit, retryAfter } from '../core/points.js';
 import { keptPoints } from '../infra/state.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
@@ -115,6 +115,8 @@ export async function writeGroups(deps, startedAt, byGroup) {
   return out.length;
 }
 
+export { knownCost };
+
 /**
  * Whether a group belongs to the heavy lane: it waits there, or its last computation took longer than a refresh pass may spend on it, or
  * (under a points budget) cost, or a stopped background job of it spent, more than a light group may; `meta` is its cache meta when the caller
@@ -127,13 +129,6 @@ export async function isHeavy(deps, group, meta) {
   return Boolean(deps.siteCap) && groupClass(knownCost(m, group.job ?? null), deps.siteCap) === 'medium';
 }
 
-/** The cost a group is known to have: the points of its last finished computation (cache meta), else what a stopped one spent (its job), else null. */
-export function knownCost(meta, job) {
-  const bound = job?.pts !== undefined ? { points: job.pts, floor: Boolean(job.floor) } : null;
-  const measured = meta?.pts !== undefined && meta?.pts !== null ? { points: meta.pts, floor: false, measured: true } : null;
-  if (measured && bound?.floor && bound.points > measured.points) return bound;
-  return measured ?? bound;
-}
 
 /** The result of a group dearer than the group limit: the error with its numbers, which its precomputations store. */
 export function overLimit(group, cost, cap) {
@@ -209,7 +204,7 @@ export async function runCompute(deps, body) {
     if (error?.name === 'PointsError') {
       console.error(`${body.functionName} stopped by the Jira points budget`);
       const pts = error.limit >= groupLimit(deps.siteCap) ? Math.max(error.spent, error.limit) : error.spent;
-      await deps.state.addJob({ ...job, pts, floor: true });
+      await deps.state.addJob({ ...job, pts, floor: true, floorAt: deps.now() });
       return { computed: key, stopped: error.scope };
     }
     if (!isRateLimit(error)) throw error;
@@ -314,8 +309,7 @@ async function pickHeavy(deps, queued, groups) {
       continue;
     }
     const cost = knownCost(meta, job)?.points ?? (cap ? lightLimit(cap) : 0);
-    const lightRetry = job.retry && cap && cost <= lightLimit(cap);
-    if (cost > room && !lightRetry) {
+    if (cost > room) {
       waits.push(retryAfter(now));
       continue;
     }
@@ -384,7 +378,7 @@ async function runPicked(deps, { job, group, room }) {
       return { heavy: { computed: running.key, tooExpensive: true } };
     }
     if (error?.name === 'PointsError') {
-      await putBack(deps, running, { pts: Math.max(error.spent, running.pts ?? 0), floor: true });
+      await putBack(deps, running, { pts: Math.max(error.spent, running.pts ?? 0), floor: true, floorAt: deps.now() });
       return { heavy: { computed: running.key, stopped: 'lane' }, wake: retryAfter(deps.now()) };
     }
     if (isRateLimit(error)) {

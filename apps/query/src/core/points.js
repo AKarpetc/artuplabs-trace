@@ -166,3 +166,11 @@ export function passInterval(overhead, cap) {
   const seconds = Math.round((3600 * overhead) / (REFRESH_OVERHEAD_SHARE * reserveOf('refresh', cap)));
   return Math.min(PASS_INTERVAL_MAX_S, Math.max(PASS_INTERVAL_MIN_S, seconds));
 }
+
+/** The cost a group is known to have: its last finished run (cache meta) unless a stop after it left a higher lower bound, else that bound, else null. */
+export function knownCost(meta, job) {
+  const bound = job?.pts !== undefined ? { points: job.pts, floor: Boolean(job.floor) } : null;
+  const measured = meta?.pts !== undefined && meta?.pts !== null ? { points: meta.pts, floor: false, measured: true } : null;
+  if (measured && bound?.floor && bound.points > measured.points && (job.floorAt ?? Infinity) > (meta.startedAt ?? 0)) return bound;
+  return measured ?? bound;
+}

@@ -100,7 +100,7 @@ async function reconcileGroups(deps, startedAt, limit) {
         return;
       }
       if (error?.name === 'PointsError') {
-        await handOver(group, { pts: error.spent, floor: true });
+        await handOver(group, { pts: error.spent, floor: true, floorAt: deps.now() });
         return;
       }
       if (!isDeadline(error)) {

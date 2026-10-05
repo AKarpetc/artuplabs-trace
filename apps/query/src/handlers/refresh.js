@@ -190,7 +190,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
             return;
           }
           if (error?.name === 'PointsError') {
-            await handOver(group, { pts: Math.max(error.spent, group.job?.pts ?? 0), floor: true });
+            await handOver(group, { pts: Math.max(error.spent, group.job?.pts ?? 0), floor: true, floorAt: deps.now() });
             done.push(group.key);
             return;
           }
