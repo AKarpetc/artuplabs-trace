@@ -172,9 +172,13 @@ export const RECENT_WINDOW_MIN = 120;
 export const RECENT_WINDOW_MARGIN_MIN = 10;
 /** How long after half past or the hour a backfill waiting for its reserve starts, so refresh and the heavy lane take first. */
 export const BACKFILL_WAKE_DELAY_MS = 60 * 1000;
-/** Points one issue costs a backfill or index check slice (its search, its changelog or comment read, and some slack). */
+/** Points one issue costs a backfill or index check slice: its search, its changelog read and its comment read (the slice cap covers more). */
 export const INDEX_ISSUE_POINTS = 3;
 /** Fewest issues a backfill or index check slice reads; with less room left the run stops until the next allowance. */
 export const INDEX_SLICE_MIN = 20;
 /** Shortest time between two reads of the status list for a status the cache does not know. */
 export const STATUS_REREAD_MS = 5 * 60 * 1000;
+/** How long the index check reuses the boards and sprints a part prepared. */
+export const INDEX_PREPARE_TTL_MS = 24 * 60 * 60 * 1000;
+/** Points of the reconcile reserve the index check keeps however much the group rewrites spend: one slice of the recent issues. */
+export const INDEX_CHECK_MIN_POINTS = 200;

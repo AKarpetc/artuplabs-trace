@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BUDGET_AT, makeDeps, RECENT, spend, withBudget } from './makeDeps.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
-import { HEAVY_RECONCILE_MS, REFRESH_GROUP_BUDGET_MS } from '../../src/core/limits.js';
+import { HEAVY_RECONCILE_MS, INDEX_CHECK_MIN_POINTS, REFRESH_GROUP_BUDGET_MS } from '../../src/core/limits.js';
 
 const old = new Date(1000000 - 2 * 3600000).toISOString();
 
@@ -162,5 +162,16 @@ describe('onReconcile with skipped groups, the journal and its points', () => {
     await deps.state.skip.set('parentsOf["q"]', 1000000 - 5 * 60000);
     await onReconcile(deps);
     expect(await deps.state.skip.get('parentsOf["q"]')).toEqual(1000001);
+  });
+  it('leaves the index check its minimum however much the groups spend', async () => {
+    const old = new Date(BUDGET_AT - 2 * 3600000).toISOString();
+    const used = new Date(BUDGET_AT - 60000).toISOString();
+    const pcs = ['a', 'b', 'c'].map((q) => ({ id: q, functionName: 'parentsOf', arguments: [q], value: 'id in (1)', used, updated: old }));
+    const deps = withBudget(makeDeps({ pcs, compute: { parentsOf: async () => { await spend(400); return { ids: ['2'], field: 'id', watch: [] }; } } }), { cap: 9000 });
+    deps.indexReconcile = async () => deps.currentPoints();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { index } = await onReconcile(deps);
+    error.mockRestore();
+    expect(index.limit).toBeGreaterThanOrEqual(INDEX_CHECK_MIN_POINTS);
   });
 });

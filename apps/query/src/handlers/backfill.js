@@ -15,7 +15,7 @@ export async function startBackfill(deps, part, { projects } = {}) {
   const scope = projects ?? (await deps.jira.projects()).filter((p) => !excluded.has(p.key));
   const old = await deps.state.progress.getPart(part);
   const total = scope.length ? await deps.jira.approximateCount(`project in (${inList(scope)})`) : 0;
-  const progress = { generation: deps.now(), startedAt: deps.now(), done: 0, total, cursor: { projects: scope, index: 0, token: null, offset: 0 }, finishedAt: null, readyAt: old?.readyAt ?? null, ...(projects ? { partial: true } : {}) };
+  const progress = { generation: deps.now(), startedAt: deps.now(), done: 0, total, cursor: { projects: scope, index: 0, after: null }, finishedAt: null, readyAt: old?.readyAt ?? null, ...(projects ? { partial: true } : {}) };
   await deps.state.progress.setPart(part, progress);
   await deps.backfillQueue.push({ kind: 'backfill', part, generation: progress.generation });
   await deps.indexParts[part].prepare();
@@ -89,8 +89,7 @@ export async function startWaiting(deps, part) {
 
 const skipProject = (c) => {
   c.index += 1;
-  c.token = null;
-  c.offset = 0;
+  c.after = null;
 };
 
 /** Issues the next slice may read: CHANGELOG_BATCH, or fewer when the points scope of the run has less room left. */
@@ -101,12 +100,21 @@ export function sliceSize(deps) {
 }
 
 /**
- * Reads and indexes the next slice of a project (one search page of the slice size, from the saved token) and moves the cursor past it;
- * rows of a project excluded meanwhile are deleted and the project is left.
+ * Reads and indexes the next slice of a project (the issues after the last one indexed, by id, as many as the slice size) and moves the
+ * cursor past it; a project Jira no longer finds (400) is left; rows of a project excluded meanwhile are deleted and the project is left.
  */
 async function fillSlice(deps, part, p, project, size) {
   const c = p.cursor;
-  const page = await deps.jira.searchPage(`project = "${project.key}" ORDER BY id ASC`, c.token, { maxResults: size });
+  const after = c.after ? ` AND id > ${c.after}` : '';
+  let page;
+  try {
+    page = await deps.jira.searchPage(`project = "${project.key}"${after} ORDER BY id ASC`, null, { maxResults: size });
+  } catch (error) {
+    if (error?.name !== 'JiraError' || error.status !== 400) throw error;
+    console.error(`backfill search failed: ${error.status}`);
+    skipProject(c);
+    return;
+  }
   const slice = page.ids.slice(0, size);
   if (slice.length) {
     await deps.indexParts[part].index(slice, project);
@@ -116,11 +124,9 @@ async function fillSlice(deps, part, p, project, size) {
       return;
     }
     p.done += slice.length;
+    c.after = slice[slice.length - 1];
   }
-  if (page.nextPageToken) {
-    c.token = page.nextPageToken;
-    c.offset = 0;
-  } else skipProject(c);
+  if (slice.length < size || !page.nextPageToken) skipProject(c);
 }
 
 async function finish(deps, part, p) {

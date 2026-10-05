@@ -41,6 +41,7 @@ export function createState({ kvs, hash, beginsWith }) {
     sprintFields: record('cfg:sprintFields'),
     statuses: record('cfg:status'),
     recentIndex: record('idx:recent'),
+    prepared: record('idx:prepared'),
     fields: record('cfg:fields'),
     progress: {
       async get() {

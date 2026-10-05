@@ -29,9 +29,9 @@ function makeDeps({ pages, cost = 0 }) {
       },
       searchPage: async (jql, token, { maxResults = 5000 } = {}) => {
         const all = pages[/project = "([^"]+)"/.exec(jql)[1]] ?? [];
-        const from = Number(token ?? 0);
-        const next = from + maxResults;
-        return { ids: all.slice(from, next), nextPageToken: next < all.length ? String(next) : null };
+        const after = Number(/id > (\d+)/.exec(jql)?.[1] ?? 0);
+        const rest = all.filter((id) => Number(id) > after);
+        return { ids: rest.slice(0, maxResults), nextPageToken: rest.length > maxResults ? 'unused' : null };
       },
     },
     indexParts: { sprint: { prepare: vi.fn(async () => {}), index: async (ids, project) => { indexed.push([project.key, ids.length]); now += cost; } } },
@@ -51,7 +51,7 @@ describe('backfill', () => {
     const deps = makeDeps({ pages: PAGES });
     await deps.state.progress.setPart('sprint', { readyAt: 7 });
     const p = await startBackfill(deps, 'sprint');
-    expect(p).toEqual({ generation: 1000, startedAt: 1000, done: 0, total: 4500, cursor: { projects: [{ id: '1', key: 'A' }, { id: '2', key: 'B' }], index: 0, token: null, offset: 0 }, finishedAt: null, readyAt: 7 });
+    expect(p).toEqual({ generation: 1000, startedAt: 1000, done: 0, total: 4500, cursor: { projects: [{ id: '1', key: 'A' }, { id: '2', key: 'B' }], index: 0, after: null }, finishedAt: null, readyAt: 7 });
     expect(deps.counted).toEqual(['project in ("A", "B")']);
     expect(deps.indexParts.sprint.prepare).toHaveBeenCalled();
     expect(deps.pushed).toEqual([{ kind: 'backfill', part: 'sprint', generation: 1000 }]);
@@ -69,7 +69,7 @@ describe('backfill', () => {
     await startBackfill(deps, 'sprint');
     expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ continued: true, done: 3000 });
     const saved = await deps.state.progress.getPart('sprint');
-    expect(saved.cursor).toEqual({ projects: [{ id: '1', key: 'A' }, { id: '2', key: 'B' }], index: 0, token: '3000', offset: 0 });
+    expect(saved.cursor).toEqual({ projects: [{ id: '1', key: 'A' }, { id: '2', key: 'B' }], index: 0, after: '3000' });
     expect(saved.savedAt).toBe(301000);
     expect(deps.pushed.at(-1)).toEqual({ kind: 'backfill', part: 'sprint', generation: 1000 });
   });
@@ -80,7 +80,7 @@ describe('backfill', () => {
     deps.indexed.length = 0;
     expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ continued: true, done: 6000 });
     expect(deps.indexed).toEqual([['A', 1000], ['A', 1000], ['A', 1000]]);
-    expect((await deps.state.progress.getPart('sprint')).cursor).toMatchObject({ index: 0, token: '6000', offset: 0 });
+    expect((await deps.state.progress.getPart('sprint')).cursor).toMatchObject({ index: 0, after: '6000' });
   });
   it('ignores a job of an older generation', async () => {
     const deps = makeDeps({ pages: PAGES });
@@ -221,9 +221,10 @@ describe('backfill under the points budget', () => {
     const request = async (path, init) => {
       const body = JSON.parse(init.body);
       if (path.includes('search/jql')) {
-        const from = Number(body.nextPageToken ?? 0);
-        const next = from + body.maxResults;
-        return { status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ issues: big.slice(from, next).map((id) => ({ id })), ...(next < big.length ? { nextPageToken: String(next) } : {}) }) };
+        if (body.nextPageToken) return { status: 400, headers: { get: () => null }, text: async () => JSON.stringify({ errorMessages: ['The provided next page token is invalid or expired.'] }) };
+        const after = Number(/id > (\d+)/.exec(body.jql)?.[1] ?? 0);
+        const rest = big.filter((id) => Number(id) > after);
+        return { status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ issues: rest.slice(0, body.maxResults).map((id) => ({ id })), ...(rest.length > body.maxResults ? { nextPageToken: 'expires' } : {}) }) };
       }
       return { status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ issueChangeLogs: body.issueIdsOrKeys.map((id) => ({ issueId: id })) }) };
     };
@@ -252,7 +253,7 @@ describe('backfill under the points budget', () => {
     const result = await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
     const saved = await deps.state.progress.getPart('sprint');
     expect(result.done).toBeGreaterThan(0);
-    expect([saved.done, saved.cursor.token]).toEqual([indexedIds(deps).length, String(indexedIds(deps).length)]);
+    expect([saved.done, saved.cursor.after]).toEqual([indexedIds(deps).length, String(indexedIds(deps).length)]);
   });
   it('never indexes an issue twice across runs of different allowances', async () => {
     const { deps } = budgeted();
@@ -262,5 +263,15 @@ describe('backfill under the points budget', () => {
     await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
     const all = indexedIds(deps);
     expect([new Set(all).size, (await deps.state.progress.getPart('sprint')).done]).toEqual([all.length, all.length]);
+  });
+  it('goes on after the last issue it indexed, with no page token, across hours', async () => {
+    const { deps } = budgeted();
+    const p = await startBackfill(deps, 'sprint');
+    for (let i = 0; i < 4; i += 1) {
+      await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
+      deps.advance(2 * 60 * 60 * 1000);
+    }
+    const all = indexedIds(deps);
+    expect([new Set(all).size, all.length > 900]).toEqual([all.length, true]);
   });
 });

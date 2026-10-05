@@ -2,14 +2,14 @@ import { SHIPPED_GROUPS } from '../core/catalog.js';
 import { sprintWindow } from '../core/boards.js';
 import { extOf } from '../core/comment-clauses.js';
 import {
-  BACKFILL_STALE_MS, COMMENT_PAGE, INDEX_ISSUE_POINTS, INDEX_SLICE_MIN, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_REREAD_MS, STATUS_TTL_MS,
+  BACKFILL_STALE_MS, COMMENT_PAGE, INDEX_ISSUE_POINTS, INDEX_PREPARE_TTL_MS, INDEX_SLICE_MIN, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_REREAD_MS, STATUS_TTL_MS,
 } from '../core/limits.js';
 import { indexPartOf } from '../core/readiness.js';
 import { sprintEvents, statusEvents, toMs } from '../core/sprint-history.js';
 import { startBackfill, startWaiting } from './backfill.js';
 
 const SPRINT_FIELD = 'com.pyxis.greenhopper.jira:gh-sprint';
-const RECENT_ORDER = ' ORDER BY updated ASC';
+const RECENT_ORDER = ' ORDER BY id ASC';
 const NUMERIC = /^\d+$/;
 
 const sprintRow = (s, boardId) => ({ id: String(s.id), boardId: String(boardId ?? s.originBoardId ?? 0), name: s.name ?? '', state: s.state ?? '', ...sprintWindow(s) });
@@ -50,15 +50,18 @@ export function createIndexing(deps) {
     return new Set(ids);
   }
 
-  /** Status categories from `cfg:status`; read again when stale, or when a needed status is missing and the last read is STATUS_REREAD_MS old. */
+  /** Status categories from `cfg:status`, read again when stale or for a missing status (at most every STATUS_REREAD_MS; one Jira does not list is not asked again). */
   async function statusCategories(needed = []) {
     const cached = await deps.state.statuses.get();
     const age = cached ? deps.now() - cached.at : Infinity;
     const map = cached ? new Map(cached.categories) : null;
-    const missing = map ? needed.some((id) => !map.has(String(id))) : true;
+    const unknown = new Set(cached?.unknown ?? []);
+    const missing = map ? needed.some((id) => !map.has(String(id)) && !unknown.has(String(id))) : true;
     if (map && age < STATUS_TTL_MS && !(missing && age >= STATUS_REREAD_MS)) return map;
     const categories = await deps.jira.statusCategories();
-    await deps.state.statuses.set({ at: deps.now(), categories: [...categories] });
+    const stillUnknown = [...new Set(needed.map(String))].filter((id) => !categories.has(id));
+    const misses = [...new Set([...(map && age < STATUS_TTL_MS ? unknown : []), ...stillUnknown])];
+    await deps.state.statuses.set({ at: deps.now(), categories: [...categories], ...(misses.length ? { unknown: misses } : {}) });
     return categories;
   }
 
@@ -180,54 +183,91 @@ export function createIndexing(deps) {
     await deps.backfillQueue.push({ kind: 'backfill', part, generation: progress.generation });
   }
 
-  /** The query of a new check: issues updated since the last finished one (at least RECENT_WINDOW_MIN), oldest first, outside excluded projects. */
-  async function windowQuery(last) {
-    const minutes = last === null ? RECENT_WINDOW_MIN : Math.max(RECENT_WINDOW_MIN, Math.ceil((deps.now() - last) / 60000) + RECENT_WINDOW_MARGIN_MIN);
-    const window = `updated >= -${minutes}m`;
+  /** The query of a check slice: issues updated since `since` (as minutes back from now), outside excluded projects, after `after`, by id. */
+  async function sliceQuery(run) {
+    const window = `updated >= -${Math.ceil((deps.now() - run.since) / 60000)}m`;
     const stored = await deps.state.excluded();
     const known = stored.length ? new Set((await deps.jira.projects()).map((p) => p.key)) : new Set();
     const excluded = stored.filter((k) => known.has(k));
-    return `${excluded.length ? `${window} AND project not in (${excluded.map((k) => `"${k}"`).join(', ')})` : window}${RECENT_ORDER}`;
+    const scope = excluded.length ? `${window} AND project not in (${excluded.map((k) => `"${k}"`).join(', ')})` : window;
+    return `${scope}${run.after ? ` AND id > ${run.after}` : ''}${RECENT_ORDER}`;
   }
 
-  /** Issues the next slice may read: what is left of RECONCILE_RECENT_MAX for this run, or fewer when the points scope has less room. */
-  function recentSlice(read) {
+  /** A new check run: its window starts at the last finished run (less a margin), at least RECENT_WINDOW_MIN back. */
+  function newRun(last, startedAt) {
+    const floor = startedAt - RECENT_WINDOW_MIN * 60000;
+    return { since: last === null ? floor : Math.min(floor, last - RECENT_WINDOW_MARGIN_MIN * 60000), startedAt, after: null, cap: null };
+  }
+
+  /** Issues the next slice may read: what is left of RECONCILE_RECENT_MAX this run, the run's cap and what the points scope has room for. */
+  function recentSlice(read, cap) {
     const scope = deps.currentPoints?.();
     const room = scope && Number.isFinite(scope.limit) ? scope.limit - scope.spent : Infinity;
-    return Math.min(RECONCILE_RECENT_MAX - read, Math.floor(room / INDEX_ISSUE_POINTS));
+    return Math.min(RECONCILE_RECENT_MAX - read, cap ?? Infinity, Math.floor(room / INDEX_ISSUE_POINTS));
+  }
+
+  async function prepareParts(list) {
+    const prepared = (await deps.state.prepared.get()) ?? {};
+    for (const part of list) {
+      if (deps.now() - (prepared[part] ?? 0) < INDEX_PREPARE_TTL_MS) continue;
+      await parts[part].prepare();
+      prepared[part] = deps.now();
+      await deps.state.prepared.set(prepared);
+    }
+  }
+
+  async function indexSlice(list, issues) {
+    const byProject = new Map();
+    for (const issue of issues) {
+      const p = issue.fields?.project;
+      if (!p) continue;
+      if (!byProject.has(p.id)) byProject.set(p.id, { project: p, ids: [] });
+      byProject.get(p.id).ids.push(String(issue.id));
+    }
+    for (const part of list) for (const { project, ids } of byProject.values()) await parts[part].index(ids, project);
   }
 
   /**
-   * Re-reads the recently updated issues in slices that fit the points left, saving the query and page token after each slice in
-   * `idx:recent`, so a run the points stop is continued by the next one; a finished run moves the window start to its own start.
+   * Re-reads the recently updated issues in slices by id that fit the points left, saving the run (window start, last id read, slice cap) in
+   * `idx:recent` after each slice, so a stopped run goes on with the next one; a slice the points stop halves the cap; a query Jira
+   * rejects starts the window over; a finished run moves the next window start to its own start.
    */
-  async function checkRecent(parts2, startedAt) {
+  async function checkRecent(list, startedAt) {
     const saved = (await deps.state.recentIndex.get()) ?? { at: null, run: null };
-    const run = saved.run ?? { jql: await windowQuery(saved.at), token: null, startedAt };
-    for (const part of parts2) await parts[part].prepare();
+    const run = saved.run ?? newRun(saved.at, startedAt);
+    const keep = (r) => deps.state.recentIndex.set({ at: saved.at, run: r });
+    await prepareParts(list);
     let read = 0;
     for (;;) {
-      const size = recentSlice(read);
-      if (size < INDEX_SLICE_MIN) {
-        await deps.state.recentIndex.set({ at: saved.at, run });
+      const size = recentSlice(read, run.cap);
+      if (size < Math.min(INDEX_SLICE_MIN, run.cap ?? INDEX_SLICE_MIN)) {
+        await keep(run);
         return read < RECONCILE_RECENT_MAX ? { reindexed: read, stopped: true } : { reindexed: read };
       }
-      const page = await deps.jira.searchPage(run.jql, run.token, { maxResults: size, fields: ['project'] });
-      const byProject = new Map();
-      for (const issue of page.issues.slice(0, size)) {
-        const p = issue.fields?.project;
-        if (!p) continue;
-        if (!byProject.has(p.id)) byProject.set(p.id, { project: p, ids: [] });
-        byProject.get(p.id).ids.push(String(issue.id));
+      let page;
+      try {
+        page = await deps.jira.searchPage(await sliceQuery(run), null, { maxResults: size, fields: ['project'] });
+      } catch (error) {
+        if (error?.name !== 'JiraError' || error.status !== 400) throw error;
+        console.error(`index check search failed: ${error.status}`);
+        await keep(null);
+        return { reindexed: read, failed: true };
       }
-      for (const part of parts2) for (const { project, ids } of byProject.values()) await parts[part].index(ids, project);
-      read += page.ids.length;
-      if (!page.nextPageToken) {
+      const issues = page.issues.slice(0, size);
+      try {
+        await indexSlice(list, issues);
+      } catch (error) {
+        if (error?.name !== 'PointsError') throw error;
+        await keep({ ...run, cap: Math.max(1, Math.floor(size / 2)) });
+        return { reindexed: read, stopped: true };
+      }
+      read += issues.length;
+      if (issues.length < size) {
         await deps.state.recentIndex.set({ at: run.startedAt, run: null });
         return { reindexed: read };
       }
-      run.token = page.nextPageToken;
-      await deps.state.recentIndex.set({ at: saved.at, run });
+      run.after = String(issues[issues.length - 1].id);
+      await keep(run);
     }
   }
 

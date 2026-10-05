@@ -1,7 +1,7 @@
 import { groupPrecomputations, reconcileTargets, rewriteDue } from '../core/affected.js';
 import { LOG } from '../core/errors.js';
 import { admit, groupClass, hourKey, laneRoom, lightLimit } from '../core/points.js';
-import { ACTIVE_MS, HEAVY_RECONCILE_MS, LEASE_MS, PENDING_STALE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, POINTS_OVERHEAD, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS } from '../core/limits.js';
+import { ACTIVE_MS, HEAVY_RECONCILE_MS, LEASE_MS, PENDING_STALE_MS, RECONCILE_MAX_GROUPS, RECONCILE_STALE_MS, RECONCILE_USED_MS, INDEX_CHECK_MIN_POINTS, POINTS_OVERHEAD, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { groupWrite, handOff, isDeadline, isHeavy, knownCost, listPrecomputations, overLimit, pushQuietly, rewrite, writeGroups } from './groups.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
@@ -139,8 +139,9 @@ async function reconcileOnce(deps) {
   const startedAt = deps.now();
   await restartJournal(deps, startedAt);
   const room = await reconcileRoom(deps, startedAt);
-  const done = room.refused ? { groups: 0, changed: 0, queued: false, spent: 0 } : await reconcileGroups(deps, startedAt, room.limit);
+  const groupRoom = Math.max(0, room.limit - INDEX_CHECK_MIN_POINTS);
+  const done = room.refused || groupRoom === 0 ? { groups: 0, changed: 0, queued: false, spent: 0 } : await reconcileGroups(deps, startedAt, groupRoom);
   if (done.queued || (await deps.state.heavy.oldest())) await pushQuietly(deps, { kind: 'heavy' });
-  const index = room.limit === Infinity || !deps.withPoints ? await deps.indexReconcile() : await deps.withPoints(Math.max(0, room.limit - done.spent), () => deps.indexReconcile(), { scope: 'pass' });
+  const index = room.limit === Infinity || !deps.withPoints ? await deps.indexReconcile() : await deps.withPoints(room.refused ? 0 : Math.max(Math.min(INDEX_CHECK_MIN_POINTS, room.limit), room.limit - done.spent), () => deps.indexReconcile(), { scope: 'pass' });
   return { groups: done.groups, changed: done.changed, index };
 }

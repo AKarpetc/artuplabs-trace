@@ -168,7 +168,7 @@ describe('reconcileIndex', () => {
     await deps.state.setExcluded(['GONE', 'X']);
     const indexing = quiet(createIndexing(deps));
     expect(await indexing.reconcileIndex()).toEqual({ started: [], reindexed: 3 });
-    expect(deps.searched).toEqual(['updated >= -120m AND project not in ("X") ORDER BY updated ASC']);
+    expect(deps.searched).toEqual(['updated >= -120m AND project not in ("X") ORDER BY id ASC']);
     const perProject = [[['7', '8'], { id: '10', key: 'A' }], [['9'], { id: '20', key: 'B' }]];
     expect([indexing.parts.sprint.index.mock.calls, indexing.parts.comments.index.mock.calls]).toEqual([perProject, perProject]);
   });
@@ -184,8 +184,8 @@ describe('reconcileIndex', () => {
     indexing.parts.sprint.index = vi.fn();
     indexing.parts.comments.index = vi.fn();
     expect(await indexing.reconcileIndex()).toEqual({ started: [], reindexed: 2000 });
-    expect(deps.searched).toEqual([['updated >= -120m ORDER BY updated ASC', null, 2000]]);
-    expect((await deps.state.recentIndex.get()).run).toMatchObject({ token: 'n' });
+    expect(deps.searched).toEqual([['updated >= -120m ORDER BY id ASC', null, 2000]]);
+    expect((await deps.state.recentIndex.get()).run).toMatchObject({ after: '1999' });
   });
   it('queues a backfill again when it saved nothing for half an hour', async () => {
     const deps = reconcileDeps();
@@ -360,7 +360,7 @@ describe('reconcileIndex window and budget', () => {
     indexing.parts.sprint.index = vi.fn();
     indexing.parts.comments.index = vi.fn();
     await indexing.reconcileIndex();
-    expect(deps.searched).toEqual([['updated >= -120m ORDER BY updated ASC', RECONCILE_RECENT_MAX]]);
+    expect(deps.searched).toEqual([['updated >= -120m ORDER BY id ASC', RECONCILE_RECENT_MAX]]);
   });
   it('widens its window to the last check it finished', async () => {
     const deps = windowDeps();
@@ -371,9 +371,9 @@ describe('reconcileIndex window and budget', () => {
     await indexing.reconcileIndex();
     deps.advance(3 * 60 * 60 * 1000);
     await indexing.reconcileIndex();
-    expect(deps.searched[1][0]).toEqual('updated >= -190m ORDER BY updated ASC');
+    expect(deps.searched[1][0]).toEqual('updated >= -190m ORDER BY id ASC');
   });
-  it('stops when the reconcile points run out and keeps the window for the next hour', async () => {
+  it('stops when the reconcile points run out and goes on with the same window start the next hour', async () => {
     const deps = windowDeps();
     await built(deps);
     const indexing = createIndexing(deps);
@@ -386,7 +386,7 @@ describe('reconcileIndex window and budget', () => {
     deps.advance(2 * 60 * 60 * 1000);
     indexing.parts.sprint.index = vi.fn();
     await indexing.reconcileIndex();
-    expect(deps.searched[2][0]).toEqual('updated >= -190m ORDER BY updated ASC');
+    expect(deps.searched[2][0]).toEqual('updated >= -240m ORDER BY id ASC');
   });
 });
 
@@ -401,6 +401,16 @@ describe('new statuses', () => {
     await indexing.indexEvent(change('2', '3', '901'));
     expect(deps.repo.addStatusEvents.mock.calls.at(-1)[0]).toEqual([{ issueId: '7', projectId: '10', at: 4000, from: 'done', to: 'indeterminate', changeId: '901' }]);
   });
+  it('reads the statuses once for a status Jira does not list, not again until they expire', async () => {
+    const deps = makeDeps();
+    const indexing = createIndexing(deps);
+    await indexing.indexEvent(change('1', '2', '900'));
+    deps.advance(STATUS_REREAD_MS);
+    await indexing.indexEvent(change('2', '9', '901'));
+    deps.advance(STATUS_REREAD_MS);
+    await indexing.indexEvent(change('2', '9', '902'));
+    expect(deps.jira.statusCategories).toHaveBeenCalledTimes(2);
+  });
   it('writes no status row for a status it still does not know, so the index check reads it later', async () => {
     const deps = makeDeps();
     const indexing = createIndexing(deps);
@@ -413,7 +423,7 @@ describe('new statuses', () => {
 
 describe('index check with the real points scope', () => {
   const T0 = Date.parse('2026-10-05T07:10:00Z');
-  function realDeps(total) {
+  function realDeps(total, { projects = 1, tokenLife = 30 * 60 * 1000 } = {}) {
     const deps = makeDeps();
     let now = T0;
     deps.now = () => now;
@@ -423,18 +433,31 @@ describe('index check with the real points scope', () => {
     deps.backfillQueue = { push: vi.fn(async () => {}) };
     deps.repo.addSprintEvents = vi.fn();
     deps.repo.addStatusEvents = vi.fn();
+    deps.repo.upsertComments = vi.fn();
+    deps.repo.upsertAttachments = vi.fn();
     deps.searched = [];
-    const issues = Array.from({ length: total }, (_, i) => ({ id: String(i + 1), fields: { project: { id: '10', key: 'A' }, updated: new Date(T0 - (total - i) * 1000).toISOString() } }));
+    deps.read = [];
+    const issues = Array.from({ length: total }, (_, i) => ({ id: String(i + 1), fields: { project: { id: String(10 + (i % projects)), key: `P${i % projects}` } } }));
+    const tokens = new Map();
     const ok = (body) => ({ status: 200, headers: { get: () => null }, text: async () => JSON.stringify(body) });
+    const bad = (message) => ({ status: 400, headers: { get: () => null }, text: async () => JSON.stringify({ errorMessages: [message] }) });
     deps.jira = createJira(async (path, init) => {
       const body = init.body ? JSON.parse(init.body) : {};
       if (path.includes('search/jql')) {
         deps.searched.push(body);
-        const from = Number(body.nextPageToken ?? 0);
+        if (body.nextPageToken && now - tokens.get(body.nextPageToken) > tokenLife) return bad('The provided next page token is invalid or expired.');
+        if (/id > [^\d]/.test(body.jql)) return bad('The value is not valid.');
+        const after = Number(/id > (\d+)/.exec(body.jql)?.[1] ?? 0);
+        const from = body.nextPageToken ? Number(body.nextPageToken) : issues.findIndex((x) => Number(x.id) > after);
+        const page = from < 0 ? [] : issues.slice(from, from + body.maxResults);
         const next = from + body.maxResults;
-        return ok({ issues: issues.slice(from, next), ...(next < issues.length ? { nextPageToken: String(next) } : {}) });
+        if (next < issues.length) tokens.set(String(next), now);
+        return ok({ issues: page, ...(from >= 0 && next < issues.length ? { nextPageToken: String(next) } : {}) });
       }
-      if (path.includes('changelog/bulkfetch')) return ok({ issueChangeLogs: [] });
+      if (path.includes('changelog/bulkfetch')) {
+        deps.read.push(...body.issueIdsOrKeys);
+        return ok({ issueChangeLogs: [] });
+      }
       if (path.includes('issue/bulkfetch')) return ok({ issues: body.issueIdsOrKeys.map((id) => ({ id, fields: { comment: { comments: [], total: 0 }, attachment: [] } })) });
       if (path.includes('/status')) return ok([]);
       if (path.includes('/field')) return ok([]);
@@ -446,27 +469,43 @@ describe('index check with the real points scope', () => {
     for (const part of ['sprint', 'comments']) await deps.state.progress.setPart(part, { readyAt: 1, finishedAt: 1 });
   };
   const run = (deps, indexing, limit) => withPoints(limit, () => indexing.reconcileIndex(), { scope: 'pass', lane: 'reconcile' });
-  it('reads slices that fit what the points have left, oldest first', async () => {
+  async function hours(deps, limit, most = 12) {
+    const indexing = createIndexing(deps);
+    const results = [];
+    for (let hour = 0; hour < most && (results.length === 0 || (await deps.state.recentIndex.get())?.run); hour += 1) {
+      results.push(await run(deps, indexing, limit));
+      deps.advance(60 * 60 * 1000);
+    }
+    return results;
+  }
+  it('reads slices that fit what the points have left, by id', async () => {
     const deps = realDeps(500);
     await built(deps);
     await run(deps, createIndexing(deps), 800);
     expect(deps.searched[0].maxResults).toBeLessThanOrEqual(Math.floor(800 / INDEX_ISSUE_POINTS));
-    expect(deps.searched[0].jql).toContain('ORDER BY updated ASC');
+    expect(deps.searched[0].jql).toContain('ORDER BY id ASC');
   });
-  it('goes on from where it stopped and finishes a window larger than its points, reading each issue once', async () => {
+  it('goes on after the last issue it read, never by a page token, and reads each issue once even when tokens expire', async () => {
     const deps = realDeps(500);
     await built(deps);
+    const results = await hours(deps, 800);
+    expect([(await deps.state.recentIndex.get()).run, results.length > 1, deps.searched.every((b) => !b.nextPageToken)]).toEqual([null, true, true]);
+    expect([new Set(deps.read).size, deps.read.length]).toEqual([500, 500]);
+  });
+  it('finishes a window spread over many projects by halving a slice the points stop', async () => {
+    const deps = realDeps(500, { projects: 200 });
+    await built(deps);
+    await hours(deps, 800, 24);
+    expect([(await deps.state.recentIndex.get()).run, new Set(deps.read).size]).toEqual([null, 500]);
+  });
+  it('starts over from the window, logging it, when Jira rejects the saved query', async () => {
+    const deps = realDeps(10);
+    await built(deps);
+    await deps.state.recentIndex.set({ at: null, run: { since: T0 - 7200000, startedAt: T0, after: 'x' } });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const indexing = createIndexing(deps);
-    const results = [];
-    for (let hour = 0; hour < 4 && !(await deps.state.recentIndex.get())?.at; hour += 1) {
-      results.push(await run(deps, indexing, 800));
-      deps.advance(60 * 60 * 1000);
-    }
-    const read = deps.searched.reduce((sum, b) => sum + Math.min(b.maxResults, 500), 0);
-    expect((await deps.state.recentIndex.get()).at).toBeGreaterThan(0);
-    expect(results.length).toBeGreaterThan(1);
-    expect(deps.searched.map((b) => b.jql).every((jql) => jql === deps.searched[0].jql)).toBe(true);
-    expect(read).toBeGreaterThanOrEqual(500);
-    expect(deps.searched.slice(1).every((b) => b.nextPageToken)).toBe(true);
+    const first = await run(deps, indexing, 800);
+    error.mockRestore();
+    expect([first.failed, (await deps.state.recentIndex.get()).run]).toEqual([true, null]);
   });
 });
