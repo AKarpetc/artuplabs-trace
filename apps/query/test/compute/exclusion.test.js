@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { createFakeKvs } from '../fakeKvs.js';
 import { createState } from '../../src/infra/state.js';
 import { createExclusion } from '../../src/compute/exclusion.js';
-import { EXCLUDED_IDS_MAX, EXCLUSION_PROJECTS_TTL_MS, VALUE_LIMIT } from '../../src/core/limits.js';
+import { EXCLUDED_IDS_MAX, EXCLUSION_PROJECTS_TTL_MS, ROOT_FILTER_VALUES, VALUE_LIMIT } from '../../src/core/limits.js';
+import { buildFragment, valuesOf } from '../../src/core/tree.js';
+
+const valuesIn = (jql) => [...jql.matchAll(/\bin \(([^)]*)\)/g)].reduce((sum, m) => sum + m[1].split(',').length, 0);
 
 const ids = (n, from = 1) => Array.from({ length: n }, (_, i) => String(from + i));
 
@@ -28,6 +31,23 @@ const withList = async (m, keys) => {
   await m.state.setExcluded(keys);
   return m;
 };
+
+describe('exclusion within the 1 000 values of a fragment', () => {
+  it('keeps the excluded children in the root filter while they leave the root room for its values', async () => {
+    const removed = ids(VALUE_LIMIT - ROOT_FILTER_VALUES, 50000);
+    const m = await withList(make({ pages: { [`parent in (${ids(800).join(',')}) AND project in ("OPS")`]: { ids: removed, nextPageToken: null } } }), ['OPS']);
+    const out = await m.exclude({ ids: ids(800), field: 'parent', watch: null });
+    const root = buildFragment({ functionName: 'issuesInEpics', userArgs: ['S'], page: null, values: valuesOf(out.ids), field: out.field, rootFilter: out.rootFilter, levels: 1 });
+    expect(out.rootFilter).toEqual(`id not in (${removed.join(',')})`);
+    expect(valuesIn(root.jql)).toBeLessThanOrEqual(VALUE_LIMIT);
+  });
+  it('turns a parent result into ids when the excluded children would leave the root filter no room', async () => {
+    const removed = ids(VALUE_LIMIT - ROOT_FILTER_VALUES + 1, 50000);
+    const base = `parent in (${ids(800).join(',')})`;
+    const m = await withList(make({ pages: { [`${base} AND project in ("OPS")`]: { ids: removed, nextPageToken: null } }, searches: { [`${base} AND project not in ("OPS")`]: ['9'] } }), ['OPS']);
+    expect(await m.exclude({ ids: ids(800), field: 'parent', watch: null })).toEqual({ ids: ['9'], field: 'id', watch: null });
+  });
+});
 
 describe('exclusion', () => {
   it('leaves a result as it is and asks Jira nothing when no project is excluded', async () => {

@@ -19,10 +19,15 @@ export function treeShape(n, levels = TREE_LEVELS) {
 const anyOf = (clauses) => (clauses.length === 1 ? clauses[0] : `(${clauses.join(' OR ')})`);
 const span = (first, last) => Array.from({ length: last - first + 1 }, (_, i) => first + i);
 
+/** Values the lists of a root filter name (`id not in (1,2)` names 2); a function such as `subTaskIssueTypes()` names none. */
+export function filterValues(rootFilter) {
+  return [...String(rootFilter ?? '').matchAll(/\bin \(([^)]*)\)/g)].reduce((sum, m) => sum + m[1].split(',').filter((v) => v.trim()).length, 0);
+}
+
 /**
  * Stored JQL of one precomputation: the root (page null), a middle node or a leaf. `field` is `id` or `parent`;
  * `rootFilter` is ANDed on the root only; a leaf nested under the filter returns no issues. Jira counts the filter toward the 1 000 values of
- * a fragment, so a list that leaves it less than ROOT_FILTER_VALUES goes into one leaf.
+ * a fragment, so a list that leaves the filter less than ROOT_FILTER_VALUES besides the values the filter lists goes into one leaf.
  */
 export function buildFragment({ functionName, userArgs, page, values, field, rootFilter, levels = TREE_LEVELS }) {
   const list = (from, to) => {
@@ -30,7 +35,7 @@ export function buildFragment({ functionName, userArgs, page, values, field, roo
     return ids.length ? `${field} in (${ids.join(',')})` : EMPTY;
   };
   const listed = treeShape(values.n, levels);
-  const crowded = listed.kind === 'list' && rootFilter && values.n > VALUE_LIMIT - ROOT_FILTER_VALUES;
+  const crowded = listed.kind === 'list' && rootFilter && values.n > VALUE_LIMIT - ROOT_FILTER_VALUES - filterValues(rootFilter);
   const shape = crowded ? { kind: 'tree', levels: 1, leaves: 1 } : listed;
   const leafCall = (index) => pageCall(functionName, userArgs, { kind: 'leaf', index });
   if (page?.kind === 'leaf') return { jql: list((page.index - 1) * VALUE_LIMIT, page.index * VALUE_LIMIT) };

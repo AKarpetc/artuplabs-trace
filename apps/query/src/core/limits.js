@@ -106,8 +106,8 @@ export const EXT_MAX_LENGTH = 32;
 export const FIELD_EVAL_CHUNK = 5000;
 /** Projects one save may exclude from the index. */
 export const EXCLUDED_MAX = 200;
-/** Issues of excluded projects one result may leave out by an `id not in (…)` clause; more turn the result into the matching ids. */
-export const EXCLUDED_IDS_MAX = 1000;
+/** Issues of excluded projects one result may leave out by an `id not in (…)` clause in its root filter, so the root stays within Jira's 1 000 values; more turn the result into the matching ids. */
+export const EXCLUDED_IDS_MAX = VALUE_LIMIT - ROOT_FILTER_VALUES;
 /** Characters of a Jira project key. */
 export const PROJECT_KEY_MAX_LENGTH = 100;
 /** How long the exclusion keeps the project list it checked the excluded keys against. */

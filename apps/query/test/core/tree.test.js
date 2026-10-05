@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildFragment, treeShape, valuesOf } from '../../src/core/tree.js';
+import { buildFragment, filterValues, treeShape, valuesOf } from '../../src/core/tree.js';
 import { ROOT_FILTER_VALUES, VALUE_LIMIT } from '../../src/core/limits.js';
 
 const ids = (n) => Array.from({ length: n }, (_, i) => String(1000 + i));
@@ -30,6 +30,16 @@ describe('buildFragment', () => {
   });
   it('keeps values that leave room for the root filter as one list', () => {
     expect(buildFragment({ ...base, page: null, values: valuesOf(ids(VALUE_LIMIT - ROOT_FILTER_VALUES)), levels: 1 }).jql).toMatch(/^\(issuetype in subTaskIssueTypes\(\)\) AND \(parent in \(/);
+  });
+  it('counts the values the root filter lists itself, so excluded ids leave the list room only within 1 000', () => {
+    const excluded = `id not in (${Array.from({ length: 300 }, (_, i) => 90000 + i).join(',')})`;
+    const root = buildFragment({ ...base, functionName: 'issuesInEpics', rootFilter: excluded, page: null, values: valuesOf(ids(800)), levels: 1 });
+    expect(root.jql).toEqual(`(${excluded}) AND (issue in issuesInEpics("project = \\"A\\"", "__aq:l1"))`);
+    expect(buildFragment({ ...base, rootFilter: excluded, page: null, values: valuesOf(ids(VALUE_LIMIT - ROOT_FILTER_VALUES - 300)), levels: 1 }).jql).toMatch(/AND \(parent in \(/);
+  });
+  it('counts the values of every list in a root filter', () => {
+    expect(filterValues('(issuetype in subTaskIssueTypes()) AND id not in (1,2,3) AND x in (4, 5)')).toEqual(5);
+    expect(filterValues('issuetype in subTaskIssueTypes()')).toEqual(0);
   });
   it('keeps 1 000 values as one list when there is no root filter', () => {
     expect(buildFragment({ ...base, rootFilter: undefined, page: null, values: valuesOf(ids(VALUE_LIMIT)), levels: 1 }).jql).toMatch(/^parent in \(/);
