@@ -103,15 +103,17 @@ function messagesOf(raw) {
   }
 }
 
-/** Jira REST client over `request(path, init)`; 5xx and a 429 whose wait fits `retryMaxMs` are retried (Retry-After or exponential backoff, each sleep capped); a longer 429 throws RateLimitError at once; bulkfetch narrows after a near-limit warning; no request starts after the deadline of the current scope or past the limit of its points scope; the points of each answer go to its scopes and to `ledger.add(lane, points)`. */
-export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now, ledger = null } = {}) {
+/** Jira REST client over `request(path, init)`; 5xx and a 429 whose wait fits `retryMaxMs` are retried (Retry-After or exponential backoff, each sleep capped); a longer 429 throws RateLimitError at once; bulkfetch narrows after a near-limit warning; no request starts after the deadline of the current scope or past the limit of its points scope; the points of each answer go to its scopes and to `ledger.add(lane, points)`; the first near-limit warning of each window calls `onNear(at)`. */
+export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now, ledger = null, onNear = null } = {}) {
   let counts = {};
   let nearUntil = 0;
   function count(endpoint, res, facts, at, rate) {
     const c = counts[endpoint] ?? { requests: 0, limited: 0, rate: null };
     const limited = res.status === 429;
     counts[endpoint] = { requests: c.requests + 1, limited: c.limited + (limited ? 1 : 0), rate: !limited && rate ? rate : c.rate };
-    if (facts.near) nearUntil = Math.max(nearUntil, facts.retryAt ?? at + NEAR_LIMIT_MS);
+    if (!facts.near) return;
+    if (at >= nearUntil) onNear?.(at);
+    nearUntil = Math.max(nearUntil, facts.retryAt ?? at + NEAR_LIMIT_MS);
   }
 
   async function charge(points) {

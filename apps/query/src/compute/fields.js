@@ -1,20 +1,31 @@
 import { ERR, FAIL, LOG } from '../core/errors.js';
 import { evaluate, fieldValue, parseExpression } from '../core/expression.js';
 import { sortIds } from '../core/ids.js';
-import { FIELD_EVAL_CHUNK } from '../core/limits.js';
+import { FIELD_EVAL_CHUNK, FIELDS_TTL_MS } from '../core/limits.js';
 
 const PSEUDO_NAME = { firstcommented: 'firstCommented', lastcommented: 'lastCommented' };
 const pseudoOf = (name) => PSEUDO_NAME[String(name).toLowerCase()] ?? null;
 const lower = (v) => String(v ?? '').toLowerCase();
 const named = (functionName, failure) => ({ error: ERR.withFunction(functionName, failure.error), log: failure.log });
 
+/** Jira's field list as id, name and custom type, kept in `cfg:fields` for FIELDS_TTL_MS so a function call rarely asks Jira for it. */
+export function createFieldList({ jira, state, now }) {
+  return async () => {
+    const cached = await state.fields.get();
+    if (cached && now() - cached.at < FIELDS_TTL_MS) return cached.list;
+    const list = ((await jira.fields()) ?? []).map((f) => ({ id: f.id, name: f.name, custom: f.schema?.custom ?? null }));
+    await state.fields.set({ at: now(), list });
+    return list;
+  };
+}
+
 /**
  * Value sources of dateCompare and expression: the subquery's issues whose field expression is true. Fields are read by id or display name,
  * in slices of FIELD_EVAL_CHUNK issues (no issue read at all when only comment times are compared); firstCommented and lastCommented come from the comment index, which counts only comments visible to everyone.
  */
-export function createFieldCompute({ jira, repo, commentsShipped, commentGate = async () => null }) {
+export function createFieldCompute({ jira, repo, commentsShipped, commentGate = async () => null, fieldList = () => jira.fields() }) {
   async function fieldIds(names) {
-    const all = (await jira.fields()) ?? [];
+    const all = (await fieldList()) ?? [];
     const out = new Map();
     for (const name of names) {
       if (pseudoOf(name)) continue;

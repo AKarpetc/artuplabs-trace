@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { makeDeps, RECENT } from './makeDeps.js';
-import { brake, brakedUntil, scheduleWake } from '../../src/handlers/brake.js';
+import { BUDGET_AT, makeDeps, RECENT, spend, withBudget } from './makeDeps.js';
+import { brake, brakedUntil, brakeNear, brakeOf, scheduleWake } from '../../src/handlers/brake.js';
 import { onRefresh, refreshOnce } from '../../src/handlers/refresh.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
 import { HEAVY_ATTEMPTS, REFRESH_USED_MS, PAGE_CACHE_MS, QUEUE_DELAY_MAX_S, RATE_BRAKE_MAX_MS, RATE_BRAKE_MIN_MS, REFRESH_RETRY_DELAY_S } from '../../src/core/limits.js';
@@ -19,6 +19,38 @@ const quietly = async (task) => {
 };
 
 describe('brake', () => {
+  it('records that a 429 set the pause', async () => {
+    const deps = makeDeps();
+    await brake(deps, NOW + 425000);
+    expect(await brakeOf(deps)).toEqual({ until: NOW + 425000, reason: 'rate' });
+  });
+  it('pauses the background until the next hour when Jira warns that the pool is nearly used', async () => {
+    const deps = makeDeps({ now: () => Date.parse('2026-10-05T07:40:00Z') });
+    expect(await brakeNear(deps)).toEqual(Date.parse('2026-10-05T08:00:00Z'));
+    expect(await brakeOf(deps)).toEqual({ until: Date.parse('2026-10-05T08:00:00Z'), reason: 'near' });
+  });
+  it('keeps a later rate pause when the pool is nearly used', async () => {
+    const deps = makeDeps({ now: () => Date.parse('2026-10-05T07:40:00Z') });
+    await brake(deps, Date.parse('2026-10-05T08:10:00Z'));
+    await brakeNear(deps);
+    expect(await brakeOf(deps)).toEqual({ until: Date.parse('2026-10-05T08:10:00Z'), reason: 'rate' });
+  });
+  it('reads a pause stored as a bare time as a rate pause', async () => {
+    const deps = makeDeps();
+    await deps.state.brake.set(NOW + 60000);
+    expect([await brakeOf(deps), await brakedUntil(deps)]).toEqual([{ until: NOW + 60000, reason: 'rate' }, NOW + 60000]);
+  });
+  it('stops the background while the pool is nearly used', async () => {
+    const deps = makeDeps();
+    const until = await brakeNear(deps);
+    expect([await onRefresh(deps, { body: { kind: 'heavy' } }), await onReconcile(deps)]).toEqual([{ braked: until }, { braked: until }]);
+  });
+  it('has no pause once it has passed', async () => {
+    const deps = makeDeps();
+    await brakeNear(deps);
+    deps.advance(3600000);
+    expect(await brakeOf(deps)).toBe(null);
+  });
   it('pauses the background work until the instant Jira named and schedules one wake for it', async () => {
     const deps = makeDeps();
     expect(await brake(deps, NOW + 425000)).toEqual(NOW + 425000);
@@ -245,5 +277,35 @@ describe('heavy groups nobody uses', () => {
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
     expect(await refreshOnce(deps)).toMatchObject({ groups: 0, recomputed: 0 });
     expect([hasSubtasks.mock.calls.length, (await deps.journal.read(10)).length]).toEqual([0, 0]);
+  });
+});
+
+describe('compute job under the points budget', () => {
+  const job = { kind: 'compute', functionName: 'parentsOf', userArgs: ['q'] };
+  const key = 'parentsOf["q"]';
+  const parentsOf = (spending) => vi.fn(async () => { for (const n of spending) await spend(n); return { ids: ['3'], field: 'id', watch: [] }; });
+  it('runs from the function lane after refresh used its own reserve', async () => {
+    const compute = { parentsOf: parentsOf([30]) };
+    const deps = withBudget(makeDeps({ compute }));
+    await deps.state.addJob({ key, functionName: 'parentsOf', userArgs: ['q'], at: BUDGET_AT });
+    await deps.points.add('refresh', 3000);
+    expect(await onRefresh(deps, { body: job })).toEqual({ computed: key, changed: 0 });
+    expect((await deps.cache.meta(key)).pts).toEqual(30);
+  });
+  it('waits, computing nothing, while the function lane cannot hold the points the group last cost', async () => {
+    const compute = { parentsOf: parentsOf([]) };
+    const deps = withBudget(makeDeps({ compute }));
+    await deps.state.addJob({ key, functionName: 'parentsOf', userArgs: ['q'], at: BUDGET_AT, pts: 600, floor: false });
+    await deps.points.add('fn', 1000);
+    expect(await onRefresh(deps, { body: job })).toEqual({ computed: key, waitUntil: Date.parse('2026-10-05T07:30:00Z') });
+    expect(compute.parentsOf).not.toHaveBeenCalled();
+  });
+  it('keeps the points it spent as a lower bound when the budget stops it', async () => {
+    const deps = withBudget(makeDeps({ compute: { parentsOf: parentsOf([1500, 1]) } }));
+    await deps.state.addJob({ key, functionName: 'parentsOf', userArgs: ['q'], at: BUDGET_AT });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await onRefresh(deps, { body: job })).toEqual({ computed: key, stopped: 'group' });
+    error.mockRestore();
+    expect(await deps.state.job(key)).toMatchObject({ pts: 1500, floor: true });
   });
 });

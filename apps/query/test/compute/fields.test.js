@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createFieldCompute } from '../../src/compute/fields.js';
-import { FIELD_EVAL_CHUNK } from '../../src/core/limits.js';
+import { createFieldCompute, createFieldList } from '../../src/compute/fields.js';
+import { beginsWith, createFakeKvs } from '../fakeKvs.js';
+import { createState } from '../../src/infra/state.js';
+import { FIELD_EVAL_CHUNK, FIELDS_TTL_MS } from '../../src/core/limits.js';
 
 const FIELDS = [{ id: 'created', name: 'Created' }, { id: 'duedate', name: 'Due date' }, { id: 'resolutiondate', name: 'Resolved' }, { id: 'timespent', name: 'Time Spent' }, { id: 'timeoriginalestimate', name: 'Original Estimate' }, { id: 'customfield_10016', name: 'Story Points' }];
 const ISSUES = [
@@ -127,5 +129,32 @@ describe('field compute edges', () => {
   it('compares nothing for an issue whose field is missing or not a number', async () => {
     const jira = { bulkIssues: async () => [{ id: '1', fields: {} }, { id: '2', fields: { customfield_10016: { name: 'x' } } }, { id: '3' }] };
     expect((await run('"Story Points" >= 0 or "Story Points" < 0', { jira })).reply.ids).toEqual([]);
+  });
+});
+
+describe('field list', () => {
+  const setup = () => {
+    let now = 1000;
+    const calls = [];
+    const jira = { fields: async () => { calls.push('fields'); return [{ id: 'customfield_1', name: 'Sprint', schema: { custom: 'sprint', type: 'array' }, extra: 'x' }, { id: 'duedate', name: 'Due date' }]; } };
+    const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
+    return { calls, list: createFieldList({ jira, state, now: () => now }), advance: (ms) => { now += ms; } };
+  };
+  it('keeps only the id, name and custom type of each field', async () => {
+    expect(await setup().list()).toEqual([{ id: 'customfield_1', name: 'Sprint', custom: 'sprint' }, { id: 'duedate', name: 'Due date', custom: null }]);
+  });
+  it('asks Jira once within the cache time', async () => {
+    const { calls, list, advance } = setup();
+    await list();
+    advance(FIELDS_TTL_MS - 1);
+    await list();
+    expect(calls).toEqual(['fields']);
+  });
+  it('asks Jira again once the cache time has passed', async () => {
+    const { calls, list, advance } = setup();
+    await list();
+    advance(FIELDS_TTL_MS);
+    await list();
+    expect(calls).toEqual(['fields', 'fields']);
   });
 });

@@ -1,4 +1,6 @@
-import { CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, POINTS_OVERHEAD, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from './limits.js';
+import {
+  BORROW_CAP_SHARE, BORROW_MINUTE, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, GROUP_POINTS_SHARE, LANE_SHARES, POINTS_OVERHEAD, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT,
+} from './limits.js';
 
 /** One hour in ms: Jira's rate-limit windows reset at the start of each UTC hour. */
 export const HOUR_MS = 60 * 60 * 1000;
@@ -49,10 +51,63 @@ const PER_ISSUE = new Map([
   ...['previousSprint', 'nextSprint', 'removedAfterSprintStart', 'commented', 'lastComment', 'hasComments', 'fileAttached', 'hasAttachments'].map((name) => [name, () => 0]),
 ]);
 
-/** Points a function is expected to spend on `n` issues (its subquery, or the site's subtasks or links); `floor` marks a lower bound, for a result that fans out. */
+/**
+ * Points a function is expected to spend on `n` issues (its subquery, or the site's subtasks or links); `floor` marks a lower bound, for a
+ * result that fans out, or for a function that reads issues when `n` is unknown (null).
+ */
 export function estimate(functionName, n) {
   const perIssue = PER_ISSUE.get(functionName);
+  if (n === null) return { points: POINTS_OVERHEAD, floor: !perIssue || perIssue(1) > 0 };
   return { points: (perIssue ? perIssue(n) : 2) * n + POINTS_OVERHEAD, floor: !perIssue || FAN_OUT.has(functionName) };
+}
+
+/** The most issues a function may read within `points` (by its estimate), so an error can say how far to narrow. */
+export function issuesWithin(functionName, points) {
+  const room = Math.max(0, points - POINTS_OVERHEAD);
+  if (functionName === 'subtasksOf') return Math.max(Math.min(VALUE_LIMIT, room), Math.floor(room / 2) > VALUE_LIMIT ? Math.floor(room / 2) : 0);
+  const perIssue = PER_ISSUE.get(functionName)?.(1) ?? 2;
+  return perIssue > 0 ? Math.floor(room / perIssue) : null;
+}
+
+const SUBQUERY_READERS = new Set(['subtasksOf', 'parentsOf', 'issuesInEpics', 'linkedIssuesOf', 'expression', 'dateCompare', ...FAN_OUT]);
+
+/** The JQL whose approximate count is the `n` of a function's estimate, or null when its cost does not follow a query Jira can count. */
+export function countQueryOf(functionName, args) {
+  if (SUBQUERY_READERS.has(functionName)) return args.subquery;
+  if (functionName === 'hasSubtasks') return 'issuetype in subTaskIssueTypes()';
+  return null;
+}
+
+/** Points one group may cost on a site with this hourly cap. */
+export function groupLimit(cap) {
+  return Math.floor(GROUP_POINTS_SHARE * cap);
+}
+
+const spentOn = (spentByLane, lane) => spentByLane[lane] ?? 0;
+const totalSpent = (spentByLane) => Object.values(spentByLane).reduce((sum, n) => sum + n, 0);
+const minuteOf = (at) => new Date(at).getUTCMinutes();
+
+/**
+ * Points a lane may still spend this hour as of `at` (the start of its step): what is left of its own reserve, and from half past also what
+ * the hour has left, other lanes than function answers only up to BORROW_CAP_SHARE of the cap.
+ */
+export function laneRoom(lane, spentByLane, at, cap) {
+  const own = Math.floor((LANE_SHARES[lane] ?? 0) * cap) - spentOn(spentByLane, lane);
+  if (minuteOf(at) < BORROW_MINUTE) return Math.max(0, own);
+  const total = totalSpent(spentByLane);
+  const borrow = Math.min(cap - total, lane === DEFAULT_LANE ? Infinity : Math.floor(BORROW_CAP_SHARE * cap) - total);
+  return Math.max(0, own, borrow);
+}
+
+/** When a lane refused at `at` may try again: half past the hour before it, else the next hour. */
+export function retryAfter(at) {
+  return minuteOf(at) < BORROW_MINUTE ? nextHour(at) - HOUR_MS + BORROW_MINUTE * 60 * 1000 : nextHour(at);
+}
+
+/** Whether a step of a lane that should cost `cost` may start at `at`: `{ ok: true }`, or `{ waitUntil }` (half past, or the next hour). */
+export function admit(lane, cost, spentByLane, at, cap) {
+  if (cost <= laneRoom(lane, spentByLane, at, cap)) return { ok: true };
+  return { waitUntil: retryAfter(at) };
 }
 
 /** The UTC hour of an instant as `YYYYMMDDHH`. */

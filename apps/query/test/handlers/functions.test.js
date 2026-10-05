@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { makeDeps, never } from './makeDeps.js';
+import { BUDGET_AT, makeDeps, never, spend, withBudget } from './makeDeps.js';
+import { brakeNear } from '../../src/handlers/brake.js';
 import { computeGroup, createFunctionHandlers, fragmentFor, handleFunction, licenceInput } from '../../src/handlers/functions.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
 import { createBoardCompute } from '../../src/compute/boards.js';
@@ -122,7 +123,7 @@ describe('handleFunction', () => {
     const deps = fnDeps({ subtasksOf: async () => { throw limited; } });
     expect((await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV)).error).toBe('Computing, retry in a minute');
     error.mockRestore();
-    expect([await deps.state.brake.get(), deps.pushed]).toEqual([1000000 + 425000, [[{ kind: 'wake' }, Math.min(425, QUEUE_DELAY_MAX_S)]]]);
+    expect([await deps.state.brake.get(), deps.pushed]).toEqual([{ until: 1000000 + 425000, reason: 'rate' }, [[{ kind: 'wake' }, Math.min(425, QUEUE_DELAY_MAX_S)]]]);
   });
   it('queues the computation when Jira keeps failing', async () => {
     const deps = fnDeps({ subtasksOf: async () => { throw Object.assign(new Error('down'), { name: 'JiraError', status: 503 }); } });
@@ -344,5 +345,97 @@ describe('handleFunction for dateCompare and expression', () => {
     const deps = fnDeps(fieldCompute());
     expect(await handleFunction(deps, 'dateCompare', notIn('q', 'duedate < firstCommented'), DEV)).toEqual({ error: 'dateCompare: firstCommented needs the comment index, which this site does not have', storeErrorAsPrecomputation: false });
     expect((await deps.state.errors()).map((e) => e.message)).toEqual(['Comment index not shipped']);
+  });
+});
+
+describe('function call under the Jira points budget', () => {
+  const expression = (spending) => ({ expression: async () => { for (const n of spending) await spend(n); return { ids: ['3'], field: 'id', watch: [] }; } });
+  const quiet = async (task) => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      return await task();
+    } finally {
+      error.mockRestore();
+    }
+  };
+  it('answers an error with its numbers, stored, and computes nothing when the estimate passes the group limit', async () => {
+    const compute = { expression: vi.fn() };
+    const deps = withBudget(fnDeps(compute), { count: 4000 });
+    expect(await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).toEqual({
+      error: "expression: the subquery has about 4,000 issues and needs about 8,020 Jira API points; on this site ArtUp Query may spend at most 2,000 on one function (Jira's rate limit for apps). Narrow the subquery to about 990 issues.",
+      storeErrorAsPrecomputation: true,
+    });
+    expect([compute.expression.mock.calls.length, deps.counted, (await deps.state.errors())[0].message]).toEqual([0, ['project = A'], 'Too expensive for the Jira rate limit']);
+  });
+  it('takes the points the group last cost instead of counting its subquery', async () => {
+    const deps = withBudget(fnDeps(expression([])));
+    await deps.cache.write('expression["project = A","a > b"]', { values: ['1'], watch: [], field: 'id', rootFilter: null, at: BUDGET_AT - PAGE_CACHE_MS, source: 'function', pts: 2500 });
+    expect((await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).error).toContain('needs about 2,500 Jira API points');
+    expect(deps.counted).toEqual([]);
+  });
+  it('takes the points a stopped computation spent as a lower bound', async () => {
+    const deps = withBudget(fnDeps(expression([])));
+    await deps.state.addJob({ key: 'expression["project = A","a > b"]', functionName: 'expression', userArgs: ['project = A', 'a > b'], at: 1, pts: 2000, floor: true });
+    expect((await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).error).toContain('needs at least 2,000 Jira API points');
+  });
+  it('answers that the hourly allowance is used, not stored, when the function reserve cannot hold the estimate before half past', async () => {
+    const deps = withBudget(fnDeps(expression([])), { count: 10 });
+    await deps.points.add('fn', 1490);
+    expect(await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).toEqual({
+      error: "ArtUp Query has used this site's Jira API allowance for this hour; retry after 07:30 UTC.",
+      storeErrorAsPrecomputation: false,
+    });
+    expect((await deps.state.errors())[0].message).toEqual('Hourly Jira allowance used');
+  });
+  it('computes within its reserve and keeps the points the group cost in the cache', async () => {
+    const deps = withBudget(fnDeps(expression([30])), { count: 10 });
+    expect(await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).toEqual({ jql: 'id in (3)' });
+    expect((await deps.cache.meta('expression["project = A","a > b"]')).pts).toEqual(30);
+  });
+  it('releases the reserved estimate once the computation ends', async () => {
+    const deps = withBudget(fnDeps(expression([30])), { count: 10 });
+    await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV);
+    expect((await deps.points.siteSpent('2026100507')).byLane).toEqual({});
+  });
+  it('answers an error with its numbers when the computation reaches the group limit', async () => {
+    const deps = withBudget(fnDeps(expression([2000, 1])), { at: Date.parse('2026-10-05T07:40:00Z') });
+    expect(await quiet(() => handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV))).toEqual({
+      error: "expression: the result needs more than 2,000 Jira API points; on this site ArtUp Query may spend at most 2,000 on one function (Jira's rate limit for apps). Narrow the subquery.",
+      storeErrorAsPrecomputation: true,
+    });
+    expect(deps.pushed).toEqual([]);
+  });
+  it('answers that the hourly allowance is used when the computation reaches what the function reserve has left', async () => {
+    const deps = withBudget(fnDeps(expression([1500, 1])));
+    expect((await quiet(() => handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV))).error).toEqual("ArtUp Query has used this site's Jira API allowance for this hour; retry after 07:30 UTC.");
+    expect(deps.pushed).toEqual([]);
+  });
+  it('borrows what the hour has left from half past', async () => {
+    const deps = withBudget(fnDeps(expression([30])), { at: Date.parse('2026-10-05T07:40:00Z'), count: 10 });
+    await deps.points.add('fn', 1500);
+    await deps.points.add('refresh', 7000);
+    expect(await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).toEqual({ jql: 'id in (3)' });
+  });
+  it('still computes a cheap function while Jira warns that the pool is nearly used', async () => {
+    const deps = withBudget(fnDeps(expression([30])), { count: 100 });
+    await brakeNear(deps);
+    expect(await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).toEqual({ jql: 'id in (3)' });
+  });
+  it('answers that the allowance is used for a dearer function while Jira warns that the pool is nearly used', async () => {
+    const deps = withBudget(fnDeps(expression([30])), { count: 200 });
+    await brakeNear(deps);
+    expect((await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).error).toEqual("ArtUp Query has used this site's Jira API allowance for this hour; retry after 08:00 UTC.");
+  });
+  it('answers a cached result without counting or reading the ledger', async () => {
+    const deps = withBudget(fnDeps({ subtasksOf: async () => ({ ids: ['3'], field: 'parent', watch: [] }) }));
+    await deps.cache.write(SUBTASK_GROUP, { ...jobEntry(['3']), at: BUDGET_AT });
+    const queries = deps.kvs.calls.queries;
+    expect((await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV)).jql).toContain('3');
+    expect([deps.counted, deps.kvs.calls.queries]).toEqual([[], queries]);
+  });
+  it('counts nothing for a function whose cost does not follow a query', async () => {
+    const deps = withBudget(fnDeps(createBoardCompute({ jira: fakeJira({ boards: [{ id: 1, name: 'B' }], sprints: { 1: [] } }) })));
+    await handleFunction(deps, 'previousSprint', payload('B'), DEV);
+    expect(deps.counted).toEqual([]);
   });
 });

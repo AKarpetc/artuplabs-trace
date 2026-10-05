@@ -637,6 +637,18 @@ describe('onRefresh heavy lane', () => {
     expect(await deps.state.heavy.oldest()).toMatchObject({ key: 'childIssuesOf["q"]', at: 1001000 });
     expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
   });
+  it('keeps the points of a waiting entry it queues again', async () => {
+    const deps = makeDeps();
+    await deps.state.heavy.put({ ...queued('q', 990000), runningSince: 990000, pts: 450, floor: true });
+    await handOff(deps, { key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'] });
+    expect(await deps.state.heavy.get('childIssuesOf["q"]')).toMatchObject({ at: 1000000, pts: 450, floor: true });
+  });
+  it('stores the points it is handed a group with', async () => {
+    const deps = makeDeps();
+    await deps.state.heavy.put({ ...queued('q', 990000), runningSince: 990000, pts: 450, floor: true });
+    await handOff(deps, { key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'] }, { pts: 1200, floor: false });
+    expect(await deps.state.heavy.get('childIssuesOf["q"]')).toMatchObject({ pts: 1200, floor: false });
+  });
   it('pushes itself again while more groups wait', async () => {
     const deps = makeDeps({ compute: { childIssuesOf: async () => ({ ids: ['3'], field: 'parent', watch: ['9'] }) } });
     await deps.state.heavy.put(queued('b', 995000));

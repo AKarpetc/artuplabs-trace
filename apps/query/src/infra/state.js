@@ -5,7 +5,10 @@ const HEAVY_PREFIX = 'q:hq:';
 
 const INDEX_PARTS = ['sprint', 'comments'];
 
-/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`, each group waiting in the heavy lane `q:hq:<hash(group)>` (both may keep the Jira points the group spent, `pts`, and whether they are a lower bound, `floor`), the start of the computation that last wrote a group `q:gw:<hash(group)>`, and the projects an index part fills once its running fill ends `idx:waiting:<part>`, the end of a pause of the background work after a Jira rate limit `q:brake` and the time of the wake scheduled for it `q:wake`. */
+/** The points a stored job or lane entry keeps (`pts`, `floor`), when it has them. */
+export const keptPoints = (record) => (record?.pts === undefined ? {} : { pts: record.pts, floor: Boolean(record.floor) });
+
+/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`, each group waiting in the heavy lane `q:hq:<hash(group)>` (both may keep the Jira points the group spent, `pts`, and whether they are a lower bound, `floor`; a job added again without them keeps the stored ones), the start of the computation that last wrote a group `q:gw:<hash(group)>`, and the projects an index part fills once its running fill ends `idx:waiting:<part>`, the end and reason of a pause of the background work for Jira's rate limit `q:brake`, the cached Jira field list `cfg:fields` and the time of the wake scheduled for it `q:wake`. */
 export function createState({ kvs, hash, beginsWith }) {
   const record = (key) => ({
     get: async () => (await kvs.get(key)) ?? null,
@@ -35,6 +38,7 @@ export function createState({ kvs, hash, beginsWith }) {
     brake: record('q:brake'),
     wake: record('q:wake'),
     sprintFields: record('cfg:sprintFields'),
+    fields: record('cfg:fields'),
     progress: {
       async get() {
         const values = await Promise.all(INDEX_PARTS.map((part) => kvs.get(progressKey(part))));
@@ -65,7 +69,11 @@ export function createState({ kvs, hash, beginsWith }) {
       await kvs.set('log:errors', [{ at, functionName, message }, ...list].slice(0, ERROR_LOG_SIZE));
     },
     errors: async () => (await kvs.get('log:errors')) ?? [],
-    addJob: (job) => kvs.set(jobKey(job.key), job),
+    async addJob(job) {
+      if (job.pts !== undefined) return kvs.set(jobKey(job.key), job);
+      const kept = await kvs.get(jobKey(job.key));
+      return kvs.set(jobKey(job.key), { ...job, ...keptPoints(kept) });
+    },
     job: async (key) => (await kvs.get(jobKey(key))) ?? null,
     heavy: {
       lease: record('q:heavy'),

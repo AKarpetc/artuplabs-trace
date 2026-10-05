@@ -5,7 +5,7 @@ import { Queue } from '@forge/events';
 import { FUNCTION_BY_NAME, SHIPPED_GROUPS } from './core/catalog.js';
 import { RETRY_MAX_MS, TREE_LEVELS } from './core/limits.js';
 import { readinessError } from './core/readiness.js';
-import { appJira, withDeadline } from './infra/jira.js';
+import { appJira, currentPoints, withDeadline, withPoints } from './infra/jira.js';
 import { createLedger } from './infra/points.js';
 import { capOf } from './core/points.js';
 import { createValueCache } from './infra/cache.js';
@@ -20,9 +20,10 @@ import { createLinkCompute } from './compute/links.js';
 import { createBoardCompute } from './compute/boards.js';
 import { createSprintCompute } from './compute/sprints.js';
 import { createCommentCompute } from './compute/comments.js';
-import { createFieldCompute } from './compute/fields.js';
+import { createFieldCompute, createFieldList } from './compute/fields.js';
 import { createExclusion } from './compute/exclusion.js';
 import { createIndexing } from './handlers/indexing.js';
+import { brakeNear } from './handlers/brake.js';
 
 const sha1 = (text) => createHash('sha1').update(text).digest('hex');
 
@@ -42,12 +43,15 @@ function currentAppContext() {
   }
 }
 
-/** Production dependencies of every handler; `retryMaxMs` caps one Jira retry sleep (queue workers pass a longer cap); all KVS access goes through the write meter; Jira points go to the process's ledger, and the site's hourly points cap comes from QUERY_POINTS_TIER or QUERY_SITE_POINTS; the index parts, the event writer and the gap filler read and write the Forge SQL index. */
+/** Production dependencies of every handler; `retryMaxMs` caps one Jira retry sleep (queue workers pass a longer cap); all KVS access goes through the write meter; Jira points go to the process's ledger, and the site's hourly points cap comes from QUERY_POINTS_TIER or QUERY_SITE_POINTS, and Jira's near-limit warning pauses the background until the next hour; the index parts, the event writer and the gap filler read and write the Forge SQL index. */
 export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
   const logKvs = { writes: process.env.QUERY_LOG_WRITES === '1', reads: process.env.QUERY_LOG_READS === '1', requests: process.env.QUERY_LOG_REQUESTS === '1' };
   const metered = meterKvs(kvs, { readBytes: logKvs.reads });
   const points = createLedger({ kvs: metered.kvs, beginsWith: WhereConditions.beginsWith });
-  const jira = appJira({ retryMaxMs, ledger: points });
+  const onNear = () => {
+    brakeNear(deps).catch((error) => console.error(`near-limit pause failed: ${error?.name}`));
+  };
+  const jira = appJira({ retryMaxMs, ledger: points, onNear });
   const meter = { ...metered, takeRequests: jira.takeRequests, points };
   const state = createState({ kvs: meter.kvs, hash: sha1, beginsWith: WhereConditions.beginsWith });
   const repo = createIndexRepo();
@@ -69,10 +73,12 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
       ...createBoardCompute({ jira }),
       ...createSprintCompute({ jira, repo, state, now: () => Date.now() }),
       ...createCommentCompute({ jira, repo, now: () => Date.now() }),
-      ...createFieldCompute({ jira, repo, commentsShipped: () => SHIPPED_GROUPS.includes('comment'), commentGate: async () => readinessError(await state.progress.get(), 'comment') }),
+      ...createFieldCompute({ jira, repo, fieldList: createFieldList({ jira, state, now: () => Date.now() }), commentsShipped: () => SHIPPED_GROUPS.includes('comment'), commentGate: async () => readinessError(await state.progress.get(), 'comment') }),
     },
     exclude: createExclusion({ jira, state, now: () => Date.now() }),
     withDeadline,
+    withPoints,
+    currentPoints,
     migrate: runMigrations,
     hash: sha1,
     appContext: currentAppContext,

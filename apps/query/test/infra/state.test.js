@@ -59,6 +59,23 @@ describe('state', () => {
     await state.heavy.put(queued);
     expect([await state.heavy.get('a'), await state.heavy.oldest()]).toEqual([queued, queued]);
   });
+  it('keeps the stored points of a job when the job added again names none', async () => {
+    const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
+    await state.addJob({ key: 'a', functionName: 'f', userArgs: [], at: 5, pts: 1700, floor: true });
+    await state.addJob({ key: 'a', functionName: 'f', userArgs: [], at: 9 });
+    expect(await state.job('a')).toEqual({ key: 'a', functionName: 'f', userArgs: [], at: 9, pts: 1700, floor: true });
+  });
+  it('replaces the stored points of a job with the points the job added names', async () => {
+    const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
+    await state.addJob({ key: 'a', functionName: 'f', userArgs: [], at: 5, pts: 1700, floor: true });
+    await state.addJob({ key: 'a', functionName: 'f', userArgs: [], at: 9, pts: 300, floor: false });
+    expect(await state.job('a')).toMatchObject({ pts: 300, floor: false });
+  });
+  it('keeps the cached field list', async () => {
+    const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
+    await state.fields.set({ at: 1, list: [{ id: 'duedate', name: 'Due date', custom: null }] });
+    expect(await state.fields.get()).toEqual({ at: 1, list: [{ id: 'duedate', name: 'Due date', custom: null }] });
+  });
   it('has no oldest heavy group and no group write time before any is stored', async () => {
     const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
     expect([await state.heavy.oldest(), await state.heavy.get('a'), await state.groupWrite.get('a'), await state.heavy.lease.get()]).toEqual([null, null, null, null]);

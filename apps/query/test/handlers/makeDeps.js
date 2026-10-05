@@ -2,6 +2,8 @@ import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createJournal } from '../../src/infra/journal.js';
 import { createValueCache } from '../../src/infra/cache.js';
 import { createState } from '../../src/infra/state.js';
+import { createLedger, newProcessPoints } from '../../src/infra/points.js';
+import { createJira, currentPoints, withPoints } from '../../src/infra/jira.js';
 
 /** A promise that never settles: a compute or a sleep that does not finish. */
 export const never = () => new Promise(() => {});
@@ -62,4 +64,29 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, invalid = {}, 
     deadlines,
     ...extra,
   };
+}
+
+/** An instant ten minutes into a UTC hour. */
+export const BUDGET_AT = Date.parse('2026-10-05T07:10:00Z');
+
+/** Gives handler dependencies a Jira points budget: a ledger over their KVS, the real points scopes, a site cap and an approximate count of `count` issues; the clock starts at `at`. */
+export function withBudget(deps, { at = BUDGET_AT, cap = 10000, count = 0 } = {}) {
+  let now = at;
+  const counted = [];
+  return Object.assign(deps, {
+    now: () => now,
+    advance: (ms) => { now += ms; },
+    points: createLedger({ kvs: deps.kvs, beginsWith, clock: () => now, own: newProcessPoints('test') }),
+    siteCap: cap,
+    withPoints,
+    currentPoints,
+    counted,
+    jira: { ...deps.jira, approximateCount: async (jql) => { counted.push(jql); return count; } },
+  });
+}
+
+/** Spends `n` Jira points in the current points scope, as one search answer does. */
+export function spend(n) {
+  const issues = Array.from({ length: n - 1 }, (_, i) => ({ id: String(i) }));
+  return createJira(async () => ({ status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ issues }) })).searchPage('x', null);
 }

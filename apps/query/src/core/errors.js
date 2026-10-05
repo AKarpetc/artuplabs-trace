@@ -1,6 +1,19 @@
+import { FUNCTION_BY_NAME } from './catalog.js';
 import { EXPRESSION_SNIPPET } from './limits.js';
 
 const fmt = (n) => Number(n).toLocaleString('en-US');
+const RATE_NOTE = "Jira's rate limit for apps";
+const takesSubquery = (functionName) => FUNCTION_BY_NAME.get(functionName)?.args.some((a) => a.type === 'jql') ?? false;
+const utcTime = (at) => new Date(at).toISOString().slice(11, 16);
+
+function tooExpensive(functionName, { n, points, limit, issues, floor = false }) {
+  const cap = `on this site ArtUp Query may spend at most ${fmt(limit)} on one function (${RATE_NOTE}).`;
+  const need = points === null || points === undefined ? `needs more than ${fmt(limit)} Jira API points` : `needs ${floor ? 'at least' : 'about'} ${fmt(points)} Jira API points`;
+  if (n === null || n === undefined) return `${functionName}: the result ${need}; ${cap} Narrow the subquery.`;
+  if (!takesSubquery(functionName)) return `${functionName}: the site has about ${fmt(n)} matching issues and ${need}; ${cap}`;
+  return `${functionName}: the subquery has about ${fmt(n)} issues and ${need}; ${cap} Narrow the subquery to about ${fmt(issues)} issues.`;
+}
+
 const clip = (text) => (text.length > EXPRESSION_SNIPPET ? `${text.slice(0, EXPRESSION_SNIPPET)}…` : text);
 
 /** English messages for the JQL editor; Jira passes no locale to a JQL function. */
@@ -30,6 +43,8 @@ export const ERR = {
   clausesTooLong: (max) => `Conditions are longer than ${fmt(max)} characters`,
   clauseNotYet: (name) => `Clause "${name}" is not available yet`,
   extensionDot: (name) => `${name} takes the part after the last dot, such as gz`,
+  tooExpensive,
+  allowanceUsed: (retryAt) => `ArtUp Query has used this site's Jira API allowance for this hour; retry after ${utcTime(retryAt)} UTC.`,
   needsCommentIndex: (field) => `${field} needs the comment index, which this site does not have`,
 };
 
@@ -48,6 +63,8 @@ export const LOG = {
   invalidConditions: () => 'Invalid conditions',
   invalidExpression: () => 'Invalid expression',
   commentIndexNotShipped: () => 'Comment index not shipped',
+  tooExpensive: () => 'Too expensive for the Jira rate limit',
+  allowanceUsed: () => 'Hourly Jira allowance used',
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

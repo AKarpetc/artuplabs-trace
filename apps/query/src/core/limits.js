@@ -134,3 +134,15 @@ export const POINTS_KEY_MIN = 20;
 export const POINTS_READ_MS = 15 * 1000;
 /** Keys one KVS query page returns at most. */
 export const KVS_PAGE = 100;
+/** Share of the site's hourly points each kind of work may spend before half past the hour (they add up to the whole cap). */
+export const LANE_SHARES = { fn: 0.15, 'index-event': 0.1, refresh: 0.3, heavy: 0.25, reconcile: 0.1, backfill: 0.1 };
+/** Minute of the hour from which a kind of work may spend points the others left unspent. */
+export const BORROW_MINUTE = 30;
+/** Share of the hour's cap work other than function answers may reach by borrowing, so the rest always stays for function answers. */
+export const BORROW_CAP_SHARE = 0.9;
+/** Share of the site's hourly cap one group may cost; a dearer one gets an error with its numbers. */
+export const GROUP_POINTS_SHARE = 0.2;
+/** Points a function call may still compute while Jira warns that little of the app's pool is left. */
+export const NEAR_FN_POINTS = 300;
+/** How long the list of Jira fields stays cached. */
+export const FIELDS_TTL_MS = 60 * 60 * 1000;

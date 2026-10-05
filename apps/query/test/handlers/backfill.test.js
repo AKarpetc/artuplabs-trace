@@ -199,6 +199,6 @@ describe('backfill', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } });
     error.mockRestore();
-    expect([result, await deps.state.brake.get(), deps.pushed.at(-1), deps.delays.at(-1)]).toEqual([{ braked: true, done: 0 }, 301000, { kind: 'backfill', part: 'sprint', generation: 1000 }, 300]);
+    expect([result, await deps.state.brake.get(), deps.pushed.at(-1), deps.delays.at(-1)]).toEqual([{ braked: true, done: 0 }, { until: 301000, reason: 'rate' }, { kind: 'backfill', part: 'sprint', generation: 1000 }, 300]);
   });
 });

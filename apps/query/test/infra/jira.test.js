@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
 const { createJira, currentPoints, JiraError, PointsError, RateLimitError, withDeadline, withPoints } = await import('../../src/infra/jira.js');
-const { POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
+const { NEAR_LIMIT_MS, POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -392,5 +392,26 @@ describe('points scope', () => {
     const { request, calls } = scripted([reply(200, { issues: [] })]);
     await withPoints(Infinity, () => createJira(request).searchIds('a'), { scope: 'call', lane: 'heavy' });
     expect(calls[0].body.maxResults).toEqual(ID_PAGE);
+  });
+});
+
+describe('near-limit warning', () => {
+  const near = () => reply(200, {}, { 'x-ratelimit-nearlimit': 'true' });
+  it('reports the first warning of a near-limit window once', async () => {
+    const { request } = scripted([near(), near(), reply(200, {})]);
+    const seen = [];
+    const jira = createJira(request, { clock: () => 5000, onNear: (at) => seen.push(at) });
+    for (const path of ['/a', '/b', '/c']) await jira.call('GET', path);
+    expect(seen).toEqual([5000]);
+  });
+  it('reports a warning again once the window has passed', async () => {
+    let now = 0;
+    const { request } = scripted([near(), near()]);
+    const seen = [];
+    const jira = createJira(request, { clock: () => now, onNear: (at) => seen.push(at) });
+    await jira.call('GET', '/a');
+    now = NEAR_LIMIT_MS;
+    await jira.call('GET', '/b');
+    expect(seen).toEqual([0, NEAR_LIMIT_MS]);
   });
 });
