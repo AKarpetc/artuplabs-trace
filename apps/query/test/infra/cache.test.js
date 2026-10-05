@@ -142,6 +142,23 @@ describe('value cache', () => {
     await cache.write('g', entry(ids(10), { pts: 200, at: 3 }));
     expect((await cache.meta('g')).pts).toEqual(200);
   });
+  it('takes the posted mark off the meta only while no newer writer replaced it', async () => {
+    const { kvs, cache } = make();
+    await cache.write('g', entry(['1'], { posted: true, startedAt: 1 }));
+    const get = kvs.get;
+    let first = true;
+    kvs.get = async (key) => {
+      const value = await get(key);
+      if (key === 'v:g:m' && first) {
+        first = false;
+        await cache.write('g', entry(['2'], { posted: true, startedAt: 2, at: 2 }));
+      }
+      return value;
+    };
+    await cache.unpost('g');
+    kvs.get = get;
+    expect(await cache.meta('g')).toMatchObject({ n: 1, posted: true, startedAt: 2 });
+  });
   it('knows nothing about a group never written', async () => {
     const { cache } = make();
     expect([await cache.meta('x'), await cache.watch('x')]).toEqual([null, null]);

@@ -129,9 +129,10 @@ export async function isHeavy(deps, group, meta) {
 
 /** The cost a group is known to have: the points of its last finished computation (cache meta), else what a stopped one spent (its job), else null. */
 export function knownCost(meta, job) {
-  if (meta?.pts !== undefined && meta?.pts !== null) return { points: meta.pts, floor: false, measured: true };
-  if (job?.pts !== undefined) return { points: job.pts, floor: Boolean(job.floor) };
-  return null;
+  const bound = job?.pts !== undefined ? { points: job.pts, floor: Boolean(job.floor) } : null;
+  const measured = meta?.pts !== undefined && meta?.pts !== null ? { points: meta.pts, floor: false, measured: true } : null;
+  if (measured && bound?.floor && bound.points > measured.points) return bound;
+  return measured ?? bound;
 }
 
 /** The result of a group dearer than the group limit: the error with its numbers, which its precomputations store. */
@@ -240,8 +241,8 @@ export async function laneIdle(deps) {
 }
 
 /**
- * Settles the lane entry of a finished run: removed once the run wrote the group, kept when the group was handed again meanwhile,
- * moved behind the other groups when the run failed or ran out of time (until HEAVY_ATTEMPTS runs).
+ * Settles the lane entry of a finished run: removed once written, kept when handed again meanwhile, retried a minute after a failure or
+ * timeout (until HEAVY_ATTEMPTS runs, then removed with a skip mark for the reconcile).
  */
 async function settle(deps, running, unfinished) {
   const current = await deps.state.heavy.get(running.key);
@@ -249,8 +250,14 @@ async function settle(deps, running, unfinished) {
   const tries = (running.tries ?? 0) + 1;
   if (unfinished && tries < HEAVY_ATTEMPTS) {
     const { runningSince, ...job } = running;
-    await deps.state.heavy.put({ ...job, tries, at: deps.now(), retry: true, notBefore: deps.now() + REFRESH_RETRY_DELAY_S * 1000 });
+    const notBefore = deps.now() + REFRESH_RETRY_DELAY_S * 1000;
+    await deps.state.heavy.put({ ...job, tries, at: deps.now(), retry: true, notBefore });
+    await scheduleWake(deps, notBefore);
     return;
+  }
+  if (unfinished) {
+    const mark = running.since ?? running.at;
+    if (((await deps.state.skip.get(running.key)) ?? Infinity) > mark) await deps.state.skip.set(running.key, mark);
   }
   await deps.state.heavy.take(running.key);
 }
@@ -307,7 +314,8 @@ async function pickHeavy(deps, queued, groups) {
       continue;
     }
     const cost = knownCost(meta, job)?.points ?? (cap ? lightLimit(cap) : 0);
-    if (cost > room) {
+    const lightRetry = job.retry && cap && cost <= lightLimit(cap);
+    if (cost > room && !lightRetry) {
       waits.push(retryAfter(now));
       continue;
     }

@@ -211,3 +211,33 @@ describe('a function answer and the group meta', () => {
     expect((await deps.cache.meta('parentsOf["q"]')).posted).toBeUndefined();
   });
 });
+
+describe('heavy lane, second round', () => {
+  it('marks a group three failures dropped from the lane and wakes the lane for each retry', async () => {
+    const deps = laneDeps({ queries: ['a'], compute: vi.fn(async () => { throw Object.assign(new Error('down'), { name: 'JiraError', status: 503 }); }) });
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000));
+    for (let i = 0; i < 3; i += 1) {
+      await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }).catch(() => null));
+      deps.advance(61000);
+    }
+    expect([await deps.state.heavy.get(key('a')), await deps.state.skip.get(key('a'))]).toEqual([null, BUDGET_AT - 2000]);
+    expect(deps.pushed.filter(([body]) => body.kind === 'wake').length).toBeGreaterThan(0);
+  });
+  it('takes the lower bound a stop left over the cost of the last finished run', async () => {
+    const compute = spending([10]);
+    const deps = laneDeps({ queries: ['a'], compute });
+    await deps.cache.write(key('a'), { values: ['3'], watch: ['9'], field: 'parent', rootFilter: null, at: 1, source: 'job', pts: 300 });
+    await deps.points.add('heavy', 2000);
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000, { pts: 700, floor: true, stops: 1 }));
+    expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy).toEqual({ waiting: Date.parse('2026-10-05T07:30:00Z') });
+    expect(compute).not.toHaveBeenCalled();
+  });
+  it('retries a failed light group whatever the heavy reserve has left', async () => {
+    const compute = spending([10]);
+    const deps = laneDeps({ queries: ['a'], compute });
+    await deps.cache.write(key('a'), { values: ['3'], watch: ['9'], field: 'parent', rootFilter: null, at: 1, source: 'job', pts: 100 });
+    await deps.points.add('heavy', 2500);
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000, { retry: true }));
+    expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy).toMatchObject({ computed: key('a') });
+  });
+});

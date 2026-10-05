@@ -125,7 +125,7 @@ async function reconcileGroups(deps, startedAt, limit) {
     if (byGroup.some(([, r]) => r.updates.length)) await deps.state.lastWrittenStart.set(startedAt);
     changed = await writeGroups(deps, startedAt, byGroup);
     const skipped = new Set(targets.filter((t) => t.skipped).map((t) => t.group.key));
-    for (const [key] of byGroup) if (skipped.has(key)) await deps.state.skip.clear(key);
+    for (const [key] of byGroup) if (skipped.has(key) && ((await deps.state.skip.get(key)) ?? Infinity) <= startedAt) await deps.state.skip.clear(key);
   }
   return { groups: targets.length, changed, queued, spent };
 }
