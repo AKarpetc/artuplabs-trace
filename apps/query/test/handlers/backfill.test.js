@@ -64,6 +64,32 @@ describe('backfill', () => {
     const p = await deps.state.progress.getPart('sprint');
     expect([p.finishedAt, p.readyAt, p.cursor]).toEqual([1000, 1000, null]);
   });
+  it('skips a job of another chain than the one the part runs under now', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await startBackfill(deps, 'sprint');
+    await deps.state.progress.setPart('sprint', { ...(await deps.state.progress.getPart('sprint')), chain: 'c2' });
+    expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000, chain: 'c1' } })).toEqual({ skipped: true });
+    expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ skipped: true });
+    expect(deps.indexed).toEqual([]);
+  });
+  it('stops a run once a resume put the part under another chain', async () => {
+    const deps = makeDeps({ pages: PAGES });
+    await startBackfill(deps, 'sprint');
+    const index = deps.indexParts.sprint.index;
+    deps.indexParts.sprint.index = async (slice, project) => {
+      await index(slice, project);
+      await deps.state.progress.setPart('sprint', { ...(await deps.state.progress.getPart('sprint')), chain: 'c9' });
+    };
+    expect(await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } })).toEqual({ skipped: true });
+    expect(deps.indexed).toEqual([['A', 1000]]);
+  });
+  it('queues its continuation under the chain of the part', async () => {
+    const deps = makeDeps({ pages: PAGES, cost: 100000 });
+    await startBackfill(deps, 'sprint');
+    await deps.state.progress.setPart('sprint', { ...(await deps.state.progress.getPart('sprint')), chain: 'c2' });
+    await onBackfill(deps, { body: { part: 'sprint', generation: 1000, chain: 'c2' } });
+    expect(deps.pushed.at(-1)).toEqual({ kind: 'backfill', part: 'sprint', generation: 1000, chain: 'c2' });
+  });
   it('saves the cursor and queues itself when the budget is spent', async () => {
     const deps = makeDeps({ pages: PAGES, cost: 100000 });
     await startBackfill(deps, 'sprint');

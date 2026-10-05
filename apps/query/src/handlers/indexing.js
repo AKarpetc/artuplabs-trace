@@ -197,7 +197,7 @@ export function createIndexing(deps) {
 
   async function resumeStalled(part, progress) {
     if (deps.now() - (progress.savedAt ?? progress.startedAt ?? 0) < BACKFILL_STALE_MS) return;
-    await deps.backfillQueue.push({ kind: 'backfill', part, generation: progress.generation });
+    await deps.backfillQueue.push({ kind: 'backfill', part, generation: progress.generation, ...(progress.chain ? { chain: progress.chain } : {}) });
   }
 
   /** The query of a check slice: issues updated since `since` (as minutes back from now), outside excluded projects, after `after`, by id. */

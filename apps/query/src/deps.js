@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import api, { getAppContext, route } from '@forge/api';
 import { kvs, WhereConditions } from '@forge/kvs';
 import { Queue } from '@forge/events';
@@ -85,6 +85,8 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     migrate: runMigrations,
     hash: sha1,
     appContext: currentAppContext,
+    appVersion: () => currentAppContext()?.appVersion ?? null,
+    newToken: () => randomBytes(4).toString('hex'),
     now: () => Date.now(),
     sleep: (ms) => new Promise((resolve) => {
       setTimeout(resolve, ms);

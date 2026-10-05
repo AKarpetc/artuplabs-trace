@@ -8,6 +8,9 @@ import { pushRefresh } from './refresh.js';
 import { brake, brakedUntil, delayUntil, isRateLimit } from './brake.js';
 
 const inList = (projects) => projects.map((p) => `"${p.key}"`).join(', ');
+
+/** The queue body that continues filling a part: its generation and, once a resume set one, the chain the part runs under. */
+export const backfillJob = (part, progress) => ({ kind: 'backfill', part, generation: progress.generation, ...(progress.chain ? { chain: progress.chain } : {}) });
 const excludedNow = async (deps, project) => (await deps.state.excluded()).includes(project.key);
 
 /** Starts filling one index part for every project not excluded (or the given ones, marked partial); an earlier readyAt is kept; the job is queued before the part's preparation, which the hourly gap filler repeats. */
@@ -18,7 +21,7 @@ export async function startBackfill(deps, part, { projects } = {}) {
   const total = scope.length ? await deps.jira.approximateCount(`project in (${inList(scope)})`) : 0;
   const progress = { generation: deps.now(), startedAt: deps.now(), done: 0, total, cursor: { projects: scope, index: 0, after: null }, finishedAt: null, readyAt: old?.readyAt ?? null, ...(projects ? { partial: true } : {}) };
   await deps.state.progress.setPart(part, progress);
-  await deps.backfillQueue.push({ kind: 'backfill', part, generation: progress.generation });
+  await deps.backfillQueue.push(backfillJob(part, progress));
   await deps.indexParts[part].prepare();
   return progress;
 }
@@ -156,30 +159,30 @@ async function finish(deps, part, p) {
  */
 export async function onBackfill(deps, event) {
   if (event?.body?.kind === 'purge') return purgeExcluded(deps);
-  const { part, generation } = event?.body ?? {};
+  const { part, generation, chain } = event?.body ?? {};
   const p = part && deps.indexParts[part] ? await deps.state.progress.getPart(part) : null;
-  if (!p || p.generation !== generation || p.finishedAt) return { skipped: true };
+  if (!p || p.generation !== generation || p.finishedAt || (chain ?? null) !== (p.chain ?? null)) return { skipped: true };
   const until = await brakedUntil(deps);
   if (until) {
-    await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, until));
+    await deps.backfillQueue.push(backfillJob(part, p), delayUntil(deps, until));
     return { braked: until };
   }
   const room = await backfillRoom(deps);
   if (room.waitUntil) {
     await deps.state.progress.setPart(part, { ...p, savedAt: deps.now() });
-    await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, room.waitUntil));
+    await deps.backfillQueue.push(backfillJob(part, p), delayUntil(deps, room.waitUntil));
     return { waiting: room.waitUntil, done: p.done };
   }
   try {
     const run = await (room.limit === Infinity ? fillPart(deps, part, generation, p) : deps.withPoints(room.limit, () => fillPart(deps, part, generation, p), { scope: 'pass' }));
     if (!run.short) return run;
-    return await waitForPoints(deps, part, generation);
+    return await waitForPoints(deps, part, p);
   } catch (error) {
-    if (error?.name === 'PointsError') return waitForPoints(deps, part, generation);
+    if (error?.name === 'PointsError') return waitForPoints(deps, part, p);
     if (!isRateLimit(error)) throw error;
     console.error('backfill stopped by the Jira rate limit');
     const resume = await brake(deps, error.retryAt);
-    await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, resume));
+    await deps.backfillQueue.push(backfillJob(part, p), delayUntil(deps, resume));
     return { braked: true, done: p.done };
   } finally {
     room.release?.();
@@ -187,10 +190,10 @@ export async function onBackfill(deps, event) {
 }
 
 /** Keeps the saved progress fresh, so the hourly check queues no second copy, and queues the job for just after the next allowance. */
-async function waitForPoints(deps, part, generation) {
+async function waitForPoints(deps, part, run) {
   const saved = await deps.state.progress.getPart(part);
-  if (saved?.generation === generation && !saved.finishedAt) await deps.state.progress.setPart(part, { ...saved, savedAt: deps.now() });
-  await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, retryAfter(deps.now()) + BACKFILL_WAKE_DELAY_MS));
+  if (saved?.generation === run.generation && !saved.finishedAt) await deps.state.progress.setPart(part, { ...saved, savedAt: deps.now() });
+  await deps.backfillQueue.push(backfillJob(part, run), delayUntil(deps, retryAfter(deps.now()) + BACKFILL_WAKE_DELAY_MS));
   return { stopped: true, done: saved?.done ?? 0 };
 }
 
@@ -214,10 +217,10 @@ async function fillPart(deps, part, generation, p) {
       await fillSlice(deps, part, p, project, size);
     }
     const current = await deps.state.progress.getPart(part);
-    if (current?.generation !== generation || current.finishedAt) return { skipped: true };
+    if (current?.generation !== generation || current.finishedAt || (current.chain ?? null) !== (p.chain ?? null)) return { skipped: true };
     p.savedAt = deps.now();
     await deps.state.progress.setPart(part, p);
   }
-  await deps.backfillQueue.push({ kind: 'backfill', part, generation });
+  await deps.backfillQueue.push(backfillJob(part, p));
   return { continued: true, done: p.done };
 }
