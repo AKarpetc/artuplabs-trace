@@ -3,7 +3,7 @@ import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
 import { groupPrecomputations, usedWithin } from '../core/affected.js';
 import { forOperator } from '../core/jql-build.js';
-import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, HEAVY_USED_MS, PAGE_CACHE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
+import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, REFRESH_USED_MS, PAGE_CACHE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
 import { computeGroup, fragmentFor } from './functions.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
@@ -172,7 +172,7 @@ async function settle(deps, running, unfinished) {
 /**
  * Heavy lane runner: one waiting group per invocation under a lease; its entry stays until the group is written, so a failed run is retried.
  * While the background waits for Jira's rate limit it runs nothing; a run a 429 stopped counts as a try and the lane goes on after the wake;
- * a group Jira has not used within HEAVY_USED_MS leaves the lane without a run.
+ * a group Jira has not used within REFRESH_USED_MS leaves the lane without a run.
  */
 export async function runHeavy(deps) {
   const until = await brakedUntil(deps);
@@ -187,7 +187,7 @@ export async function runHeavy(deps) {
   try {
     const job = await deps.state.heavy.oldest();
     const group = job ? groupPrecomputations(await deps.jira.precomputations(), { now: deps.now(), activeMs: Infinity }).find((g) => g.key === job.key) : null;
-    if (group && !usedWithin(group, deps.now(), HEAVY_USED_MS)) {
+    if (group && !usedWithin(group, deps.now(), REFRESH_USED_MS)) {
       await deps.state.heavy.take(job.key);
       heavy = { computed: job.key, unused: true };
     } else if (job) {

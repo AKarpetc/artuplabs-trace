@@ -3,7 +3,7 @@ import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
 import { commentTimesWanted, REWRITE_ALL_KIND, familyWants, groupPrecomputations, needsRepair, queryOverlap, summarizeJournal, usedWithin } from '../core/affected.js';
 import {
-  ACTIVE_MS, FAILED_ROWS_KEEP_MS, HEAVY_USED_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, VERIFY_DELAY_S, WORKER_BUDGET_MS,
+  ACTIVE_MS, FAILED_ROWS_KEEP_MS, REFRESH_USED_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { handOff, isDeadline, isHeavy, laneIdle, pushQuietly, rewrite, runCompute, runHeavy, writeGroups } from './groups.js';
@@ -57,9 +57,9 @@ async function isStale(deps, group, summary) {
 }
 
 /**
- * One pass over a journal page: recompute stale groups (precomputations Jira used, every stored one after a rewrite of all, and
+ * One pass over a journal page: recompute stale groups (precomputations Jira used within REFRESH_USED_MS, every stored one after a rewrite of all, and
  * background jobs), each within its own deadline,
- * hand slow groups Jira used within HEAVY_USED_MS to the heavy lane (slow ones used less lately are left to the reconcile after their next use), write changes, then drop the rows; rows stay when the write fails, when a later pass wrote first,
+ * hand slow groups Jira used within REFRESH_USED_MS to the heavy lane (slow ones used less lately are left to the reconcile after their next use), write changes, then drop the rows; rows stay when the write fails, when a later pass wrote first,
  * when the worker budget stopped a group (it is not slow, so it stays out of the heavy lane and the next refresh computes it),
  * or (until FAILED_ROWS_KEEP_MS) when a group failed. A 429 stops the pass: it writes nothing, keeps the rows and returns `limited`.
  */
@@ -70,7 +70,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const summary = summarizeJournal(rows);
   const every = summary.kinds.includes(REWRITE_ALL_KIND);
   const stored = groupPrecomputations(await deps.jira.precomputations(), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
-  const groups = every ? stored : stored.filter(isUsed);
+  const groups = every ? stored : stored.filter((g) => isUsed(g) && usedWithin(g, startedAt, REFRESH_USED_MS));
   const all = [...groups, ...jobGroups(await deps.state.jobs(startedAt), groups)];
   const reconcile = summary.touched.slice(0, RECONCILE_MAX);
   const byGroup = [];
@@ -82,7 +82,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   let limited = null;
   const names = { computed: [], handed: [] };
   const handOver = async (group) => {
-    if (!usedWithin(group, startedAt, HEAVY_USED_MS)) return;
+    if (!usedWithin(group, startedAt, REFRESH_USED_MS)) return;
     handed += 1;
     names.handed.push(group.functionName);
     if (await handOff(deps, group)) queued = true;

@@ -3,7 +3,7 @@ import { makeDeps, RECENT } from './makeDeps.js';
 import { brake, brakedUntil, scheduleWake } from '../../src/handlers/brake.js';
 import { onRefresh, refreshOnce } from '../../src/handlers/refresh.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
-import { HEAVY_ATTEMPTS, HEAVY_USED_MS, PAGE_CACHE_MS, QUEUE_DELAY_MAX_S, RATE_BRAKE_MAX_MS, RATE_BRAKE_MIN_MS, REFRESH_RETRY_DELAY_S } from '../../src/core/limits.js';
+import { HEAVY_ATTEMPTS, REFRESH_USED_MS, PAGE_CACHE_MS, QUEUE_DELAY_MAX_S, RATE_BRAKE_MAX_MS, RATE_BRAKE_MIN_MS, REFRESH_RETRY_DELAY_S } from '../../src/core/limits.js';
 
 const rateLimit = (retryAt) => Object.assign(new Error('The request has been rate-limited.'), { name: 'RateLimitError', status: 429, retryAt });
 const NOW = 1000000;
@@ -205,7 +205,7 @@ describe('reconcile under a rate limit', () => {
 });
 
 describe('heavy groups nobody uses', () => {
-  const longAgo = new Date(NOW - HEAVY_USED_MS - 1000).toISOString();
+  const longAgo = new Date(NOW - REFRESH_USED_MS - 1000).toISOString();
   const idle = [{ id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'parent in (1)', used: longAgo }];
   it('leaves a slow group nobody used for a day out of the heavy lane (the hourly reconcile catches up once it is used again)', async () => {
     const childIssuesOf = vi.fn();
@@ -237,5 +237,13 @@ describe('heavy groups nobody uses', () => {
     await refreshOnce(deps);
     expect(log.mock.calls).toEqual([['refresh pass: 1 groups, computed hasSubtasks@0h 1, handed none']]);
     log.mockRestore();
+  });
+  it('recomputes no group, light or slow, that Jira has not used for a day; the reconcile rewrites it within an hour of its next use', async () => {
+    const hasSubtasks = vi.fn();
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: longAgo }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ groups: 0, recomputed: 0 });
+    expect([hasSubtasks.mock.calls.length, (await deps.journal.read(10)).length]).toEqual([0, 0]);
   });
 });
