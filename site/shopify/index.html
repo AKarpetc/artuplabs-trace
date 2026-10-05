@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AR Room for Shopify — 3D models from product photos and an AR room</title>
+  <meta name="description" content="AR Room for Shopify (the ArtUp Labs app): create 3D models from your product photos and let shoppers place several products together in their room with AR, then add the whole set to cart.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="../style.css?v=cbfa66d8">
+  <style>
+    /* Plan cards: the price under the plan name. */
+    .plans strong { font-size: 1.2rem; }
+    .plans .price { display: block; font-size: 1.6rem; font-weight: 700; color: var(--text); margin: 0.15rem 0 0.5rem; }
+    .plans ul { margin: 0; padding-left: 1.1rem; color: var(--text-muted); font-size: 0.95rem; }
+    .plans ul li { border: 0; border-radius: 0; background: none; padding: 0; }
+    .plans ul li + li { margin-top: 0.25rem; }
+    .plans .price small { font-size: 0.95rem; font-weight: 400; color: var(--text-muted); }
+    .price-notes { margin: 1.5rem 0 0; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n-html="t1">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="../index.html"><img class="brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main" data-i18n-attr="aria-label:a1">
+        <ul>
+          <li data-i18n-html="t2"><a href="../index.html">Home</a></li>
+          <li><a href="./" aria-current="page">AR Room</a></li>
+          <li><a href="../ar-xr/">AR XR</a></li>
+          <li data-i18n-html="t3"><a href="https://app.artuplabs.com/guide">Guide</a></li>
+          <li data-i18n-html="t4"><a href="https://app.artuplabs.com/support">Support</a></li>
+          <li data-i18n-html="t5"><a href="https://app.artuplabs.com/privacy">Privacy</a></li>
+        </ul>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.label"><button type="button" data-lang-set="ru" lang="ru" aria-pressed="false">RU</button><button type="button" data-lang-set="en" lang="en" aria-pressed="true">EN</button></div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero hero-product" aria-labelledby="hero-title">
+      <div class="container">
+        <div class="hero-head">
+          <img class="app-icon" src="icon.svg" alt="" width="56" height="56">
+          <div>
+            <p class="eyebrow" data-i18n-html="t6">AR Room · ArtUp Labs app for Shopify</p>
+            <h1 id="hero-title" data-i18n-html="t7">Product photos to 3D. Products in the shopper's room.</h1>
+            <p class="lead" data-i18n-html="t8">Turn product photos into 3D models and let shoppers place several products in their room in AR. Review each model in your Shopify admin, set the item's real height and add it to the product's media in one click. Shoppers collect products into their room, view up to five of them together and add the whole set to the cart.</p>
+            <div class="actions" data-i18n-html="t9">
+              <!-- TODO: once the app is published, add the Shopify App Store listing link here as the primary button (and on the main page). -->
+              <a class="btn btn-primary" href="https://app.artuplabs.com/guide">Read the setup guide</a>
+              <a class="btn btn-secondary" href="https://app.artuplabs.com/support">Support and FAQ</a>
+            </div>
+            <ul class="pills" aria-label="Highlights" data-i18n-attr="aria-label:a2">
+              <li data-i18n-html="t10">14-day free trial</li>
+              <li data-i18n-html="t11">Billing through Shopify</li>
+              <li data-i18n-html="t12">Up to 5 products in one room</li>
+              <li data-i18n-html="t13">Theme block, no code</li>
+            </ul>
+            <p class="meta" style="margin:1rem 0 0" data-i18n-html="t14">Coming soon to the Shopify App Store. In Shopify the app is called <strong>ArtUp Labs</strong>.</p>
+          </div>
+        </div>
+        <div class="shot">
+          <div class="frame">
+            <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+            <img src="room.webp" width="1600" height="720" alt="The room page on a desktop: a sofa and two chairs from the store in one 3D scene, the list of items in the room, a QR code to open the room on a phone and the Add all to cart button." data-i18n-attr="alt:a3">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="features-title">
+      <div class="container">
+        <h2 id="features-title" data-i18n-html="t15">From a product photo to the shopper's room</h2>
+        <p class="section-lead" data-i18n-html="t16">You make the models in your Shopify admin; a theme block puts the room on your product pages.</p>
+
+        <div class="feature-rows">
+          <div class="feature-row">
+            <div>
+              <span class="kicker" data-i18n-html="t17">Generate</span>
+              <h3 data-i18n-html="t18">A 3D model from the photo the product already has</h3>
+              <p data-i18n-html="t19">The app's <strong>Products</strong> page lists your products with their 3D status. Open a product that has a photo and click <strong>Generate 3D</strong>.</p>
+              <ul>
+                <li data-i18n-html="t20">The product's main photo is used; a single item on a plain background works best.</li>
+                <li data-i18n-html="t21">Generation usually takes about 3 minutes, and the page updates on its own.</li>
+                <li data-i18n-html="t22">A product without a photo shows <em>No photo</em> until you add one in Shopify.</li>
+              </ul>
+            </div>
+            <div class="frame">
+              <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+              <img src="products.webp" width="1200" height="675" loading="lazy" alt="The app's Products page in the Shopify admin: each product with its 3D status (3D ready or Can generate), the generation status and a Generate 3D button." data-i18n-attr="alt:a4">
+            </div>
+          </div>
+
+          <div class="feature-row reverse">
+            <div>
+              <span class="kicker" data-i18n-html="t23">Review</span>
+              <h3 data-i18n-html="t24">Preview every model, then accept, regenerate or reject it</h3>
+              <p data-i18n-html="t25">When the product shows <strong>Preview ready</strong>, rotate the 3D preview to check it. Enter the item's real height in centimeters (1 to 500 cm): the model is scaled to it, so the product appears at true size in AR.</p>
+              <p data-i18n-html="t26"><strong>Accept</strong> adds the model to the product's media in Shopify. <strong>Regenerate</strong> makes a new model for the same product (it counts as a new generation); <strong>Reject</strong> discards the preview.</p>
+            </div>
+            <div class="frame">
+              <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+              <img src="preview.webp" width="1200" height="675" loading="lazy" alt="A generated model in the app: the interactive 3D preview with Preview ready, the Height, cm field and the Accept, Regenerate and Reject buttons." data-i18n-attr="alt:a5">
+            </div>
+          </div>
+
+          <div class="feature-row">
+            <div>
+              <span class="kicker" data-i18n-html="t27">No code</span>
+              <h3 data-i18n-html="t28">Two buttons on your product pages</h3>
+              <p data-i18n-html="t29">In the theme editor click <strong>Add block</strong> and choose <strong>Apps → AR Room button</strong> — or use the button at the bottom of the app's Products page, which opens the theme editor with the block already added, so you only click <strong>Save</strong>.</p>
+              <ul>
+                <li data-i18n-html="t30"><em>View in my room</em> and <em>Add to my room</em> appear on products that have a 3D model and stay hidden on the others.</li>
+                <li data-i18n-html="t31">Change the button labels and color in the block settings.</li>
+              </ul>
+            </div>
+            <div class="frame">
+              <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+              <img src="theme-block.webp" width="1200" height="675" loading="lazy" alt="The Shopify theme editor with the AR Room button block selected: label and color settings on the left, the View in my room and Add to my room buttons on the product page." data-i18n-attr="alt:a6">
+            </div>
+          </div>
+
+          <div class="feature-row reverse">
+            <div>
+              <span class="kicker" data-i18n-html="t32">For shoppers</span>
+              <h3 data-i18n-html="t33">Several products together, then the whole set to the cart</h3>
+              <p data-i18n-html="t34">Shoppers click <em>Add to my room</em> on product pages. The room holds up to 5 products and is kept in the shopper's browser. <em>View in my room</em> opens the room page with the current product and the ones added before, in 3D; shoppers move and rotate them.</p>
+              <p data-i18n-html="t35"><strong>Add all to cart</strong> opens your store's cart with the products from the room.</p>
+            </div>
+            <div class="frame">
+              <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+              <img src="checkout.webp" width="952" height="674" loading="lazy" alt="Shopify checkout of a test store after Add all to cart: the sofa and both chairs from the room in one order." data-i18n-attr="alt:a7">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section band" aria-labelledby="devices-title">
+      <div class="container">
+        <h2 id="devices-title" data-i18n-html="t36">Where shoppers see AR</h2>
+        <p class="section-lead" data-i18n-html="t37">The room page opens in the browser at artuplabs.com/room/ — nothing to install on Android or desktop.</p>
+        <ul class="badges">
+          <li data-i18n-html="t38"><strong>Android</strong><span>Chrome on a phone or tablet with ARCore: the room page offers AR, so the products can be placed in the real room.</span></li>
+          <li data-i18n-html="t39"><strong>iPhone and iPad</strong><span>Support through the ArtUp Labs App Clip is rolling out (pending Apple approval); until then the room is shown in 3D without AR.</span></li>
+          <li data-i18n-html="t40"><strong>Desktop</strong><span>The room in 3D, with a QR code to open it on a phone.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="setup-title">
+      <div class="container">
+        <h2 id="setup-title" data-i18n-html="t41">Set up in five steps</h2>
+        <p class="section-lead" data-i18n-html="t42">The app opens inside your Shopify admin; no separate login or account is needed. <a href="https://app.artuplabs.com/guide">The guide walks through every step →</a></p>
+        <ol class="steps">
+          <li><strong data-i18n-html="t43">Install the app.</strong><p data-i18n-html="t44">Approve the access request in Shopify.</p></li>
+          <li><strong data-i18n-html="t45">Choose a plan.</strong><p data-i18n-html="t46">Click <em>Choose a plan</em>, pick one on Shopify's plan page and approve it. Every plan starts with a free trial.</p></li>
+          <li><strong data-i18n-html="t47">Generate a 3D model.</strong><p data-i18n-html="t48">Open a product with a photo and click <em>Generate 3D</em>.</p></li>
+          <li><strong data-i18n-html="t49">Check the preview and accept it.</strong><p data-i18n-html="t50">Enter the real height and click <em>Accept</em>; the model appears in the product's media.</p></li>
+          <li><strong data-i18n-html="t51">Add the button to your theme.</strong><p data-i18n-html="t52">Add the <em>AR Room button</em> block to the product template and save.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section band" aria-labelledby="price-title">
+      <div class="container">
+        <h2 id="price-title" data-i18n-html="t53">Plans</h2>
+        <p class="section-lead" data-i18n-html="t54">Every plan starts with a 14-day free trial with up to 5 generations. Billing goes through Shopify, and you can change the plan in the app at any time.</p>
+        <ul class="badges plans">
+          <li data-i18n-html="t55"><strong>Starter</strong><span class="price">$29<small> / month</small></span><ul><li>5 3D models included per month</li><li>$2 per additional generation</li><li>Up to 30 generations per month</li><li>AR room with up to 5 products</li></ul></li>
+          <li data-i18n-html="t56"><strong>Growth</strong><span class="price">$79<small> / month</small></span><ul><li>25 3D models included per month</li><li>$2 per additional generation</li><li>Up to 100 generations per month</li><li>AR room with up to 5 products</li></ul></li>
+          <li data-i18n-html="t57"><strong>Pro</strong><span class="price">$199<small> / month</small></span><ul><li>100 3D models included per month</li><li>$2 per additional generation</li><li>Up to 300 generations per month</li><li>AR room with up to 5 products</li></ul></li>
+        </ul>
+        <p class="meta price-notes" data-i18n-html="t58">All plans include the AR Room theme block and the shopper room page. A store can run up to 10 generations per day (UTC). Regenerate counts as a new generation.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="trust-title">
+      <div class="container">
+        <h2 id="trust-title" data-i18n-html="t59">Your store's data</h2>
+        <p class="section-lead" data-i18n-html="t60">The app keeps only what it needs to make models for your store. <a href="https://app.artuplabs.com/privacy">Privacy Policy →</a></p>
+        <ul class="facts">
+          <li data-i18n-html="t61"><strong>No shopper data</strong>The app does not collect personal data of your customers.</li>
+          <li data-i18n-html="t62"><strong>Only the photo URL</strong>To build a model, the URL of the product's photo is sent to fal.ai.</li>
+          <li data-i18n-html="t63"><strong>Short storage</strong>Generated model files are deleted from our storage within 14 days; accepted models live in your store's media.</li>
+          <li data-i18n-html="t64"><strong>Deleted on uninstall</strong>Access tokens are deleted right away; generation records and model files when Shopify sends the data deletion request.</li>
+          <li data-i18n-html="t65"><strong>Narrow access</strong>Scopes: <code>read_products</code>, <code>write_products</code>, <code>write_files</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0" aria-labelledby="links-title">
+      <div class="container">
+        <h2 id="links-title" data-i18n-html="t66">Resources</h2>
+        <ul class="link-grid">
+          <li data-i18n-html="t67"><a href="https://app.artuplabs.com/guide">Setup guide<span>From installation to the room page</span></a></li>
+          <li data-i18n-html="t68"><a href="https://app.artuplabs.com/support">Support and FAQ<span>Answers to common questions, reply within 2 business days</span></a></li>
+          <li data-i18n-html="t69"><a href="https://app.artuplabs.com/privacy">Privacy Policy<span>What the app stores and where</span></a></li>
+          <li data-i18n-html="t70"><a href="mailto:support@artuplabs.com">support@artuplabs.com<span>Include your store's myshopify.com domain</span></a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p data-i18n-html="t71"><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p data-i18n-html="t72">Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · <span style="white-space:nowrap"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: <a href="https://wa.me/77778490070" target="_blank" rel="noopener">+7 777 849 00 70</a></span> · App support: <a href="mailto:support@artuplabs.com">support@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer" data-i18n-attr="aria-label:a8">
+        <ul>
+          <li><a href="../ar-xr/">ArtUp AR XR</a></li>
+          <li><a href="./">AR Room</a></li>
+          <li><a href="../export/">ArtUp Export</a></li>
+          <li><a href="../reports/">ArtUp Reports</a></li>
+          <li><a href="../query/">ArtUp Query</a></li>
+          <li data-i18n-html="t73"><a href="https://app.artuplabs.com/guide">AR Room guide</a></li>
+          <li data-i18n-html="t74"><a href="https://app.artuplabs.com/support">AR Room support</a></li>
+          <li data-i18n-html="t75"><a href="https://app.artuplabs.com/privacy">AR Room privacy</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+  <script>window.ARTUP_I18N = { en: {}, ru: {
+  "lang.label": "Язык",
+  "t1": "Перейти к содержимому",
+  "t2": "<a href=\"../index.html\">Главная<\/a>",
+  "t3": "<a href=\"https://app.artuplabs.com/guide\">Руководство<\/a>",
+  "t4": "<a href=\"https://app.artuplabs.com/support\">Поддержка<\/a>",
+  "t5": "<a href=\"https://app.artuplabs.com/privacy\">Конфиденциальность<\/a>",
+  "t6": "AR Room · приложение ArtUp Labs для Shopify",
+  "t7": "Из фото товара — 3D. Товары — в комнате покупателя.",
+  "t8": "Превращайте фото товаров в 3D-модели, а покупатели расставят несколько товаров в своей комнате в AR. Проверьте каждую модель в админке Shopify, укажите реальную высоту предмета и одним нажатием добавьте модель в медиа товара. Покупатели собирают товары в свою комнату, смотрят до пяти из них вместе и добавляют весь набор в корзину.",
+  "t9": "<a class=\"btn btn-primary\" href=\"https://app.artuplabs.com/guide\">Руководство по настройке<\/a> <a class=\"btn btn-secondary\" href=\"https://app.artuplabs.com/support\">Поддержка и вопросы<\/a>",
+  "t10": "14 дней бесплатно",
+  "t11": "Оплата через Shopify",
+  "t12": "До 5 товаров в одной комнате",
+  "t13": "Блок темы, без кода",
+  "t14": "Скоро в Shopify App Store. В Shopify приложение называется <strong>ArtUp Labs<\/strong>.",
+  "t15": "От фото товара до комнаты покупателя",
+  "t16": "Модели вы делаете в админке Shopify, а блок темы добавляет комнату на страницы товаров.",
+  "t17": "Генерация",
+  "t18": "3D-модель из фото, которое у товара уже есть",
+  "t19": "На странице <strong>Products<\/strong> приложения — ваши товары и их статус 3D. Откройте товар с фото и нажмите <strong>Generate 3D<\/strong>.",
+  "t20": "Берётся главное фото товара; лучше всего — один предмет на однотонном фоне.",
+  "t21": "Генерация обычно занимает около 3 минут, страница обновляется сама.",
+  "t22": "У товара без фото стоит <em>No photo<\/em>, пока вы не добавите фото в Shopify.",
+  "t23": "Проверка",
+  "t24": "Каждую модель можно посмотреть, а затем принять, перегенерировать или отклонить",
+  "t25": "Когда у товара появится <strong>Preview ready<\/strong>, покрутите 3D-превью и проверьте его. Укажите реальную высоту предмета в сантиметрах (от 1 до 500 см): модель масштабируется под неё, и товар в AR будет в натуральную величину.",
+  "t26": "<strong>Accept<\/strong> добавляет модель в медиа товара в Shopify. <strong>Regenerate<\/strong> делает новую модель того же товара (считается новой генерацией); <strong>Reject<\/strong> отбрасывает превью.",
+  "t27": "Без кода",
+  "t28": "Две кнопки на страницах товаров",
+  "t29": "В редакторе темы нажмите <strong>Add block<\/strong> и выберите <strong>Apps → AR Room button<\/strong> — или нажмите кнопку внизу страницы Products в приложении: она откроет редактор темы с уже добавленным блоком, останется нажать <strong>Save<\/strong>.",
+  "t30": "<em>View in my room<\/em> и <em>Add to my room<\/em> появляются у товаров с 3D-моделью и скрыты у остальных.",
+  "t31": "Подписи и цвет кнопок меняются в настройках блока.",
+  "t32": "Для покупателей",
+  "t33": "Несколько товаров вместе, а затем весь набор — в корзину",
+  "t34": "Покупатель нажимает <em>Add to my room<\/em> на страницах товаров. В комнате помещается до 5 товаров, она хранится в браузере покупателя. <em>View in my room<\/em> открывает страницу комнаты с текущим товаром и добавленными ранее, в 3D; товары можно двигать и поворачивать.",
+  "t35": "<strong>Add all to cart<\/strong> открывает корзину вашего магазина с товарами из комнаты.",
+  "t36": "Где покупатель увидит AR",
+  "t37": "Страница комнаты открывается в браузере по адресу artuplabs.com/room/ — на Android и компьютере ничего устанавливать не нужно.",
+  "t38": "<strong>Android<\/strong><span>Chrome на телефоне или планшете с ARCore: страница комнаты предлагает AR, и товары можно поставить в настоящей комнате.<\/span>",
+  "t39": "<strong>iPhone и iPad<\/strong><span>Поддержка через App Clip ArtUp Labs вводится (ждёт одобрения Apple); до этого комната показывается в 3D без AR.<\/span>",
+  "t40": "<strong>Компьютер<\/strong><span>Комната в 3D и QR-код, чтобы открыть её на телефоне.<\/span>",
+  "t41": "Настройка за пять шагов",
+  "t42": "Приложение открывается внутри админки Shopify; отдельный вход или аккаунт не нужен. <a href=\"https://app.artuplabs.com/guide\">Руководство описывает каждый шаг →<\/a>",
+  "t43": "Установите приложение.",
+  "t44": "Подтвердите запрос доступа в Shopify.",
+  "t45": "Выберите тариф.",
+  "t46": "Нажмите <em>Choose a plan<\/em>, выберите тариф на странице тарифов Shopify и подтвердите. Каждый тариф начинается с бесплатного пробного периода.",
+  "t47": "Создайте 3D-модель.",
+  "t48": "Откройте товар с фото и нажмите <em>Generate 3D<\/em>.",
+  "t49": "Проверьте превью и примите его.",
+  "t50": "Укажите реальную высоту и нажмите <em>Accept<\/em>; модель появится в медиа товара.",
+  "t51": "Добавьте кнопку в тему.",
+  "t52": "Добавьте блок <em>AR Room button<\/em> в шаблон товара и сохраните.",
+  "t53": "Тарифы",
+  "t54": "Каждый тариф начинается с 14-дневного бесплатного периода, в нём до 5 генераций. Оплата идёт через Shopify, тариф можно сменить в приложении в любой момент.",
+  "t55": "<strong>Starter<\/strong><span class=\"price\">$29<small> \/ мес.<\/small><\/span><ul><li>5 3D-моделей в месяц включено<\/li><li>$2 за каждую дополнительную генерацию<\/li><li>До 30 генераций в месяц<\/li><li>AR-комната до 5 товаров<\/li><\/ul>",
+  "t56": "<strong>Growth<\/strong><span class=\"price\">$79<small> \/ мес.<\/small><\/span><ul><li>25 3D-моделей в месяц включено<\/li><li>$2 за каждую дополнительную генерацию<\/li><li>До 100 генераций в месяц<\/li><li>AR-комната до 5 товаров<\/li><\/ul>",
+  "t57": "<strong>Pro<\/strong><span class=\"price\">$199<small> \/ мес.<\/small><\/span><ul><li>100 3D-моделей в месяц включено<\/li><li>$2 за каждую дополнительную генерацию<\/li><li>До 300 генераций в месяц<\/li><li>AR-комната до 5 товаров<\/li><\/ul>",
+  "t58": "Во всех тарифах есть блок темы AR Room и страница комнаты для покупателей. Магазин может запускать до 10 генераций в сутки (UTC). Regenerate считается новой генерацией.",
+  "t59": "Данные вашего магазина",
+  "t60": "Приложение хранит только то, что нужно для создания моделей вашего магазина. <a href=\"https://app.artuplabs.com/privacy\">Политика конфиденциальности →<\/a>",
+  "t61": "<strong>Без данных покупателей<\/strong>Приложение не собирает персональные данные ваших клиентов.",
+  "t62": "<strong>Только ссылка на фото<\/strong>Для создания модели в fal.ai отправляется URL фото товара.",
+  "t63": "<strong>Недолгое хранение<\/strong>Сгенерированные файлы моделей удаляются из нашего хранилища в течение 14 дней; принятые модели хранятся в медиа вашего магазина.",
+  "t64": "<strong>Удаление при удалении приложения<\/strong>Токены доступа удаляются сразу; записи генераций и файлы моделей — когда Shopify присылает запрос на удаление данных.",
+  "t65": "<strong>Узкий доступ<\/strong>Разрешения: <code>read_products<\/code>, <code>write_products<\/code>, <code>write_files<\/code>.",
+  "t66": "Ресурсы",
+  "t67": "<a href=\"https://app.artuplabs.com/guide\">Руководство по настройке<span>От установки до страницы комнаты<\/span><\/a>",
+  "t68": "<a href=\"https://app.artuplabs.com/support\">Поддержка и вопросы<span>Ответы на частые вопросы, ответ в течение 2 рабочих дней<\/span><\/a>",
+  "t69": "<a href=\"https://app.artuplabs.com/privacy\">Политика конфиденциальности<span>Что хранит приложение и где<\/span><\/a>",
+  "t70": "<a href=\"mailto:support@artuplabs.com\">support@artuplabs.com<span>Укажите домен магазина myshopify.com<\/span><\/a>",
+  "t71": "<strong>ArtUp Labs<\/strong> — торговое название ИП Карпец Артём, Республика Казахстан.",
+  "t72": "Связь: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a> · <span style=\"white-space:nowrap\"><svg class=\"wa-icon\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:-3px\"><path d=\"M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z\"/><path d=\"M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z\"/><\/svg> WhatsApp: <a href=\"https://wa.me/77778490070\" target=\"_blank\" rel=\"noopener\">+7 777 849 00 70<\/a><\/span> · Поддержка приложения: <a href=\"mailto:support@artuplabs.com\">support@artuplabs.com<\/a>",
+  "t73": "<a href=\"https://app.artuplabs.com/guide\">Руководство AR Room<\/a>",
+  "t74": "<a href=\"https://app.artuplabs.com/support\">Поддержка AR Room<\/a>",
+  "t75": "<a href=\"https://app.artuplabs.com/privacy\">Конфиденциальность AR Room<\/a>",
+  "a1": "Основное меню",
+  "a2": "Главное",
+  "a3": "Страница комнаты на компьютере: диван и два стула из магазина в одной 3D-сцене, список товаров в комнате, QR-код, чтобы открыть комнату на телефоне, и кнопка Add all to cart.",
+  "a4": "Страница Products приложения в админке Shopify: у каждого товара статус 3D (3D ready или Can generate), статус генерации и кнопка Generate 3D.",
+  "a5": "Сгенерированная модель в приложении: интерактивное 3D-превью со статусом Preview ready, поле Height, cm и кнопки Accept, Regenerate и Reject.",
+  "a6": "Редактор темы Shopify с выбранным блоком AR Room button: настройки подписей и цвета слева, кнопки View in my room и Add to my room на странице товара.",
+  "a7": "Оформление заказа в тестовом магазине Shopify после Add all to cart: диван и оба стула из комнаты в одном заказе.",
+  "a8": "Нижнее меню",
+  "meta.title": "AR Room для Shopify — 3D-модели из фото товаров и AR-комната",
+  "meta.description": "AR Room для Shopify (приложение ArtUp Labs): создавайте 3D-модели из фото товаров, а покупатели расставят несколько товаров вместе в своей комнате в AR и добавят весь набор в корзину."
+} };</script>
+  <script src="/ar-xr/assets/lang.js?v=6abb7ca1"></script>
+</body>
+</html>
