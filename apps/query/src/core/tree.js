@@ -1,4 +1,4 @@
-import { TREE_FANOUT, TREE_LEVELS, VALUE_LIMIT } from './limits.js';
+import { ROOT_FILTER_VALUES, TREE_FANOUT, TREE_LEVELS, VALUE_LIMIT } from './limits.js';
 import { ERR } from './errors.js';
 import { EMPTY, pageCall } from './jql-build.js';
 
@@ -21,14 +21,17 @@ const span = (first, last) => Array.from({ length: last - first + 1 }, (_, i) =>
 
 /**
  * Stored JQL of one precomputation: the root (page null), a middle node or a leaf. `field` is `id` or `parent`;
- * `rootFilter` is ANDed on the root only; a leaf nested under the filter returns no issues.
+ * `rootFilter` is ANDed on the root only; a leaf nested under the filter returns no issues. Jira counts the filter toward the 1 000 values of
+ * a fragment, so a list that leaves it less than ROOT_FILTER_VALUES goes into one leaf.
  */
 export function buildFragment({ functionName, userArgs, page, values, field, rootFilter, levels = TREE_LEVELS }) {
   const list = (from, to) => {
     const ids = values.range(from, to);
     return ids.length ? `${field} in (${ids.join(',')})` : EMPTY;
   };
-  const shape = treeShape(values.n, levels);
+  const listed = treeShape(values.n, levels);
+  const crowded = listed.kind === 'list' && rootFilter && values.n > VALUE_LIMIT - ROOT_FILTER_VALUES;
+  const shape = crowded ? { kind: 'tree', levels: 1, leaves: 1 } : listed;
   const leafCall = (index) => pageCall(functionName, userArgs, { kind: 'leaf', index });
   if (page?.kind === 'leaf') return { jql: list((page.index - 1) * VALUE_LIMIT, page.index * VALUE_LIMIT) };
   if (page?.kind === 'mid') {

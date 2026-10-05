@@ -1,5 +1,7 @@
 /** Values one stored JQL list may hold (Forge precomputation limit). */
 export const VALUE_LIMIT = 1000;
+/** Values a root filter may count toward Jira's limit of a stored fragment; a list under a filter keeps this room or moves into a leaf. */
+export const ROOT_FILTER_VALUES = 100;
 /** Page calls one stored fragment may hold (measured: 9 work, 10 return nothing, 11 fail). */
 export const TREE_FANOUT = 9;
 /** Levels of page calls under the root; 2 only after the live probe passes. */

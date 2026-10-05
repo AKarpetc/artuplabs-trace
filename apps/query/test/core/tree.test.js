@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildFragment, treeShape, valuesOf } from '../../src/core/tree.js';
+import { ROOT_FILTER_VALUES, VALUE_LIMIT } from '../../src/core/limits.js';
 
 const ids = (n) => Array.from({ length: n }, (_, i) => String(1000 + i));
 const call = (page) => `issue in subtasksOf("project = \\"A\\"", "__aq:${page}")`;
@@ -23,6 +24,18 @@ describe('treeShape', () => {
 describe('buildFragment', () => {
   it('stores up to 1 000 values as one list under the root filter', () => {
     expect(buildFragment({ ...base, page: null, values: valuesOf(['3', '5']), levels: 1 })).toEqual({ jql: '(issuetype in subTaskIssueTypes()) AND (parent in (3,5))' });
+  });
+  it('moves values that leave no room for the root filter within Jira\'s 1 000 values into one leaf call', () => {
+    expect(buildFragment({ ...base, page: null, values: valuesOf(ids(VALUE_LIMIT - ROOT_FILTER_VALUES + 1)), levels: 1 })).toEqual({ jql: `(issuetype in subTaskIssueTypes()) AND (${call('l1')})` });
+  });
+  it('keeps values that leave room for the root filter as one list', () => {
+    expect(buildFragment({ ...base, page: null, values: valuesOf(ids(VALUE_LIMIT - ROOT_FILTER_VALUES)), levels: 1 }).jql).toMatch(/^\(issuetype in subTaskIssueTypes\(\)\) AND \(parent in \(/);
+  });
+  it('keeps 1 000 values as one list when there is no root filter', () => {
+    expect(buildFragment({ ...base, rootFilter: undefined, page: null, values: valuesOf(ids(VALUE_LIMIT)), levels: 1 }).jql).toMatch(/^parent in \(/);
+  });
+  it('serves the whole list from the one leaf it moved there', () => {
+    expect(buildFragment({ ...base, page: { kind: 'leaf', index: 1 }, values: valuesOf(ids(VALUE_LIMIT)), levels: 1 })).toEqual({ jql: `parent in (${ids(VALUE_LIMIT).join(',')})` });
   });
   it('keeps an OR inside the root filter from escaping the AND', () => {
     expect(buildFragment({ ...base, rootFilter: 'project = A OR project = B', page: null, values: valuesOf(['3']), levels: 1 })).toEqual({ jql: '(project = A OR project = B) AND (parent in (3))' });
