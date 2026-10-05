@@ -166,3 +166,11 @@ export const HEAVY_MIN_INTERVAL_MS = 60 * 60 * 1000;
 export const HEAVY_WAIT_MAX_MS = 6 * 60 * 60 * 1000;
 /** Stops by the rate limit or the points budget after which the reconcile hands a heavy group needing repair to the lane once a day. */
 export const HEAVY_STOPS_MAX = 2;
+/** How long the status categories of the site stay cached (`cfg:status`). */
+export const STATUS_TTL_MS = 60 * 60 * 1000;
+/** Shortest window, in minutes, of recently updated issues the hourly index check re-reads. */
+export const RECENT_WINDOW_MIN = 120;
+/** Minutes the index check adds to the time since its last finished run, so no update falls between two windows. */
+export const RECENT_WINDOW_MARGIN_MIN = 10;
+/** How long after half past or the hour a backfill waiting for its reserve starts, so refresh and the heavy lane take first. */
+export const BACKFILL_WAKE_DELAY_MS = 60 * 1000;

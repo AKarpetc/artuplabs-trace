@@ -39,6 +39,8 @@ export function createState({ kvs, hash, beginsWith }) {
     brake: record('q:brake'),
     wake: record('q:wake'),
     sprintFields: record('cfg:sprintFields'),
+    statuses: record('cfg:status'),
+    recentIndex: record('idx:recent'),
     fields: record('cfg:fields'),
     progress: {
       async get() {

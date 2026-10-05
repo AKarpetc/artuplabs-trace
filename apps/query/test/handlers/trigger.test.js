@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { makeDeps } from './makeDeps.js';
+import { makeDeps, spend, withBudget } from './makeDeps.js';
+import { brakeNear } from '../../src/handlers/brake.js';
 import { changeId, onEvent } from '../../src/handlers/trigger.js';
 
 const fixture = (name) => JSON.parse(readFileSync(new URL(`../fixtures/events/${name}.json`, import.meta.url), 'utf8'));
@@ -97,5 +98,41 @@ describe('changeId', () => {
   });
   it('reads an event without issue, time or items', () => {
     expect(changeId({}, hash)).toBe(changeId({ changelog: { items: 'x' } }, hash));
+  });
+});
+
+describe('onEvent under the points budget', () => {
+  const event = { eventType: 'avi:jira:created:issuelink', issueLink: { sourceIssueId: 1, destinationIssueId: 2 } };
+  it('indexes an event within the index-event reserve', async () => {
+    const indexEvent = vi.fn(async () => { await spend(3); });
+    const deps = withBudget(makeDeps({ indexEvent }));
+    await onEvent(deps, event);
+    expect(indexEvent).toHaveBeenCalledTimes(1);
+    expect(deps.kvs.calls.ops.some((op) => op.startsWith('set t:'))).toBe(true);
+  });
+  it('sends no Jira request for an event past the index-event reserve, yet journals it and logs no failure', async () => {
+    let sent = false;
+    const indexEvent = vi.fn(async () => { await spend(3); sent = true; });
+    const deps = withBudget(makeDeps({ indexEvent }));
+    await deps.points.add('index-event', 1000);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await onEvent(deps, event);
+    expect([sent, error.mock.calls]).toEqual([false, []]);
+    error.mockRestore();
+    expect((await deps.journal.read(10)).map((r) => r.value)).toEqual([{ ids: ['1', '2'], kinds: ['link'] }]);
+  });
+  it('still writes index rows that need no Jira request past the reserve', async () => {
+    const written = [];
+    const deps = withBudget(makeDeps({ indexEvent: async () => { written.push('row'); } }));
+    await deps.points.add('index-event', 1000);
+    await onEvent(deps, event);
+    expect(written).toEqual(['row']);
+  });
+  it('sends no Jira request while Jira warns that the pool is nearly used', async () => {
+    let sent = false;
+    const deps = withBudget(makeDeps({ indexEvent: async () => { await spend(3); sent = true; } }));
+    await brakeNear(deps);
+    await onEvent(deps, event);
+    expect(sent).toBe(false);
   });
 });

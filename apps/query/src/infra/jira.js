@@ -181,8 +181,8 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     return out;
   }
 
-  async function searchPage(jql, nextPageToken) {
-    const page = await call('POST', '/rest/api/3/search/jql', { jql, fields: ['id'], maxResults: pageSize(), ...(nextPageToken ? { nextPageToken } : {}) });
+  async function searchPage(jql, nextPageToken, { maxResults = ID_PAGE } = {}) {
+    const page = await call('POST', '/rest/api/3/search/jql', { jql, fields: ['id'], maxResults: Math.min(pageSize(), maxResults), ...(nextPageToken ? { nextPageToken } : {}) });
     return { ids: (page?.issues ?? []).map((x) => String(x.id)), nextPageToken: page?.nextPageToken ?? null };
   }
 

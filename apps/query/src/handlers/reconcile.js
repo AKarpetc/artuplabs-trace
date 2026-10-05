@@ -45,7 +45,7 @@ async function restartJournal(deps, at) {
 async function reconcileRoom(deps, at) {
   if (!deps.points || !deps.siteCap) return { limit: Infinity };
   const { byLane } = await deps.points.siteSpent(hourKey(at));
-  if (!admit('reconcile', POINTS_OVERHEAD, byLane, at, deps.siteCap).ok) return { refused: true };
+  if (!admit('reconcile', POINTS_OVERHEAD, byLane, at, deps.siteCap).ok) return { refused: true, limit: 0 };
   return { limit: laneRoom('reconcile', byLane, at, deps.siteCap) };
 }
 
@@ -66,7 +66,8 @@ async function targetsOf(deps, startedAt) {
 }
 
 async function reconcileGroups(deps, startedAt, limit) {
-  const targets = await targetsOf(deps, startedAt);
+  let targets = [];
+  let spent = 0;
   const cap = deps.siteCap;
   const byGroup = [];
   let queued = false;
@@ -77,7 +78,7 @@ async function reconcileGroups(deps, startedAt, limit) {
     if ((waiting?.stops ?? 0) >= HEAVY_STOPS_MAX && startedAt - waiting.at < HEAVY_RECONCILE_MS) return;
     if (await handOff(deps, group, points)) queued = true;
   };
-  await withPass(deps, limit, () => pool(targets, REFRESH_CONCURRENCY, async ({ group, heavy }) => {
+  const visit = async ({ group, heavy }) => {
     if (limited || stopped) return;
     try {
       const cost = knownCost(await deps.cache.meta(group.key), null);
@@ -107,7 +108,15 @@ async function reconcileGroups(deps, startedAt, limit) {
       if (!isDeadline(error)) throw error;
       await handOver(group);
     }
-  }));
+  };
+  await withPass(deps, limit, async () => {
+    try {
+      targets = await targetsOf(deps, startedAt);
+      await pool(targets, REFRESH_CONCURRENCY, visit);
+    } finally {
+      spent = deps.currentPoints?.()?.spent ?? 0;
+    }
+  });
   if (limited) throw limited;
   let changed = 0;
   if (byGroup.length && ((await deps.state.lastWrittenStart.get()) ?? 0) <= startedAt) {
@@ -116,7 +125,7 @@ async function reconcileGroups(deps, startedAt, limit) {
     const skipped = new Set(targets.filter((t) => t.skipped).map((t) => t.group.key));
     for (const [key] of byGroup) if (skipped.has(key)) await deps.state.skip.clear(key);
   }
-  return { groups: targets.length, changed, queued };
+  return { groups: targets.length, changed, queued, spent };
 }
 
 const withPass = (deps, limit, task) => (deps.withPoints ? deps.withPoints(limit, task, { scope: 'pass' }) : task()).catch((error) => {
@@ -128,7 +137,8 @@ async function reconcileOnce(deps) {
   const startedAt = deps.now();
   await restartJournal(deps, startedAt);
   const room = await reconcileRoom(deps, startedAt);
-  const done = room.refused ? { groups: 0, changed: 0, queued: false } : await reconcileGroups(deps, startedAt, room.limit);
+  const done = room.refused ? { groups: 0, changed: 0, queued: false, spent: 0 } : await reconcileGroups(deps, startedAt, room.limit);
   if (done.queued || (await deps.state.heavy.oldest())) await pushQuietly(deps, { kind: 'heavy' });
-  return { groups: done.groups, changed: done.changed, index: await deps.indexReconcile() };
+  const index = room.limit === Infinity || !deps.withPoints ? await deps.indexReconcile() : await deps.withPoints(Math.max(0, room.limit - done.spent), () => deps.indexReconcile(), { scope: 'pass' });
+  return { groups: done.groups, changed: done.changed, index };
 }

@@ -1,5 +1,6 @@
 import { LOG } from '../core/errors.js';
-import { CHANGELOG_BATCH, WORKER_BUDGET_MS } from '../core/limits.js';
+import { BACKFILL_WAKE_DELAY_MS, CHANGELOG_BATCH, POINTS_OVERHEAD, WORKER_BUDGET_MS } from '../core/limits.js';
+import { admit, hourKey, laneRoom, retryAfter } from '../core/points.js';
 import { REWRITE_ALL_KIND } from '../core/affected.js';
 import { indexReadyKind } from '../core/readiness.js';
 import { pushRefresh } from './refresh.js';
@@ -125,7 +126,8 @@ async function finish(deps, part, p) {
  * Backfill consumer: slices of issue ids, project by project, within the budget, leaving out projects excluded since the fill started;
  * then it queues itself to continue; it stops when a newer backfill started or another copy of this job finished the part; a finished
  * part starts the projects kept for it; while the background waits for Jira's rate limit, or when a 429 stops a slice, it queues itself for
- * the reset. A `purge` job deletes the rows of the excluded projects.
+ * the reset; it spends the backfill points only, and when they are out it keeps its progress and queues itself for just after the next
+ * allowance (half past or the hour). A `purge` job deletes the rows of the excluded projects.
  */
 export async function onBackfill(deps, event) {
   if (event?.body?.kind === 'purge') return purgeExcluded(deps);
@@ -137,15 +139,34 @@ export async function onBackfill(deps, event) {
     await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, until));
     return { braked: until };
   }
+  const room = await backfillRoom(deps);
+  if (room.waitUntil) {
+    await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, room.waitUntil));
+    return { waiting: room.waitUntil, done: p.done };
+  }
   try {
-    return await fillPart(deps, part, generation, p);
+    return await (room.limit === Infinity ? fillPart(deps, part, generation, p) : deps.withPoints(room.limit, () => fillPart(deps, part, generation, p), { scope: 'pass' }));
   } catch (error) {
+    if (error?.name === 'PointsError') {
+      await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, retryAfter(deps.now()) + BACKFILL_WAKE_DELAY_MS));
+      return { stopped: true, done: (await deps.state.progress.getPart(part))?.done ?? p.done };
+    }
     if (!isRateLimit(error)) throw error;
     console.error('backfill stopped by the Jira rate limit');
     const resume = await brake(deps, error.retryAt);
     await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, resume));
     return { braked: true, done: p.done };
   }
+}
+
+/** Points the next backfill run may spend: what the backfill lane has left, or the instant to try again (just after half past or the hour). */
+async function backfillRoom(deps) {
+  if (!deps.points || !deps.siteCap || !deps.withPoints) return { limit: Infinity };
+  const at = deps.now();
+  const { byLane } = await deps.points.siteSpent(hourKey(at));
+  const step = admit('backfill', POINTS_OVERHEAD, byLane, at, deps.siteCap);
+  if (!step.ok) return { waitUntil: step.waitUntil + BACKFILL_WAKE_DELAY_MS };
+  return { limit: laneRoom('backfill', byLane, at, deps.siteCap) };
 }
 
 async function fillPart(deps, part, generation, p) {

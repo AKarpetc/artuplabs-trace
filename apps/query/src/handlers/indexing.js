@@ -1,13 +1,12 @@
 import { SHIPPED_GROUPS } from '../core/catalog.js';
 import { sprintWindow } from '../core/boards.js';
 import { extOf } from '../core/comment-clauses.js';
-import { BACKFILL_STALE_MS, COMMENT_PAGE, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS } from '../core/limits.js';
+import { BACKFILL_STALE_MS, COMMENT_PAGE, RECENT_WINDOW_MARGIN_MIN, RECENT_WINDOW_MIN, RECONCILE_RECENT_MAX, SPRINT_FIELDS_TTL_MS, STATUS_TTL_MS } from '../core/limits.js';
 import { indexPartOf } from '../core/readiness.js';
 import { sprintEvents, statusEvents, toMs } from '../core/sprint-history.js';
 import { startBackfill, startWaiting } from './backfill.js';
 
 const SPRINT_FIELD = 'com.pyxis.greenhopper.jira:gh-sprint';
-const RECENT_JQL = 'updated >= -2h';
 const RECENT_ORDER = ' ORDER BY updated DESC';
 const NUMERIC = /^\d+$/;
 
@@ -49,6 +48,14 @@ export function createIndexing(deps) {
     return new Set(ids);
   }
 
+  async function statusCategories() {
+    const cached = await deps.state.statuses.get();
+    if (cached && deps.now() - cached.at < STATUS_TTL_MS) return new Map(cached.categories);
+    const categories = await deps.jira.statusCategories();
+    await deps.state.statuses.set({ at: deps.now(), categories: [...categories] });
+    return categories;
+  }
+
   async function projectOf(event) {
     return event.issue?.fields?.project ?? (await deps.jira.issue(String(event.issue.id), ['project'])).fields.project;
   }
@@ -84,7 +91,7 @@ export function createIndexing(deps) {
       },
       async index(ids, project) {
         const fields = await sprintFieldIds();
-        const categories = await deps.jira.statusCategories();
+        const categories = await statusCategories();
         const logs = await deps.jira.changelogs(ids, [...fields, 'status']);
         const sprintRows = [];
         const statusRows = [];
@@ -114,7 +121,7 @@ export function createIndexing(deps) {
     if ((await deps.state.excluded()).includes(project.key)) return;
     if (sprintRows.length) await deps.repo.addSprintEvents(withProject(sprintRows, project));
     if (!statusChanged) return;
-    const statusRows = statusEvents(event.issue.id, histories, await deps.jira.statusCategories());
+    const statusRows = statusEvents(event.issue.id, histories, await statusCategories());
     if (statusRows.length) await deps.repo.addStatusEvents(withProject(statusRows, project));
   }
 
@@ -161,11 +168,14 @@ export function createIndexing(deps) {
   }
 
   async function recentByProject() {
+    const last = (await deps.state.recentIndex.get())?.at ?? null;
+    const minutes = last === null ? RECENT_WINDOW_MIN : Math.max(RECENT_WINDOW_MIN, Math.ceil((deps.now() - last) / 60000) + RECENT_WINDOW_MARGIN_MIN);
+    const window = `updated >= -${minutes}m`;
     const stored = await deps.state.excluded();
     const known = stored.length ? new Set((await deps.jira.projects()).map((p) => p.key)) : new Set();
     const excluded = stored.filter((k) => known.has(k));
-    const scope = excluded.length ? `${RECENT_JQL} AND project not in (${excluded.map((k) => `"${k}"`).join(', ')})` : RECENT_JQL;
-    const recent = (await deps.jira.searchPage(`${scope}${RECENT_ORDER}`, null)).ids.slice(0, RECONCILE_RECENT_MAX);
+    const scope = excluded.length ? `${window} AND project not in (${excluded.map((k) => `"${k}"`).join(', ')})` : window;
+    const recent = (await deps.jira.searchPage(`${scope}${RECENT_ORDER}`, null, { maxResults: RECONCILE_RECENT_MAX })).ids.slice(0, RECONCILE_RECENT_MAX);
     const byProject = new Map();
     for (const issue of await deps.jira.bulkIssues(recent, ['project'])) {
       const p = issue.fields.project;
@@ -175,7 +185,21 @@ export function createIndexing(deps) {
     return { recent, byProject };
   }
 
+  /**
+   * Hourly gap filler: starts, resumes or continues the fill of each shipped part, then re-reads the issues updated since its last finished
+   * run (at least RECENT_WINDOW_MIN, at most RECONCILE_RECENT_MAX issues); when the reconcile points run out it stops and the next hour
+   * re-reads the wider window.
+   */
   async function reconcileIndex() {
+    try {
+      return await checkIndex(deps.now());
+    } catch (error) {
+      if (error?.name !== 'PointsError') throw error;
+      return { stopped: true };
+    }
+  }
+
+  async function checkIndex(startedAt) {
     const shipped = shippedParts();
     if (!shipped.length) return { started: [], reindexed: 0 };
     await deps.migrate();
@@ -195,6 +219,7 @@ export function createIndexing(deps) {
       await parts[part].prepare();
       for (const { project, ids } of byProject.values()) await parts[part].index(ids, project);
     }
+    await deps.state.recentIndex.set({ at: startedAt });
     return { started, reindexed: recent.length };
   }
 

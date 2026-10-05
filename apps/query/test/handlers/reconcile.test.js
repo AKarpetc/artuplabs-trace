@@ -148,4 +148,10 @@ describe('onReconcile with skipped groups, the journal and its points', () => {
     error.mockRestore();
     expect(await deps.state.heavy.get('hasSubtasks[]')).toMatchObject({ pts: 501, floor: true });
   });
+  it('checks the index within what the reconcile points have left', async () => {
+    const deps = withBudget(makeDeps({ pcs: [] }));
+    deps.indexReconcile = async () => deps.currentPoints();
+    await deps.points.add('reconcile', 400);
+    expect((await onReconcile(deps)).index).toMatchObject({ scope: 'pass', limit: 600 });
+  });
 });

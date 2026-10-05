@@ -4,6 +4,8 @@ import { createJournal } from '../../src/infra/journal.js';
 import { createState } from '../../src/infra/state.js';
 import { backfillProjects, onBackfill, startBackfill } from '../../src/handlers/backfill.js';
 import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
+import { PointsError, withPoints } from '../../src/infra/jira.js';
+import { createLedger, newProcessPoints } from '../../src/infra/points.js';
 
 function makeDeps({ pages, cost = 0 }) {
   let now = 1000;
@@ -200,5 +202,38 @@ describe('backfill', () => {
     const result = await onBackfill(deps, { body: { part: 'sprint', generation: 1000 } });
     error.mockRestore();
     expect([result, await deps.state.brake.get(), deps.pushed.at(-1), deps.delays.at(-1)]).toEqual([{ braked: true, done: 0 }, { until: 301000, reason: 'rate' }, { kind: 'backfill', part: 'sprint', generation: 1000 }, 300]);
+  });
+});
+
+describe('backfill under the points budget', () => {
+  const AT = Date.parse('2026-10-05T07:10:00Z');
+  function budgeted({ backfillSpent = 0, index } = {}) {
+    const deps = makeDeps({ pages: PAGES });
+    let now = AT;
+    deps.now = () => now;
+    deps.siteCap = 10000;
+    deps.withPoints = withPoints;
+    deps.points = createLedger({ kvs: createFakeKvs(), beginsWith, clock: () => now, own: newProcessPoints('b') });
+    if (index) deps.indexParts.sprint.index = index;
+    return { deps, ready: async () => { if (backfillSpent) await deps.points.add('backfill', backfillSpent); } };
+  }
+  it('starts no slice once the backfill reserve is spent and queues itself for just after half past', async () => {
+    const index = vi.fn();
+    const { deps, ready } = budgeted({ backfillSpent: 1000, index });
+    await ready();
+    const p = await startBackfill(deps, 'sprint');
+    deps.pushed.length = 0;
+    deps.delays.length = 0;
+    expect(await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } })).toEqual({ waiting: Date.parse('2026-10-05T07:31:00Z'), done: 0 });
+    expect([index.mock.calls.length, deps.pushed, deps.delays]).toEqual([0, [{ kind: 'backfill', part: 'sprint', generation: p.generation }], [300]]);
+  });
+  it('keeps its progress when the reserve runs out within a slice and queues itself for the next allowance', async () => {
+    const index = vi.fn(async () => { throw new PointsError('pass', 900, 900); });
+    const { deps } = budgeted({ index });
+    const p = await startBackfill(deps, 'sprint');
+    deps.pushed.length = 0;
+    const result = await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } });
+    expect(result).toEqual({ stopped: true, done: 0 });
+    expect([(await deps.state.progress.getPart('sprint')).done, deps.pushed]).toEqual([0, [{ kind: 'backfill', part: 'sprint', generation: p.generation }]]);
   });
 });

@@ -427,3 +427,11 @@ describe('approximate count', () => {
     expect(await createJira(request, { sleep: async () => {} }).approximateCount('q')).toEqual(5);
   });
 });
+
+describe('search page size', () => {
+  it('asks for no more issues than the caller wants', async () => {
+    const { request, calls } = scripted([reply(200, { issues: [] })]);
+    await createJira(request).searchPage('a', null, { maxResults: 2000 });
+    expect(calls[0].body.maxResults).toEqual(2000);
+  });
+});
