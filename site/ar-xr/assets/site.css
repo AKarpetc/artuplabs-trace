@@ -104,17 +104,9 @@
 .lx-plan-plus { margin: 0.2rem 0 0; font-size: 0.85rem; font-weight: 650; color: var(--ax-text); }
 .lx-feat { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; flex: 1; align-content: start; font-size: 0.92rem; }
 .lx-feat li { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; color: var(--ax-muted); }
-/* Feature status pill: "now" works today, "soon" is coming in upcoming updates (see the pricing footnote). */
-.lx-status {
-  flex: none; margin-top: 0.1rem; padding: 0.08rem 0.45rem; border-radius: var(--ax-radius-pill);
-  font-size: 0.7rem; font-weight: 700; line-height: 1.4; letter-spacing: 0.02em; white-space: nowrap; border: 1px solid transparent;
-}
-.lx-now { background: var(--ax-ok-soft); color: var(--ax-ok); }
-.lx-soon { background: transparent; color: var(--ax-muted); border-color: var(--ax-border); }
 .lx-terms { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.4rem; font-size: 0.95rem; }
 .lx-terms li { display: block; }
 .lx-terms li::before { content: "•"; color: var(--ax-accent); font-weight: 700; margin-right: 0.15rem; }
-.lx-terms .lx-status { margin: 0 0 0 0.25rem; }
 .lx-note { margin: 1.25rem 0 0; color: var(--ax-muted); font-size: 0.92rem; }
 .lx-note p { margin: 0 0 0.5rem; }
 

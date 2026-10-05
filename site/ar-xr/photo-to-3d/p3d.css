@@ -40,8 +40,7 @@
 .p3d-copy { display: grid; gap: 1.5rem 2.5rem; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; margin-top: 2rem; }
 .p3d-copy .ax-list-check { margin: 0; }
 .p3d-copy p { margin: 0 0 1rem; }
-.p3d-soon { color: var(--ax-muted); font-size: 0.93rem; }
-.p3d-soon .lx-status { margin-left: 0.35rem; }
+.p3d-price { color: var(--ax-muted); font-size: 0.93rem; }
 .p3d-hint { margin: 0.75rem 0 0; color: var(--ax-muted); font-size: 0.88rem; }
 .p3d-foot { margin: 2.5rem 0 0; color: var(--ax-muted); font-size: 0.88rem; max-width: 52rem; }
 
