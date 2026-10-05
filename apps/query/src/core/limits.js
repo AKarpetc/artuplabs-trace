@@ -114,3 +114,21 @@ export const PROJECT_KEY_MAX_LENGTH = 100;
 export const EXCLUSION_PROJECTS_TTL_MS = 60 * 1000;
 /** How long the strict parser's answer about one subquery text is reused: a function call and a refresh pass ask once per text. */
 export const JQL_CHECK_MS = 60 * 1000;
+/** Jira rate-limit points per hour one site may spend on Tier 1 (the app's pool is shared by every site): five sites at this cap, counted 15 % low, stay under the pool's near-limit warning. */
+export const SITE_POINTS_TIER1 = 9000;
+/** Points per hour one site may spend on Tier 2 (the site's own pool, Standard 100 000 less 15 % for the counter's error). */
+export const SITE_POINTS_TIER2 = 85000;
+/** Points one changelog bulkfetch charges per issue log it returns. */
+export const CHANGELOG_POINT_FACTOR = 1;
+/** Points one bulkfetch charges per issue when it returns their comments. */
+export const COMMENT_POINT_FACTOR = 1;
+/** Points a computation spends besides reading its issues (subquery check, count, paging). */
+export const POINTS_OVERHEAD = 20;
+/** Smallest search page a points scope asks for when little of its limit is left. */
+export const POINTS_PAGE_MIN = 100;
+/** Points a process spends on one lane before it rewrites its ledger key during an invocation. */
+export const POINTS_FLUSH = 200;
+/** Unwritten points a process writes to its ledger key at the end of an invocation; less waits for its next invocation. */
+export const POINTS_KEY_MIN = 20;
+/** How long a process reuses the points it read from the other processes' ledger keys. */
+export const POINTS_READ_MS = 15 * 1000;

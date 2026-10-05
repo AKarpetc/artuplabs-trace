@@ -15,7 +15,8 @@ const sameChunks = (a, b) => Boolean(a) && Boolean(b) && sameList(a.c ?? [], b.c
  * Value cache of a precomputation group: meta `v:<h>:m` lists the content hashes of its value chunks (`c`) and watched-id chunks (`w`),
  * each stored once as `v:<h>:k<hash>` (≤ 5 000 ids). A write stores only chunks it does not have yet, rewrites the meta only when something
  * a reader uses changed, then deletes chunks nothing references; a read that meets a missing chunk answers null, never a partial list.
- * The meta also keeps the lowest and highest id of each watch chunk (`wr`), so a membership check reads only the chunks that can hold an id.
+ * The meta also keeps the lowest and highest id of each watch chunk (`wr`), so a membership check reads only the chunks that can hold an id,
+ * and, when given, the Jira points the computation cost (`pts`) and the levels of the stored tree (`lv`).
  * Writers are ordered by the start of their computation (`startedAt` in the meta): an older computation never replaces a newer one, a writer
  * re-stores reused chunks a concurrent writer removed, deletes chunks only while its own meta is the current one, and a read that finds a
  * chunk of the current meta gone drops that meta, so the group is computed and stored again.
@@ -89,7 +90,7 @@ export function createValueCache({ kvs, hash, chunkHash = hash }) {
       const list = await readChunks(key, m.w ?? [], 0, m.nw);
       return list ? new Set(list) : null;
     },
-    async write(key, { values, watch, field, rootFilter, at, source, ms = null, startedAt = 0 }) {
+    async write(key, { values, watch, field, rootFilter, at, source, ms = null, pts = null, lv = null, startedAt = 0 }) {
       const old = await meta(key);
       if ((old?.startedAt ?? 0) > startedAt) return;
       const oldHashes = hashesOf(old);
@@ -98,10 +99,10 @@ export function createValueCache({ kvs, hash, chunkHash = hash }) {
       const c = await storeChunks(key, values, known, contents);
       const w = await storeChunks(key, watch ?? [], known, contents);
       const wr = watch ? chunksOf(watch).map(rangeOf) : null;
-      const next = { at, startedAt, n: values.length, nw: watch ? watch.length : null, field, rootFilter: rootFilter ?? null, source, c, w, ...(wr ? { wr } : {}), ...(ms === null ? {} : { ms }) };
+      const next = { at, startedAt, n: values.length, nw: watch ? watch.length : null, field, rootFilter: rootFilter ?? null, source, c, w, ...(wr ? { wr } : {}), ...(ms === null ? {} : { ms }), ...(pts === null ? {} : { pts }), ...(lv === null ? {} : { lv }) };
       const unchanged = old && old.n === next.n && old.nw === next.nw && old.field === next.field && old.rootFilter === next.rootFilter
         && old.source === source && sameList(old.c ?? [], c) && sameList(old.w ?? [], w) && isHeavy(old.ms) === isHeavy(next.ms)
-        && (wr === null || Array.isArray(old.wr));
+        && (wr === null || Array.isArray(old.wr)) && (old.pts ?? null) === pts && (old.lv ?? null) === lv;
       if (unchanged && source !== 'job') return;
       const current = await meta(key);
       if ((current?.startedAt ?? 0) > startedAt) return;

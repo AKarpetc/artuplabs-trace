@@ -5,7 +5,7 @@ const HEAVY_PREFIX = 'q:hq:';
 
 const INDEX_PARTS = ['sprint', 'comments'];
 
-/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`, each group waiting in the heavy lane `q:hq:<hash(group)>`, the start of the computation that last wrote a group `q:gw:<hash(group)>`, and the projects an index part fills once its running fill ends `idx:waiting:<part>`, the end of a pause of the background work after a Jira rate limit `q:brake` and the time of the wake scheduled for it `q:wake`. */
+/** KVS records of the refresh machinery, the error log, index progress and settings; each background job has its own key `q:job:<hash(group)>`, each group waiting in the heavy lane `q:hq:<hash(group)>` (both may keep the Jira points the group spent, `pts`, and whether they are a lower bound, `floor`), the start of the computation that last wrote a group `q:gw:<hash(group)>`, and the projects an index part fills once its running fill ends `idx:waiting:<part>`, the end of a pause of the background work after a Jira rate limit `q:brake` and the time of the wake scheduled for it `q:wake`. */
 export function createState({ kvs, hash, beginsWith }) {
   const record = (key) => ({
     get: async () => (await kvs.get(key)) ?? null,

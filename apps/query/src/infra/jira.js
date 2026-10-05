@@ -2,8 +2,9 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import api, { assumeTrustedRoute } from '@forge/api';
 import {
   BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
-  RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
+  POINTS_PAGE_MIN, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
+import { pointsOf } from '../core/points.js';
 import { endpointOf, rateHeaderText, rateLimitOf } from '../core/rate.js';
 import { pool } from './pool.js';
 
@@ -34,7 +35,50 @@ export class DeadlineError extends Error {
   }
 }
 
+/** A request was refused because it would take a points scope past its limit; `scope` names that scope ('group', 'pass', …). */
+export class PointsError extends Error {
+  constructor(scope, spent, limit) {
+    super('Jira points limit reached');
+    this.name = 'PointsError';
+    this.scope = scope;
+    this.spent = spent;
+    this.limit = limit;
+  }
+}
+
 const deadlines = new AsyncLocalStorage();
+const scopes = new AsyncLocalStorage();
+const DEFAULT_LANE = 'fn';
+
+/** Runs task in a points scope inside the current one: its Jira requests count toward it and every scope around it, and a request that would take it past `limit` is refused (PointsError); the lane is inherited unless given. */
+export function withPoints(limit, task, { scope = 'group', lane } = {}) {
+  const parent = scopes.getStore() ?? null;
+  return scopes.run({ scope, limit, spent: 0, lane: lane ?? parent?.lane ?? DEFAULT_LANE, parent }, task);
+}
+
+/** The lane, name, spent points and limit of the innermost points scope, or null outside any. */
+export function currentPoints() {
+  const s = scopes.getStore();
+  return s ? { lane: s.lane, scope: s.scope, spent: s.spent, limit: s.limit } : null;
+}
+
+function chainOf(scope) {
+  const out = [];
+  for (let s = scope; s; s = s.parent) out.push(s);
+  return out;
+}
+
+function admitRequest(cost) {
+  const over = chainOf(scopes.getStore()).find((s) => s.spent + cost > s.limit);
+  if (over) throw new PointsError(over.scope, over.spent, over.limit);
+}
+
+function pageSize() {
+  const left = Math.min(...chainOf(scopes.getStore()).map((s) => s.limit - s.spent));
+  return Number.isFinite(left) ? Math.min(ID_PAGE, Math.max(POINTS_PAGE_MIN, left)) : ID_PAGE;
+}
+
+const forecastOf = (endpoint, body) => 1 + (endpoint.endsWith('/issue/bulkfetch') ? (body?.issueIdsOrKeys?.length ?? 0) : 0);
 
 /** Runs task in a scope whose Jira requests are refused (DeadlineError) from `deadline` (epoch ms) on; parallel scopes stay apart. */
 export function withDeadline(deadline, task) {
@@ -56,8 +100,8 @@ function messagesOf(raw) {
   }
 }
 
-/** Jira REST client over `request(path, init)`; 5xx and a 429 whose wait fits `retryMaxMs` are retried (Retry-After or exponential backoff, each sleep capped); a longer 429 throws RateLimitError at once; bulkfetch narrows after a near-limit warning; no request starts after the deadline of the current scope. */
-export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now } = {}) {
+/** Jira REST client over `request(path, init)`; 5xx and a 429 whose wait fits `retryMaxMs` are retried (Retry-After or exponential backoff, each sleep capped); a longer 429 throws RateLimitError at once; bulkfetch narrows after a near-limit warning; no request starts after the deadline of the current scope or past the limit of its points scope; the points of each answer go to its scopes and to `ledger.add(lane, points)`. */
+export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now, ledger = null } = {}) {
   let counts = {};
   let nearUntil = 0;
   function count(endpoint, res, facts, at, rate) {
@@ -67,11 +111,18 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     if (facts.near) nearUntil = Math.max(nearUntil, facts.retryAt ?? at + NEAR_LIMIT_MS);
   }
 
+  async function charge(points) {
+    const scope = scopes.getStore();
+    for (const s of chainOf(scope)) s.spent += points;
+    if (ledger) await ledger.add(scope?.lane ?? DEFAULT_LANE, points);
+  }
+
   async function call(method, path, body) {
     const endpoint = endpointOf(path);
     for (let attempt = 1; ; attempt += 1) {
       const deadline = deadlines.getStore();
       if (deadline !== undefined && clock() >= deadline) throw new DeadlineError();
+      admitRequest(forecastOf(endpoint, body));
       const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
       const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
       const header = (name) => res.headers?.get?.(name) ?? null;
@@ -83,13 +134,16 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
       const wait = facts.retryAt === null ? RETRY_BASE_MS * 2 ** attempt : facts.retryAt - at;
       const retry = (res.status === 429 || res.status >= 500) && attempt < attempts && (res.status !== 429 || wait <= retryMaxMs);
       if (retry) {
+        await charge(1);
         await sleep(Math.min(wait, retryMaxMs));
         continue;
       }
       const raw = await res.text();
+      const answer = res.status < 400 && raw ? JSON.parse(raw) : null;
+      await charge(pointsOf(method, endpoint, answer));
       if (res.status === 429) throw new RateLimitError(facts, messagesOf(raw));
       if (res.status >= 400) throw new JiraError(res.status, messagesOf(raw));
-      return raw ? JSON.parse(raw) : null;
+      return answer;
     }
   }
 
@@ -112,7 +166,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
       const page = await call('POST', '/rest/api/3/search/jql', {
         jql,
         fields: ['id'],
-        maxResults: ID_PAGE,
+        maxResults: pageSize(),
         ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, RECONCILE_MAX).map(Number) } : {}),
         ...(nextPageToken ? { nextPageToken } : {}),
       });
@@ -123,7 +177,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
   }
 
   async function searchPage(jql, nextPageToken) {
-    const page = await call('POST', '/rest/api/3/search/jql', { jql, fields: ['id'], maxResults: ID_PAGE, ...(nextPageToken ? { nextPageToken } : {}) });
+    const page = await call('POST', '/rest/api/3/search/jql', { jql, fields: ['id'], maxResults: pageSize(), ...(nextPageToken ? { nextPageToken } : {}) });
     return { ids: (page?.issues ?? []).map((x) => String(x.id)), nextPageToken: page?.nextPageToken ?? null };
   }
 

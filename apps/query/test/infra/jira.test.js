@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
-const { createJira, JiraError, RateLimitError, withDeadline } = await import('../../src/infra/jira.js');
-const { BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
+const { createJira, currentPoints, JiraError, PointsError, RateLimitError, withDeadline, withPoints } = await import('../../src/infra/jira.js');
+const { POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -294,5 +294,103 @@ describe('rate limits', () => {
     await jira.call('GET', '/rest/api/3/field');
     await jira.bulkIssues(many, ['x']);
     expect([before, most]).toEqual([BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR]);
+  });
+});
+
+describe('points scope', () => {
+  const ledger = () => {
+    const added = [];
+    return { added, add: async (lane, points) => { added.push([lane, points]); } };
+  };
+  it('charges the points of each answer to the function lane outside any scope', async () => {
+    const { request } = scripted([reply(200, { issues: [{ id: '1' }, { id: '2' }] })]);
+    const points = ledger();
+    await createJira(request, { ledger: points }).searchPage('x', null);
+    expect(points.added).toEqual([['fn', 3]]);
+  });
+  it('charges the lane of the scope a request runs in', async () => {
+    const { request } = scripted([reply(200, {})]);
+    const points = ledger();
+    const jira = createJira(request, { ledger: points });
+    await withPoints(Infinity, () => withPoints(50, () => jira.call('GET', '/x')), { scope: 'call', lane: 'refresh' });
+    expect(points.added).toEqual([['refresh', 1]]);
+  });
+  it('charges 1 for each rate-limited attempt', async () => {
+    const { request } = scripted([reply(429, {}, { 'retry-after': '1' }), reply(200, { issues: [{ id: '1' }] })]);
+    const points = ledger();
+    await createJira(request, { ledger: points, sleep: async () => {} }).searchPage('x', null);
+    expect(points.added).toEqual([['fn', 1], ['fn', 2]]);
+  });
+  it('adds the points of a request to its scope and to the scopes around it', async () => {
+    const { request } = scripted([reply(200, { issues: [{ id: '1' }] }), reply(200, {})]);
+    const jira = createJira(request);
+    const seen = await withPoints(Infinity, async () => {
+      const inner = await withPoints(100, async () => {
+        await jira.searchPage('x', null);
+        return currentPoints();
+      });
+      await jira.call('GET', '/y');
+      return [inner, currentPoints()];
+    }, { scope: 'pass', lane: 'refresh' });
+    expect(seen).toEqual([{ lane: 'refresh', scope: 'group', spent: 2, limit: 100 }, { lane: 'refresh', scope: 'pass', spent: 3, limit: Infinity }]);
+  });
+  it('knows no points outside any scope', () => {
+    expect(currentPoints()).toBe(null);
+  });
+  it('refuses, without sending it, a request that would take its scope past the limit', async () => {
+    const { request, calls } = scripted([reply(200, { issues: [{ id: '1' }, { id: '2' }] }), reply(200, {})]);
+    const jira = createJira(request);
+    const error = await withPoints(3, async () => {
+      await jira.searchPage('x', null);
+      return jira.call('GET', '/y').catch((e) => e);
+    });
+    expect(error).toBeInstanceOf(PointsError);
+    expect({ scope: error.scope, spent: error.spent, limit: error.limit }).toEqual({ scope: 'group', spent: 3, limit: 3 });
+    expect(calls).toHaveLength(1);
+  });
+  it('names the scope whose limit a request would pass, an outer one too', async () => {
+    const { request } = scripted([reply(200, {})]);
+    const jira = createJira(request);
+    const scope = await withPoints(1, () => withPoints(10, async () => {
+      await jira.call('GET', '/a');
+      return jira.call('GET', '/b').catch((e) => e.scope);
+    }), { scope: 'pass' });
+    expect(scope).toEqual('pass');
+  });
+  it('refuses a bulkfetch whose issues would take its scope past the limit', async () => {
+    const { request, calls } = scripted([]);
+    const jira = createJira(request);
+    const ids = Array.from({ length: BULK_BATCH }, (_, i) => String(i));
+    await expect(withPoints(BULK_BATCH, () => jira.bulkIssues(ids, ['id']))).rejects.toBeInstanceOf(PointsError);
+    expect(calls).toEqual([]);
+  });
+  it('keeps the points of parallel scopes apart', async () => {
+    const { request } = scripted([reply(200, { issues: [{ id: '1' }, { id: '2' }] }), reply(200, {})]);
+    const jira = createJira(request);
+    const spent = await Promise.all([
+      withPoints(10, async () => { await jira.searchPage('a', null); return currentPoints().spent; }),
+      withPoints(10, async () => { await jira.call('GET', '/b'); return currentPoints().spent; }),
+    ]);
+    expect(spent).toEqual([3, 1]);
+  });
+  it('asks a search for no more issues than the scope has points left, but at least a minimum page', async () => {
+    const { request, calls } = scripted([reply(200, { issues: [] }), reply(200, { issues: [] }), reply(200, { issues: [] })]);
+    const jira = createJira(request);
+    await withPoints(POINTS_PAGE_MIN + 51, async () => {
+      await jira.call('GET', '/spend');
+      await jira.searchPage('a', null);
+      await jira.searchIds('b');
+    });
+    expect(calls.slice(1).map((c) => c.body.maxResults)).toEqual([POINTS_PAGE_MIN + 50, POINTS_PAGE_MIN + 49]);
+  });
+  it('asks for the minimum page when the scope has almost no points left', async () => {
+    const { request, calls } = scripted([reply(200, { issues: [] })]);
+    await withPoints(5, () => createJira(request).searchPage('a', null));
+    expect(calls[0].body.maxResults).toEqual(POINTS_PAGE_MIN);
+  });
+  it('asks for a full page outside a limited scope', async () => {
+    const { request, calls } = scripted([reply(200, { issues: [] })]);
+    await withPoints(Infinity, () => createJira(request).searchIds('a'), { scope: 'call', lane: 'heavy' });
+    expect(calls[0].body.maxResults).toEqual(ID_PAGE);
   });
 });

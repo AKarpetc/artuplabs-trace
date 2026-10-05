@@ -47,6 +47,18 @@ describe('state', () => {
     await state.heavy.take('c');
     expect([(await state.heavy.oldest()).key, [...kvs.data.keys()].sort()]).toEqual(['b', ['q:hq:ha', 'q:hq:hb']]);
   });
+  it('keeps the points a job spent and whether they are a lower bound', async () => {
+    const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
+    const job = { key: 'a', functionName: 'f', userArgs: [], at: 5, pts: 1700, floor: true };
+    await state.addJob(job);
+    expect([await state.job('a'), await state.jobs(6)]).toEqual([job, [job]]);
+  });
+  it('keeps the points a queued heavy group spent and whether they are a lower bound', async () => {
+    const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
+    const queued = { key: 'a', functionName: 'f', userArgs: [], at: 5, pts: 450, floor: true };
+    await state.heavy.put(queued);
+    expect([await state.heavy.get('a'), await state.heavy.oldest()]).toEqual([queued, queued]);
+  });
   it('has no oldest heavy group and no group write time before any is stored', async () => {
     const state = createState({ kvs: createFakeKvs(), hash: (s) => s, beginsWith });
     expect([await state.heavy.oldest(), await state.heavy.get('a'), await state.groupWrite.get('a'), await state.heavy.lease.get()]).toEqual([null, null, null, null]);

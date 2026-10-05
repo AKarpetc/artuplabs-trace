@@ -1,3 +1,5 @@
+import { withPoints } from './jira.js';
+
 const FAMILIES = [
   [/^v:[^:]+:m$/, 'cache-meta'],
   [/^v:[^:]+:k/, 'cache-chunk'],
@@ -76,14 +78,19 @@ const familyText = (families) => Object.entries(families).sort(([a], [b]) => a.l
 
 const requestText = (counts) => Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([endpoint, c]) => `${endpoint} ${c.requests}${c.limited ? ` (429: ${c.limited})` : ''}${c.rate ? ` [${c.rate}]` : ''}`).join(', ');
 
-/** Wraps a handler so that it logs the KVS traffic of each invocation as counts, never values: writes per record family when `log.writes`, reads when `log.reads`, Jira requests per endpoint when `log.requests`; `name` may be a function of the handler arguments. */
-export function withKvsLog(name, meter, log, handler) {
+/**
+ * Wraps a handler so that it runs in a points scope of its lane (`lane`, or a function of the handler arguments; the function lane by
+ * default), writes the points ledger when it ends, and logs the KVS traffic of each invocation as counts, never values: writes per record
+ * family when `log.writes`, reads when `log.reads`, Jira requests per endpoint when `log.requests`; `name` may be a function of the handler arguments.
+ */
+export function withKvsLog(name, meter, log, handler, lane = 'fn') {
   return async (...args) => {
     meter.take();
     meter.takeRequests?.();
     try {
-      return await handler(...args);
+      return await withPoints(Infinity, () => handler(...args), { scope: 'call', lane: typeof lane === 'function' ? lane(...args) : lane });
     } finally {
+      await meter.points?.flush();
       const w = meter.take();
       const label = typeof name === 'function' ? name(...args) : name;
       const detail = w.sets ? ` [${familyText(w.families)}]` : '';

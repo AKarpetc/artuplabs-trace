@@ -87,6 +87,38 @@ describe('value cache', () => {
     await cache.write('g', entry(['1'], { ms: REFRESH_GROUP_BUDGET_MS }));
     expect((await cache.meta('g')).ms).toBe(REFRESH_GROUP_BUDGET_MS);
   });
+  it('keeps the points the group cost and the levels of its stored tree', async () => {
+    const { cache } = make();
+    await cache.write('g', entry(['1'], { pts: 420, lv: 2 }));
+    expect(await cache.meta('g')).toMatchObject({ pts: 420, lv: 2 });
+  });
+  it('stores no points and no levels when none were given', async () => {
+    const { cache } = make();
+    await cache.write('g', entry(['1']));
+    expect(Object.keys(await cache.meta('g'))).not.toContain('pts');
+    expect(Object.keys(await cache.meta('g'))).not.toContain('lv');
+  });
+  it('rewrites the meta of the same values when the points the group cost changed', async () => {
+    const { kvs, cache } = make();
+    await cache.write('g', entry(ids(10), { pts: 30 }));
+    kvs.calls.ops.length = 0;
+    await cache.write('g', entry(ids(10), { pts: 900, at: 2 }));
+    expect([sets(kvs), (await cache.meta('g')).pts]).toEqual([['set v:g:m'], 900]);
+  });
+  it('rewrites the meta of the same values when the levels of the tree changed', async () => {
+    const { kvs, cache } = make();
+    await cache.write('g', entry(ids(10), { lv: 1 }));
+    kvs.calls.ops.length = 0;
+    await cache.write('g', entry(ids(10), { lv: 2, at: 2 }));
+    expect([sets(kvs), (await cache.meta('g')).lv]).toEqual([['set v:g:m'], 2]);
+  });
+  it('writes nothing for the same values, points and levels', async () => {
+    const { kvs, cache } = make();
+    await cache.write('g', entry(ids(10), { pts: 30, lv: 1 }));
+    kvs.calls.ops.length = 0;
+    await cache.write('g', entry(ids(10), { pts: 30, lv: 1, at: 2 }));
+    expect(kvs.calls.ops).toEqual([]);
+  });
   it('knows nothing about a group never written', async () => {
     const { cache } = make();
     expect([await cache.meta('x'), await cache.watch('x')]).toEqual([null, null]);

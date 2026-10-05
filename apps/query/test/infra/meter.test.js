@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
+const { currentPoints } = await import('../../src/infra/jira.js');
 import { createFakeKvs } from '../fakeKvs.js';
 import { keyFamily, meterKvs, withKvsLog } from '../../src/infra/meter.js';
 
@@ -119,5 +122,21 @@ describe('withKvsLog', () => {
     await withKvsLog('expression', meter, { requests: true }, async () => null)();
     expect(log.mock.calls).toEqual([['jira requests expression: GET /rest/api/3/field 2 (429: 1) [x-ratelimit-remaining=40], POST /rest/api/3/search/jql 3']]);
     log.mockRestore();
+  });
+  it('runs the handler in a points scope of the function lane by default', async () => {
+    const meter = meterKvs(createFakeKvs());
+    expect(await withKvsLog('subtasksOf', meter, {}, async () => currentPoints())()).toEqual({ lane: 'fn', scope: 'call', spent: 0, limit: Infinity });
+  });
+  it('runs the handler in a points scope of the lane it names from the handler arguments', async () => {
+    const meter = meterKvs(createFakeKvs());
+    const handler = withKvsLog('on-refresh', meter, {}, async () => currentPoints().lane, (event) => event.body.kind);
+    expect(await handler({ body: { kind: 'heavy' } })).toEqual('heavy');
+  });
+  it('writes the points ledger at the end of an invocation, also one that throws', async () => {
+    const flushed = [];
+    const meter = { ...meterKvs(createFakeKvs()), points: { flush: async () => { flushed.push('flush'); } } };
+    await withKvsLog('a', meter, {}, async () => null)();
+    await expect(withKvsLog('b', meter, {}, async () => { throw new Error('boom'); })()).rejects.toThrow('boom');
+    expect(flushed).toEqual(['flush', 'flush']);
   });
 });

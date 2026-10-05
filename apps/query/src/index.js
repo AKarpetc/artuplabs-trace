@@ -8,6 +8,7 @@ import { onReconcile as handleReconcile } from './handlers/reconcile.js';
 import { onBackfill as handleBackfill } from './handlers/backfill.js';
 import { onLifecycle as handleLifecycle } from './handlers/lifecycle.js';
 import { WORKER_RETRY_MAX_MS } from './core/limits.js';
+import { laneOfRefresh } from './core/points.js';
 import { withKvsLog } from './infra/meter.js';
 
 const deps = createDeps();
@@ -46,12 +47,12 @@ export const dateCompare = handlers.dateCompare;
 export const expression = handlers.expression;
 
 /** Product event trigger: Forge gives a trigger no custom timeout, so it keeps the short retry cap of a function call and a failed index write is left to the hourly gap filler. */
-export const onEvent = withKvsLog('on-event', deps.meter, deps.logKvs, (event) => handleEvent(deps, event));
+export const onEvent = withKvsLog('on-event', deps.meter, deps.logKvs, (event) => handleEvent(deps, event), 'index-event');
 /** Consumer of the query-refresh queue. */
-export const onRefresh = withKvsLog((event) => `on-refresh:${event?.body?.verify ? 'verify' : event?.body?.kind}`, workerDeps.meter, workerDeps.logKvs, (event) => handleRefresh(workerDeps, event));
+export const onRefresh = withKvsLog((event) => `on-refresh:${event?.body?.verify ? 'verify' : event?.body?.kind}`, workerDeps.meter, workerDeps.logKvs, (event) => handleRefresh(workerDeps, event), (event) => laneOfRefresh(event?.body));
 /** Hourly reconcile. */
-export const onReconcile = withKvsLog('on-reconcile', workerDeps.meter, workerDeps.logKvs, () => handleReconcile(workerDeps));
+export const onReconcile = withKvsLog('on-reconcile', workerDeps.meter, workerDeps.logKvs, () => handleReconcile(workerDeps), 'reconcile');
 /** Consumer of the query-backfill queue. */
-export const onBackfill = withKvsLog('on-backfill', workerDeps.meter, workerDeps.logKvs, (event) => handleBackfill(workerDeps, event));
+export const onBackfill = withKvsLog('on-backfill', workerDeps.meter, workerDeps.logKvs, (event) => handleBackfill(workerDeps, event), 'backfill');
 /** App installed or upgraded (a trigger: the default timeout, so a part's preparation that runs out is redone by the hourly gap filler). */
-export const onLifecycle = withKvsLog('on-lifecycle', workerDeps.meter, workerDeps.logKvs, () => handleLifecycle(workerDeps));
+export const onLifecycle = withKvsLog('on-lifecycle', workerDeps.meter, workerDeps.logKvs, () => handleLifecycle(workerDeps), 'backfill');

@@ -6,6 +6,13 @@ import { HEAVY_RECONCILE_MS, REFRESH_GROUP_BUDGET_MS } from '../../src/core/limi
 const old = new Date(1000000 - 2 * 3600000).toISOString();
 
 describe('onReconcile', () => {
+  it('deletes the points ledger keys of past hours, also while the background waits for the rate limit', async () => {
+    const prune = vi.fn(async () => 0);
+    const deps = makeDeps({ points: { prune } });
+    await deps.state.brake.set(2000000);
+    expect(await onReconcile(deps)).toEqual({ braked: 2000000 });
+    expect(prune).toHaveBeenCalledTimes(1);
+  });
   it('rewrites used groups that were not rewritten for an hour', async () => {
     const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT, updated: old }];
     const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });

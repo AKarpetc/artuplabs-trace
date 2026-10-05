@@ -7,9 +7,10 @@ import { pushRefresh } from './refresh.js';
 
 /**
  * Hourly safety net: recompute used groups that missed an event, depend on the clock or need repair (slow ones go to the heavy lane once a day unless they need repair or follow the clock), restart
- * a stalled heavy lane and a journal no refresh is pending for, then fill index gaps; it waits while the background is paused for Jira's rate limit, and a 429 pauses it.
+ * a stalled heavy lane and a journal no refresh is pending for, then fill index gaps; it first deletes the points ledger keys of past hours; it waits while the background is paused for Jira's rate limit, and a 429 pauses it.
  */
 export async function onReconcile(deps) {
+  await deps.points?.prune();
   const until = await brakedUntil(deps);
   if (until) {
     await scheduleWake(deps, until);

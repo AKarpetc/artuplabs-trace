@@ -1,0 +1,144 @@
+import { describe, expect, it } from 'vitest';
+import { capOf, estimate, hourKey, LANES, laneOfRefresh, nextHour, pointsOf } from '../../src/core/points.js';
+import { FUNCTIONS } from '../../src/core/catalog.js';
+import { CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, POINTS_OVERHEAD, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from '../../src/core/limits.js';
+
+const list = (n, make = (i) => ({ id: String(i) })) => Array.from({ length: n }, (_, i) => make(i));
+
+describe('pointsOf', () => {
+  it('charges 1 for an answer without a body, such as a 429', () => {
+    expect(pointsOf('POST', '/rest/api/3/search/jql', null)).toEqual(1);
+  });
+  it('charges 1 plus each issue of a search page', () => {
+    expect(pointsOf('POST', '/rest/api/3/search/jql', { issues: list(7) })).toEqual(8);
+  });
+  it('charges 1 plus each issue of a bulkfetch', () => {
+    expect(pointsOf('POST', '/rest/api/3/issue/bulkfetch', { issues: list(100) })).toEqual(101);
+  });
+  it('charges the issues of a bulkfetch that holds comments by the comment factor', () => {
+    const issues = list(10, (i) => ({ id: String(i), fields: { comment: { comments: [] } } }));
+    expect(pointsOf('POST', '/rest/api/3/issue/bulkfetch', { issues })).toEqual(1 + 10 * COMMENT_POINT_FACTOR);
+  });
+  it('charges the issues of a changelog bulkfetch by the changelog factor', () => {
+    expect(pointsOf('POST', '/rest/api/3/changelog/bulkfetch', { issueChangeLogs: list(40) })).toEqual(1 + 40 * CHANGELOG_POINT_FACTOR);
+  });
+  it('charges each value of a list read with startAt', () => {
+    expect(pointsOf('GET', '/rest/agile/1.0/board/*/sprint', { values: list(12), isLast: true })).toEqual(13);
+  });
+  it('charges each precomputation Jira lists', () => {
+    expect(pointsOf('GET', '/rest/api/3/jql/function/computation', { values: list(100) })).toEqual(101);
+  });
+  it('charges each entry of the field and status lists', () => {
+    expect([pointsOf('GET', '/rest/api/3/field', list(300)), pointsOf('GET', '/rest/api/3/status', list(25))]).toEqual([301, 26]);
+  });
+  it('charges each link type', () => {
+    expect(pointsOf('GET', '/rest/api/3/issueLinkType', { issueLinkTypes: list(4) })).toEqual(5);
+  });
+  it('charges one issue read by id', () => {
+    expect(pointsOf('GET', '/rest/api/3/issue/*', { id: '1', fields: {} })).toEqual(2);
+  });
+  it('charges 2 per user a user search finds', () => {
+    expect(pointsOf('GET', '/rest/api/3/user/search', list(5))).toEqual(11);
+  });
+  it('charges 2 per member of a group', () => {
+    expect(pointsOf('GET', '/rest/api/3/group/member', { values: list(3), isLast: true })).toEqual(7);
+  });
+  it('charges 2 per actor of a project role', () => {
+    expect(pointsOf('GET', '/rest/api/3/project/*/role/*', { actors: list(4) })).toEqual(9);
+  });
+  it('charges 1 for a write, an approximate count and a parse', () => {
+    expect([
+      pointsOf('POST', '/rest/api/3/jql/function/computation', { values: list(3) }),
+      pointsOf('POST', '/rest/api/3/search/approximate-count', { count: 50000 }),
+      pointsOf('POST', '/rest/api/3/jql/parse', { queries: list(1) }),
+    ]).toEqual([1, 1, 1]);
+  });
+  it('charges 1 for an answer it does not know', () => {
+    expect(pointsOf('GET', '/rest/api/3/project/*/role', { Developers: 'url' })).toEqual(1);
+  });
+  it('charges 1 when a known list field is missing', () => {
+    expect([pointsOf('POST', '/rest/api/3/search/jql', {}), pointsOf('GET', '/rest/api/3/field', { odd: true })]).toEqual([1, 1]);
+  });
+});
+
+describe('estimate', () => {
+  it('reads the subtasks of a small subquery once per issue', () => {
+    expect(estimate('subtasksOf', VALUE_LIMIT)).toEqual({ points: VALUE_LIMIT + POINTS_OVERHEAD, floor: false });
+  });
+  it('reads the subtasks of a large subquery twice per issue', () => {
+    expect(estimate('subtasksOf', VALUE_LIMIT + 1)).toEqual({ points: 2 * (VALUE_LIMIT + 1) + POINTS_OVERHEAD, floor: false });
+  });
+  it('reads twice per issue for a function that fetches the issues of its subquery', () => {
+    expect(['parentsOf', 'issuesInEpics', 'linkedIssuesOf', 'expression', 'dateCompare', 'hasSubtasks'].map((f) => estimate(f, 500)))
+      .toEqual(Array(6).fill({ points: 1000 + POINTS_OVERHEAD, floor: false }));
+  });
+  it('gives a lower bound for a function whose result fans out', () => {
+    expect(['epicsOf', 'childIssuesOf', 'linkedIssuesOfRecursive', 'linkedIssuesOfRecursiveLimited'].map((f) => estimate(f, 500)))
+      .toEqual(Array(4).fill({ points: 1000 + POINTS_OVERHEAD, floor: true }));
+  });
+  it('reads once per issue for a computed link function', () => {
+    expect(['hasLinks', 'hasLinkType'].map((f) => estimate(f, 300))).toEqual(Array(2).fill({ points: 300 + POINTS_OVERHEAD, floor: false }));
+  });
+  it('reads twice per sprint issue for a sprint function that fetches its issues', () => {
+    expect(['addedAfterSprintStart', 'incompleteInSprint', 'completeInSprint'].map((f) => estimate(f, 40)))
+      .toEqual(Array(3).fill({ points: 80 + POINTS_OVERHEAD, floor: false }));
+  });
+  it('knows the cost of every function of the catalog', () => {
+    expect(FUNCTIONS.filter((f) => estimate(f.name, 1).floor && !['epicsOf', 'childIssuesOf', 'linkedIssuesOfRecursive', 'linkedIssuesOfRecursiveLimited'].includes(f.name)).map((f) => f.name)).toEqual([]);
+  });
+  it('costs only the overhead for an index or native function', () => {
+    expect(['commented', 'hasComments', 'fileAttached', 'previousSprint', 'hasAttachments', 'removedAfterSprintStart'].map((f) => estimate(f, 50000)))
+      .toEqual(Array(6).fill({ points: POINTS_OVERHEAD, floor: false }));
+  });
+  it('treats a function it does not know as a fan-out lower bound', () => {
+    expect(estimate('unknown', 10)).toEqual({ points: 20 + POINTS_OVERHEAD, floor: true });
+  });
+});
+
+describe('hourKey', () => {
+  it('names the UTC hour of an instant', () => {
+    expect(hourKey(Date.parse('2026-10-05T07:59:59.999Z'))).toEqual('2026100507');
+  });
+  it('moves to the next hour on the hour', () => {
+    expect(hourKey(Date.parse('2026-10-05T23:00:00Z'))).toEqual('2026100523');
+  });
+});
+
+describe('nextHour', () => {
+  it('is the start of the next UTC hour', () => {
+    expect(nextHour(Date.parse('2026-10-05T23:30:00Z'))).toEqual(Date.parse('2026-10-06T00:00:00Z'));
+  });
+  it('is an hour later on the hour itself', () => {
+    expect(nextHour(Date.parse('2026-10-05T07:00:00Z'))).toEqual(Date.parse('2026-10-05T08:00:00Z'));
+  });
+});
+
+describe('capOf', () => {
+  it('is the Tier 1 cap by default', () => {
+    expect(capOf(undefined, undefined)).toEqual(SITE_POINTS_TIER1);
+  });
+  it('is the Tier 2 cap for tier 2', () => {
+    expect(capOf(2, undefined)).toEqual(SITE_POINTS_TIER2);
+  });
+  it('takes a positive override over the tier', () => {
+    expect(capOf(2, 2000)).toEqual(2000);
+  });
+  it('ignores an override that is not a positive number', () => {
+    expect([capOf(1, 0), capOf(1, Number.NaN), capOf(1, -5), capOf(3, null)]).toEqual(Array(4).fill(SITE_POINTS_TIER1));
+  });
+});
+
+describe('laneOfRefresh', () => {
+  it('spends a deferred function computation from the function lane', () => {
+    expect(laneOfRefresh({ kind: 'compute' })).toEqual('fn');
+  });
+  it('spends a heavy lane run from the heavy lane', () => {
+    expect(laneOfRefresh({ kind: 'heavy' })).toEqual('heavy');
+  });
+  it('spends journal passes, verifies and wakes from the refresh lane', () => {
+    expect([laneOfRefresh({ kind: 'refresh' }), laneOfRefresh({ verify: ['1'] }), laneOfRefresh({ kind: 'wake' }), laneOfRefresh(undefined)]).toEqual(Array(4).fill('refresh'));
+  });
+  it('names every lane once', () => {
+    expect(LANES).toEqual(['fn', 'index-event', 'refresh', 'heavy', 'reconcile', 'backfill']);
+  });
+});
