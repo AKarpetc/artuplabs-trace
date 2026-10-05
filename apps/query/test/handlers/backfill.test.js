@@ -209,7 +209,7 @@ describe('backfill', () => {
 describe('backfill under the points budget', () => {
   const AT = Date.parse('2026-10-05T07:01:00Z');
   const big = ids(20000);
-  function budgeted({ backfillSpent = 0, at = AT } = {}) {
+  function budgeted({ backfillSpent = 0, at = AT, pointsKvs = createFakeKvs(), tag = 'b' } = {}) {
     const deps = makeDeps({ pages: { A: big } });
     let now = at;
     deps.now = () => now;
@@ -217,7 +217,7 @@ describe('backfill under the points budget', () => {
     deps.siteCap = 9000;
     deps.withPoints = withPoints;
     deps.currentPoints = currentPoints;
-    deps.points = createLedger({ kvs: createFakeKvs(), beginsWith, clock: () => now, own: newProcessPoints('b') });
+    deps.points = createLedger({ kvs: pointsKvs, beginsWith, clock: () => now, own: newProcessPoints(tag), sleep: async (ms) => { for (let i = 0; i < ms; i += 1) await null; }, random: () => (tag === 'b' ? 0.2 : 0.7) });
     const request = async (path, init) => {
       const body = JSON.parse(init.body);
       if (path.includes('search/jql')) {
@@ -228,7 +228,7 @@ describe('backfill under the points budget', () => {
       }
       return { status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ issueChangeLogs: body.issueIdsOrKeys.map((id) => ({ issueId: id })) }) };
     };
-    const jira = createJira(request);
+    const jira = createJira(request, { ledger: deps.points });
     deps.jira.searchPage = jira.searchPage;
     deps.indexParts.sprint.index = async (slice, project) => {
       deps.indexed.push([project.key, ...slice]);
@@ -246,6 +246,16 @@ describe('backfill under the points budget', () => {
     deps.advance(1000);
     expect(await onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } })).toEqual({ waiting: Date.parse('2026-10-05T07:31:00Z'), done: 0 });
     expect([deps.indexed, deps.pushed, deps.delays, (await deps.state.progress.getPart('sprint')).savedAt]).toEqual([[], [{ kind: 'backfill', part: 'sprint', generation: p.generation }], [300], AT + 1000]);
+  });
+  it('lets two processes filling parts at once spend no more than the one backfill reserve between them', async () => {
+    const pointsKvs = createFakeKvs({ pageSize: 100 });
+    const runs = [budgeted({ pointsKvs, tag: 'b' }), budgeted({ pointsKvs, tag: 'c' })].map(({ deps }) => deps);
+    const started = await Promise.all(runs.map((deps) => startBackfill(deps, 'sprint')));
+    await Promise.all(runs.map((deps, i) => withPoints(Infinity, () => onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: started[i].generation } }), { scope: 'call', lane: 'backfill' })));
+    await Promise.all(runs.map((deps) => deps.points.flush()));
+    const { byLane } = await createLedger({ kvs: pointsKvs, beginsWith, clock: () => AT, own: newProcessPoints('x') }).siteSpent('2026100507');
+    expect(byLane.backfill).toBeGreaterThan(0);
+    expect(byLane.backfill).toBeLessThanOrEqual(900);
   });
   it('fills slices that fit its reserve before half past and counts only the issues it indexed', async () => {
     const { deps } = budgeted();

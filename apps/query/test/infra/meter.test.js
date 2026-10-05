@@ -139,6 +139,12 @@ describe('withKvsLog', () => {
     await expect(withKvsLog('b', meter, {}, async () => { throw new Error('boom'); })()).rejects.toThrow('boom');
     expect(flushed).toEqual(['flush', 'flush']);
   });
+  it('releases the points claims of the process before it writes the ledger', async () => {
+    const seen = [];
+    const meter = { ...meterKvs(createFakeKvs()), points: { releaseAll: () => seen.push('release'), flush: async () => { seen.push('flush'); } } };
+    await expect(withKvsLog('b', meter, {}, async () => { throw new Error('boom'); })()).rejects.toThrow('boom');
+    expect(seen).toEqual(['release', 'flush']);
+  });
 });
 
 describe('withKvsLog points line', () => {

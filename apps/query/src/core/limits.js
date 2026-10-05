@@ -132,6 +132,12 @@ export const POINTS_FLUSH = 200;
 export const POINTS_KEY_MIN = 20;
 /** How long a process reuses the points it read from the other processes' ledger keys. */
 export const POINTS_READ_MS = 15 * 1000;
+/** Times a background step tries to claim its room when another process claimed the same points at the same moment. */
+export const CLAIM_TRIES = 3;
+/** Longest random pause before a step tries its claim again. */
+export const CLAIM_JITTER_MS = 1500;
+/** Most points the index work of one product event claims, so parallel events each get theirs from the index-event reserve. */
+export const EVENT_POINTS_CLAIM = 100;
 /** Keys one KVS query page returns at most. */
 export const KVS_PAGE = 100;
 /** Share of the site's hourly points each kind of work may spend before half past the hour (they add up to the whole cap). */

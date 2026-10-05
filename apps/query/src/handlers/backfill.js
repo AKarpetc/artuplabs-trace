@@ -1,6 +1,7 @@
 import { LOG } from '../core/errors.js';
-import { BACKFILL_WAKE_DELAY_MS, CHANGELOG_BATCH, INDEX_ISSUE_POINTS, INDEX_SLICE_MIN, POINTS_OVERHEAD, WORKER_BUDGET_MS } from '../core/limits.js';
-import { admit, hourKey, laneRoom, retryAfter } from '../core/points.js';
+import { BACKFILL_WAKE_DELAY_MS, CHANGELOG_BATCH, INDEX_ISSUE_POINTS, INDEX_SLICE_MIN, WORKER_BUDGET_MS } from '../core/limits.js';
+import { retryAfter } from '../core/points.js';
+import { claimRoom } from './budget.js';
 import { REWRITE_ALL_KIND } from '../core/affected.js';
 import { indexReadyKind } from '../core/readiness.js';
 import { pushRefresh } from './refresh.js';
@@ -180,6 +181,8 @@ export async function onBackfill(deps, event) {
     const resume = await brake(deps, error.retryAt);
     await deps.backfillQueue.push({ kind: 'backfill', part, generation }, delayUntil(deps, resume));
     return { braked: true, done: p.done };
+  } finally {
+    room.release?.();
   }
 }
 
@@ -191,14 +194,11 @@ async function waitForPoints(deps, part, generation) {
   return { stopped: true, done: saved?.done ?? 0 };
 }
 
-/** Points the next backfill run may spend: what the backfill lane has left, or the instant to try again (just after half past or the hour). */
+/** Points the next backfill run may spend, claimed from what the backfill lane has left, or the instant to try again (just after half past or the hour). */
 async function backfillRoom(deps) {
   if (!deps.points || !deps.siteCap || !deps.withPoints) return { limit: Infinity };
-  const at = deps.now();
-  const { byLane } = await deps.points.siteSpent(hourKey(at));
-  const step = admit('backfill', POINTS_OVERHEAD, byLane, at, deps.siteCap);
-  if (!step.ok) return { waitUntil: step.waitUntil + BACKFILL_WAKE_DELAY_MS };
-  return { limit: laneRoom('backfill', byLane, at, deps.siteCap) };
+  const room = await claimRoom(deps, 'backfill');
+  return room.waitUntil ? { waitUntil: room.waitUntil + BACKFILL_WAKE_DELAY_MS } : room;
 }
 
 async function fillPart(deps, part, generation, p) {

@@ -278,25 +278,39 @@ function waitedError(deps, job, meta) {
 
 /**
  * The lane's next step: drop a group nobody used within REFRESH_USED_MS, give one that waited past HEAVY_WAIT_MAX_MS its waited error, or
- * take the first waiting group (by `at`) whose last lane write is HEAVY_MIN_INTERVAL_MS old and whose cost fits what the heavy reserve has
- * left; else the earliest instant one may run (`waitUntil`).
+ * take the first waiting group (by `at`) whose last lane write is HEAVY_MIN_INTERVAL_MS old and whose cost fits the room claimed for the
+ * heavy lane (`release` frees it once the step ends); else the earliest instant one may run (`waitUntil`).
  */
 async function pickHeavy(deps, queued, groups) {
   const now = deps.now();
   const cap = deps.siteCap;
-  const room = deps.points ? laneRoom('heavy', (await deps.points.siteSpent(hourKey(now))).byLane, now, cap) : Infinity;
+  const claim = deps.points?.claim ? await deps.points.claim('heavy', (byLane) => laneRoom('heavy', byLane, now, cap)) : null;
+  try {
+    return await pickWithin(deps, queued, groups, now, claim);
+  } catch (error) {
+    claim?.release();
+    throw error;
+  }
+}
+
+async function pickWithin(deps, queued, groups, now, claim) {
+  const cap = deps.siteCap;
+  const room = claim ? claim.limit : Infinity;
+  const release = () => claim?.release();
   const waits = [];
   for (const job of queued) {
     const group = groups.get(job.key) ?? null;
     if (group && !usedWithin(group, now, REFRESH_USED_MS)) {
       if ((await deps.state.skip.get(job.key)) === null) await deps.state.skip.set(job.key, job.at);
       await deps.state.heavy.take(job.key);
+      release();
       return { result: { computed: job.key, unused: true } };
     }
     const meta = await deps.cache.meta(job.key);
     if (now - (job.since ?? job.at) >= HEAVY_WAIT_MAX_MS) {
       await writeError(deps, group, now, waitedError(deps, job, meta));
       await deps.state.heavy.take(job.key);
+      release();
       return { result: { computed: job.key, waited: true } };
     }
     if ((job.notBefore ?? 0) > now) {
@@ -314,8 +328,9 @@ async function pickHeavy(deps, queued, groups) {
       waits.push(retryAfter(now));
       continue;
     }
-    return { job, group, room, admitted: { points: cost, known: known !== undefined } };
+    return { job, group, room, admitted: { points: cost, known: known !== undefined }, release };
   }
+  release();
   return { waitUntil: waits.length ? Math.min(...waits) : null };
 }
 
@@ -345,10 +360,14 @@ export async function runHeavy(deps) {
         heavy = { waiting: pick.waitUntil };
       }
       if (pick.job) {
-        const step = await runPicked(deps, pick);
-        heavy = step.heavy;
-        limited = step.limited ?? null;
-        wake = step.wake ?? null;
+        try {
+          const step = await runPicked(deps, pick);
+          heavy = step.heavy;
+          limited = step.limited ?? null;
+          wake = step.wake ?? null;
+        } finally {
+          pick.release();
+        }
       }
     }
   } catch (error) {

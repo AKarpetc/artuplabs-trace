@@ -244,6 +244,9 @@ describe('laneRoom keeps the hour within the cap', () => {
   it('still lends the function lane what the hour has left', () => {
     expect(laneRoom('fn', { refresh: 6000 }, late, C)).toEqual(3000);
   });
+  it('keeps what the function reserve has left out of the room of other lanes before half past too', () => {
+    expect(laneRoom('refresh', { backfill: 7650 }, Date.parse('2026-10-05T07:10:00Z'), C)).toEqual(0);
+  });
 });
 
 describe('countQueryOf for link functions', () => {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createLedger, newProcessPoints } from '../../src/infra/points.js';
 import { POINTS_FLUSH, POINTS_KEY_MIN, POINTS_READ_MS } from '../../src/core/limits.js';
+import { laneRoom } from '../../src/core/points.js';
 
 const AT = Date.parse('2026-10-05T07:10:00Z');
 const HOUR = '2026100507';
@@ -191,5 +192,89 @@ describe('points ledger snapshot', () => {
     await b.flush();
     await a.add('fn', 5);
     expect(await a.snapshot()).toEqual({ hour: HOUR, byLane: { refresh: POINTS_FLUSH, heavy: POINTS_KEY_MIN, fn: 5 }, total: POINTS_FLUSH + POINTS_KEY_MIN + 5, keys: 2 });
+  });
+});
+
+describe('points ledger claims', () => {
+  const CAP = 9000;
+  const LATE = Date.parse('2026-10-05T07:40:00Z');
+  const ticks = async (ms) => { for (let i = 0; i < ms; i += 1) await null; };
+  function shared({ at = AT } = {}) {
+    const kvs = createFakeKvs({ pageSize: 100 });
+    let n = 0;
+    const make = (tag) => createLedger({ kvs, beginsWith, clock: () => at, own: newProcessPoints(tag), sleep: ticks, random: () => [0.1, 0.9, 0.5, 0.3][n++ % 4] });
+    return { kvs, make };
+  }
+  const roomOf = (lane, at = AT) => (byLane) => laneRoom(lane, byLane, at, CAP);
+
+  it('claims what the lane has left and writes it under the process key before any request', async () => {
+    const { kvs, make } = shared();
+    const claim = await make('a').claim('backfill', roomOf('backfill'));
+    expect(claim.limit).toEqual(900);
+    expect(Object.fromEntries(kvs.data)).toEqual({ [`q:pts:${HOUR}:backfill:a`]: 900 });
+  });
+  it('lets two processes claiming one lane at once take no more than its room together, and one of them all of it', async () => {
+    const { make } = shared();
+    const claims = await Promise.all([make('a').claim('backfill', roomOf('backfill')), make('b').claim('backfill', roomOf('backfill'))]);
+    expect(claims.map((c) => c.limit).sort((x, y) => x - y)).toEqual([0, 900]);
+  });
+  it('counts the points spent within a claim once, for this process and the others', async () => {
+    const { make } = shared();
+    const a = make('a');
+    await a.claim('backfill', roomOf('backfill'));
+    await a.add('backfill', 300);
+    await a.flush();
+    expect(await a.siteSpent(HOUR)).toEqual({ byLane: { backfill: 900 }, total: 900 });
+    expect(await make('b').siteSpent(HOUR)).toEqual({ byLane: { backfill: 900 }, total: 900 });
+  });
+  it('adds the points a step spends past its claim', async () => {
+    const { make } = shared();
+    const a = make('a');
+    await a.claim('backfill', roomOf('backfill'));
+    await a.add('backfill', 1000);
+    expect(await a.siteSpent(HOUR)).toEqual({ byLane: { backfill: 1000 }, total: 1000 });
+  });
+  it('leaves only the spent points under the key once the claim is released', async () => {
+    const { kvs, make } = shared();
+    const a = make('a');
+    const claim = await a.claim('backfill', roomOf('backfill'));
+    await a.add('backfill', 300);
+    claim.release();
+    claim.release();
+    await a.flush();
+    expect(kvs.data.get(`q:pts:${HOUR}:backfill:a`)).toEqual(300);
+    expect(await make('b').siteSpent(HOUR)).toEqual({ byLane: { backfill: 300 }, total: 300 });
+  });
+  it('releases every claim of the process at the end of an invocation', async () => {
+    const { kvs, make } = shared();
+    const a = make('a');
+    await a.claim('refresh', roomOf('refresh'));
+    await a.add('refresh', 40);
+    a.releaseAll();
+    await a.flush();
+    expect(kvs.data.get(`q:pts:${HOUR}:refresh:a`)).toEqual(40);
+  });
+  it('claims nothing and writes nothing when the lane has no room', async () => {
+    const { kvs, make } = shared();
+    const a = make('a');
+    await a.add('backfill', 900);
+    await a.flush();
+    const ops = kvs.calls.ops.length;
+    expect((await a.claim('backfill', roomOf('backfill'))).limit).toEqual(0);
+    expect(kvs.calls.ops.length).toEqual(ops);
+  });
+  it('keeps the function reserve when every other lane claims and spends its room in parallel processes after half past', async () => {
+    const { make } = shared({ at: LATE });
+    const lanes = ['refresh', 'heavy', 'reconcile', 'backfill', 'backfill', 'index-event', 'refresh', 'heavy'];
+    const ledgers = lanes.map((lane, i) => [lane, make(`p${i}`)]);
+    await Promise.all(ledgers.map(async ([lane, ledger]) => {
+      const claim = await ledger.claim(lane, roomOf(lane, LATE));
+      await ledger.add(lane, claim.limit);
+      claim.release();
+      await ledger.flush();
+    }));
+    const { byLane, total } = await make('fn').siteSpent(HOUR);
+    expect(total).toBeLessThanOrEqual(CAP - 1350);
+    expect(laneRoom('fn', byLane, LATE, CAP)).toBeGreaterThanOrEqual(1350);
   });
 });

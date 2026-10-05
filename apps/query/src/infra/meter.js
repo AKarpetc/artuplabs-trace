@@ -91,7 +91,7 @@ const requestText = (counts) => Object.entries(counts).sort(([a], [b]) => a.loca
 
 /**
  * Wraps a handler so that it runs in a points scope of its lane (`lane`, or a function of the handler arguments; the function lane by
- * default), writes the points ledger when it ends, and logs the KVS traffic of each invocation as counts, never values: writes per record
+ * default), releases the points claims of the process and writes the points ledger when it ends, and logs the KVS traffic of each invocation as counts, never values: writes per record
  * family when `log.writes`, reads when `log.reads`, Jira requests per endpoint when `log.requests`; `name` may be a function of the handler arguments.
  */
 export function withKvsLog(name, meter, log, handler, lane = DEFAULT_LANE) {
@@ -101,6 +101,7 @@ export function withKvsLog(name, meter, log, handler, lane = DEFAULT_LANE) {
     try {
       return await withPoints(Infinity, () => handler(...args), { scope: 'call', lane: typeof lane === 'function' ? lane(...args) : lane });
     } finally {
+      meter.points?.releaseAll?.();
       await meter.points?.flush();
       const w = meter.take();
       const label = typeof name === 'function' ? name(...args) : name;

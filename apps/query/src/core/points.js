@@ -112,13 +112,13 @@ const reserveOf = (lane, cap) => Math.floor((LANE_SHARES[lane] ?? 0) * cap);
 /**
  * Points a lane may still spend this hour as of `at` (the start of its step): what is left of its own reserve, and from half past also what
  * the hour has left, other lanes than function answers only up to BORROW_CAP_SHARE of the cap; never more than the cap leaves, and for other
- * lanes than function answers never what the function reserve has left.
+ * lanes than function answers, before half past as after, never what the function reserve has left.
  */
 export function laneRoom(lane, spentByLane, at, cap) {
   const own = reserveOf(lane, cap) - spentOn(spentByLane, lane);
   const total = totalOf(spentByLane);
   const fnLeft = lane === DEFAULT_LANE ? 0 : Math.max(0, reserveOf(DEFAULT_LANE, cap) - spentOn(spentByLane, DEFAULT_LANE));
-  const ceiling = cap - total - (minuteOf(at) < BORROW_MINUTE ? 0 : fnLeft);
+  const ceiling = cap - total - fnLeft;
   if (minuteOf(at) < BORROW_MINUTE) return Math.max(0, Math.min(own, ceiling));
   const borrow = lane === DEFAULT_LANE ? cap - total : Math.floor(BORROW_CAP_SHARE * cap) - total;
   return Math.max(0, Math.min(Math.max(own, borrow), ceiling));

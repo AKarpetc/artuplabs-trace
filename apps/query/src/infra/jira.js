@@ -51,12 +51,12 @@ const scopes = new AsyncLocalStorage();
 
 /**
  * Runs task in a points scope inside the current one: its Jira requests count toward it and every scope around it, and a request that would
- * take it past `limit` is refused (PointsError); the lane is inherited unless given. A request is judged by 1 point (a bulkfetch by 1 per issue
+ * take it past `limit`, with the forecasts of its requests still in flight, is refused (PointsError); the lane is inherited unless given. A request is judged by 1 point (a bulkfetch by 1 per issue
  * too), so a search page of at least POINTS_PAGE_MIN issues and one parallel bulkfetch round may pass the limit by what they return.
  */
 export function withPoints(limit, task, { scope = 'group', lane } = {}) {
   const parent = scopes.getStore() ?? null;
-  return scopes.run({ scope, limit, spent: 0, lane: lane ?? parent?.lane ?? DEFAULT_LANE, parent }, task);
+  return scopes.run({ scope, limit, spent: 0, flying: 0, lane: lane ?? parent?.lane ?? DEFAULT_LANE, parent }, task);
 }
 
 /** The lane, name, spent points and limit of the innermost points scope, or null outside any. */
@@ -72,12 +72,17 @@ function chainOf(scope) {
 }
 
 function admitRequest(cost) {
-  const over = chainOf(scopes.getStore()).find((s) => s.spent + cost > s.limit);
+  const chain = chainOf(scopes.getStore());
+  const over = chain.find((s) => s.spent + s.flying + cost > s.limit);
   if (over) throw new PointsError(over.scope, over.spent, over.limit);
+  for (const s of chain) s.flying += cost;
+  return () => {
+    for (const s of chain) s.flying -= cost;
+  };
 }
 
 function pageSize() {
-  const left = Math.min(...chainOf(scopes.getStore()).map((s) => s.limit - s.spent));
+  const left = Math.min(...chainOf(scopes.getStore()).map((s) => s.limit - s.spent - s.flying));
   return Number.isFinite(left) ? Math.min(ID_PAGE, Math.max(POINTS_PAGE_MIN, left)) : ID_PAGE;
 }
 
@@ -127,25 +132,37 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     for (let attempt = 1; ; attempt += 1) {
       const deadline = deadlines.getStore();
       if (deadline !== undefined && clock() >= deadline) throw new DeadlineError();
-      admitRequest(forecastOf(endpoint, body));
+      const landed = admitRequest(forecastOf(endpoint, body));
       const headers = { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) };
-      const res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
-      const header = (name) => res.headers?.get?.(name) ?? null;
-      const at = clock();
-      const facts = rateLimitOf(header, at);
-      const rate = rateHeaderText(header);
-      count(`${method} ${endpoint}`, res, facts, at, rate);
-      if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rate}`);
-      const wait = facts.retryAt === null ? RETRY_BASE_MS * 2 ** attempt : facts.retryAt - at;
-      const retry = (res.status === 429 || res.status >= 500) && attempt < tries && (res.status !== 429 || wait <= retryMaxMs);
+      let res;
+      let facts;
+      let retry = false;
+      let wait = 0;
+      let raw = '';
+      let answer = null;
+      try {
+        res = await request(path, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
+        const header = (name) => res.headers?.get?.(name) ?? null;
+        const at = clock();
+        facts = rateLimitOf(header, at);
+        const rate = rateHeaderText(header);
+        count(`${method} ${endpoint}`, res, facts, at, rate);
+        if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rate}`);
+        wait = facts.retryAt === null ? RETRY_BASE_MS * 2 ** attempt : facts.retryAt - at;
+        retry = (res.status === 429 || res.status >= 500) && attempt < tries && (res.status !== 429 || wait <= retryMaxMs);
+        if (retry) await charge(1);
+        else {
+          raw = await res.text();
+          answer = res.status < 400 && raw ? JSON.parse(raw) : null;
+          await charge(pointsOf(method, endpoint, answer));
+        }
+      } finally {
+        landed();
+      }
       if (retry) {
-        await charge(1);
         await sleep(Math.min(wait, retryMaxMs));
         continue;
       }
-      const raw = await res.text();
-      const answer = res.status < 400 && raw ? JSON.parse(raw) : null;
-      await charge(pointsOf(method, endpoint, answer));
       if (res.status === 429) throw new RateLimitError(facts, messagesOf(raw));
       if (res.status >= 400) throw new JiraError(res.status, messagesOf(raw));
       return answer;

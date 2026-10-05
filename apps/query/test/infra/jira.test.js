@@ -364,6 +364,15 @@ describe('points scope', () => {
     await expect(withPoints(BULK_BATCH, () => jira.bulkIssues(ids, ['id']))).rejects.toBeInstanceOf(PointsError);
     expect(calls).toEqual([]);
   });
+  it('counts the requests of a scope still in flight, so a parallel round cannot pass its limit', async () => {
+    const issues = (n) => Array.from({ length: n }, (_, i) => ({ id: String(i) }));
+    const { request, calls } = scripted([reply(200, { issues: issues(BULK_BATCH) }), reply(200, { issues: issues(BULK_BATCH) })]);
+    const jira = createJira(request);
+    const ids = (from) => Array.from({ length: BULK_BATCH }, (_, i) => String(from + i));
+    const results = await withPoints(BULK_BATCH + 50, () => Promise.all([jira.bulkIssues(ids(0), ['id']), jira.bulkIssues(ids(BULK_BATCH), ['id']).catch((e) => e.name)]));
+    expect(results[1]).toEqual('PointsError');
+    expect(calls).toHaveLength(1);
+  });
   it('keeps the points of parallel scopes apart', async () => {
     const { request } = scripted([reply(200, { issues: [{ id: '1' }, { id: '2' }] }), reply(200, {})]);
     const jira = createJira(request);

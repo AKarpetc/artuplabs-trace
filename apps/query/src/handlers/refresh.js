@@ -3,12 +3,13 @@ import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
 import { commentTimesWanted, REWRITE_ALL_KIND, familyWants, groupPrecomputations, needsRepair, pricedOut, queryOverlap, summarizeJournal, usedWithin } from '../core/affected.js';
 import {
-  ACTIVE_MS, REFRESH_USED_MS, JOURNAL_PAGE, LEASE_MS, MAX_TOUCHED, POINTS_OVERHEAD, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, TOUCHED_CHECK_MAX, VERIFY_DELAY_S, WORKER_BUDGET_MS,
+  ACTIVE_MS, REFRESH_USED_MS, JOURNAL_PAGE, LEASE_MS, MAX_TOUCHED, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, TOUCHED_CHECK_MAX, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { keptPoints } from '../infra/state.js';
 import { handOff, isDeadline, isHeavy, knownCost, laneIdle, listPrecomputations, overLimit, pushQuietly, rewrite, runCompute, runHeavy, groupWrite, writeGroups } from './groups.js';
-import { admit, groupClass, hourKey, laneRoom, lightLimit, passInterval, retryAfter } from '../core/points.js';
+import { groupClass, hourKey, lightLimit, passInterval, retryAfter } from '../core/points.js';
+import { claimRoom } from './budget.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
 export { rewrite };
@@ -99,9 +100,10 @@ function logCut(deps, cut, rows) {
 
 async function passRoom(deps, startedAt) {
   if (!deps.points) return { limit: Infinity };
+  const room = await claimRoom(deps, 'refresh');
+  if (!room.waitUntil) return room;
   const { byLane, total } = await deps.points.siteSpent(hourKey(startedAt));
-  if (!admit('refresh', POINTS_OVERHEAD, byLane, startedAt, deps.siteCap).ok) return { refused: retryAfter(startedAt), spent: byLane.refresh ?? 0, total };
-  return { limit: laneRoom('refresh', byLane, startedAt, deps.siteCap) };
+  return { refused: room.waitUntil, spent: byLane.refresh ?? 0, total };
 }
 
 const inScope = (deps, limit, task) => (deps.withPoints ? deps.withPoints(limit, task, { scope: 'pass' }) : task());
@@ -231,6 +233,8 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   } catch (error) {
     if (error?.name !== 'PointsError' || error.scope !== 'pass') throw error;
     stopped = true;
+  } finally {
+    room.release?.();
   }
   const { recomputed, handed, failed, postponed } = counts;
   const overhead = Math.max(0, spent.pass - spent.runs);

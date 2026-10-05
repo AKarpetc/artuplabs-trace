@@ -1,7 +1,7 @@
 import { LOG } from '../core/errors.js';
 import { eventRecord } from '../core/events.js';
-import { LEASE_MS, PENDING_STALE_MS } from '../core/limits.js';
-import { hourKey, laneRoom } from '../core/points.js';
+import { EVENT_POINTS_CLAIM, LEASE_MS, PENDING_STALE_MS } from '../core/limits.js';
+import { claimRoom } from './budget.js';
 import { brakeOf } from './brake.js';
 import { pushRefresh } from './refresh.js';
 
@@ -11,21 +11,22 @@ export function changeId(event, hash) {
   return hash(JSON.stringify([event?.eventType ?? null, event?.issue?.id ?? null, event?.timestamp ?? null, items]));
 }
 
-/** Points the index work of one event may spend: what the index-event lane has left, none while the background is paused (429 or near limit). */
+/** Points the index work of one event may spend, claimed from what the index-event lane has left (at most EVENT_POINTS_CLAIM); none while the background is paused (429 or near limit). */
 async function eventRoom(deps) {
-  if (!deps.points || !deps.siteCap || !deps.withPoints) return Infinity;
-  const at = deps.now();
-  const [pause, { byLane }] = await Promise.all([brakeOf(deps), deps.points.siteSpent(hourKey(at))]);
-  return pause ? 0 : laneRoom('index-event', byLane, at, deps.siteCap);
+  if (!deps.points || !deps.siteCap || !deps.withPoints) return { limit: Infinity };
+  if (await brakeOf(deps)) return { limit: 0 };
+  return claimRoom(deps, 'index-event', { least: 1, most: EVENT_POINTS_CLAIM });
 }
 
 async function indexWithin(deps, event) {
   const room = await eventRoom(deps);
   const task = () => deps.indexEvent(event, { changeId: changeId(event, deps.hash) });
   try {
-    await (room === Infinity ? task() : deps.withPoints(room, task, { scope: 'pass' }));
+    await (room.limit === Infinity ? task() : deps.withPoints(room.limit, task, { scope: 'pass' }));
   } catch (error) {
     if (error?.name !== 'PointsError') throw error;
+  } finally {
+    room.release?.();
   }
 }
 

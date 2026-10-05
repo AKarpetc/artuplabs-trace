@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { BUDGET_AT, makeDeps, spend, withBudget } from './makeDeps.js';
 import { brakeNear } from '../../src/handlers/brake.js';
 import { changeId, onEvent } from '../../src/handlers/trigger.js';
+import { createLedger, newProcessPoints } from '../../src/infra/points.js';
+import { beginsWith } from '../fakeKvs.js';
 
 const fixture = (name) => JSON.parse(readFileSync(new URL(`../fixtures/events/${name}.json`, import.meta.url), 'utf8'));
 
@@ -109,6 +111,16 @@ describe('onEvent under the points budget', () => {
     await onEvent(deps, event);
     expect(indexEvent).toHaveBeenCalledTimes(1);
     expect(deps.kvs.calls.ops.some((op) => op.startsWith('set t:'))).toBe(true);
+  });
+  it('indexes events that arrive at once in two processes, each within its own claim', async () => {
+    let sent = 0;
+    const indexEvent = async () => { await spend(3); sent += 1; };
+    const first = withBudget(makeDeps({ indexEvent }));
+    const second = withBudget(makeDeps({ indexEvent }));
+    second.points = createLedger({ kvs: first.kvs, beginsWith, clock: () => BUDGET_AT, own: newProcessPoints('other'), sleep: async () => {} });
+    first.points = createLedger({ kvs: first.kvs, beginsWith, clock: () => BUDGET_AT, own: newProcessPoints('test'), sleep: async () => {} });
+    await Promise.all([onEvent(first, event), onEvent(second, event)]);
+    expect(sent).toEqual(2);
   });
   it('sends no Jira request for an event past the index-event reserve, yet journals it and logs no failure', async () => {
     let sent = false;
