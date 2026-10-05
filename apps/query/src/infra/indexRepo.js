@@ -96,6 +96,15 @@ export function createIndexRepo(run = execute) {
     async deleteProject(projectId, tables) {
       for (const table of tables) await run(`DELETE FROM ${table} WHERE project_id = ?`, [projectId]);
     },
+    /** Rows and distinct issues of each table. */
+    async counts(tables) {
+      const out = {};
+      for (const table of tables) {
+        const { rows } = await run(`SELECT COUNT(*) AS n, COUNT(DISTINCT issue_id) AS issues FROM ${table}`);
+        out[table] = { rows: Number(rows?.[0]?.n ?? 0), issues: Number(rows?.[0]?.issues ?? 0) };
+      }
+      return out;
+    },
     async clear(tables) {
       for (const table of tables) await run(`DELETE FROM ${table}`);
     },

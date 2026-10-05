@@ -222,4 +222,9 @@ describe('comment and attachment rows', () => {
     const repo = createIndexRepo(async () => ({}));
     expect([await repo.issuesWithComments(), await repo.issuesWithCommentCount({ op: 'atLeast', n: 1 }), await repo.issuesWithAttachments(), await repo.commentProjects(), (await repo.commentBounds(['1'])).size]).toEqual([[], [], [], [], 0]);
   });
+  it('counts the rows and the distinct issues of each table', async () => {
+    const { calls, run } = recorder([[{ n: 5, issues: 3 }], [{ n: '0', issues: '0' }]]);
+    expect(await createIndexRepo(run).counts(['sprint_event', 'status_event'])).toEqual({ sprint_event: { rows: 5, issues: 3 }, status_event: { rows: 0, issues: 0 } });
+    expect(calls.map(([q]) => q)).toEqual(['SELECT COUNT(*) AS n, COUNT(DISTINCT issue_id) AS issues FROM sprint_event', 'SELECT COUNT(*) AS n, COUNT(DISTINCT issue_id) AS issues FROM status_event']);
+  });
 });

@@ -68,6 +68,6 @@ describe('admin resolvers', () => {
   });
   it('treats a missing payload as empty', async () => {
     const defs = createResolverDefinitions(adminDeps({ isAdmin: async () => true }));
-    expect(await run(defs, 'adminStatus', { environmentType: 'DEVELOPMENT' }, undefined)).toEqual({ excluded: [], progress: null, parts: [] });
+    expect(await run(defs, 'adminStatus', { environmentType: 'DEVELOPMENT' }, undefined)).toEqual({ excluded: [], progress: null, parts: [], rows: {} });
   });
 });

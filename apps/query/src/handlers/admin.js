@@ -12,7 +12,7 @@ const fail = (code) => {
 const validKeys = (keys) => Array.isArray(keys) && keys.length <= EXCLUDED_MAX && keys.every((k) => typeof k === 'string' && PROJECT_KEY.test(k));
 
 /**
- * Admin page actions: exclusion, project reindex and full reset; Jira administrators only. A save of the excluded projects accepts only
+ * Admin page actions: status (with the index rows of each table), exclusion, project reindex and full reset; Jira administrators only. A save of the excluded projects accepts only
  * keys Jira knows; right after storing the list it journals the rewrite of every stored root, then hands the deletion of the excluded
  * projects' index rows to a queue job and keeps returning projects for a fill. Every step after the save is idempotent, so a retried save
  * repairs a failed one, and the hourly gap filler starts kept fills too.
@@ -23,6 +23,17 @@ export function createAdminActions(deps) {
   async function guard(context) {
     if (!decideLicence({ environmentType: context?.environmentType, license: context?.license }).licensed) fail(CODE.unlicensed);
     if (!(await deps.isAdmin(context))) fail(CODE.forbidden);
+  }
+
+  /** Rows and distinct issues of each index table, or null when Forge SQL cannot count them (logged without values). */
+  async function indexRows(tables) {
+    if (!tables.length) return {};
+    try {
+      return await deps.repo.counts(tables);
+    } catch (error) {
+      console.error(`index row count failed: ${error?.name}`);
+      return null;
+    }
   }
 
   async function notReady() {
@@ -36,7 +47,8 @@ export function createAdminActions(deps) {
   return {
     async adminStatus(payload, context) {
       await guard(context);
-      return { excluded: await deps.state.excluded(), progress: await deps.state.progress.get(), parts: deps.shippedParts() };
+      const parts = deps.shippedParts();
+      return { excluded: await deps.state.excluded(), progress: await deps.state.progress.get(), parts, rows: await indexRows(parts.flatMap(tablesOf)) };
     },
     async setExcluded({ projectKeys } = {}, context) {
       await guard(context);

@@ -14,7 +14,7 @@ function makeDeps({ admin = true } = {}) {
     state,
     isAdmin: async () => admin,
     now: () => 50,
-    repo: { deleteProject: vi.fn(async () => {}), clear: vi.fn(async () => {}) },
+    repo: { deleteProject: vi.fn(async () => {}), clear: vi.fn(async () => {}), counts: async (tables) => Object.fromEntries(tables.map((t) => [t, { rows: 4, issues: 2 }])) },
     jira: { projects: async () => [{ id: '1', key: 'A' }, { id: '2', key: 'B' }], approximateCount: async () => 10 },
     indexParts: { sprint: { tables: ['sprint_event', 'status_event'], prepare: async () => {} } },
     shippedParts: () => ['sprint'],
@@ -72,11 +72,19 @@ describe('admin actions', () => {
     for (const key of ['adminStatus', 'setExcluded', 'reindexProject', 'resetIndex']) await expect(actions[key]({ projectKey: 'A', projectKeys: ['A'] }, DEV)).rejects.toThrow('forbidden');
     expect([deps.repo.clear.mock.calls.length, deps.repo.deleteProject.mock.calls.length, await deps.state.excluded()]).toEqual([0, 0, []]);
   });
-  it('reports the excluded projects, the index progress and the shipped parts', async () => {
+  it('reports the excluded projects, the index progress, the shipped parts and the index rows of each table', async () => {
     const deps = makeDeps();
     await deps.state.setExcluded(['B']);
     await deps.state.progress.setPart('sprint', { done: 1, total: 2, finishedAt: null });
-    expect(await createAdminActions(deps).adminStatus({}, DEV)).toEqual({ excluded: ['B'], progress: { sprint: { done: 1, total: 2, finishedAt: null } }, parts: ['sprint'] });
+    expect(await createAdminActions(deps).adminStatus({}, DEV)).toEqual({ excluded: ['B'], progress: { sprint: { done: 1, total: 2, finishedAt: null } }, parts: ['sprint'], rows: { sprint_event: { rows: 4, issues: 2 }, status_event: { rows: 4, issues: 2 } } });
+  });
+  it('reports no index rows and logs the failure without values when Forge SQL cannot count them', async () => {
+    const deps = makeDeps();
+    deps.repo.counts = async () => { throw new TypeError('sql down'); };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect((await createAdminActions(deps).adminStatus({}, DEV)).rows).toBe(null);
+    expect(error.mock.calls).toEqual([['index row count failed: TypeError']]);
+    error.mockRestore();
   });
   it('rejects a list that is not an array or longer than the limit', async () => {
     const actions = createAdminActions(makeDeps());
