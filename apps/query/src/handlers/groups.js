@@ -1,11 +1,11 @@
 import { groupKey, parseArgs, splitPage } from '../core/args.js';
 import { FUNCTION_BY_NAME } from '../core/catalog.js';
-import { LOG } from '../core/errors.js';
+import { ERR, LOG } from '../core/errors.js';
 import { groupPrecomputations, usedWithin } from '../core/affected.js';
 import { forOperator } from '../core/jql-build.js';
 import { ACTIVE_MS, HEAVY_ATTEMPTS, HEAVY_LEASE_MS, HEAVY_QUEUED_STALE_MS, REFRESH_USED_MS, PAGE_CACHE_MS, REFRESH_GROUP_BUDGET_MS, WORKER_BUDGET_MS } from '../core/limits.js';
-import { computeGroup, costOf, fragmentFor, pastLimit, rejectedByJira } from './functions.js';
-import { admit, groupLimit, hourKey, laneRoom } from '../core/points.js';
+import { computeGroup, costOf, fragmentFor, rejectedByJira } from './functions.js';
+import { admit, groupClass, groupLimit, hourKey, laneRoom } from '../core/points.js';
 import { keptPoints } from '../infra/state.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
@@ -54,11 +54,12 @@ export function updatesFor(group, result, levels) {
 }
 
 /**
- * Recomputes one group: its precomputation updates and the cache entry to store after they are written (a group without precomputations
- * is a background job, cached at once). Staleness is judged against the cache, so the cache must never run ahead of what Jira stores.
+ * Recomputes one group within `limit` Jira points: its precomputation updates and the cache entry to store after they are written (a group
+ * without precomputations is a background job, cached at once). Staleness is judged against the cache, so the cache must never run ahead of
+ * what Jira stores.
  */
-export async function rewrite(deps, group, reconcile) {
-  const result = await recompute(deps, group, reconcile, group.items.length ? 'refresh' : 'job');
+export async function rewrite(deps, group, reconcile, { limit = Infinity } = {}) {
+  const result = await recompute(deps, group, reconcile, group.items.length ? 'refresh' : 'job', limit);
   if (!group.items.length) {
     await keepEntry(deps, group.key, result);
     await keepJob(deps, group.functionName, group.userArgs, result);
@@ -87,10 +88,27 @@ export async function writeGroups(deps, startedAt, byGroup) {
   return out.length;
 }
 
-/** Whether a group belongs to the heavy lane: it waits there, or its last computation took longer than a refresh pass may spend on it. */
-export async function isHeavy(deps, group) {
+/**
+ * Whether a group belongs to the heavy lane: it waits there, or its last computation took longer than a refresh pass may spend on it, or
+ * (under a points budget) cost more than a light group may; `meta` is its cache meta when the caller has read it.
+ */
+export async function isHeavy(deps, group, meta) {
   if (await deps.state.heavy.get(group.key)) return true;
-  return ((await deps.cache.meta(group.key))?.ms ?? 0) >= REFRESH_GROUP_BUDGET_MS;
+  const m = meta === undefined ? await deps.cache.meta(group.key) : meta;
+  if ((m?.ms ?? 0) >= REFRESH_GROUP_BUDGET_MS) return true;
+  return Boolean(deps.siteCap) && groupClass(knownCost(m, null), deps.siteCap) === 'medium';
+}
+
+/** The cost a group is known to have: the points of its last finished computation (cache meta), else what a stopped one spent (its job), else null. */
+export function knownCost(meta, job) {
+  if (meta?.pts !== undefined && meta?.pts !== null) return { points: meta.pts, floor: false, measured: true };
+  if (job?.pts !== undefined) return { points: job.pts, floor: Boolean(job.floor) };
+  return null;
+}
+
+/** The result of a group dearer than the group limit: the error with its numbers, which its precomputations store. */
+export function overLimit(group, cost, cap) {
+  return { error: ERR.tooExpensive(group.functionName, { n: null, points: cost.points, limit: groupLimit(cap), floor: cost.floor }), log: LOG.tooExpensive() };
 }
 
 /**
@@ -178,7 +196,7 @@ async function jobBudget(deps, functionName, args, key, job) {
   if (!deps.points) return { limit: Infinity };
   const at = deps.now();
   const [cost, { byLane }] = await Promise.all([costOf(deps, functionName, args, key, await deps.cache.meta(key), job), deps.points.siteSpent(hourKey(at))]);
-  if (pastLimit(cost, groupLimit(deps.siteCap))) return { tooExpensive: true };
+  if (groupClass(cost, deps.siteCap) === 'over') return { tooExpensive: true };
   const step = admit('fn', cost.points, byLane, at, deps.siteCap);
   if (!step.ok) return { waitUntil: step.waitUntil };
   return { limit: Math.min(groupLimit(deps.siteCap), laneRoom('fn', byLane, at, deps.siteCap)), release: deps.points.reserve('fn', cost.points) };

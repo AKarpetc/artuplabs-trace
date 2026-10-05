@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ERR, FAIL, LOG } from '../../src/core/errors.js';
+import { ERR, FAIL, isTooExpensiveError, LOG } from '../../src/core/errors.js';
 
 describe('error texts', () => {
   it('groups thousands in counts', () => {
@@ -60,5 +60,20 @@ describe('Jira points errors', () => {
   });
   it('logs both without numbers or values', () => {
     expect([LOG.tooExpensive(), LOG.allowanceUsed()]).toEqual(['Too expensive for the Jira rate limit', 'Hourly Jira allowance used']);
+  });
+});
+
+describe('isTooExpensiveError', () => {
+  it('recognises every form of the too-expensive error', () => {
+    const texts = [
+      ERR.tooExpensive('subtasksOf', { n: 4213, points: 8446, limit: 1800, issues: 890 }),
+      ERR.tooExpensive('hasSubtasks', { n: 3000, points: 6020, limit: 1800 }),
+      ERR.tooExpensive('expression', { n: null, points: null, limit: 1800 }),
+      ERR.tooExpensive('childIssuesOf', { n: null, points: 2000, limit: 1800, floor: true }),
+    ];
+    expect(texts.map(isTooExpensiveError)).toEqual([true, true, true, true]);
+  });
+  it('tells other errors apart', () => {
+    expect([ERR.computing(), ERR.allowanceUsed(0), 'subtasksOf: bad jql', null, undefined].map(isTooExpensiveError)).toEqual([false, false, false, false, false]);
   });
 });

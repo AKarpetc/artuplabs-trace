@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { admit, capOf, countQueryOf, estimate, groupLimit, hourKey, issuesWithin, LANES, laneOfRefresh, laneRoom, nextHour, pointsOf } from '../../src/core/points.js';
+import { admit, capOf, countQueryOf, estimate, groupClass, groupLimit, lightLimit, hourKey, issuesWithin, LANES, laneOfRefresh, laneRoom, nextHour, pointsOf } from '../../src/core/points.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
-import { CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, POINTS_OVERHEAD, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from '../../src/core/limits.js';
+import { CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from '../../src/core/limits.js';
 
 const list = (n, make = (i) => ({ id: String(i) })) => Array.from({ length: n }, (_, i) => make(i));
 
@@ -250,5 +250,27 @@ describe('countQueryOf for link functions', () => {
   it('counts the issues with the link type', () => {
     expect([countQueryOf('hasLinks', { linkType: 'blocks' }), countQueryOf('hasLinkType', { linkType: 'Duplicate' }), countQueryOf('hasLinks', {})])
       .toEqual(['issueLinkType = "blocks"', 'issueLinkType = "Duplicate"', null]);
+  });
+});
+
+describe('groupClass', () => {
+  const C = 10000;
+  it('is light up to a twentieth of the cap', () => {
+    expect([groupClass({ points: 500, floor: false }, C), groupClass({ points: 501, floor: false }, C)]).toEqual(['light', 'medium']);
+  });
+  it('is medium up to the group limit and over past it', () => {
+    expect([groupClass({ points: 2000, floor: false }, C), groupClass({ points: 2001, floor: false }, C)]).toEqual(['medium', 'over']);
+  });
+  it('lets a finished computation pass the group limit by one request round', () => {
+    expect([groupClass({ points: 2000 + POINTS_OVERRUN, measured: true }, C), groupClass({ points: 2001 + POINTS_OVERRUN, measured: true }, C)]).toEqual(['medium', 'over']);
+  });
+  it('is over for a lower bound that reached the group limit', () => {
+    expect(groupClass({ points: 2000, floor: true }, C)).toEqual('over');
+  });
+  it('is unknown without points', () => {
+    expect(groupClass(null, C)).toEqual('unknown');
+  });
+  it('is a twentieth of the cap for the light limit', () => {
+    expect(lightLimit(SITE_POINTS_TIER1)).toEqual(450);
   });
 });

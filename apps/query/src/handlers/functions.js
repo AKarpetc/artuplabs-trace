@@ -2,8 +2,8 @@ import { decideLicence } from '../access.js';
 import { groupKey, parseArgs } from '../core/args.js';
 import { FUNCTIONS, takesSubquery } from '../core/catalog.js';
 import { ERR, LOG } from '../core/errors.js';
-import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, NEAR_FN_POINTS, PAGE_CACHE_MS, POINTS_OVERRUN, VALUE_LIMIT } from '../core/limits.js';
-import { admit, countQueryOf, estimate, groupLimit, hourKey, issuesWithin, laneRoom, retryAfter } from '../core/points.js';
+import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, NEAR_FN_POINTS, PAGE_CACHE_MS, VALUE_LIMIT } from '../core/limits.js';
+import { admit, countQueryOf, estimate, groupClass, groupLimit, hourKey, issuesWithin, laneRoom, retryAfter } from '../core/points.js';
 import { forOperator } from '../core/jql-build.js';
 import { buildFragment, valuesOf } from '../core/tree.js';
 import { brake, brakeOf, isRateLimit } from './brake.js';
@@ -98,11 +98,6 @@ const tooExpensive = (functionName, cost, limit) => ({
   store: true,
 });
 const allowanceUsed = (retryAt) => ({ error: ERR.allowanceUsed(retryAt), log: LOG.allowanceUsed() });
-/** Whether a cost passes the group limit: a finished computation only by more than one request round could, an estimate or a lower bound at once. */
-export function pastLimit(cost, limit) {
-  if (cost.measured) return cost.points > limit + POINTS_OVERRUN;
-  return cost.points > limit || (cost.floor && cost.points >= limit);
-}
 
 async function countOf(deps, query) {
   try {
@@ -147,7 +142,7 @@ async function budgetFor(deps, functionName, args, key, meta) {
     throw error;
   }
   const [cost, pause, { byLane }] = found;
-  if (pastLimit(cost, most)) return { refused: tooExpensive(functionName, cost, most) };
+  if (groupClass(cost, cap) === 'over') return { refused: tooExpensive(functionName, cost, most) };
   const near = pause?.reason === 'near';
   if (near && cost.points > NEAR_FN_POINTS) return { refused: allowanceUsed(pause.until) };
   const step = admit('fn', cost.points, byLane, at, cap);

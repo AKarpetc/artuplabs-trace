@@ -1,5 +1,5 @@
 import {
-  BORROW_CAP_SHARE, BORROW_MINUTE, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, GROUP_POINTS_SHARE, LANE_SHARES, POINTS_OVERHEAD, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT,
+  BORROW_CAP_SHARE, BORROW_MINUTE, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, GROUP_POINTS_SHARE, LANE_SHARES, LIGHT_GROUP_SHARE, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT,
 } from './limits.js';
 import { quote } from './jql-build.js';
 
@@ -83,6 +83,23 @@ export function countQueryOf(functionName, args) {
 /** Points one group may cost on a site with this hourly cap. */
 export function groupLimit(cap) {
   return Math.floor(GROUP_POINTS_SHARE * cap);
+}
+
+/** Points a group may cost and still be recomputed on every event. */
+export function lightLimit(cap) {
+  return Math.floor(LIGHT_GROUP_SHARE * cap);
+}
+
+/**
+ * Class of a group by its cost `{ points, floor, measured }`: light (every event), medium (heavy lane), over (an error with its numbers) or
+ * unknown without a cost; a finished computation (`measured`) may pass the group limit by one request round (POINTS_OVERRUN) before it is
+ * over, a lower bound (`floor`) is over once it reaches the group limit.
+ */
+export function groupClass(cost, cap) {
+  if (!cost || cost.points === null || cost.points === undefined) return 'unknown';
+  const slack = cost.measured ? POINTS_OVERRUN : 0;
+  if (cost.points > groupLimit(cap) + slack || (cost.floor && cost.points >= groupLimit(cap))) return 'over';
+  return cost.points > lightLimit(cap) ? 'medium' : 'light';
 }
 
 const spentOn = (spentByLane, lane) => spentByLane[lane] ?? 0;

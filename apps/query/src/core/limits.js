@@ -150,3 +150,5 @@ export const FIELDS_TTL_MS = 60 * 60 * 1000;
 export const POINTS_OVERRUN = BULK_CONCURRENCY * (BULK_BATCH + 1);
 /** Largest field list kept in `cfg:fields`, below the Forge KVS value limit (240 KiB). */
 export const FIELDS_CACHE_MAX_BYTES = 200 * 1024;
+/** Share of the site's hourly cap a group may cost and still be recomputed on every event; a dearer one waits for the heavy lane. */
+export const LIGHT_GROUP_SHARE = 0.05;

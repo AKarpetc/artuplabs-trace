@@ -4,6 +4,10 @@ import { EXPRESSION_SNIPPET } from './limits.js';
 const fmt = (n) => Number(n).toLocaleString('en-US');
 const RATE_NOTE = "Jira's rate limit for apps";
 const utcTime = (at) => new Date(at).toISOString().slice(11, 16);
+const TOO_EXPENSIVE = / Jira API points; on this site ArtUp Query may spend at most [\d,]+ on one function \(/;
+
+/** Whether a stored precomputation error is the too-expensive error of the Jira points budget. */
+export const isTooExpensiveError = (text) => typeof text === 'string' && TOO_EXPENSIVE.test(text);
 
 function tooExpensive(functionName, { n, points, limit, issues, floor = false }) {
   const cap = `on this site ArtUp Query may spend at most ${fmt(limit)} on one function (${RATE_NOTE}).`;
