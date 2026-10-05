@@ -90,13 +90,14 @@ export async function writeGroups(deps, startedAt, byGroup) {
 
 /**
  * Whether a group belongs to the heavy lane: it waits there, or its last computation took longer than a refresh pass may spend on it, or
- * (under a points budget) cost more than a light group may; `meta` is its cache meta when the caller has read it.
+ * (under a points budget) cost, or a stopped background job of it spent, more than a light group may; `meta` is its cache meta when the caller
+ * has read it.
  */
 export async function isHeavy(deps, group, meta) {
   if (await deps.state.heavy.get(group.key)) return true;
   const m = meta === undefined ? await deps.cache.meta(group.key) : meta;
   if ((m?.ms ?? 0) >= REFRESH_GROUP_BUDGET_MS) return true;
-  return Boolean(deps.siteCap) && groupClass(knownCost(m, null), deps.siteCap) === 'medium';
+  return Boolean(deps.siteCap) && groupClass(knownCost(m, group.job ?? null), deps.siteCap) === 'medium';
 }
 
 /** The cost a group is known to have: the points of its last finished computation (cache meta), else what a stopped one spent (its job), else null. */

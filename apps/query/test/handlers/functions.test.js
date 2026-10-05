@@ -472,4 +472,12 @@ describe('function call under the Jira points budget', () => {
     deps.jira.approximateCount = async () => { throw Object.assign(new Error('busy'), { name: 'JiraError', status: 503 }); };
     expect(await handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV)).toEqual({ jql: 'id in (3)' });
   });
+  it('answers that the allowance is used when what the function lane has left equals the group limit and runs out', async () => {
+    const deps = withBudget(fnDeps(expression([2000, 1])), { at: Date.parse('2026-10-05T07:40:00Z') });
+    await deps.points.add('refresh', 8000);
+    expect(await quiet(() => handleFunction(deps, 'expression', payload('project = A', 'a > b'), DEV))).toEqual({
+      error: "ArtUp Query has used this site's Jira API allowance for this hour; retry after 08:00 UTC.",
+      storeErrorAsPrecomputation: false,
+    });
+  });
 });

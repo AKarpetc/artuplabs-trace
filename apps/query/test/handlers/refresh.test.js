@@ -770,8 +770,8 @@ describe('journal cut under the points budget', () => {
     return { ids: ['2'], field: 'id', watch: null };
   });
   const meta = (pts) => ({ values: ['1'], watch: null, field: 'id', rootFilter: null, at: 1, source: 'refresh', ...(pts === null ? {} : { pts }) });
-  async function budgetDeps({ compute, refreshSpent = 0, pcs = sitePcs, write, at, pts = [10, 20], touched = ['9'] } = {}) {
-    const deps = withBudget(makeDeps({ pcs, compute, write }), { at });
+  async function budgetDeps({ compute, refreshSpent = 0, pcs = sitePcs, write, at, pts = [10, 20], touched = ['9'], searches } = {}) {
+    const deps = withBudget(makeDeps({ pcs, compute, write, searches }), { at });
     if (refreshSpent) await deps.points.add('refresh', refreshSpent);
     await deps.cache.write(H, meta(pts[0]));
     await deps.cache.write(L, meta(pts[1]));
@@ -874,6 +874,59 @@ describe('journal cut under the points budget', () => {
     await deps.state.cut.set({ key: deps.rowKey, startedAt: 5, done: [] });
     await refreshOnce(deps);
     expect(order).toEqual(['hasLinks', 'hasSubtasks']);
+  });
+  it('verifies the touched issues of a cut that a verify job finishes', async () => {
+    const deps = await budgetDeps({ compute: { hasSubtasks: spending([10]), hasLinks: spending([10]) }, touched: ids(3) });
+    await deps.state.cut.set({ key: deps.rowKey, startedAt: 5, done: [] });
+    await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT, verify: ['999'], kinds: ['issue-updated'] } });
+    expect(deps.pushed.filter(([body]) => body.verify).map(([body]) => body.verify)).toEqual([ids(3)]);
+  });
+  it('lifts a cut whose only open group keeps failing, so later rows are read', async () => {
+    const compute = { hasSubtasks: vi.fn(async () => { throw jiraError(403); }), hasLinks: spending([10]) };
+    const deps = await budgetDeps({ compute });
+    await deps.state.cut.set({ key: deps.rowKey, startedAt: 5, done: [L] });
+    await deps.journal.append({ ids: ['7'], kinds: ['link'] }, BUDGET_AT + 100);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await refreshOnce(deps);
+    expect(await deps.state.cut.get()).toBe(null);
+    const next = await refreshOnce(deps);
+    error.mockRestore();
+    expect([next.events, compute.hasLinks.mock.calls.length]).toEqual([2, 1]);
+  });
+  it('hands a background job whose stopped run passed the light limit to the heavy lane without computing it', async () => {
+    const compute = { parentsOf: spending([10]), hasSubtasks: spending([10]), hasLinks: spending([10]) };
+    const deps = await budgetDeps({ compute, searches: { '(q) AND id in (9)': ['9'] } });
+    await deps.state.addJob({ key: 'parentsOf["q"]', functionName: 'parentsOf', userArgs: ['q'], at: BUDGET_AT, pts: 600, floor: true });
+    await refreshOnce(deps);
+    expect(compute.parentsOf).not.toHaveBeenCalled();
+    expect(await deps.state.heavy.get('parentsOf["q"]')).toMatchObject({ pts: 600, floor: true });
+  });
+  it('keeps the higher lower bound of a background job the light limit stopped', async () => {
+    const compute = { parentsOf: spending([499, 2, 1]), hasSubtasks: spending([10]), hasLinks: spending([10]) };
+    const deps = await budgetDeps({ compute, searches: { '(q) AND id in (9)': ['9'] } });
+    await deps.state.addJob({ key: 'parentsOf["q"]', functionName: 'parentsOf', userArgs: ['q'], at: BUDGET_AT, pts: 300, floor: true });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await refreshOnce(deps);
+    error.mockRestore();
+    expect(await deps.state.heavy.get('parentsOf["q"]')).toMatchObject({ pts: 501, floor: true });
+  });
+  it('adds nothing to a cut written over rows it did not read', async () => {
+    let deps;
+    const hasSubtasks = vi.fn(async () => {
+      await deps.state.cut.set({ key: 't:999999999999999:z', startedAt: 7, done: ['other'] });
+      await spend(40);
+      return { ids: ['2'], field: 'id', watch: null };
+    });
+    deps = await budgetDeps({ compute: { hasSubtasks, hasLinks: spending([30, 1]) }, refreshSpent: 2930 });
+    await refreshOnce(deps);
+    expect(await deps.state.cut.get()).toEqual({ key: 't:999999999999999:z', startedAt: 7, done: ['other'] });
+  });
+  it('does not rewrite an unchanged cut while the refresh reserve stays spent', async () => {
+    const deps = await budgetDeps({ compute: { hasSubtasks: spending([10]), hasLinks: spending([10]) }, refreshSpent: 3000 });
+    await refreshOnce(deps);
+    const writes = deps.kvs.calls.ops.filter((op) => op === 'set q:cut').length;
+    await refreshOnce(deps);
+    expect(deps.kvs.calls.ops.filter((op) => op === 'set q:cut').length).toEqual(writes);
   });
   it('renews the lease after each group', async () => {
     const deps = await budgetDeps({ compute: { hasSubtasks: vi.fn(async () => { deps.advance(5000); return { ids: ['2'], field: 'id', watch: null }; }), hasLinks: spending([10]) } });

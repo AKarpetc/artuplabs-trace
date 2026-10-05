@@ -6,6 +6,7 @@ import {
   ACTIVE_MS, FAILED_ROWS_KEEP_MS, REFRESH_USED_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, POINTS_OVERHEAD, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, TOUCHED_CHECK_MAX, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
+import { keptPoints } from '../infra/state.js';
 import { handOff, isDeadline, isHeavy, knownCost, laneIdle, overLimit, pushQuietly, rewrite, runCompute, runHeavy, updatesFor, writeGroups } from './groups.js';
 import { admit, groupClass, hourKey, laneRoom, lightLimit, retryAfter } from '../core/points.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
@@ -68,12 +69,18 @@ async function rowsOf(deps) {
   return { rows, cut: null };
 }
 
-/** Writes the cut of a pass the points budget stopped: a new cut, or its own one; the cut of another pass only gets the groups it did. */
-async function saveCut(deps, { key, startedAt, done }) {
+/**
+ * Writes the cut of a pass the points budget stopped: a new cut, or its own one; the cut of another pass only gets the groups it did when
+ * that cut covers no row past the ones the pass read; an unchanged cut is not written again.
+ */
+async function saveCut(deps, { key, startedAt, done, under = null }) {
   const cut = await deps.state.cut.get();
   const own = !cut || cut.startedAt === startedAt;
-  const list = [...new Set([...(own ? [] : cut.done), ...done])];
-  await deps.state.cut.set(own ? { key: cut?.key ?? key, startedAt, done: list } : { ...cut, done: list });
+  if (!own && under !== cut.key && key < cut.key) return;
+  const list = [...new Set([...(cut?.done ?? []), ...done])];
+  const next = own ? { key: cut?.key ?? key, startedAt, done: list } : { ...cut, done: list };
+  if (cut && JSON.stringify(next) === JSON.stringify(cut)) return;
+  await deps.state.cut.set(next);
 }
 
 async function passRoom(deps, startedAt) {
@@ -103,7 +110,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const lastKey = rows[rows.length - 1].key;
   const room = await passRoom(deps, startedAt);
   if (room.refused) {
-    await saveCut(deps, { key: lastKey, startedAt, done: [] });
+    await saveCut(deps, { key: lastKey, startedAt, done: [], under: cut?.key ?? null });
     return { budgeted: room.refused, events: rows.length, groups: 0, touched: [], kinds: summary.kinds, changed: 0, oldestEventMs: null };
   }
   const cap = deps.siteCap;
@@ -148,7 +155,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
             return;
           }
           if (await isHeavy(deps, group, meta)) {
-            await handOver(group);
+            await handOver(group, keptPoints(group.job));
             done.push(group.key);
             return;
           }
@@ -168,8 +175,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
             return;
           }
           if (error?.name === 'PointsError') {
-            if (group.items.length) await handOver(group, { pts: error.spent, floor: true });
-            else await deps.state.addJob({ ...group.job, pts: error.spent, floor: true });
+            await handOver(group, { pts: Math.max(error.spent, group.job?.pts ?? 0), floor: true });
             done.push(group.key);
             return;
           }
@@ -213,15 +219,16 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   }
   const doneHashes = done.map((key) => deps.hash(key));
   if (stopped) {
-    await saveCut(deps, { key: lastKey, startedAt, done: doneHashes });
+    await saveCut(deps, { key: lastKey, startedAt, done: doneHashes, under: cut?.key ?? null });
     return { budgeted: retryAfter(startedAt), events: rows.length, groups: counts.groups, recomputed, handed, changed, stale, failed, postponed, touched: [], kinds: summary.kinds, oldestEventMs: null };
   }
   const finished = !stale && !postponed;
   if (finished) await deps.journal.remove((failed ? rows.filter((r) => r.key < expiredBefore(startedAt)) : rows).map((r) => r.key));
-  if (cut && finished && !failed) await deps.state.cut.clear();
-  else if (cut) await saveCut(deps, { key: cut.key, startedAt, done: doneHashes });
+  if (cut && finished) await deps.state.cut.clear();
+  else if (cut) await saveCut(deps, { key: cut.key, startedAt, done: doneHashes, under: cut.key });
   return {
-    touched: summary.touched.slice(0, cut ? TOUCHED_CHECK_MAX : MAX_TOUCHED),
+    touched: summary.touched.slice(0, TOUCHED_CHECK_MAX),
+    cutFinished: Boolean(cut && finished),
     kinds: summary.kinds,
     events: rows.length,
     all: summary.all,
@@ -286,6 +293,9 @@ async function pushVerify(deps, passes) {
   }
 }
 
+/** Passes whose touched issues get a verify job: every pass, or inside a verify job only a pass that finished a cut. */
+const toVerify = (body, passes) => (body.verify ? passes.filter((p) => p.cutFinished) : passes);
+
 async function refreshPasses(deps, body) {
   const until = await brakedUntil(deps);
   if (until) {
@@ -322,14 +332,14 @@ async function refreshPasses(deps, body) {
   }
   if (limited) {
     console.error('refresh stopped by the Jira rate limit');
-    if (!body.verify) await pushVerify(deps, passes);
+    await pushVerify(deps, toVerify(body, passes));
     await brake(deps, limited.retryAt);
     return { passes, braked: true };
   }
   const kept = passes.some((p) => p.stale || p.failed);
   if (budgeted) await scheduleWake(deps, budgeted);
   else if ((await deps.journal.read(1)).length && !(await deps.state.pending.get())) await pushRefresh(deps, deps.now(), kept ? REFRESH_RETRY_DELAY_S : undefined);
-  if (!body.verify) await pushVerify(deps, passes);
+  await pushVerify(deps, toVerify(body, passes));
   if (passes.length) {
     await deps.state.lastRefresh.set({ at: deps.now(), passes: passes.length, changed: passes.reduce((s, p) => s + p.changed, 0), oldestEventMs: Math.max(...passes.map((p) => p.oldestEventMs ?? 0)) });
   }

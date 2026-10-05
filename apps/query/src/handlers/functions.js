@@ -149,7 +149,7 @@ async function budgetFor(deps, functionName, args, key, meta) {
   if (!step.ok) return { refused: allowanceUsed(step.waitUntil) };
   const room = laneRoom('fn', byLane, at, cap);
   const limits = [['group', most], ['lane', room], ...(near ? [['near', NEAR_FN_POINTS]] : [])];
-  const [cause, limit] = limits.reduce((a, b) => (b[1] < a[1] ? b : a));
+  const [cause, limit] = limits.reduce((a, b) => (b[1] <= a[1] ? b : a));
   return { limit, cause, most, at, pause, release: deps.points.reserve('fn', cost.points) };
 }
 
