@@ -7,7 +7,7 @@ import {
 } from '../core/limits.js';
 import { indexPartOf } from '../core/readiness.js';
 import { sprintEvents, statusEvents, toMs } from '../core/sprint-history.js';
-import { startBackfill, startWaiting } from './backfill.js';
+import { backfillJob, startBackfill, startWaiting } from './backfill.js';
 
 const SPRINT_FIELD = 'com.pyxis.greenhopper.jira:gh-sprint';
 const RECENT_ORDER = ' ORDER BY id ASC';
@@ -197,7 +197,7 @@ export function createIndexing(deps) {
 
   async function resumeStalled(part, progress) {
     if (deps.now() - (progress.savedAt ?? progress.startedAt ?? 0) < BACKFILL_STALE_MS) return;
-    await deps.backfillQueue.push({ kind: 'backfill', part, generation: progress.generation, ...(progress.chain ? { chain: progress.chain } : {}) });
+    await deps.backfillQueue.push(backfillJob(part, progress));
   }
 
   /** The query of a check slice: issues updated since `since` (as minutes back from now), outside excluded projects, after `after`, by id. */

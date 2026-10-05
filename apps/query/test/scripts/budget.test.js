@@ -19,7 +19,7 @@ describe('idSlices', () => {
 describe('loadPlan', () => {
   it('spreads the calls a points target needs evenly over the minutes, by the estimate of each function', () => {
     expect([loadPlan({ fn: 'subtasksOf', n: 1000, points: 52000, minutes: 60 }), loadPlan({ fn: 'expression', n: 500, points: 10200, minutes: 30 })]).toEqual([
-      { cost: 1020, calls: 51, intervalMs: 70588 },
+      { cost: 1030, calls: 51, intervalMs: 70588 },
       { cost: 1020, calls: 10, intervalMs: 180000 },
     ]);
   });

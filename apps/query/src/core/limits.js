@@ -140,6 +140,8 @@ export const CLAIM_TRIES = 3;
 export const CLAIM_TTL_MS = 15 * 60 * 1000;
 /** Longest random pause before a step tries its claim again. */
 export const CLAIM_JITTER_MS = 1500;
+/** Seconds after the first call of a new app version that the journal wake it queues comes. */
+export const RESUME_WAKE_DELAY_S = 1;
 /** Most points the index work of one product event claims, so parallel events each get theirs from the index-event reserve. */
 export const EVENT_POINTS_CLAIM = 100;
 /** Keys one KVS query page returns at most. */

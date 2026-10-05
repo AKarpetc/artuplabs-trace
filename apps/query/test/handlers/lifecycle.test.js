@@ -96,6 +96,32 @@ describe('resume after a deploy', () => {
     await expect(resumeAfterDeploy(deps)).rejects.toThrow('400 Bad Request');
     expect([await deps.state.version.get(), await deps.state.wake.get()]).toEqual(['4.26.0', null]);
   });
+  it('gives a part its chain back when the push of the new chain fails, so the job already queued under it still runs', async () => {
+    const { deps, ready } = deployed();
+    await ready();
+    await deps.state.progress.setPart('sprint', { generation: 5, done: 10, chain: 'c1' });
+    deps.backfillQueue.push = async () => { throw new Error('400 Bad Request'); };
+    await expect(resumeAfterDeploy(deps)).rejects.toThrow('400 Bad Request');
+    expect((await deps.state.progress.getPart('sprint')).chain).toEqual('c1');
+  });
+  it('still starts the parts never built when the resume fails on an upgrade', async () => {
+    const { deps, ready } = deployed();
+    await ready();
+    const started = [];
+    Object.assign(deps, {
+      migrate: async () => {},
+      shippedParts: () => ['sprint'],
+      jira: { ...deps.jira, projects: async () => [], approximateCount: async () => 0 },
+      indexParts: { sprint: { prepare: async () => {} } },
+    });
+    await deps.journal.append({ ids: ['1'], kinds: ['issue-updated'] }, deps.now());
+    deps.queue.push = async () => { throw new Error('400 Bad Request'); };
+    deps.backfillQueue.push = async (body) => { started.push(body.part); };
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await onLifecycle(deps)).toEqual({ started: ['sprint'] });
+    expect(error.mock.calls[0]).toEqual(['resume after deploy failed: Error']);
+    error.mockRestore();
+  });
   it('does nothing without a known app version', async () => {
     const { deps, backfill, ready } = deployed({ version: null });
     await ready();

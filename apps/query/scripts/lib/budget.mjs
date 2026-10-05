@@ -1,5 +1,7 @@
+import { estimate } from '../../src/core/points.js';
+
 const WINDOW_MINUTES = 10000000;
-const COST = { subtasksOf: (n) => n + 20, expression: (n) => 2 * n + 20 };
+const LOAD_FUNCTIONS = ['subtasksOf', 'expression'];
 
 /** The same issues as `base` under a text of its own for index `i` (an `updated` window wider than any site's history). */
 export const distinctSubquery = (base, i) => `${base} AND updated >= -${WINDOW_MINUTES + i}m`;
@@ -17,8 +19,8 @@ export function idSlices(ids, size) {
 
 /** Calls of `fn` over `n` issues that spend `points` (by the app's estimate) spread evenly over `minutes`. */
 export function loadPlan({ fn, n, points, minutes }) {
-  if (!COST[fn]) throw new Error(`load-hour supports ${Object.keys(COST).join(', ')}`);
-  const cost = COST[fn](n);
+  if (!LOAD_FUNCTIONS.includes(fn)) throw new Error(`load-hour supports ${LOAD_FUNCTIONS.join(', ')}`);
+  const cost = estimate(fn, n).points;
   const calls = Math.ceil(points / cost);
   return { cost, calls, intervalMs: Math.floor((minutes * 60000) / calls) };
 }
