@@ -62,19 +62,21 @@ describe('pointsOf', () => {
 });
 
 describe('estimate', () => {
-  it('reads the subtasks of a small subquery once per issue', () => {
-    expect(estimate('subtasksOf', VALUE_LIMIT)).toEqual({ points: VALUE_LIMIT + POINTS_OVERHEAD, floor: false });
+  it('reads the subquery of subtasksOf once with its subtasks, a point per issue and per page of FIELDS_PAGE', () => {
+    expect([estimate('subtasksOf', VALUE_LIMIT), estimate('subtasksOf', 1200), estimate('subtasksOf', 1500)]).toEqual([
+      { points: 1010 + POINTS_OVERHEAD, floor: false }, { points: 1212 + POINTS_OVERHEAD, floor: false }, { points: 1515 + POINTS_OVERHEAD, floor: false },
+    ]);
   });
-  it('reads the subtasks of a large subquery twice per issue', () => {
-    expect(estimate('subtasksOf', VALUE_LIMIT + 1)).toEqual({ points: 2 * (VALUE_LIMIT + 1) + POINTS_OVERHEAD, floor: false });
+  it('reads the subquery once with its fields for a hierarchy function', () => {
+    expect(['parentsOf', 'issuesInEpics', 'hasSubtasks'].map((f) => estimate(f, 500))).toEqual(Array(3).fill({ points: 505 + POINTS_OVERHEAD, floor: false }));
   });
   it('reads twice per issue for a function that fetches the issues of its subquery', () => {
-    expect(['parentsOf', 'issuesInEpics', 'linkedIssuesOf', 'expression', 'dateCompare', 'hasSubtasks'].map((f) => estimate(f, 500)))
-      .toEqual(Array(6).fill({ points: 1000 + POINTS_OVERHEAD, floor: false }));
+    expect(['linkedIssuesOf', 'expression', 'dateCompare'].map((f) => estimate(f, 500)))
+      .toEqual(Array(3).fill({ points: 1000 + POINTS_OVERHEAD, floor: false }));
   });
   it('gives a lower bound for a function whose result fans out', () => {
-    expect(['epicsOf', 'childIssuesOf', 'linkedIssuesOfRecursive', 'linkedIssuesOfRecursiveLimited'].map((f) => estimate(f, 500)))
-      .toEqual(Array(4).fill({ points: 1000 + POINTS_OVERHEAD, floor: true }));
+    expect([estimate('epicsOf', 500), ...['childIssuesOf', 'linkedIssuesOfRecursive', 'linkedIssuesOfRecursiveLimited'].map((f) => estimate(f, 500))])
+      .toEqual([{ points: 505 + POINTS_OVERHEAD, floor: true }, ...Array(3).fill({ points: 1000 + POINTS_OVERHEAD, floor: true })]);
   });
   it('reads once per issue for a computed link function', () => {
     expect(['hasLinks', 'hasLinkType'].map((f) => estimate(f, 300))).toEqual(Array(2).fill({ points: 300 + POINTS_OVERHEAD, floor: false }));
@@ -202,10 +204,10 @@ describe('groupLimit', () => {
 
 describe('issuesWithin', () => {
   it('is how many issues a function reads within the points', () => {
-    expect([issuesWithin('expression', 1800), issuesWithin('hasLinks', 1800), issuesWithin('subtasksOf', 1800)]).toEqual([890, 1780, 1000]);
+    expect([issuesWithin('expression', 1800), issuesWithin('hasLinks', 1800), issuesWithin('subtasksOf', 1800)]).toEqual([890, 1780, 1762]);
   });
-  it('is the small-subquery count of subtasksOf when it fits', () => {
-    expect(issuesWithin('subtasksOf', 1000)).toEqual(980);
+  it('fits the estimate of subtasksOf on the count it names', () => {
+    expect(estimate('subtasksOf', issuesWithin('subtasksOf', 1800)).points).toBeLessThanOrEqual(1800);
   });
 });
 

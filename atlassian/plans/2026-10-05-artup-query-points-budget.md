@@ -214,10 +214,12 @@ Atlassian ответит на тикет и Developer Console покажет Tie
 
 | Функция | Очки ≈ | Tier 1 (≤ 1 800) | Tier 2 (≤ 17 000) |
 |---|---|---|---|
-| `subtasksOf` (N ≤ 1 000), `hasLinks` вычисляемый | N | ~1 800 задач | ~17 000 |
-| `subtasksOf` (N > 1 000), `parentsOf`, `issuesInEpics`, `linkedIssuesOf`, `expression`, `dateCompare` | 2N | ~900 | ~8 500 |
-| `epicsOf`, `childIssuesOf`, `linkedIssuesOfRecursive(Limited)` | ≥ 2N + выход (разветвление) | меньше 900, зависит от данных | меньше 8 500 |
-| `hasSubtasks()` | 2 × число подзадач сайта | сайт до ~900 подзадач | до ~8 500 |
+| `hasLinks` вычисляемый | N | ~1 800 задач | ~17 000 |
+| `subtasksOf`, `parentsOf`, `issuesInEpics` (поля читаются в поиске подзапроса страницами по 100; ruling A, Q-R70) | 1,01 N | ~1 760 | ~16 800 |
+| `linkedIssuesOf`, `expression`, `dateCompare` | 2N | ~900 | ~8 500 |
+| `epicsOf` | ≥ 1,01 N + родители вне подзапроса | меньше 1 760, зависит от данных | меньше 16 800 |
+| `childIssuesOf`, `linkedIssuesOfRecursive(Limited)` | ≥ 2N + выход (разветвление; у `childIssuesOf` дети читаются с полем `parent` в поиске, 1,01 на ребёнка) | меньше 900, зависит от данных | меньше 8 500 |
+| `hasSubtasks()` | 1,01 × число подзадач сайта | сайт до ~1 760 подзадач | до ~16 800 |
 | спринтовые через Agile и поиск | 2 × состав спринта | реальные спринты помещаются | — |
 | индексные (`commented`, `hasComments`, `fileAttached`, `addedAfterSprintStart`, …) | ≈ 0 (SQL) + разбор пользователя или группы | без предела | — |
 | родные ответы (`previousSprint`, `hasAttachments()`, `hasLinks` нативно) | ≈ 0 | без предела | — |

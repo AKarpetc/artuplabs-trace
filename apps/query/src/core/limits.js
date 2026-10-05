@@ -124,6 +124,8 @@ export const CHANGELOG_POINT_FACTOR = 1;
 export const COMMENT_POINT_FACTOR = 1;
 /** Points a computation spends besides reading its issues (subquery check, count, paging). */
 export const POINTS_OVERHEAD = 20;
+/** Issues a search page returns at most when it asks for fields besides the id. */
+export const FIELDS_PAGE = 100;
 /** Smallest search page a points scope asks for when little of its limit is left. */
 export const POINTS_PAGE_MIN = 100;
 /** Points a process spends on one lane before it rewrites its ledger key during an invocation. */

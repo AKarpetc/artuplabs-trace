@@ -1,5 +1,5 @@
 import {
-  BORROW_CAP_SHARE, BORROW_MINUTE, PASS_INTERVAL_MAX_S, PASS_INTERVAL_MIN_S, REFRESH_OVERHEAD_SHARE, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, GROUP_POINTS_SHARE, LANE_SHARES, LIGHT_GROUP_SHARE, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT,
+  BORROW_CAP_SHARE, BORROW_MINUTE, PASS_INTERVAL_MAX_S, PASS_INTERVAL_MIN_S, REFRESH_OVERHEAD_SHARE, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, FIELDS_PAGE, GROUP_POINTS_SHARE, LANE_SHARES, LIGHT_GROUP_SHARE, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2,
 } from './limits.js';
 import { quote } from './jql-build.js';
 
@@ -35,20 +35,22 @@ export function pointsOf(method, endpoint, body) {
 }
 
 const FAN_OUT = new Set(['epicsOf', 'childIssuesOf', 'linkedIssuesOfRecursive', 'linkedIssuesOfRecursiveLimited']);
+const WITH_FIELDS = 1 + 1 / FIELDS_PAGE;
 const PER_ISSUE = new Map([
-  ['subtasksOf', (n) => (n > VALUE_LIMIT ? 2 : 1)],
+  ['subtasksOf', () => WITH_FIELDS],
   ['hasLinks', () => 1],
   ['hasLinkType', () => 1],
-  ['parentsOf', () => 2],
-  ['issuesInEpics', () => 2],
+  ['parentsOf', () => WITH_FIELDS],
+  ['issuesInEpics', () => WITH_FIELDS],
   ['linkedIssuesOf', () => 2],
   ['expression', () => 2],
   ['dateCompare', () => 2],
-  ['hasSubtasks', () => 2],
+  ['hasSubtasks', () => WITH_FIELDS],
+  ['epicsOf', () => WITH_FIELDS],
   ['addedAfterSprintStart', () => 1],
   ['incompleteInSprint', () => 2],
   ['completeInSprint', () => 2],
-  ...[...FAN_OUT].map((name) => [name, () => 2]),
+  ...[...FAN_OUT].filter((name) => name !== 'epicsOf').map((name) => [name, () => 2]),
   ...['previousSprint', 'nextSprint', 'removedAfterSprintStart', 'commented', 'lastComment', 'hasComments', 'fileAttached', 'hasAttachments'].map((name) => [name, () => 0]),
 ]);
 
@@ -59,15 +61,16 @@ const PER_ISSUE = new Map([
 export function estimate(functionName, n) {
   const perIssue = PER_ISSUE.get(functionName);
   if (n === null) return { points: POINTS_OVERHEAD, floor: !perIssue || perIssue(1) > 0 };
-  return { points: (perIssue ? perIssue(n) : 2) * n + POINTS_OVERHEAD, floor: !perIssue || FAN_OUT.has(functionName) };
+  return { points: Math.ceil((perIssue ? perIssue(n) : 2) * n) + POINTS_OVERHEAD, floor: !perIssue || FAN_OUT.has(functionName) };
 }
 
 /** The most issues a function may read within `points` (by its estimate), so an error can say how far to narrow. */
 export function issuesWithin(functionName, points) {
   const room = Math.max(0, points - POINTS_OVERHEAD);
-  if (functionName === 'subtasksOf') return Math.max(Math.min(VALUE_LIMIT, room), Math.floor(room / 2) > VALUE_LIMIT ? Math.floor(room / 2) : 0);
   const perIssue = PER_ISSUE.get(functionName)?.(1) ?? 2;
-  return perIssue > 0 ? Math.floor(room / perIssue) : null;
+  if (!(perIssue > 0)) return null;
+  const n = Math.floor(room / perIssue);
+  return Math.ceil(perIssue * n) > room ? n - 1 : n;
 }
 
 const SUBQUERY_READERS = new Set(['subtasksOf', 'parentsOf', 'issuesInEpics', 'linkedIssuesOf', 'expression', 'dateCompare', ...FAN_OUT]);

@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import api, { assumeTrustedRoute } from '@forge/api';
 import {
-  BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
+  BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, FIELDS_PAGE, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
   POINTS_PAGE_MIN, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
 import { DEFAULT_LANE, pointsOf } from '../core/points.js';
@@ -198,6 +198,23 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     return out;
   }
 
+  async function searchIssues(jql, fields, { reconcile = [] } = {}) {
+    const out = [];
+    let nextPageToken;
+    do {
+      const page = await call('POST', '/rest/api/3/search/jql', {
+        jql,
+        fields,
+        maxResults: Math.min(pageSize(), FIELDS_PAGE),
+        ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, RECONCILE_MAX).map(Number) } : {}),
+        ...(nextPageToken ? { nextPageToken } : {}),
+      });
+      out.push(...(page.issues ?? []).map((x) => ({ ...x, id: String(x.id) })));
+      nextPageToken = page.nextPageToken;
+    } while (nextPageToken);
+    return out;
+  }
+
   async function searchPage(jql, nextPageToken, { maxResults = ID_PAGE, fields = ['id'] } = {}) {
     const page = await call('POST', '/rest/api/3/search/jql', { jql, fields, maxResults: Math.min(pageSize(), maxResults), ...(nextPageToken ? { nextPageToken } : {}) });
     const issues = page?.issues ?? [];
@@ -299,6 +316,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     call,
     takeRequests,
     searchIds,
+    searchIssues,
     searchPage,
     validateJql,
     bulkIssues,

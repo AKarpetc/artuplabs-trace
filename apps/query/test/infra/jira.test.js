@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
 const { createJira, currentPoints, JiraError, PointsError, RateLimitError, withDeadline, withPoints } = await import('../../src/infra/jira.js');
-const { NEAR_LIMIT_MS, POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
+const { FIELDS_PAGE, NEAR_LIMIT_MS, POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -396,6 +396,15 @@ describe('points scope', () => {
     const { request, calls } = scripted([reply(200, { issues: [] })]);
     await withPoints(5, () => createJira(request).searchPage('a', null));
     expect(calls[0].body.maxResults).toEqual(POINTS_PAGE_MIN);
+  });
+  it('reads the issues of a query with their fields in pages of FIELDS_PAGE, passing the issues to reconcile', async () => {
+    const { request, calls } = scripted([reply(200, { issues: [{ id: '1', fields: { subtasks: [] } }], nextPageToken: 'n' }), reply(200, { issues: [{ id: '2', fields: { subtasks: [{ id: '3' }] } }] })]);
+    const issues = await createJira(request).searchIssues('a', ['subtasks'], { reconcile: ['2'] });
+    expect(issues).toEqual([{ id: '1', fields: { subtasks: [] } }, { id: '2', fields: { subtasks: [{ id: '3' }] } }]);
+    expect(calls.map((c) => c.body)).toEqual([
+      { jql: 'a', fields: ['subtasks'], maxResults: FIELDS_PAGE, reconcileIssues: [2] },
+      { jql: 'a', fields: ['subtasks'], maxResults: FIELDS_PAGE, reconcileIssues: [2], nextPageToken: 'n' },
+    ]);
   });
   it('asks for a full page outside a limited scope', async () => {
     const { request, calls } = scripted([reply(200, { issues: [] })]);

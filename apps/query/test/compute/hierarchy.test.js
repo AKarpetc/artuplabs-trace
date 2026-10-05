@@ -23,9 +23,29 @@ describe('hierarchy compute', () => {
     const result = await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'S' }, ctx);
     expect(result.ids).toEqual(['10']);
   });
-  it('subtasksOf reads no issues for up to 1 000 inner issues', async () => {
-    const jira = fakeJira({ issues: ISSUES, searches: { S: ['11', '10'] } });
+  it('subtasksOf reads the subtasks within the search of its subquery, with no bulkfetch at any size', async () => {
+    const extra = Array.from({ length: 1001 }, (_, i) => issue(5000 + i));
+    const jira = fakeJira({ issues: [...ISSUES, ...extra], searches: { S: [...extra.map((x) => x.id), '10'], T: ['11', '10'] } });
     await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'S' }, ctx);
+    await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'T' }, ctx);
+    expect(jira.calls).toEqual([['search', 'S', [], ['subtasks']], ['search', 'T', [], ['subtasks']]]);
+  });
+  it('reads the fields of the subquery within its search for parentsOf, issuesInEpics and hasSubtasks', async () => {
+    const jira = fakeJira({ issues: ISSUES, searches: { S: ['100', '11', '1'] } });
+    const compute = createHierarchyCompute({ jira });
+    await compute.parentsOf({ subquery: 'S' }, ctx);
+    await compute.issuesInEpics({ subquery: 'S' }, ctx);
+    await compute.hasSubtasks({}, ctx);
+    expect(jira.calls.map(([kind, , , fields]) => [kind, fields])).toEqual([['search', ['parent', 'issuetype']], ['search', ['issuetype']], ['search', ['parent']]]);
+  });
+  it('epicsOf fetches only the parents its subquery search did not return', async () => {
+    const jira = fakeJira({ issues: ISSUES, searches: { S: ['100', '12'] } });
+    await createHierarchyCompute({ jira }).epicsOf({ subquery: 'S' }, ctx);
+    expect(jira.calls.map(([kind, what]) => [kind, what])).toEqual([['search', 'S'], ['bulk', 1]]);
+  });
+  it('childIssuesOf reads the parent of each child within the search for the children', async () => {
+    const jira = fakeJira({ issues: ISSUES, searches: { S: ['1'] } });
+    await createHierarchyCompute({ jira }).childIssuesOf({ subquery: 'S' }, ctx);
     expect(jira.calls.filter(([kind]) => kind === 'bulk')).toEqual([]);
   });
   it('parentsOf returns direct parents of any level', async () => {
@@ -49,6 +69,6 @@ describe('hierarchy compute', () => {
   it('passes touched issues to the inner search for read-after-write', async () => {
     const jira = fakeJira({ issues: ISSUES, searches: { S: ['10'] } });
     await createHierarchyCompute({ jira }).parentsOf({ subquery: 'S' }, { reconcile: ['10'] });
-    expect(jira.calls[0]).toEqual(['search', 'S', ['10']]);
+    expect(jira.calls[0].slice(0, 3)).toEqual(['search', 'S', ['10']]);
   });
 });

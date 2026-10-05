@@ -15,22 +15,29 @@ export function issue(id, { level = 0, parent, subtasks = [], links = [] } = {})
 export function fakeJira({ issues = [], searches = {}, linkTypes = [], boards = [], sprints = {} } = {}) {
   const byId = new Map(issues.map((i) => [i.id, i]));
   const calls = [];
+  async function idsOf(jql) {
+    if (jql in searches) {
+      const answer = searches[jql];
+      if (answer instanceof Error) throw answer;
+      return answer;
+    }
+    const parentIn = /^parent in \(([\d,]+)\)$/.exec(jql);
+    if (parentIn) {
+      const set = new Set(parentIn[1].split(','));
+      return issues.filter((i) => set.has(i.fields.parent?.id)).map((i) => i.id);
+    }
+    if (jql === 'issuetype in subTaskIssueTypes()') return issues.filter((i) => i.fields.issuetype.hierarchyLevel === -1).map((i) => i.id);
+    return [];
+  }
   return {
     calls,
     async searchIds(jql, options = {}) {
       calls.push(['search', jql, options.reconcile ?? []]);
-      if (jql in searches) {
-        const answer = searches[jql];
-        if (answer instanceof Error) throw answer;
-        return answer;
-      }
-      const parentIn = /^parent in \(([\d,]+)\)$/.exec(jql);
-      if (parentIn) {
-        const set = new Set(parentIn[1].split(','));
-        return issues.filter((i) => set.has(i.fields.parent?.id)).map((i) => i.id);
-      }
-      if (jql === 'issuetype in subTaskIssueTypes()') return issues.filter((i) => i.fields.issuetype.hierarchyLevel === -1).map((i) => i.id);
-      return [];
+      return idsOf(jql);
+    },
+    async searchIssues(jql, fields, options = {}) {
+      calls.push(['search', jql, options.reconcile ?? [], fields]);
+      return (await idsOf(jql)).map((id) => byId.get(String(id)) ?? { id: String(id), fields: {} });
     },
     async bulkIssues(ids, fields) {
       calls.push(['bulk', ids.length, fields]);
