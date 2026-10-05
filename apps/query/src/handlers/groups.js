@@ -284,7 +284,7 @@ function waitedError(deps, job, meta) {
 async function pickHeavy(deps, queued, groups) {
   const now = deps.now();
   const cap = deps.siteCap;
-  const claim = deps.points?.claim ? await deps.points.claim('heavy', (byLane) => laneRoom('heavy', byLane, now, cap)) : null;
+  const claim = deps.points?.claim ? await deps.points.claim('heavy', (byLane) => Math.min(groupLimit(cap), laneRoom('heavy', byLane, now, cap))) : null;
   try {
     return await pickWithin(deps, queued, groups, now, claim);
   } catch (error) {

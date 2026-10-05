@@ -1,6 +1,6 @@
 import { LOG } from '../core/errors.js';
 import { BACKFILL_WAKE_DELAY_MS, CHANGELOG_BATCH, INDEX_ISSUE_POINTS, INDEX_SLICE_MIN, WORKER_BUDGET_MS } from '../core/limits.js';
-import { retryAfter } from '../core/points.js';
+import { groupLimit, retryAfter } from '../core/points.js';
 import { claimRoom } from './budget.js';
 import { REWRITE_ALL_KIND } from '../core/affected.js';
 import { indexReadyKind } from '../core/readiness.js';
@@ -176,9 +176,9 @@ export async function onBackfill(deps, event) {
   try {
     const run = await (room.limit === Infinity ? fillPart(deps, part, generation, p) : deps.withPoints(room.limit, () => fillPart(deps, part, generation, p), { scope: 'pass' }));
     if (!run.short) return run;
-    return await waitForPoints(deps, part, p);
+    return await outOfPoints(deps, part, p, room);
   } catch (error) {
-    if (error?.name === 'PointsError') return waitForPoints(deps, part, p);
+    if (error?.name === 'PointsError') return outOfPoints(deps, part, p, room);
     if (!isRateLimit(error)) throw error;
     console.error('backfill stopped by the Jira rate limit');
     const resume = await brake(deps, error.retryAt);
@@ -189,6 +189,13 @@ export async function onBackfill(deps, event) {
   }
 }
 
+/** A run that spent its claim: one whose claim the per-run cap cut queues its continuation at once (the next run claims again), any other waits for the next allowance. */
+async function outOfPoints(deps, part, run, room) {
+  if (!room.capped) return waitForPoints(deps, part, run);
+  await deps.backfillQueue.push(backfillJob(part, run));
+  return { continued: true, done: (await deps.state.progress.getPart(part))?.done ?? run.done };
+}
+
 /** Keeps the saved progress fresh, so the hourly check queues no second copy, and queues the job for just after the next allowance. */
 async function waitForPoints(deps, part, run) {
   const saved = await deps.state.progress.getPart(part);
@@ -197,11 +204,15 @@ async function waitForPoints(deps, part, run) {
   return { stopped: true, done: saved?.done ?? 0 };
 }
 
-/** Points the next backfill run may spend, claimed from what the backfill lane has left, or the instant to try again (just after half past or the hour). */
+/**
+ * Points the next backfill run may spend, claimed from what the backfill lane has left but at most the group limit, so a run does not hold
+ * the hour's borrowable points from the other lanes (`capped` when the cap cut it); or the instant to try again (just after half past or the hour).
+ */
 async function backfillRoom(deps) {
   if (!deps.points || !deps.siteCap || !deps.withPoints) return { limit: Infinity };
-  const room = await claimRoom(deps, 'backfill');
-  return room.waitUntil ? { waitUntil: room.waitUntil + BACKFILL_WAKE_DELAY_MS } : room;
+  const most = groupLimit(deps.siteCap);
+  const room = await claimRoom(deps, 'backfill', { most });
+  return room.waitUntil ? { waitUntil: room.waitUntil + BACKFILL_WAKE_DELAY_MS } : { ...room, capped: room.limit >= most };
 }
 
 async function fillPart(deps, part, generation, p) {

@@ -283,6 +283,19 @@ describe('backfill under the points budget', () => {
     expect(byLane.backfill).toBeGreaterThan(0);
     expect(byLane.backfill).toBeLessThanOrEqual(900);
   });
+  it('claims at most the group limit for one run and continues at once while the lane has room left', async () => {
+    const late = Date.parse('2026-10-05T07:40:00Z');
+    const { deps } = budgeted({ at: late });
+    const p = await startBackfill(deps, 'sprint');
+    deps.pushed.length = 0;
+    deps.delays.length = 0;
+    await withPoints(Infinity, () => onBackfill(deps, { body: { kind: 'backfill', part: 'sprint', generation: p.generation } }), { scope: 'call', lane: 'backfill' });
+    await deps.points.flush();
+    const spent = (await deps.points.siteSpent('2026100507')).byLane.backfill;
+    expect(spent).toBeGreaterThan(900);
+    expect(spent).toBeLessThanOrEqual(1800);
+    expect([deps.pushed, deps.delays]).toEqual([[{ kind: 'backfill', part: 'sprint', generation: p.generation }], [null]]);
+  });
   it('fills slices that fit its reserve before half past and counts only the issues it indexed', async () => {
     const { deps } = budgeted();
     const p = await startBackfill(deps, 'sprint');

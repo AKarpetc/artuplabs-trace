@@ -5,6 +5,9 @@ import { handleFunction } from '../../src/handlers/functions.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
 import { ERR } from '../../src/core/errors.js';
 import { HEAVY_MIN_INTERVAL_MS, HEAVY_WAIT_MAX_MS } from '../../src/core/limits.js';
+import { hourKey } from '../../src/core/points.js';
+import { createLedger, newProcessPoints } from '../../src/infra/points.js';
+import { beginsWith } from '../fakeKvs.js';
 
 const USED = new Date(BUDGET_AT - 1000).toISOString();
 const HALF = Date.parse('2026-10-05T07:30:00Z');
@@ -38,6 +41,17 @@ describe('heavy lane under the points budget', () => {
     await deps.state.heavy.put(entry('b', BUDGET_AT - 1000, { pts: 90 }));
     expect((await onRefresh(deps, { body: { kind: 'heavy' } })).heavy).toMatchObject({ computed: key('b') });
     expect([(await deps.state.heavy.get(key('a')))?.key, await deps.state.heavy.get(key('b'))]).toEqual([key('a'), null]);
+  });
+  it('claims at most the group limit for the step, so other processes see the rest of the hour', async () => {
+    let claimed = null;
+    const compute = vi.fn(async () => {
+      claimed = (await createLedger({ kvs: deps.kvs, beginsWith, clock: () => deps.now(), own: newProcessPoints('other') }).siteSpent(hourKey(deps.now()))).byLane.heavy;
+      return { ids: [], field: 'parent' };
+    });
+    const deps = laneDeps({ compute, at: Date.parse('2026-10-05T07:40:00Z'), cap: 9000 });
+    await deps.state.heavy.put(entry('a', deps.now() - 1000, { pts: 90 }));
+    await onRefresh(deps, { body: { kind: 'heavy' } });
+    expect(claimed).toEqual(1800);
   });
   it('waits for half past, without computing, when no waiting group fits', async () => {
     const compute = spending([50]);

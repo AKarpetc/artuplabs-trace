@@ -17,6 +17,8 @@ const pause = (ms) => new Promise((resolve) => {
 });
 const outstanding = (entry) => entry.claims.reduce((sum, c) => sum + Math.max(0, c.points - (entry.total - c.base)), 0);
 const valueOf = (entry) => entry.total + outstanding(entry);
+const stored = (entry) => (outstanding(entry) > 0 ? { spent: entry.total, claim: outstanding(entry) } : entry.total);
+const parsed = (value) => (value && typeof value === 'object' ? { spent: Number(value.spent) || 0, claim: Number(value.claim) || 0 } : { spent: Number(value) || 0, claim: 0 });
 
 /**
  * Ledger of the Jira points this process spends, per hour and lane: the process keeps a running total and overwrites its own key
@@ -31,7 +33,7 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
   function laneOf(hour, lane) {
     if (!own.hours.has(hour)) own.hours.set(hour, new Map());
     const lanes = own.hours.get(hour);
-    if (!lanes.has(lane)) lanes.set(lane, { total: 0, written: 0, claims: [] });
+    if (!lanes.has(lane)) lanes.set(lane, { total: 0, written: 0, writtenSpent: 0, claims: [] });
     return lanes.get(lane);
   }
 
@@ -40,10 +42,13 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
     for (const [hour, lanes] of own.hours) {
       for (const [lane, entry] of lanes) {
         const value = valueOf(entry);
-        if (value === entry.written || Math.abs(value - entry.written) < min) continue;
+        const total = entry.total;
+        const moved = Math.max(Math.abs(value - entry.written), Math.abs(total - entry.writtenSpent));
+        if (!moved || moved < min) continue;
         try {
-          await kvs.set(keyOf(hour, lane), value);
+          await kvs.set(keyOf(hour, lane), stored(entry));
           entry.written = value;
+          entry.writtenSpent = total;
         } catch (error) {
           console.error(`points ledger write failed: ${error?.name}`);
         }
@@ -81,7 +86,8 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
     if (read.pages > 1) console.log(`points ledger pages ${read.pages}`);
     const byLane = read.rows.reduce((acc, { key, value }) => {
       const [, , , lane, proc] = key.split(':');
-      return proc === own.proc ? acc : addTo(acc, lane, Number(value) || 0);
+      const { spent, claim } = parsed(value);
+      return proc === own.proc ? acc : addTo(acc, lane, spent + claim);
     }, {});
     own.memo = { hour, at, byLane };
     return byLane;
@@ -128,7 +134,7 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
     async add(lane, points) {
       const entry = laneOf(hourKey(clock()), lane);
       entry.total += points;
-      if (valueOf(entry) - entry.written >= POINTS_FLUSH) flush(POINTS_FLUSH);
+      if (valueOf(entry) - entry.written >= POINTS_FLUSH || entry.total - entry.writtenSpent >= POINTS_FLUSH) flush(POINTS_FLUSH);
     },
     flush,
     /** Points spent on the site in `hour` by lane and in total, with the steps this process has reserved. */
@@ -162,13 +168,13 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
         own.reserved = addTo(own.reserved, lane, -points);
       };
     },
-    /** The site's points of the current hour by lane and in total, read past the memo, with this process's unwritten points and the number of keys. */
+    /** The site's spent points of the current hour by lane and in total (claims left out), read past the memo, with this process's unwritten points and the number of keys. */
     async snapshot() {
       const hour = hourKey(clock());
       const { rows: found } = await rows(`${PREFIX}${hour}:`);
       let byLane = found.reduce((acc, { key, value }) => {
         const [, , , lane, proc] = key.split(':');
-        return proc === own.proc ? acc : addTo(acc, lane, Number(value) || 0);
+        return proc === own.proc ? acc : addTo(acc, lane, parsed(value).spent);
       }, {});
       for (const [lane, entry] of own.hours.get(hour) ?? []) byLane = addTo(byLane, lane, entry.total);
       return { hour, byLane, total: totalOf(byLane), keys: found.length };

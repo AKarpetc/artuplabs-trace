@@ -211,7 +211,7 @@ describe('points ledger claims', () => {
     const { kvs, make } = shared();
     const claim = await make('a').claim('backfill', roomOf('backfill'));
     expect(claim.limit).toEqual(900);
-    expect(Object.fromEntries(kvs.data)).toEqual({ [`q:pts:${HOUR}:backfill:a`]: 900 });
+    expect(Object.fromEntries(kvs.data)).toEqual({ [`q:pts:${HOUR}:backfill:a`]: { spent: 0, claim: 900 } });
   });
   it('lets two processes claiming one lane at once take no more than its room together, and one of them all of it', async () => {
     const { make } = shared();
@@ -253,6 +253,20 @@ describe('points ledger claims', () => {
     a.releaseAll();
     await a.flush();
     expect(kvs.data.get(`q:pts:${HOUR}:refresh:a`)).toEqual(40);
+  });
+  it('leaves the claims of other processes out of the snapshot, which reports spent points only', async () => {
+    const { make } = shared();
+    const a = make('a');
+    await a.claim('backfill', roomOf('backfill'));
+    await a.add('backfill', 300);
+    await a.flush(0);
+    expect((await make('b').snapshot()).byLane).toEqual({ backfill: 300 });
+  });
+  it('reads a ledger key an older version wrote as a plain number', async () => {
+    const { kvs, make } = shared();
+    await kvs.set(`q:pts:${HOUR}:refresh:old`, 250);
+    const b = make('b');
+    expect([await b.siteSpent(HOUR), (await b.snapshot()).byLane]).toEqual([{ byLane: { refresh: 250 }, total: 250 }, { refresh: 250 }]);
   });
   it('claims nothing and writes nothing when the lane has no room', async () => {
     const { kvs, make } = shared();
