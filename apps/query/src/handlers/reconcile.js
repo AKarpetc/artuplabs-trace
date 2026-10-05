@@ -52,7 +52,7 @@ async function reconcileOnce(deps) {
         if (rewriteDue(group, { now: startedAt, staleMs: HEAVY_RECONCILE_MS })) await handOver(group);
         return;
       }
-      byGroup.push([group.key, await deps.withDeadline(deps.now() + REFRESH_GROUP_BUDGET_MS, () => rewrite(deps, group, []))]);
+      byGroup.push([group.key, await deps.withDeadline(deps.now() + REFRESH_GROUP_BUDGET_MS, () => rewrite(deps, group, [], { compare: false }))]);
     } catch (error) {
       if (isRateLimit(error)) {
         limited = error;

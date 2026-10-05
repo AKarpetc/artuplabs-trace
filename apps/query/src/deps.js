@@ -62,7 +62,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     state,
     repo,
     cache: createValueCache({ kvs: meter.kvs, hash: sha1, costClass: (pts) => (pts === null ? null : groupClass({ points: pts, measured: true }, siteCap)) }),
-    pcList: createPcsCache({ kvs: meter.kvs, jira }),
+    pcList: createPcsCache({ kvs: meter.kvs, jira, beginsWith: WhereConditions.beginsWith }),
     journal: createJournal({ kvs: meter.kvs, beginsWith: WhereConditions.beginsWith }),
     meter,
     logKvs,

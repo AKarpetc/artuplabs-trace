@@ -153,7 +153,7 @@ export const FIELDS_CACHE_MAX_BYTES = 200 * 1024;
 /** Share of the site's hourly cap a group may cost and still be recomputed on every event; a dearer one waits for the heavy lane. */
 export const LIGHT_GROUP_SHARE = 0.05;
 /** How long the cached list of precomputations (`q:pcs:*`) is used before Jira is asked again. */
-export const PCS_CACHE_MS = 10 * 60 * 1000;
+export const PCS_CACHE_MS = 60 * 60 * 1000;
 /** Precomputation records one `q:pcs:<i>` value holds. */
 export const PCS_CHUNK = 100;
 /** Share of the refresh reserve the fixed cost of journal passes may take; it sets the pause between passes. */

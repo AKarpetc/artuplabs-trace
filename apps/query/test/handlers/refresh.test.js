@@ -2,9 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { BUDGET_AT, ids, makeDeps, RECENT, spend, withBudget } from './makeDeps.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
 import { handOff, writeGroups } from '../../src/handlers/groups.js';
+import { handleFunction } from '../../src/handlers/functions.js';
+import { onReconcile } from '../../src/handlers/reconcile.js';
 import { createFieldCompute } from '../../src/compute/fields.js';
 import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
 import { passInterval } from '../../src/core/points.js';
+import { ERR } from '../../src/core/errors.js';
 import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
@@ -39,10 +42,11 @@ describe('refreshOnce', () => {
     expect((await deps.journal.read(10)).length).toBe(1);
     refuse = false;
     deps.advance(1000);
-    expect(await refreshOnce(deps)).toMatchObject({ all: true, recomputed: 2, changed: 2 });
+    expect(await refreshOnce(deps)).toMatchObject({ all: true, recomputed: 2, changed: 3 });
     expect([...deps.written].sort((a, b) => a.id.localeCompare(b.id))).toEqual([
       { id: 'idle', value: 'NOT (id in (6))' },
       { id: 'never', value: 'id in (3)' },
+      { id: 'page', value: 'id = -1' },
     ]);
     expect(await deps.journal.read(10)).toEqual([]);
   });
@@ -350,7 +354,7 @@ describe('rewrite', () => {
   it('stores Jira\'s parser error for a subquery that became invalid', async () => {
     const deps = makeDeps({ compute: { parentsOf: async () => ({ ids: [], field: 'id', watch: [] }) }, invalid: { 'x = 1': 'Field \'x\' does not exist' } });
     const items = [{ id: 'a', arguments: ['x = 1'], operator: 'in', value: 'id in (4)' }];
-    expect(await rewrite(deps, group('parentsOf', ['x = 1'], items), [])).toEqual({ updates: [{ id: 'a', error: 'parentsOf: Field \'x\' does not exist' }], entry: null });
+    expect(await rewrite(deps, group('parentsOf', ['x = 1'], items), [])).toEqual({ updates: [{ id: 'a', error: 'parentsOf: Field \'x\' does not exist' }], entry: null, keepIfSame: false });
   });
   it('writes nothing when the stored value is unchanged', async () => {
     const deps = makeDeps({ compute: { previousSprint: async () => ({ native: 'sprint = 1' }) } });
@@ -959,9 +963,9 @@ describe('verify after a rate limit', () => {
 });
 
 describe('write decision by the cache meta', () => {
-  const slim = (extra = {}) => ({ id: 'h', functionName: 'hasSubtasks', arguments: [], operator: 'in', used: RECENT, updated: null, created: null, hasValue: true, errorKind: null, ...extra });
+  const slim = (extra = {}) => ({ id: 'h', functionName: 'hasSubtasks', arguments: [], operator: 'in', used: RECENT, value: 'id in (1)', ...extra });
   const result = (ids2) => async () => ({ ids: ids2, field: 'id', watch: null });
-  const cached = (values) => ({ values, watch: null, field: 'id', rootFilter: null, at: 1, source: 'refresh', lv: 1 });
+  const cached = (values) => ({ values, watch: null, field: 'id', rootFilter: null, at: 1, source: 'refresh', lv: 1, posted: true });
   async function pass(pcs, compute, meta) {
     const deps = makeDeps({ pcs, compute: { hasSubtasks: compute } });
     if (meta) await deps.cache.write('hasSubtasks[]', meta);
@@ -978,7 +982,7 @@ describe('write decision by the cache meta', () => {
     expect(deps.written).toEqual([{ id: 'h', value: 'id in (3)' }, { id: 'n', value: 'NOT (id in (3))' }]);
   });
   it('writes when a precomputation stores an error although the result matches the meta', async () => {
-    const deps = await pass([slim({ errorKind: 'other' })], result(['2']), cached(['2']));
+    const deps = await pass([slim({ error: 'Computing, retry in a minute' })], result(['2']), cached(['2']));
     expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)', error: null }]);
   });
   it('writes the older result a pass computed after the heavy lane wrote a newer one, so Jira holds what the pass saw', async () => {
@@ -987,7 +991,7 @@ describe('write decision by the cache meta', () => {
   });
   it('leaves a group whose precomputations store the too-expensive error', async () => {
     const compute = vi.fn(result(['2']));
-    await pass([slim({ hasValue: false, errorKind: 'tooExpensive' })], compute, null);
+    await pass([slim({ value: undefined, error: ERR.tooExpensive('hasSubtasks', { n: null, points: null, limit: 9 }) })], compute, null);
     expect(compute).not.toHaveBeenCalled();
   });
   it('keeps the tree levels in the cache meta', async () => {
@@ -998,20 +1002,25 @@ describe('write decision by the cache meta', () => {
 
 describe('pass overhead and the pause between passes', () => {
   const USED = new Date(BUDGET_AT - 1000).toISOString();
-  const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: USED }];
-  async function overheadDeps({ overhead = 30, computeCost = 40 } = {}) {
-    const deps = withBudget(makeDeps({ pcs, compute: { hasSubtasks: async () => { await spend(computeCost); return { ids: ['2'], field: 'id', watch: null }; } } }));
+  const pcs = [
+    { id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: USED },
+    { id: 'p', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: USED },
+  ];
+  async function overheadDeps({ listCost = 300, checkCost = 10, computeCost = 40 } = {}) {
+    const compute = async () => { await spend(computeCost); return { ids: ['2'], field: 'id', watch: null }; };
+    const deps = withBudget(makeDeps({ pcs, compute: { hasSubtasks: compute, parentsOf: compute } }));
     const list = deps.jira.precomputations;
-    deps.jira.precomputations = async () => { await spend(overhead); return list(); };
+    deps.jira.precomputations = async () => { await spend(listCost); return list(); };
+    deps.jira.searchIds = async () => { await spend(checkCost); return []; };
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, BUDGET_AT - 500);
     return deps;
   }
-  it('counts what a pass spent besides its recomputations', async () => {
+  it('counts what a pass spent besides reading the list and recomputing', async () => {
     const deps = await overheadDeps();
-    expect((await refreshOnce(deps)).overhead).toEqual(30);
+    expect((await refreshOnce(deps)).overhead).toEqual(10);
   });
   it('records the overhead of the last pass and the pause it sets', async () => {
-    const deps = await overheadDeps({ overhead: 50 });
+    const deps = await overheadDeps({ checkCost: 50 });
     await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT } });
     expect(await deps.state.lastRefresh.get()).toMatchObject({ overhead: 50, interval: passInterval(50, 10000) });
   });
@@ -1026,5 +1035,55 @@ describe('pass overhead and the pause between passes', () => {
     const deps = await overheadDeps();
     await deps.state.lastRefresh.set({ at: BUDGET_AT - 60000, passes: 1, changed: 0, oldestEventMs: 0, overhead: 50, interval: 60 });
     expect((await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT } })).passes).toHaveLength(1);
+  });
+});
+
+describe('the cache meta never runs ahead of Jira', () => {
+  const pc = (extra = {}) => ({ id: 'h', functionName: 'hasSubtasks', arguments: [], operator: 'in', used: RECENT, value: 'id in (1)', ...extra });
+  const posted = (values, startedAt = 0) => ({ values, watch: null, field: 'id', rootFilter: null, at: 1, source: 'refresh', lv: 1, startedAt, posted: true });
+  it('writes what a pass computed when another writer changed the meta after the pass read it', async () => {
+    let deps;
+    const hasSubtasks = async () => {
+      await deps.cache.write('hasSubtasks[]', posted(['2'], 500));
+      return { ids: ['1'], field: 'id', watch: null };
+    };
+    deps = makeDeps({ pcs: [pc()], compute: { hasSubtasks } });
+    await deps.cache.write('hasSubtasks[]', posted(['1']));
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (1)' }]);
+  });
+  it('writes every precomputation of a group whose meta a function call wrote', async () => {
+    const deps = makeDeps({ pcs: [pc()], compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await deps.cache.write('hasSubtasks[]', { ...posted(['2']), posted: false, source: 'function' });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
+  });
+  it('marks the meta of a group it wrote as posted', async () => {
+    const deps = makeDeps({ pcs: [pc()], compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect((await deps.cache.meta('hasSubtasks[]')).posted).toBe(true);
+  });
+  it('writes the new value of a background job once a function answer from the cache made Jira store it', async () => {
+    const deps = makeDeps({ pcs: [], compute: { subtasksOf: async () => ({ ids: ['5'], field: 'parent', watch: ['5'] }) } });
+    await deps.cache.write('subtasksOf["q"]', { values: ['4'], watch: ['4', '5'], field: 'parent', rootFilter: 'issuetype in subTaskIssueTypes()', at: 1000000, source: 'job', lv: 1 });
+    await deps.pcList.list();
+    await handleFunction(deps, 'subtasksOf', { precomputationId: 's1', clause: { field: 'issue', operator: 'in', arguments: ['q'] } }, { environmentType: 'DEVELOPMENT' });
+    await deps.journal.append({ ids: ['5'], kinds: ['issue-updated'] }, 1000100);
+    await refreshOnce(deps);
+    expect(deps.written.map((u) => u.id)).toEqual(['s1']);
+  });
+});
+
+describe('reconcile writes what it computes', () => {
+  it('writes a group whose result matches its meta', async () => {
+    const old = new Date(1000000 - 2 * 3600000).toISOString();
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], operator: 'in', value: 'id in (2)', used: RECENT, updated: old }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    await deps.cache.write('hasSubtasks[]', { values: ['2'], watch: null, field: 'id', rootFilter: null, at: 1, source: 'refresh', lv: 1, posted: true });
+    await onReconcile(deps);
+    expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
   });
 });

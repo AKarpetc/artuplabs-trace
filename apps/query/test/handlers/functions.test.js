@@ -483,17 +483,44 @@ describe('function call under the Jira points budget', () => {
 });
 
 describe('precomputation list after a function call', () => {
-  it('marks the cached list stale after computing a root', async () => {
+  const listing = () => {
+    const added = [];
     const marked = [];
-    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) }, { pcList: { markDirty: async () => { marked.push(1); } } });
-    await handleFunction(deps, 'parentsOf', payload('q'), DEV);
-    expect(marked).toEqual([1]);
+    return { added, marked, pcList: { add: async (r) => { added.push(r); }, markDirty: async () => { marked.push(1); } } };
+  };
+  const withId = (body) => ({ ...body, precomputationId: 'pc1' });
+  it('adds the precomputation Jira creates from a computed answer to the cached list', async () => {
+    const l = listing();
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) }, { pcList: l.pcList });
+    await handleFunction(deps, 'parentsOf', withId(notIn('q')), DEV);
+    expect(l.added).toEqual([{ id: 'pc1', functionName: 'parentsOf', arguments: ['q'], operator: 'not in', hasValue: true, errorKind: null }]);
   });
-  it('leaves the cached list alone when it answers from the cache', async () => {
-    const marked = [];
-    const deps = fnDeps({ subtasksOf: async () => ({ ids: ['3'], field: 'parent', watch: [] }) }, { pcList: { markDirty: async () => { marked.push(1); } } });
+  it('adds the precomputation of an answer from the cache', async () => {
+    const l = listing();
+    const deps = fnDeps({}, { pcList: l.pcList });
     await deps.cache.write(SUBTASK_GROUP, jobEntry(['3']));
-    await handleFunction(deps, 'subtasksOf', payload('project = A'), DEV);
-    expect(marked).toEqual([]);
+    await handleFunction(deps, 'subtasksOf', withId(payload('project = A')), DEV);
+    expect(l.added.map((r) => r.id)).toEqual(['pc1']);
+  });
+  it('adds a stored error as an error of its kind', async () => {
+    const l = listing();
+    const deps = withBudget(fnDeps({ expression: vi.fn() }, { pcList: l.pcList }), { count: 4000 });
+    await handleFunction(deps, 'expression', withId(payload('project = A', 'a > b')), DEV);
+    expect(l.added.map((r) => [r.hasValue, r.errorKind])).toEqual([[false, 'tooExpensive']]);
+  });
+  it('adds nothing for an answer Jira does not store', async () => {
+    const l = listing();
+    const deps = fnDeps({ subtasksOf: never }, { pcList: l.pcList, sleep: async () => {} });
+    await handleFunction(deps, 'subtasksOf', withId(payload('project = A')), DEV);
+    expect([l.added, l.marked]).toEqual([[], []]);
+  });
+  it('marks the cached list stale when the record cannot be added', async () => {
+    const l = listing();
+    l.pcList.add = async () => { throw new Error('kvs down'); };
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) }, { pcList: l.pcList });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await handleFunction(deps, 'parentsOf', withId(payload('q')), DEV);
+    error.mockRestore();
+    expect(l.marked).toEqual([1]);
   });
 });

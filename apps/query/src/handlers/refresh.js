@@ -7,7 +7,7 @@ import {
 } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { keptPoints } from '../infra/state.js';
-import { handOff, isDeadline, isHeavy, knownCost, laneIdle, listPrecomputations, overLimit, pushQuietly, rewrite, runCompute, runHeavy, updatesFor, writeGroups } from './groups.js';
+import { handOff, isDeadline, isHeavy, knownCost, laneIdle, listPrecomputations, overLimit, pushQuietly, rewrite, runCompute, runHeavy, groupWrite, writeGroups } from './groups.js';
 import { admit, groupClass, hourKey, laneRoom, lightLimit, passInterval, retryAfter } from '../core/points.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
@@ -141,7 +141,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   try {
     await inScope(deps, room.limit, async () => {
       const every = summary.kinds.includes(REWRITE_ALL_KIND);
-      const stored = groupPrecomputations(await listPrecomputations(deps), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
+      const stored = groupPrecomputations(await measured(() => listPrecomputations(deps)), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
       const groups = every ? stored : stored.filter((g) => isUsed(g) && usedWithin(g, startedAt, REFRESH_USED_MS));
       const all = [...groups, ...jobGroups(await deps.state.jobs(startedAt), groups)].filter((g) => !skip.has(deps.hash(g.key)));
       counts.groups = all.length;
@@ -160,7 +160,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
           const meta = await metaOf(group);
           const cost = knownCost(meta, group.job);
           if (cap && groupClass(cost, cap) === 'over') {
-            byGroup.push([group.key, { updates: updatesFor(group, overLimit(group, cost, cap), deps.levels), entry: null }]);
+            byGroup.push([group.key, groupWrite(group, overLimit(group, cost, cap), deps.levels)]);
             return;
           }
           if (await isHeavy(deps, group, meta)) {
@@ -172,7 +172,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
           const ownDeadline = deps.now() + REFRESH_GROUP_BUDGET_MS;
           cutByWorker = ownDeadline > deadline;
           const limit = cap ? lightLimit(cap) : Infinity;
-          byGroup.push([group.key, await deps.withDeadline(Math.min(ownDeadline, deadline), () => measured(() => rewrite(deps, group, reconcile, { limit, meta })))]);
+          byGroup.push([group.key, await deps.withDeadline(Math.min(ownDeadline, deadline), () => measured(() => rewrite(deps, group, reconcile, { limit })))]);
           counts.recomputed += 1;
         } catch (error) {
           if (isRateLimit(error)) {

@@ -3,6 +3,7 @@ import { createJournal } from '../../src/infra/journal.js';
 import { createValueCache } from '../../src/infra/cache.js';
 import { createState } from '../../src/infra/state.js';
 import { createLedger, newProcessPoints } from '../../src/infra/points.js';
+import { createPcsCache } from '../../src/infra/pcs.js';
 import { createJira, currentPoints, withPoints } from '../../src/infra/jira.js';
 
 /** A promise that never settles: a compute or a sleep that does not finish. */
@@ -14,7 +15,7 @@ export const ids = (n, from = 1) => Array.from({ length: n }, (_, i) => String(f
 /** A `used` time inside the active window of the test clock. */
 export const RECENT = new Date(999000).toISOString();
 
-/** Handler dependencies over a fake KVS and a scripted Jira; `invalid` maps a query to the text Jira's strict parser rejects it with; records pushed jobs, written precomputations and validated queries; `extra` overrides any field. */
+/** Handler dependencies over a fake KVS and a scripted Jira, with the cached precomputation list over them (`pcList: null` for none); `invalid` maps a query to the text Jira's strict parser rejects it with; records pushed jobs, written precomputations and validated queries; `extra` overrides any field. */
 export function makeDeps({ pcs = [], compute = {}, searches = {}, invalid = {}, write, ...extra } = {}) {
   const kvs = createFakeKvs({ pageSize: 1000 });
   let now = 1000000;
@@ -24,7 +25,7 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, invalid = {}, 
   const searched = [];
   const validated = [];
   const deadlines = [];
-  return {
+  const deps = {
     kvs,
     journal: createJournal({ kvs, beginsWith, random: () => String((tag += 1)).padStart(4, '0') }),
     cache: createValueCache({ kvs, hash: (s) => s }),
@@ -64,6 +65,8 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, invalid = {}, 
     deadlines,
     ...extra,
   };
+  if (!('pcList' in extra)) deps.pcList = createPcsCache({ kvs, jira: { precomputations: () => deps.jira.precomputations() }, beginsWith, clock: () => deps.now() });
+  return deps;
 }
 
 /** An instant ten minutes into a UTC hour. */

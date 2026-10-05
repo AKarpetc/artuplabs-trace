@@ -2,6 +2,7 @@ import { decideLicence } from '../access.js';
 import { groupKey, parseArgs } from '../core/args.js';
 import { FUNCTIONS, takesSubquery } from '../core/catalog.js';
 import { ERR, LOG } from '../core/errors.js';
+import { errorKindOf } from '../core/affected.js';
 import { CACHE_READ_ATTEMPTS, FUNCTION_BUDGET_MS, NEAR_FN_POINTS, PAGE_CACHE_MS, VALUE_LIMIT } from '../core/limits.js';
 import { admit, countQueryOf, estimate, groupClass, groupLimit, hourKey, issuesWithin, laneRoom, retryAfter } from '../core/points.js';
 import { forOperator } from '../core/jql-build.js';
@@ -214,16 +215,25 @@ async function evaluateClause(deps, functionName, payload, context) {
     console.error(`${functionName} failed: ${outcome.failed?.name} ${outcome.failed?.status ?? ''}`);
     return defer(deps, functionName, userArgs, outcome.failed);
   }
-  if (!page) await markListStale(deps);
   return answer(fragmentFor(functionName, userArgs, page, outcome.result, deps.levels), operator);
 }
 
-/** Marks the cached precomputation list stale after a root was computed: Jira creates its precomputation from this answer. */
-async function markListStale(deps) {
+/**
+ * Adds the precomputation Jira creates from a stored answer (a JQL fragment or a stored error) to the cached list, by the id Jira passed;
+ * when that fails the cached list is marked stale, so the next pass reads Jira's.
+ */
+async function listCreated(deps, functionName, payload, reply) {
+  if (!deps.pcList || !payload?.precomputationId) return;
+  const record = { id: payload.precomputationId, functionName, arguments: payload.clause?.arguments ?? [], operator: payload.clause?.operator, hasValue: !reply.error, errorKind: reply.error ? errorKindOf(reply.error) : null };
   try {
-    await deps.pcList?.markDirty();
+    await deps.pcList.add(record);
   } catch (error) {
-    console.error(`precomputation list mark failed: ${error?.name}`);
+    console.error(`precomputation list add failed: ${error?.name}`);
+    try {
+      await deps.pcList.markDirty();
+    } catch (failure) {
+      console.error(`precomputation list mark failed: ${failure?.name}`);
+    }
   }
 }
 
@@ -240,6 +250,7 @@ function answer(fragment, operator) {
  */
 export async function handleFunction(deps, functionName, payload, context) {
   const reply = await evaluateSafely(deps, functionName, payload, context);
+  if (!reply.error || reply.store === true) await listCreated(deps, functionName, payload, reply);
   if (!reply.error) return { jql: reply.jql };
   if (reply.error !== ERR.computing()) await recordQuietly(deps, functionName, reply.log ?? LOG.rejected());
   return { error: reply.error, storeErrorAsPrecomputation: reply.store === true };

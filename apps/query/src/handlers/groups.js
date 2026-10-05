@@ -41,13 +41,9 @@ async function keepEntry(deps, key, result) {
 const listed = (pc) => pc.hasValue !== undefined;
 const clean = (pc) => pc.hasValue && pc.errorKind === null;
 
-/**
- * Precomputation updates, each in the form of its operator (`not in` stores the complement); a value clears a stored error, which Jira keeps
- * otherwise. Precomputations from the cached list (no stored value) are all written unless the result is `same` as the group's cache meta and
- * each holds a value alone; precomputations read from Jira with their values get an update only where the stored value or error changed.
- */
-export function updatesFor(group, result, levels, same = false) {
-  if (group.items.length && group.items.every(listed)) return listedUpdates(group, result, levels, same);
+/** Updates of a group's precomputations in the form of each operator: all of them for records of the cached list, else only the changed ones. */
+export function updatesFor(group, result, levels) {
+  if (group.items.length && group.items.every(listed)) return listedUpdates(group, result, levels);
   const updates = [];
   for (const pc of group.items) {
     const { page } = splitPage(pc.arguments);
@@ -61,8 +57,7 @@ export function updatesFor(group, result, levels, same = false) {
   return updates;
 }
 
-function listedUpdates(group, result, levels, same) {
-  if (same && !result.error && group.items.every(clean)) return [];
+function listedUpdates(group, result, levels) {
   return group.items.map((pc) => {
     const { page } = splitPage(pc.arguments);
     const fragment = fragmentFor(group.functionName, group.userArgs, page, result, levels);
@@ -72,44 +67,48 @@ function listedUpdates(group, result, levels, same) {
   });
 }
 
-/** Whether a group's new result holds what its cache meta (`meta`, read when undefined) describes. */
-async function sameAsCache(deps, key, result, meta) {
-  if (!result.entry) return false;
-  const m = meta === undefined ? await deps.cache.meta(key) : meta;
-  return deps.cache.matches(m, result.entry);
-}
+/** Whether the writes of a group may be skipped when its current meta, written after all its precomputations, holds the same value. */
+const mayKeep = (group, result) => Boolean(result.entry) && !result.error && group.items.length > 0 && group.items.every((pc) => listed(pc) && clean(pc));
+
+/** A group's write: its updates, the cache entry (marked posted, as it is stored once all its precomputations are written) and whether it may be kept. */
+export const groupWrite = (group, result, levels, compare = true) => ({
+  updates: updatesFor(group, result, levels),
+  entry: result.entry ? { ...result.entry, posted: true } : null,
+  keepIfSame: compare && mayKeep(group, result),
+});
 
 /**
  * Recomputes one group within `limit` Jira points: its precomputation updates and the cache entry to store after they are written (a group
  * without precomputations is a background job, cached at once). Staleness is judged against the cache, so the cache must never run ahead of
  * what Jira stores.
  */
-export async function rewrite(deps, group, reconcile, { limit = Infinity, meta } = {}) {
+export async function rewrite(deps, group, reconcile, { limit = Infinity, compare = true } = {}) {
   const result = await recompute(deps, group, reconcile, group.items.length ? 'refresh' : 'job', limit);
   if (!group.items.length) {
     await keepEntry(deps, group.key, result);
     await keepJob(deps, group.functionName, group.userArgs, result);
     return { updates: [], entry: null };
   }
-  return { updates: updatesFor(group, result, deps.levels, await sameAsCache(deps, group.key, result, meta)), entry: result.entry ?? null };
+  return groupWrite(group, result, deps.levels, compare);
 }
 
 /** The precomputation list: the cached one when the dependencies keep it, else Jira's own. */
 export const listPrecomputations = (deps) => (deps.pcList?.list ? deps.pcList.list() : deps.jira.precomputations());
 
 /**
- * Writes the updates of each group unless a computation that started later already wrote or confirmed that group, then stores the cache
- * entries of the groups it did not skip; a group found unchanged is confirmed too, so an older computation finishing later cannot roll it
- * back. Returns how many updates were written.
+ * Writes the updates of each group unless a computation that started later already wrote or confirmed that group (or, for `keepIfSame`, its
+ * current posted meta holds the same value), then stores the cache entries of the groups it did not skip; a group found unchanged is
+ * confirmed too, so an older computation finishing later cannot roll it back. Returns how many updates were written.
  */
 export async function writeGroups(deps, startedAt, byGroup) {
   const out = [];
   const entries = [];
-  for (const [key, { updates, entry }] of byGroup) {
+  for (const [key, { updates, entry, keepIfSame }] of byGroup) {
     if (!updates.length && !entry) continue;
     if (((await deps.state.groupWrite.get(key)) ?? 0) > startedAt) continue;
     await deps.state.groupWrite.set(key, startedAt);
-    out.push(...updates);
+    const current = keepIfSame ? await deps.cache.meta(key) : null;
+    if (!(current?.posted && deps.cache.matches(current, entry))) out.push(...updates);
     if (entry) entries.push([key, entry]);
   }
   if (out.length) await deps.jira.writePrecomputations(out);
@@ -176,8 +175,7 @@ export async function runGroupJob(deps, { functionName, userArgs }, { limit = In
     await keepJob(deps, functionName, parsed.userArgs, result);
     return { computed: key, changed: 0 };
   }
-  const same = await sameAsCache(deps, key, result);
-  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, { updates: updatesFor(group, result, deps.levels, same), entry: result.entry ?? null }]]) };
+  return { computed: key, changed: await writeGroups(deps, startedAt, [[key, groupWrite(group, result, deps.levels)]]) };
 }
 
 /**
