@@ -58,8 +58,6 @@ export const RATE_BRAKE_MAX_MS = 60 * 60 * 1000;
 export const QUEUE_DELAY_MAX_S = 300;
 /** Delay of the follow-up refresh after a pass that kept its journal rows (a failed group or a later pass wrote first). */
 export const REFRESH_RETRY_DELAY_S = 60;
-/** Age after which journal rows are dropped even though a group keeps failing; the hourly reconcile covers them. */
-export const FAILED_ROWS_KEEP_MS = 60 * 60 * 1000;
 /** Issue ids one search may pass as reconcileIssues (Jira's limit). */
 export const RECONCILE_MAX = 50;
 /** Reads of a cached group: the second one follows a generation switched during the first. */
@@ -162,3 +160,9 @@ export const REFRESH_OVERHEAD_SHARE = 0.5;
 export const PASS_INTERVAL_MIN_S = 5;
 /** Longest pause between journal passes, in seconds. */
 export const PASS_INTERVAL_MAX_S = 300;
+/** Shortest time between two writes of a heavy group by the heavy lane. */
+export const HEAVY_MIN_INTERVAL_MS = 60 * 60 * 1000;
+/** Longest wait of a group in the heavy lane; then its precomputations get the waited error with its numbers. */
+export const HEAVY_WAIT_MAX_MS = 6 * 60 * 60 * 1000;
+/** Stops by the rate limit or the points budget after which the reconcile hands a heavy group needing repair to the lane once a day. */
+export const HEAVY_STOPS_MAX = 2;

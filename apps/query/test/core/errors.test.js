@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ERR, FAIL, isTooExpensiveError, LOG } from '../../src/core/errors.js';
+import { ERR, FAIL, isTooExpensiveError, isWaitedError, LOG } from '../../src/core/errors.js';
 
 describe('error texts', () => {
   it('groups thousands in counts', () => {
@@ -75,5 +75,23 @@ describe('isTooExpensiveError', () => {
   });
   it('tells other errors apart', () => {
     expect([ERR.computing(), ERR.allowanceUsed(0), 'subtasksOf: bad jql', null, undefined].map(isTooExpensiveError)).toEqual([false, false, false, false, false]);
+  });
+});
+
+describe('waited error', () => {
+  it('names the hours, the points of one update, the allowance and the subquery size that updates on every edit', () => {
+    expect(ERR.waited('subtasksOf', { hours: 6, points: 1700, perFunction: 1800, perHour: 9000, issues: 430 }))
+      .toEqual("subtasksOf: not updated for 6 hours: each update needs about 1,700 Jira API points and the app's allowance on this site (1,800 per function, 9,000 per hour) is used up. The result will update when the allowance permits; a subquery under about 430 issues updates on every edit.");
+  });
+  it('gives no subquery advice to a function without one', () => {
+    expect(ERR.waited('hasSubtasks', { hours: 6, points: 1700, perFunction: 1800, perHour: 9000, issues: 430 })).not.toContain('subquery');
+  });
+  it('is recognised and told apart from the too-expensive error', () => {
+    const waited = ERR.waited('subtasksOf', { hours: 6, points: 1700, perFunction: 1800, perHour: 9000, issues: 430 });
+    expect([isWaitedError(waited), isTooExpensiveError(waited), isWaitedError(ERR.tooExpensive('hasSubtasks', { n: null, points: null, limit: 9 })), isWaitedError(null)])
+      .toEqual([true, false, false, false]);
+  });
+  it('logs without numbers', () => {
+    expect(LOG.waited()).toEqual('Waited too long for the Jira rate limit');
   });
 });

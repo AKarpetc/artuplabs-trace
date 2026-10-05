@@ -3,7 +3,7 @@ import { FUNCTION_BY_NAME } from '../core/catalog.js';
 import { LOG } from '../core/errors.js';
 import { commentTimesWanted, REWRITE_ALL_KIND, familyWants, groupPrecomputations, needsRepair, pricedOut, queryOverlap, summarizeJournal, usedWithin } from '../core/affected.js';
 import {
-  ACTIVE_MS, FAILED_ROWS_KEEP_MS, REFRESH_USED_MS, JOURNAL_PAGE, JOURNAL_TS_DIGITS, LEASE_MS, MAX_TOUCHED, POINTS_OVERHEAD, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, TOUCHED_CHECK_MAX, VERIFY_DELAY_S, WORKER_BUDGET_MS,
+  ACTIVE_MS, REFRESH_USED_MS, JOURNAL_PAGE, LEASE_MS, MAX_TOUCHED, POINTS_OVERHEAD, RECONCILE_MAX, REFRESH_CONCURRENCY, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, TOUCHED_CHECK_MAX, VERIFY_DELAY_S, WORKER_BUDGET_MS,
 } from '../core/limits.js';
 import { pool } from '../infra/pool.js';
 import { keptPoints } from '../infra/state.js';
@@ -27,6 +27,9 @@ export async function pushRefresh(deps, ts, delay) {
 }
 
 const isUsed = (group) => group.items.some((pc) => pc.used);
+
+/** Whether the changes may make a group outside the used window stale: a query group on any touched issue, another on the kinds it wants. */
+const skipWanted = (group, summary) => (group.family === 'query' ? summary.all || summary.touched.length > 0 : familyWants(group.family, summary.kinds));
 
 function jobGroups(jobs, groups) {
   const known = new Set(groups.map((g) => g.key));
@@ -94,14 +97,8 @@ async function passRoom(deps, startedAt) {
 const inScope = (deps, limit, task) => (deps.withPoints ? deps.withPoints(limit, task, { scope: 'pass' }) : task());
 
 /**
- * One pass over a journal page: recompute stale groups (precomputations Jira used within REFRESH_USED_MS, every stored one after a rewrite of
- * all, and background jobs), each within its own deadline and, under a points budget, the light limit; hand slow or medium groups Jira used
- * within REFRESH_USED_MS to the heavy lane (a group without a known cost that passes the light limit goes there with what it spent as a lower
- * bound), give a group dearer than the group limit the error with its numbers, write changes, then drop the rows; rows stay when the write
- * fails, when a later pass wrote first, when the worker budget stopped a group, or (until FAILED_ROWS_KEEP_MS) when a group failed. When the
- * refresh lane's points run out the pass writes what it computed and cuts the journal (`q:cut`): later passes read only the rows of the cut,
- * skip its done groups, take the cheapest known groups first and drop its rows once every group is done. A 429 stops the pass: it writes nothing, keeps the rows and the cut and
- * returns `limited`.
+ * One pass over a journal page within the refresh points: stale light groups are recomputed and written, others go to the heavy lane, the
+ * error or a skip mark; a pass the points stop writes what it computed and cuts the journal (`q:cut`), a 429 writes nothing (`limited`).
  */
 export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const startedAt = deps.now();
@@ -131,8 +128,14 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
       spent.runs += deps.currentPoints().spent;
     }
   }, { scope: 'run' }) : task());
+  const markSkip = async (group) => {
+    if (!(await deps.state.skip.get(group.key))) await deps.state.skip.set(group.key, startedAt);
+  };
   const handOver = async (group, points) => {
-    if (!usedWithin(group, startedAt, REFRESH_USED_MS)) return;
+    if (!usedWithin(group, startedAt, REFRESH_USED_MS)) {
+      await markSkip(group);
+      return;
+    }
     counts.handed += 1;
     names.handed.push(group.functionName);
     if (await handOff(deps, group, points)) queued = true;
@@ -142,7 +145,9 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
     await inScope(deps, room.limit, async () => {
       const every = summary.kinds.includes(REWRITE_ALL_KIND);
       const stored = groupPrecomputations(await measured(() => listPrecomputations(deps)), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
-      const groups = every ? stored : stored.filter((g) => isUsed(g) && usedWithin(g, startedAt, REFRESH_USED_MS));
+      const inWindow = (g) => isUsed(g) && usedWithin(g, startedAt, REFRESH_USED_MS);
+      const groups = every ? stored : stored.filter(inWindow);
+      if (!every) for (const g of stored.filter((x) => !inWindow(x) && skipWanted(x, summary))) await markSkip(g);
       const all = [...groups, ...jobGroups(await deps.state.jobs(startedAt), groups)].filter((g) => !skip.has(deps.hash(g.key)));
       counts.groups = all.length;
       const metas = new Map(cut ? await Promise.all(all.map(async (g) => [g.key, await deps.cache.meta(g.key)])) : []);
@@ -202,6 +207,8 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
           const status = error?.name === 'JiraError' ? error.status : null;
           console.error(`refresh of ${group.functionName} failed: ${error?.name} ${status ?? ''}`);
           await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
+          await handOver(group);
+          done.push(group.key);
         } finally {
           await deps.state.lease.set(deps.now());
         }
@@ -234,7 +241,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
     return { budgeted: retryAfter(startedAt), events: rows.length, groups: counts.groups, recomputed, handed, changed, stale, failed, postponed, touched: [], kinds: summary.kinds, oldestEventMs: null, overhead };
   }
   const finished = !stale && !postponed;
-  if (finished) await deps.journal.remove((failed ? rows.filter((r) => r.key < expiredBefore(startedAt)) : rows).map((r) => r.key));
+  if (finished) await deps.journal.remove(rows.map((r) => r.key));
   if (cut && finished) await deps.state.cut.clear();
   else if (cut) await saveCut(deps, { key: cut.key, startedAt, done: doneHashes, under: cut.key });
   return {
@@ -266,7 +273,6 @@ const nameCounts = (list) => {
   return counts.size ? [...counts].sort(([a], [b]) => a.localeCompare(b)).map(([name, n]) => `${name} ${n}`).join(', ') : 'none';
 };
 
-const expiredBefore = (now) => `t:${String(now - FAILED_ROWS_KEEP_MS).padStart(JOURNAL_TS_DIGITS, '0')}`;
 
 /**
  * Queue consumer: a compute job, the heavy lane, a wake after a rate-limit pause, or refresh passes under a lease until the journal is
@@ -346,7 +352,7 @@ async function refreshPasses(deps, body) {
         budgeted = pass.budgeted;
         break;
       }
-      if (pass.stale || pass.failed || pass.postponed) break;
+      if (pass.stale || pass.postponed) break;
     }
   } catch (error) {
     if (!isRateLimit(error)) throw error;
@@ -360,7 +366,7 @@ async function refreshPasses(deps, body) {
     await brake(deps, limited.retryAt);
     return { passes, braked: true };
   }
-  const kept = passes.some((p) => p.stale || p.failed);
+  const kept = passes.some((p) => p.stale);
   if (budgeted) await scheduleWake(deps, budgeted);
   else if ((await deps.journal.read(1)).length && !(await deps.state.pending.get())) await pushRefresh(deps, deps.now(), kept ? REFRESH_RETRY_DELAY_S : undefined);
   await pushVerify(deps, toVerify(body, passes));

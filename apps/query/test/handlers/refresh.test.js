@@ -8,7 +8,7 @@ import { createFieldCompute } from '../../src/compute/fields.js';
 import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
 import { passInterval } from '../../src/core/points.js';
 import { ERR } from '../../src/core/errors.js';
-import { FAILED_ROWS_KEEP_MS, HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
+import { HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
 const deadlineError = () => Object.assign(new Error('Computation deadline passed'), { name: 'DeadlineError' });
 /** Runs the compute job of a parentsOf call that a function deferred just now (it records the job before queuing it). */
@@ -142,7 +142,7 @@ describe('refreshOnce', () => {
     await deps.journal.append({ ids: ['5'], kinds: ['issue-updated'] }, 999500);
     expect((await refreshOnce(deps)).recomputed).toBe(1);
   });
-  it('counts a group whose live search breaks as failed and keeps the journal', async () => {
+  it('counts a group whose live search breaks as failed and hands it to the heavy lane', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: RECENT }];
     const deps = makeDeps({ pcs, searches: { '(q) AND id in (5)': new TypeError('bug') } });
     await deps.cache.write('parentsOf["q"]', { values: ['1'], watch: [], field: 'id', rootFilter: null, at: 1, source: 'refresh' });
@@ -150,7 +150,7 @@ describe('refreshOnce', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect((await refreshOnce(deps)).failed).toBe(1);
     error.mockRestore();
-    expect(await deps.journal.read(10)).toHaveLength(1);
+    expect([(await deps.state.heavy.get('parentsOf["q"]'))?.key, await deps.journal.read(10)]).toEqual(['parentsOf["q"]', []]);
   });
   it('leaves query groups alone when the events touched no issue', async () => {
     const pcs = [{ id: 'root', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: RECENT }];
@@ -266,19 +266,7 @@ describe('refreshOnce', () => {
     error.mockRestore();
     expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
     expect(await deps.state.errors()).toEqual([{ at: 1000000, functionName: 'previousSprint', message: 'Refresh failed: Jira answered 403' }]);
-    expect(await deps.journal.read(10)).toHaveLength(1);
-  });
-  it('drops rows older than the failure window even while a group keeps failing', async () => {
-    const pcs = [{ id: 'bad', functionName: 'previousSprint', arguments: ['B'], value: 'sprint = 1', used: RECENT }];
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const deps = makeDeps({ pcs, compute: { previousSprint: async () => { throw new TypeError('bug'); } } });
-    deps.advance(FAILED_ROWS_KEEP_MS);
-    await deps.journal.append({ ids: [], kinds: ['sprint'] }, 999999);
-    await deps.journal.append({ ids: [], kinds: ['sprint'] }, deps.now() - 500);
-    await refreshOnce(deps);
-    error.mockRestore();
-    expect((await deps.journal.read(10)).map((r) => r.key)).toEqual([`t:${String(deps.now() - 500).padStart(15, '0')}:0002`]);
-    expect((await deps.state.errors())[0].message).toBe('Refresh failed');
+    expect(await deps.journal.read(10)).toEqual([]);
   });
   it('keeps the cache of a deferred computation fresh before Jira stores its root', async () => {
     const compute = { linkedIssuesOf: vi.fn(async () => ({ ids: ['8'], field: 'id', watch: ['5'] })) };
@@ -435,7 +423,7 @@ describe('onRefresh', () => {
     expect((await onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } })).passes).toHaveLength(1);
     expect(deps.pushed[0]).toEqual([{ kind: 'refresh', ts: 1000000 }, REFRESH_RETRY_DELAY_S]);
   });
-  it('schedules a delayed follow-up refresh when a group failed', async () => {
+  it('pushes no follow-up refresh for a group that failed, as the heavy lane retries it', async () => {
     const pcs = [{ id: 'bad', functionName: 'previousSprint', arguments: ['B'], value: 'sprint = 1', used: RECENT }];
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const deps = makeDeps({ pcs, compute: { previousSprint: async () => { throw jiraError(403); } } });
@@ -443,8 +431,7 @@ describe('onRefresh', () => {
     const result = await onRefresh(deps, { body: { kind: 'refresh', ts: 999000 } });
     error.mockRestore();
     expect(result.passes).toHaveLength(1);
-    expect(deps.pushed).toEqual([[{ kind: 'refresh', ts: 1000000 }, REFRESH_RETRY_DELAY_S]]);
-    expect(await deps.state.pending.get()).toBe(1000000);
+    expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
   });
   it('releases the lease when a pass fails', async () => {
     const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];
@@ -488,7 +475,7 @@ describe('heavy groups in a refresh pass', () => {
     const pass = await refreshOnce(deps);
     expect(pass).toMatchObject({ recomputed: 1, handed: 1, failed: 0, changed: 1 });
     expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
-    expect(await deps.state.heavy.get('childIssuesOf["q"]')).toEqual({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 1000000 });
+    expect(await deps.state.heavy.get('childIssuesOf["q"]')).toEqual({ key: 'childIssuesOf["q"]', functionName: 'childIssuesOf', userArgs: ['q'], at: 1000000, since: 1000000 });
     expect(deps.pushed).toEqual([[{ kind: 'heavy' }, null]]);
     expect(await deps.journal.read(10)).toEqual([]);
   });
@@ -886,7 +873,7 @@ describe('journal cut under the points budget', () => {
     await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT, verify: ['999'], kinds: ['issue-updated'] } });
     expect(deps.pushed.filter(([body]) => body.verify).map(([body]) => body.verify)).toEqual([ids(3)]);
   });
-  it('lifts a cut whose only open group keeps failing, so later rows are read', async () => {
+  it('finishes a cut whose only open group fails by handing it to the heavy lane, so later rows are read', async () => {
     const compute = { hasSubtasks: vi.fn(async () => { throw jiraError(403); }), hasLinks: spending([10]) };
     const deps = await budgetDeps({ compute });
     await deps.state.cut.set({ key: deps.rowKey, startedAt: 5, done: [L] });
@@ -896,7 +883,7 @@ describe('journal cut under the points budget', () => {
     expect(await deps.state.cut.get()).toBe(null);
     const next = await refreshOnce(deps);
     error.mockRestore();
-    expect([next.events, compute.hasLinks.mock.calls.length]).toEqual([2, 1]);
+    expect([next.events, compute.hasLinks.mock.calls.length, (await deps.state.heavy.get(H))?.key]).toEqual([1, 1, H]);
   });
   it('hands a background job whose stopped run passed the light limit to the heavy lane without computing it', async () => {
     const compute = { parentsOf: spending([10]), hasSubtasks: spending([10]), hasLinks: spending([10]) };
@@ -1085,5 +1072,54 @@ describe('reconcile writes what it computes', () => {
     await deps.cache.write('hasSubtasks[]', { values: ['2'], watch: null, field: 'id', rootFilter: null, at: 1, source: 'refresh', lv: 1, posted: true });
     await onReconcile(deps);
     expect(deps.written).toEqual([{ id: 'h', value: 'id in (2)' }]);
+  });
+});
+
+describe('groups outside the used window', () => {
+  const longAgo = new Date(1000000 - 2 * 24 * 3600000).toISOString();
+  it('marks a query group with the pass start on any touched issue, without reading its watch or computing it', async () => {
+    const parentsOf = vi.fn();
+    const deps = makeDeps({ pcs: [{ id: 'p', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: longAgo }], compute: { parentsOf } });
+    deps.cache.watchHit = vi.fn();
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-updated'] }, 999500);
+    await refreshOnce(deps);
+    expect([await deps.state.skip.get('parentsOf["q"]'), parentsOf.mock.calls.length, deps.cache.watchHit.mock.calls.length, (await deps.journal.read(10)).length]).toEqual([1000000, 0, 0, 0]);
+  });
+  it('keeps the first skip mark of a group', async () => {
+    const deps = makeDeps({ pcs: [{ id: 'p', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: longAgo }] });
+    await deps.state.skip.set('parentsOf["q"]', 5);
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-updated'] }, 999500);
+    await refreshOnce(deps);
+    expect(await deps.state.skip.get('parentsOf["q"]')).toEqual(5);
+  });
+  it('marks another family only on the changes it wants', async () => {
+    const deps = makeDeps({ pcs: [{ id: 'l', functionName: 'hasLinks', arguments: [], value: 'id in (1)', used: longAgo }] });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    await refreshOnce(deps);
+    expect(await deps.state.skip.get('hasLinks[]')).toBe(null);
+    await deps.journal.append({ ids: ['9'], kinds: ['link'] }, 999600);
+    await refreshOnce(deps);
+    expect(await deps.state.skip.get('hasLinks[]')).toEqual(1000000);
+  });
+  it('marks an unused slow group a rewrite of all would hand to the heavy lane', async () => {
+    const deps = makeDeps({ pcs: [{ id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'id in (1)', used: longAgo }] });
+    await deps.cache.write('childIssuesOf["q"]', { values: ['1'], watch: [], field: 'parent', rootFilter: null, at: 1, source: 'job', ms: 60000 });
+    await deps.journal.append({ ids: [], kinds: [REWRITE_ALL_KIND] }, 999500);
+    await refreshOnce(deps);
+    expect([await deps.state.skip.get('childIssuesOf["q"]'), await deps.state.heavy.get('childIssuesOf["q"]')]).toEqual([1000000, null]);
+  });
+});
+
+describe('a group that keeps failing', () => {
+  it('goes to the heavy lane, so the pass drops its rows and reads the next ones', async () => {
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => { throw jiraError(403); } } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const pass = await refreshOnce(deps);
+    error.mockRestore();
+    expect(pass).toMatchObject({ failed: 1, handed: 1 });
+    expect([(await deps.state.heavy.get('hasSubtasks[]'))?.key, await deps.journal.read(10)]).toEqual(['hasSubtasks[]', []]);
+    expect((await deps.state.errors())[0].message).toEqual('Refresh failed: Jira answered 403');
   });
 });

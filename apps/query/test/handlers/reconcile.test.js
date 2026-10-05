@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { makeDeps, RECENT } from './makeDeps.js';
+import { BUDGET_AT, makeDeps, RECENT, spend, withBudget } from './makeDeps.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
 import { HEAVY_RECONCILE_MS, REFRESH_GROUP_BUDGET_MS } from '../../src/core/limits.js';
 
@@ -96,5 +96,56 @@ describe('onReconcile', () => {
     await deps.state.pending.set(999900);
     await onReconcile(deps);
     expect(deps.pushed).toEqual([]);
+  });
+});
+
+describe('onReconcile with skipped groups, the journal and its points', () => {
+  const recent = new Date(1000000 - 10 * 60000).toISOString();
+  const usedNow = new Date(1000000 - 60000).toISOString();
+  const rateLimit = Object.assign(new Error('rate limited'), { name: 'RateLimitError', status: 429, retryAt: null });
+  it('rewrites a group used after a pass skipped it, however recently it was rewritten, and clears the mark', async () => {
+    const pcs = [{ id: 'p', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: usedNow, updated: recent }];
+    const deps = makeDeps({ pcs, compute: { parentsOf: async () => ({ ids: ['2'], field: 'id', watch: [] }) } });
+    await deps.state.skip.set('parentsOf["q"]', 1000000 - 5 * 60000);
+    await onReconcile(deps);
+    expect([deps.written, await deps.state.skip.get('parentsOf["q"]')]).toEqual([[{ id: 'p', value: 'id in (2)' }], null]);
+  });
+  it('hands a heavy group used after a pass skipped it to the lane at once', async () => {
+    const pcs = [{ id: 'c', functionName: 'childIssuesOf', arguments: ['q'], value: 'id in (1)', used: usedNow, updated: recent }];
+    const deps = makeDeps({ pcs });
+    await deps.cache.write('childIssuesOf["q"]', { values: ['1'], watch: [], field: 'parent', rootFilter: null, at: 1, source: 'job', ms: 60000 });
+    await deps.state.skip.set('childIssuesOf["q"]', 1000000 - 5 * 60000);
+    await onReconcile(deps);
+    expect((await deps.state.heavy.get('childIssuesOf["q"]'))?.key).toEqual('childIssuesOf["q"]');
+  });
+  it('restarts an idle journal before it rewrites any group', async () => {
+    const old = new Date(1000000 - 2 * 3600000).toISOString();
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: usedNow, updated: old }];
+    const deps = makeDeps({ pcs, compute: { hasSubtasks: async () => { throw rateLimit; } } });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 1000);
+    expect(await onReconcile(deps)).toEqual({ braked: true });
+    expect(deps.pushed[0]).toEqual([{ kind: 'refresh', ts: 1000000 }, null]);
+  });
+  it('rewrites nothing, yet restarts the lane and the journal, once its points are spent', async () => {
+    const old = new Date(BUDGET_AT - 2 * 3600000).toISOString();
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: new Date(BUDGET_AT - 60000).toISOString(), updated: old }];
+    const hasSubtasks = vi.fn();
+    const deps = withBudget(makeDeps({ pcs, compute: { hasSubtasks } }));
+    deps.jira.precomputations = vi.fn(deps.jira.precomputations);
+    await deps.points.add('reconcile', 1000);
+    await deps.state.heavy.put({ key: 'x', functionName: 'childIssuesOf', userArgs: ['x'], at: 1 });
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 1000);
+    const result = await onReconcile(deps);
+    expect([hasSubtasks.mock.calls.length, deps.jira.precomputations.mock.calls.length, result.groups]).toEqual([0, 0, 0]);
+    expect(deps.pushed.map(([body]) => body.kind).sort()).toEqual(['heavy', 'refresh']);
+  });
+  it('hands a group that passes the light limit to the lane with what it spent as a lower bound', async () => {
+    const old = new Date(BUDGET_AT - 2 * 3600000).toISOString();
+    const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: new Date(BUDGET_AT - 60000).toISOString(), updated: old }];
+    const deps = withBudget(makeDeps({ pcs, compute: { hasSubtasks: async () => { await spend(499); await spend(2); await spend(1); return { ids: ['2'], field: 'id', watch: null }; } } }));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await onReconcile(deps);
+    error.mockRestore();
+    expect(await deps.state.heavy.get('hasSubtasks[]')).toMatchObject({ pts: 501, floor: true });
   });
 });

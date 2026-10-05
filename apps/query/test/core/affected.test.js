@@ -188,3 +188,31 @@ describe('pricedOut', () => {
     expect(reconcileTargets([group], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50 })).toEqual([]);
   });
 });
+
+describe('waited precomputations', () => {
+  const waited = ERR.waited('subtasksOf', { hours: 6, points: 1700, perFunction: 1800, perHour: 9000, issues: 430 });
+  it('are an error of their own kind', () => {
+    expect(errorKindOf(waited)).toEqual('waited');
+  });
+  it('need repair', () => {
+    expect([needsRepair({ error: waited }), needsRepair({ hasValue: false, errorKind: 'waited' })]).toEqual([true, true]);
+  });
+});
+
+describe('reconcileTargets with skipped and heavy groups', () => {
+  const group = (key, used, updated) => ({ key, functionName: 'parentsOf', family: 'query', userArgs: ['q'], items: [{ id: key, used: iso(used), updated: iso(updated), value: 'id in (1)' }] });
+  it('takes a group used after the pass skipped it, however recently it was rewritten, before the others', () => {
+    const skipped = group('s', 10 * 60000, 30 * 60000);
+    const stale = group('a', HOUR, 5 * HOUR);
+    expect(reconcileTargets([stale, skipped], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50, skips: new Map([['s', NOW - 20 * 60000]]) })).toEqual([skipped, stale]);
+  });
+  it('leaves a group used before the pass skipped it to the usual rule', () => {
+    const skipped = group('s', 30 * 60000, 40 * 60000);
+    expect(reconcileTargets([skipped], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 50, skips: new Map([['s', NOW - 20 * 60000]]) })).toEqual([]);
+  });
+  it('drops heavy groups rewritten within the heavy period before it keeps at most max groups', () => {
+    const heavy = group('h', HOUR, 3 * HOUR);
+    const light = group('l', HOUR, 2 * HOUR);
+    expect(reconcileTargets([heavy, light], { now: NOW, usedMs: 24 * HOUR, staleMs: HOUR, max: 1, heavy: new Set(['h']), heavyMs: 24 * HOUR })).toEqual([light]);
+  });
+});

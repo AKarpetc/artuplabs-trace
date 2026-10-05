@@ -192,16 +192,16 @@ describe('heavy lane under a rate limit', () => {
     expect(await onRefresh(deps, { body: { kind: 'heavy' } })).toEqual({ braked: NOW + 60000 });
     expect([childIssuesOf.mock.calls.length, await deps.state.heavy.oldest()]).toEqual([0, heavyEntry('q', 990000)]);
   });
-  it('moves a group a 429 stopped behind the others, counts the try, logs it and waits for the wake instead of pushing itself', async () => {
+  it('keeps a group a 429 stopped where it was without counting a try, logs it and waits for the wake instead of pushing itself', async () => {
     const deps = makeDeps({ pcs, compute: { childIssuesOf: async () => { throw rateLimit(NOW + 425000); } } });
     await deps.state.heavy.put(heavyEntry('q', 990000));
     const result = await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }));
     expect(result).toEqual({ heavy: { computed: 'childIssuesOf["q"]', braked: true } });
-    expect(await deps.state.heavy.oldest()).toEqual(heavyEntry('q', NOW, { tries: 1 }));
+    expect(await deps.state.heavy.oldest()).toEqual(heavyEntry('q', 990000, { stops: 1 }));
     expect(await deps.state.errors()).toEqual([{ at: NOW, functionName: 'childIssuesOf', message: 'Stopped by the Jira rate limit' }]);
     expect([deps.pushed, await deps.state.heavy.lease.get()]).toEqual([[[{ kind: 'wake' }, Math.min(425, QUEUE_DELAY_MAX_S)]], null]);
   });
-  it('gives a group up after as many rate-limited runs as the attempts allow', async () => {
+  it('keeps a group however many runs the rate limit stops', async () => {
     const deps = makeDeps({ pcs, compute: { childIssuesOf: async () => { throw rateLimit(null); } } });
     await deps.state.heavy.put(heavyEntry('q', 990000));
     for (let i = 0; i < HEAVY_ATTEMPTS; i += 1) {
@@ -209,7 +209,7 @@ describe('heavy lane under a rate limit', () => {
       await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }));
       deps.advance(1000);
     }
-    expect(await deps.state.heavy.oldest()).toBe(null);
+    expect(await deps.state.heavy.oldest()).toEqual(heavyEntry('q', 990000, { stops: HEAVY_ATTEMPTS }));
   });
 });
 

@@ -6,6 +6,16 @@ const RATE_NOTE = "Jira's rate limit for apps";
 const utcTime = (at) => new Date(at).toISOString().slice(11, 16);
 const TOO_EXPENSIVE = / Jira API points; on this site ArtUp Query may spend at most [\d,]+ on one function \(/;
 
+const WAITED = /: not updated for \d+ hours: each update needs about [\d,]+ Jira API points and the app's allowance on this site /;
+
+/** Whether a stored precomputation error is the error of a group that waited too long in the heavy lane. */
+export const isWaitedError = (text) => typeof text === 'string' && WAITED.test(text);
+
+function waited(functionName, { hours, points, perFunction, perHour, issues }) {
+  const text = `${functionName}: not updated for ${hours} hours: each update needs about ${fmt(points)} Jira API points and the app's allowance on this site (${fmt(perFunction)} per function, ${fmt(perHour)} per hour) is used up. The result will update when the allowance permits`;
+  return takesSubquery(functionName) ? `${text}; a subquery under about ${fmt(issues)} issues updates on every edit.` : `${text}.`;
+}
+
 /** Whether a stored precomputation error is the too-expensive error of the Jira points budget. */
 export const isTooExpensiveError = (text) => typeof text === 'string' && TOO_EXPENSIVE.test(text);
 
@@ -47,6 +57,7 @@ export const ERR = {
   clauseNotYet: (name) => `Clause "${name}" is not available yet`,
   extensionDot: (name) => `${name} takes the part after the last dot, such as gz`,
   tooExpensive,
+  waited,
   allowanceUsed: (retryAt) => `ArtUp Query has used this site's Jira API allowance for this hour; retry after ${utcTime(retryAt)} UTC.`,
   needsCommentIndex: (field) => `${field} needs the comment index, which this site does not have`,
 };
@@ -68,6 +79,7 @@ export const LOG = {
   commentIndexNotShipped: () => 'Comment index not shipped',
   tooExpensive: () => 'Too expensive for the Jira rate limit',
   allowanceUsed: () => 'Hourly Jira allowance used',
+  waited: () => 'Waited too long for the Jira rate limit',
 };
 
 /** Errors that quote an argument value: the editor text with the value, the log text without it. */

@@ -2,7 +2,7 @@ import { JOURNAL_PAGE, TOUCHED_CHECK_MAX } from './limits.js';
 import { FUNCTION_BY_NAME } from './catalog.js';
 import { groupKey, splitPage } from './args.js';
 import { sortIds } from './ids.js';
-import { isTooExpensiveError } from './errors.js';
+import { isTooExpensiveError, isWaitedError } from './errors.js';
 
 const FAMILY_KINDS = {
   query: [],
@@ -78,8 +78,11 @@ export function isTimeRelative(userArgs) {
   return userArgs.some((a) => RELATIVE.test(a));
 }
 
+const kindOf = (pc) => (pc.errorKind !== undefined ? pc.errorKind : errorKindOf(pc.error));
+
 /** A stored precomputation Jira cannot answer from: a value that still carries an error (Jira keeps the error and returns no issues), or neither. */
 export function needsRepair(pc) {
+  if (kindOf(pc) === 'waited') return true;
   const hasError = pc.errorKind !== undefined ? pc.errorKind !== null : pc.error !== undefined && pc.error !== null;
   const hasValue = pc.hasValue !== undefined ? pc.hasValue : Boolean(pc.value);
   return hasValue === hasError;
@@ -88,10 +91,9 @@ export function needsRepair(pc) {
 /** The kind of a stored precomputation error: null without one, 'tooExpensive' for the error of the Jira points budget, else 'other'. */
 export function errorKindOf(error) {
   if (error === undefined || error === null) return null;
+  if (isWaitedError(error)) return 'waited';
   return isTooExpensiveError(error) ? 'tooExpensive' : 'other';
 }
-
-const kindOf = (pc) => (pc.errorKind !== undefined ? pc.errorKind : errorKindOf(pc.error));
 
 /** Whether every precomputation of a group stores the too-expensive error: the background leaves it until the user narrows the query. */
 export function pricedOut(group) {
@@ -105,12 +107,16 @@ export function rewriteDue(group, { now, staleMs }) {
   return now - lastWrite(group) >= staleMs || isTimeRelative(group.userArgs) || group.items.some(needsRepair);
 }
 
-/** Groups the hourly reconcile recomputes: used within usedMs and due for a rewrite after staleMs. */
-export function reconcileTargets(groups, { now, usedMs, staleMs, max }) {
+/**
+ * Groups the reconcile rewrites, at most `max`: used within `usedMs` and due by `rewriteDue` (a heavy one, in `heavy`, only after `heavyMs`),
+ * or used after a pass skipped them (`skips`: key → when), those first, then the oldest rewrites; groups that store the too-expensive error never.
+ */
+export function reconcileTargets(groups, { now, usedMs, staleMs, max, skips = new Map(), heavy = new Set(), heavyMs = staleMs }) {
+  const usedAfterSkip = (g) => skips.has(g.key) && g.items.some((pc) => pc.used && Date.parse(pc.used) > skips.get(g.key));
   return groups
     .filter((g) => !pricedOut(g))
     .filter((g) => g.items.some((pc) => pc.used && now - Date.parse(pc.used) <= usedMs))
-    .filter((g) => rewriteDue(g, { now, staleMs }))
-    .sort((a, b) => lastWrite(a) - lastWrite(b))
+    .filter((g) => usedAfterSkip(g) || rewriteDue(g, { now, staleMs: heavy.has(g.key) ? heavyMs : staleMs }))
+    .sort((a, b) => Number(usedAfterSkip(b)) - Number(usedAfterSkip(a)) || lastWrite(a) - lastWrite(b))
     .slice(0, max);
 }
