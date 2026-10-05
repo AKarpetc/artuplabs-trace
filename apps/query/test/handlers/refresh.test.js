@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BUDGET_AT, ids, makeDeps, RECENT, spend, withBudget } from './makeDeps.js';
+import { createLedger, newProcessPoints } from '../../src/infra/points.js';
+import { beginsWith } from '../fakeKvs.js';
 import { onRefresh, pushRefresh, refreshOnce, rewrite } from '../../src/handlers/refresh.js';
 import { handOff, writeGroups } from '../../src/handlers/groups.js';
 import { handleFunction } from '../../src/handlers/functions.js';
 import { onReconcile } from '../../src/handlers/reconcile.js';
 import { createFieldCompute } from '../../src/compute/fields.js';
 import { REWRITE_ALL_KIND } from '../../src/core/affected.js';
-import { passInterval } from '../../src/core/points.js';
+import { laneRoom, passInterval } from '../../src/core/points.js';
 import { ERR } from '../../src/core/errors.js';
 import { HEAVY_ATTEMPTS, HEAVY_QUEUED_STALE_MS, REFRESH_GROUP_BUDGET_MS, REFRESH_RETRY_DELAY_S, WORKER_BUDGET_MS } from '../../src/core/limits.js';
 
@@ -856,6 +858,28 @@ describe('journal cut under the points budget', () => {
     const { interval, overhead } = await deps.state.lastRefresh.get();
     expect(linesOf(log, 'refresh interval')).toEqual([`refresh interval ${interval} s after overhead ${overhead}`]);
     log.mockRestore();
+  });
+  describe('after half past', () => {
+    const LATE = Date.parse('2026-10-05T07:40:00Z');
+    const linkPcs = (n) => Array.from({ length: n }, (_, i) => ({ id: `l${i}`, functionName: 'hasLinks', arguments: [`t${i}`], value: 'id in (1)', used: USED }));
+    it('claims no more than the group limit beyond its own reserve, so other lanes keep their reserves while the pass runs', async () => {
+      let seen = null;
+      const compute = { hasLinks: vi.fn(async () => {
+        const { byLane } = await createLedger({ kvs: deps.kvs, beginsWith, clock: () => LATE, own: newProcessPoints('other') }).siteSpent('2026100507');
+        seen = { refresh: byLane.refresh, eventRoom: laneRoom('index-event', byLane, LATE, 10000) };
+        return { ids: ['2'], field: 'id', watch: null };
+      }) };
+      const deps = await budgetDeps({ compute, refreshSpent: 3000, pcs: linkPcs(1), at: LATE });
+      await refreshOnce(deps);
+      expect(seen.refresh).toEqual(3000 + 2000);
+      expect(seen.eventRoom).toBeGreaterThanOrEqual(1000);
+    });
+    it('goes on with the next pass instead of waiting for the hour when only the cap of its claim stopped it', async () => {
+      const compute = { hasLinks: spending([450]) };
+      const deps = await budgetDeps({ compute, refreshSpent: 3000, pcs: linkPcs(10), at: LATE });
+      const pass = await refreshOnce(deps);
+      expect([pass.budgeted ?? null, pass.capped]).toEqual([null, true]);
+    });
   });
   it('stops the pass at once and cuts the journal when the refresh reserve is spent', async () => {
     const compute = { hasSubtasks: spending([10]), hasLinks: spending([10]) };

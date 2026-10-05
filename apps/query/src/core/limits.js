@@ -136,6 +136,8 @@ export const POINTS_KEY_MIN = 20;
 export const POINTS_READ_MS = 15 * 1000;
 /** Times a background step tries to claim its room when another process claimed the same points at the same moment. */
 export const CLAIM_TRIES = 3;
+/** How long a points claim counts after its last write: a claim a killed process could not release stops holding the lane after it. */
+export const CLAIM_TTL_MS = 15 * 60 * 1000;
 /** Longest random pause before a step tries its claim again. */
 export const CLAIM_JITTER_MS = 1500;
 /** Most points the index work of one product event claims, so parallel events each get theirs from the index-event reserve. */

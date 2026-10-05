@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { CLAIM_JITTER_MS, CLAIM_TRIES, KVS_PAGE, POINTS_FLUSH, POINTS_KEY_MIN, POINTS_READ_MS } from '../core/limits.js';
+import { CLAIM_JITTER_MS, CLAIM_TRIES, CLAIM_TTL_MS, KVS_PAGE, POINTS_FLUSH, POINTS_KEY_MIN, POINTS_READ_MS } from '../core/limits.js';
 import { HOUR_MS, hourKey, totalOf } from '../core/points.js';
 
 const PREFIX = 'q:pts:';
@@ -17,23 +17,28 @@ const pause = (ms) => new Promise((resolve) => {
 });
 const outstanding = (entry) => entry.claims.reduce((sum, c) => sum + Math.max(0, c.points - (entry.total - c.base)), 0);
 const valueOf = (entry) => entry.total + outstanding(entry);
-const stored = (entry) => (outstanding(entry) > 0 ? { spent: entry.total, claim: outstanding(entry) } : entry.total);
-const parsed = (value) => (value && typeof value === 'object' ? { spent: Number(value.spent) || 0, claim: Number(value.claim) || 0 } : { spent: Number(value) || 0, claim: 0 });
+const parsed = (value, now) => {
+  if (!value || typeof value !== 'object') return { spent: Number(value) || 0, claim: 0 };
+  const live = !(Number(value.until) <= now);
+  return { spent: Number(value.spent) || 0, claim: live ? Number(value.claim) || 0 : 0 };
+};
 
 /**
  * Ledger of the Jira points this process spends, per hour and lane: the process keeps a running total and overwrites its own key
  * `q:pts:<hour>:<lane>:<proc>` with it (one writer per key) once the unwritten part reaches POINTS_FLUSH, and at `flush` once it reaches
  * POINTS_KEY_MIN; the site's spending is the sum of every process's keys of the hour, read at most once per POINTS_READ_MS, plus the own
  * running totals and reserved steps. A background step claims its room first: the claim goes into the process key at once, so every other
- * process counts it as spent until it is released. A failed write is logged and retried with the next write.
+ * process counts it as spent until it is released, or until CLAIM_TTL_MS after it was written when its process died. A failed write is
+ * logged and retried with the next write.
  */
 export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS, sleep = pause, random = Math.random }) {
+  const stored = (entry) => (outstanding(entry) > 0 ? { spent: entry.total, claim: outstanding(entry), until: clock() + CLAIM_TTL_MS } : entry.total);
   const keyOf = (hour, lane) => `${PREFIX}${hour}:${lane}:${own.proc}`;
 
   function laneOf(hour, lane) {
     if (!own.hours.has(hour)) own.hours.set(hour, new Map());
     const lanes = own.hours.get(hour);
-    if (!lanes.has(lane)) lanes.set(lane, { total: 0, written: 0, writtenSpent: 0, claims: [] });
+    if (!lanes.has(lane)) lanes.set(lane, { total: 0, written: 0, writtenSpent: 0, writtenClaim: 0, claims: [] });
     return lanes.get(lane);
   }
 
@@ -43,12 +48,15 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
       for (const [lane, entry] of lanes) {
         const value = valueOf(entry);
         const total = entry.total;
+        const claim = outstanding(entry);
         const moved = Math.max(Math.abs(value - entry.written), Math.abs(total - entry.writtenSpent));
-        if (!moved || moved < min) continue;
+        const claimFlipped = (claim > 0) !== (entry.writtenClaim > 0);
+        if (!claimFlipped && (!moved || moved < min)) continue;
         try {
           await kvs.set(keyOf(hour, lane), stored(entry));
           entry.written = value;
           entry.writtenSpent = total;
+          entry.writtenClaim = claim;
         } catch (error) {
           console.error(`points ledger write failed: ${error?.name}`);
         }
@@ -86,7 +94,7 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
     if (read.pages > 1) console.log(`points ledger pages ${read.pages}`);
     const byLane = read.rows.reduce((acc, { key, value }) => {
       const [, , , lane, proc] = key.split(':');
-      const { spent, claim } = parsed(value);
+      const { spent, claim } = parsed(value, at);
       return proc === own.proc ? acc : addTo(acc, lane, spent + claim);
     }, {});
     own.memo = { hour, at, byLane };
@@ -102,7 +110,8 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
 
   async function claimOnce(hour, lane, roomOf, fresh) {
     const entry = laneOf(hour, lane);
-    const wanted = Math.max(0, roomOf((await spentIn(hour, fresh)).byLane));
+    let wanted = Math.max(0, roomOf((await spentIn(hour, fresh)).byLane));
+    if (!wanted && !fresh) wanted = Math.max(0, roomOf((await spentIn(hour, true)).byLane));
     if (!wanted) return { limit: 0, wanted };
     const claim = { points: wanted, base: entry.total };
     entry.claims.push(claim);
@@ -112,11 +121,12 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
     const drop = () => {
       entry.claims = entry.claims.filter((c) => c !== claim);
     };
-    if (claim.points < wanted) {
+    if (!claim.points) {
       drop();
       await flush(0);
       return { limit: 0, wanted, collided: true };
     }
+    if (claim.points < wanted) await flush(0);
     let released = false;
     return {
       limit: claim.points,
@@ -142,9 +152,9 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
       return spentIn(hour);
     },
     /**
-     * Claims for one step of a lane the room `roomOf(byLane)` leaves: writes the claim into the process key, reads the other keys again past
-     * the memo and keeps the claim only if the room still holds it with every claim it sees, else drops it and, when the room was taken by
-     * a claim made at the same moment, tries again after a random pause. Returns the points the step may spend (0 when none) and a release.
+     * Claims for one step of a lane the room `roomOf(byLane)` leaves (read past the memo when the memo leaves none): writes the claim into
+     * the process key, reads the other keys again past the memo and cuts the claim to the room left with every claim it sees; when nothing
+     * is left, it drops the claim and, as the room was taken by a claim made at the same moment, tries again after a random pause. Returns the points the step may spend (0 when none) and a release.
      */
     async claim(lane, roomOf) {
       const hour = hourKey(clock());
@@ -174,7 +184,7 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS,
       const { rows: found } = await rows(`${PREFIX}${hour}:`);
       let byLane = found.reduce((acc, { key, value }) => {
         const [, , , lane, proc] = key.split(':');
-        return proc === own.proc ? acc : addTo(acc, lane, parsed(value).spent);
+        return proc === own.proc ? acc : addTo(acc, lane, parsed(value, 0).spent);
       }, {});
       for (const [lane, entry] of own.hours.get(hour) ?? []) byLane = addTo(byLane, lane, entry.total);
       return { hour, byLane, total: totalOf(byLane), keys: found.length };

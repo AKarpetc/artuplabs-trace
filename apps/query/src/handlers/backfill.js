@@ -1,7 +1,7 @@
 import { LOG } from '../core/errors.js';
 import { BACKFILL_WAKE_DELAY_MS, CHANGELOG_BATCH, INDEX_ISSUE_POINTS, INDEX_SLICE_MIN, WORKER_BUDGET_MS } from '../core/limits.js';
-import { groupLimit, retryAfter } from '../core/points.js';
-import { claimRoom } from './budget.js';
+import { retryAfter } from '../core/points.js';
+import { claimRoom, stepCap } from './budget.js';
 import { REWRITE_ALL_KIND } from '../core/affected.js';
 import { indexReadyKind } from '../core/readiness.js';
 import { pushRefresh } from './refresh.js';
@@ -205,14 +205,14 @@ async function waitForPoints(deps, part, run) {
 }
 
 /**
- * Points the next backfill run may spend, claimed from what the backfill lane has left but at most the group limit, so a run does not hold
- * the hour's borrowable points from the other lanes (`capped` when the cap cut it); or the instant to try again (just after half past or the hour).
+ * Points the next backfill run may spend, claimed from what the backfill lane has left but at most its own reserve left or the group limit,
+ * so a run does not hold the hour's borrowable points from the other lanes (`capped` when the cap cut it); or the instant to try again (just
+ * after half past or the hour).
  */
 async function backfillRoom(deps) {
   if (!deps.points || !deps.siteCap || !deps.withPoints) return { limit: Infinity };
-  const most = groupLimit(deps.siteCap);
-  const room = await claimRoom(deps, 'backfill', { most });
-  return room.waitUntil ? { waitUntil: room.waitUntil + BACKFILL_WAKE_DELAY_MS } : { ...room, capped: room.limit >= most };
+  const room = await claimRoom(deps, 'backfill', { most: stepCap(deps, 'backfill') });
+  return room.waitUntil ? { waitUntil: room.waitUntil + BACKFILL_WAKE_DELAY_MS } : room;
 }
 
 async function fillPart(deps, part, generation, p) {

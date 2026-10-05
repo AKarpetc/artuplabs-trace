@@ -127,6 +127,16 @@ export function laneRoom(lane, spentByLane, at, cap) {
   return Math.max(0, Math.min(Math.max(own, borrow), ceiling));
 }
 
+/** What is left of a lane's own reserve this hour (never below zero). */
+export function reserveLeft(lane, spentByLane, cap) {
+  return Math.max(0, reserveOf(lane, cap) - spentOn(spentByLane, lane));
+}
+
+/** Most points one step of a background lane may claim: what is left of its own reserve, or the group limit when that is more. */
+export function stepClaim(lane, spentByLane, cap) {
+  return Math.max(reserveLeft(lane, spentByLane, cap), groupLimit(cap));
+}
+
 /** When a lane refused at `at` may try again: half past the hour before it, else the next hour. */
 export function retryAfter(at) {
   return minuteOf(at) < BORROW_MINUTE ? nextHour(at) - HOUR_MS + BORROW_MINUTE * 60 * 1000 : nextHour(at);

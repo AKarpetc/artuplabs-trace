@@ -9,7 +9,7 @@ import { pool } from '../infra/pool.js';
 import { keptPoints } from '../infra/state.js';
 import { handOff, isDeadline, isHeavy, knownCost, laneIdle, listPrecomputations, overLimit, pushQuietly, rewrite, runCompute, runHeavy, groupWrite, writeGroups } from './groups.js';
 import { groupClass, hourKey, lightLimit, passInterval, retryAfter } from '../core/points.js';
-import { claimRoom } from './budget.js';
+import { claimRoom, stepCap } from './budget.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 
 export { rewrite };
@@ -100,7 +100,7 @@ function logCut(deps, cut, rows) {
 
 async function passRoom(deps, startedAt) {
   if (!deps.points) return { limit: Infinity };
-  const room = await claimRoom(deps, 'refresh');
+  const room = await claimRoom(deps, 'refresh', { most: stepCap(deps, 'refresh') });
   if (!room.waitUntil) return room;
   const { byLane, total } = await deps.points.siteSpent(hourKey(startedAt));
   return { refused: room.waitUntil, spent: byLane.refresh ?? 0, total };
@@ -256,6 +256,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const doneHashes = done.map((key) => deps.hash(key));
   if (stopped) {
     logCut(deps, await saveCut(deps, { key: lastKey, startedAt, done: doneHashes, under: cut?.key ?? null }), rows);
+    if (room.capped) return { capped: true, events: rows.length, groups: counts.groups, recomputed, handed, changed, stale, failed, postponed, touched: [], kinds: summary.kinds, oldestEventMs: null, overhead };
     return { budgeted: retryAfter(startedAt), events: rows.length, groups: counts.groups, recomputed, handed, changed, stale, failed, postponed, touched: [], kinds: summary.kinds, oldestEventMs: null, overhead };
   }
   const finished = !stale && !postponed;

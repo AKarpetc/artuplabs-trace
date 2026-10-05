@@ -154,6 +154,12 @@ describe('onReconcile with skipped groups, the journal and its points', () => {
     await deps.points.add('reconcile', 400);
     expect((await onReconcile(deps)).index).toMatchObject({ scope: 'pass', limit: 600 });
   });
+  it('claims no more than the group limit after half past once its own reserve is spent', async () => {
+    const deps = withBudget(makeDeps({ pcs: [] }), { at: Date.parse('2026-10-05T07:40:00Z') });
+    deps.indexReconcile = async () => deps.currentPoints();
+    await deps.points.add('reconcile', 1000);
+    expect((await onReconcile(deps)).index).toMatchObject({ scope: 'pass', limit: 2000 });
+  });
   it('keeps a skip mark set after it started', async () => {
     const recent2 = new Date(1000000 - 10 * 60000).toISOString();
     const pcs = [{ id: 'p', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: new Date(1000000 - 60000).toISOString(), updated: recent2 }];

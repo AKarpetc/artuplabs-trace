@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createLedger, newProcessPoints } from '../../src/infra/points.js';
-import { POINTS_FLUSH, POINTS_KEY_MIN, POINTS_READ_MS } from '../../src/core/limits.js';
+import { CLAIM_TTL_MS, POINTS_FLUSH, POINTS_KEY_MIN, POINTS_READ_MS } from '../../src/core/limits.js';
 import { laneRoom } from '../../src/core/points.js';
 
 const AT = Date.parse('2026-10-05T07:10:00Z');
@@ -211,7 +211,7 @@ describe('points ledger claims', () => {
     const { kvs, make } = shared();
     const claim = await make('a').claim('backfill', roomOf('backfill'));
     expect(claim.limit).toEqual(900);
-    expect(Object.fromEntries(kvs.data)).toEqual({ [`q:pts:${HOUR}:backfill:a`]: { spent: 0, claim: 900 } });
+    expect(Object.fromEntries(kvs.data)).toEqual({ [`q:pts:${HOUR}:backfill:a`]: { spent: 0, claim: 900, until: AT + CLAIM_TTL_MS } });
   });
   it('lets two processes claiming one lane at once take no more than its room together, and one of them all of it', async () => {
     const { make } = shared();
@@ -267,6 +267,48 @@ describe('points ledger claims', () => {
     await kvs.set(`q:pts:${HOUR}:refresh:old`, 250);
     const b = make('b');
     expect([await b.siteSpent(HOUR), (await b.snapshot()).byLane]).toEqual([{ byLane: { refresh: 250 }, total: 250 }, { refresh: 250 }]);
+  });
+  it('keeps a claim cut to what is left when another process spent between its write and its read', async () => {
+    const { kvs, make } = shared();
+    const set = kvs.set;
+    let other = 0;
+    kvs.set = async (key, value) => {
+      await set(key, value);
+      if (key.endsWith(':backfill:a')) {
+        other += 100;
+        await set(`q:pts:${HOUR}:backfill:b`, other);
+      }
+    };
+    expect((await make('a').claim('backfill', roomOf('backfill'))).limit).toEqual(800);
+  });
+  it('reads past the memo once when the memo leaves the lane no room', async () => {
+    const { kvs, make } = shared();
+    const a = make('a');
+    await kvs.set(`q:pts:${HOUR}:backfill:b`, { spent: 0, claim: 900 });
+    await a.siteSpent(HOUR);
+    await kvs.set(`q:pts:${HOUR}:backfill:b`, 0);
+    expect((await a.claim('backfill', roomOf('backfill'))).limit).toEqual(900);
+  });
+  it('leaves out a claim past its expiry, as one a killed process left', async () => {
+    const kvs = createFakeKvs({ pageSize: 100 });
+    let now = AT;
+    const a = createLedger({ kvs, beginsWith, clock: () => now, own: newProcessPoints('a') });
+    await a.claim('backfill', roomOf('backfill'));
+    await a.add('backfill', 100);
+    await a.flush(0);
+    now += CLAIM_TTL_MS;
+    const b = createLedger({ kvs, beginsWith, clock: () => now, own: newProcessPoints('b') });
+    expect(await b.siteSpent(HOUR)).toEqual({ byLane: { backfill: 100 }, total: 100 });
+  });
+  it('writes a released claim at the end of an invocation, however little of it was left', async () => {
+    const { kvs, make } = shared();
+    const a = make('a');
+    await a.claim('backfill', roomOf('backfill'));
+    await a.add('backfill', 890);
+    await a.flush();
+    a.releaseAll();
+    await a.flush();
+    expect(kvs.data.get(`q:pts:${HOUR}:backfill:a`)).toEqual(890);
   });
   it('claims nothing and writes nothing when the lane has no room', async () => {
     const { kvs, make } = shared();
