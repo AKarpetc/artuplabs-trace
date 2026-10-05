@@ -75,6 +75,27 @@ describe('resume after a deploy', () => {
     await resumeAfterDeploy(deps);
     expect([deps.pushed, backfill]).toEqual([[], []]);
   });
+  it('records the version only once every push went through, so a failed resume is tried again', async () => {
+    const { deps, backfill, ready } = deployed();
+    await ready();
+    await deps.journal.append({ ids: ['1'], kinds: ['issue-updated'] }, deps.now());
+    await deps.state.progress.setPart('sprint', { generation: 5, done: 10 });
+    const push = deps.backfillQueue.push;
+    deps.backfillQueue.push = async () => { throw new Error('400 Bad Request'); };
+    await expect(resumeAfterDeploy(deps)).rejects.toThrow('400 Bad Request');
+    expect(await deps.state.version.get()).toEqual('4.26.0');
+    deps.backfillQueue.push = push;
+    expect(await resumeAfterDeploy(deps)).toBe(true);
+    expect([await deps.state.version.get(), backfill.length, deps.pushed.length]).toEqual(['4.27.0', 1, 2]);
+  });
+  it('fails the resume when the wake cannot be queued', async () => {
+    const { deps, ready } = deployed();
+    await ready();
+    await deps.journal.append({ ids: ['1'], kinds: ['issue-updated'] }, deps.now());
+    deps.queue.push = async () => { throw new Error('400 Bad Request'); };
+    await expect(resumeAfterDeploy(deps)).rejects.toThrow('400 Bad Request');
+    expect([await deps.state.version.get(), await deps.state.wake.get()]).toEqual(['4.26.0', null]);
+  });
   it('does nothing without a known app version', async () => {
     const { deps, backfill, ready } = deployed({ version: null });
     await ready();
