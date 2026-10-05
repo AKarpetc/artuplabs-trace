@@ -308,12 +308,13 @@ async function pickHeavy(deps, queued, groups) {
       waits.push(written + HEAVY_MIN_INTERVAL_MS);
       continue;
     }
-    const cost = knownCost(meta, job)?.points ?? (cap ? lightLimit(cap) : 0);
+    const known = knownCost(meta, job)?.points;
+    const cost = known ?? (cap ? lightLimit(cap) : 0);
     if (cost > room) {
       waits.push(retryAfter(now));
       continue;
     }
-    return { job, group, room };
+    return { job, group, room, admitted: { points: cost, known: known !== undefined } };
   }
   return { waitUntil: waits.length ? Math.min(...waits) : null };
 }
@@ -362,7 +363,7 @@ export async function runHeavy(deps) {
   return { heavy };
 }
 
-async function runPicked(deps, { job, group, room }) {
+async function runPicked(deps, { job, group, room, admitted }) {
   const cap = deps.siteCap;
   const most = cap ? groupLimit(cap) : Infinity;
   const running = { ...job, runningSince: deps.now() };
@@ -372,7 +373,7 @@ async function runPicked(deps, { job, group, room }) {
     heavy = await runGroupJob(deps, running, { limit: Math.min(most, room), group, compare: !running.force });
   } catch (error) {
     if (error?.name === 'PointsError' && room >= most) {
-      console.error(`${running.functionName} passed the group limit in the heavy lane`);
+      console.warn(`${running.functionName} passed the group limit in the heavy lane: spent ${error.spent} of ${error.limit}, admitted at ${admitted.points}${admitted.known ? '' : ' (no known cost)'}`);
       await writeError(deps, group, running.runningSince, overLimit(running, { points: null, floor: false }, cap).error);
       await deps.state.heavy.take(running.key);
       return { heavy: { computed: running.key, tooExpensive: true } };

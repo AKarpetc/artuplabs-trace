@@ -106,6 +106,17 @@ export function createLedger({ kvs, beginsWith, clock = Date.now, own = PROCESS 
         own.reserved = addTo(own.reserved, lane, -points);
       };
     },
+    /** The site's points of the current hour by lane and in total, read past the memo, with this process's unwritten points and the number of keys. */
+    async snapshot() {
+      const hour = hourKey(clock());
+      const { rows: found } = await rows(`${PREFIX}${hour}:`);
+      let byLane = found.reduce((acc, { key, value }) => {
+        const [, , , lane, proc] = key.split(':');
+        return proc === own.proc ? acc : addTo(acc, lane, Number(value) || 0);
+      }, {});
+      for (const [lane, entry] of own.hours.get(hour) ?? []) byLane = addTo(byLane, lane, entry.total);
+      return { hour, byLane, total: totalOf(byLane), keys: found.length };
+    },
     /** Deletes the ledger keys of the hours before the past one; returns how many. */
     async prune() {
       const keep = hourKey(clock() - HOUR_MS);

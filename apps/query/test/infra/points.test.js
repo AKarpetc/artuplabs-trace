@@ -178,3 +178,18 @@ describe('points ledger', () => {
     expect(kvs.data.get(`q:pts:${HOUR}:fn:a`)).toEqual(30);
   });
 });
+
+describe('points ledger snapshot', () => {
+  it('reads the site points of the current hour by lane with its key count, past the read memo and with the own unwritten points', async () => {
+    const { make } = setup();
+    const a = make('a');
+    const b = make('b');
+    await b.add('refresh', POINTS_FLUSH);
+    await b.flush();
+    await a.siteSpent(HOUR);
+    await b.add('heavy', POINTS_KEY_MIN);
+    await b.flush();
+    await a.add('fn', 5);
+    expect(await a.snapshot()).toEqual({ hour: HOUR, byLane: { refresh: POINTS_FLUSH, heavy: POINTS_KEY_MIN, fn: 5 }, total: POINTS_FLUSH + POINTS_KEY_MIN + 5, keys: 2 });
+  });
+});

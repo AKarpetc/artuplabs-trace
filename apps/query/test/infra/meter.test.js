@@ -140,3 +140,26 @@ describe('withKvsLog', () => {
     expect(flushed).toEqual(['flush', 'flush']);
   });
 });
+
+describe('withKvsLog points line', () => {
+  it('logs the site points of the hour by lane with the cap and the key count at the end of an invocation when requests are enabled', async () => {
+    const meter = { ...meterKvs(createFakeKvs()), cap: 9000, points: { flush: async () => null, snapshot: async () => ({ hour: '2026100507', byLane: { refresh: 200, fn: 100 }, total: 300, keys: 2 }) } };
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await withKvsLog('on-reconcile', meter, { requests: true }, async () => null)();
+    expect(log.mock.calls).toEqual([['points 2026100507 on-reconcile: site 300, lanes {fn 100, refresh 200}, cap 9000, keys 2']]);
+    log.mockRestore();
+  });
+  it('logs no points line when requests are off', async () => {
+    const snapshot = vi.fn();
+    const meter = { ...meterKvs(createFakeKvs()), cap: 9000, points: { flush: async () => null, snapshot } };
+    await withKvsLog('a', meter, { writes: true }, async () => null)();
+    expect(snapshot).not.toHaveBeenCalled();
+  });
+  it('keeps the handler result when the points line cannot be read', async () => {
+    const meter = { ...meterKvs(createFakeKvs()), cap: 9000, points: { flush: async () => null, snapshot: async () => { throw new Error('kvs'); } } };
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await withKvsLog('a', meter, { requests: true }, async () => 7)()).toEqual(7);
+    expect(err.mock.calls).toEqual([['points line failed: Error']]);
+    err.mockRestore();
+  });
+});

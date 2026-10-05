@@ -1,5 +1,5 @@
 import { QUEUE_DELAY_MAX_S, RATE_BRAKE_MAX_MS, RATE_BRAKE_MIN_MS } from '../core/limits.js';
-import { nextHour } from '../core/points.js';
+import { nextHour, pointsSummary } from '../core/points.js';
 
 /** Whether an error is Jira rate-limiting the app. */
 export const isRateLimit = (error) => error?.name === 'RateLimitError';
@@ -52,7 +52,19 @@ export async function brake(deps, retryAt) {
   return pauseUntil(deps, Math.min(Math.max(retryAt ?? 0, now + RATE_BRAKE_MIN_MS), now + RATE_BRAKE_MAX_MS), 'rate');
 }
 
-/** Pauses the app's background work until the next hour after Jira warned that the app's pool is nearly used (a later pause stays). */
+/** Logs the site's points of the hour when Jira first warns that the pool is nearly used; a failed read is logged without values. */
+async function logNear(deps) {
+  if (!deps.points?.snapshot) return;
+  try {
+    const s = await deps.points.snapshot();
+    console.log(`near limit ${s.hour}: ${pointsSummary(s, deps.siteCap)}`);
+  } catch (error) {
+    console.error(`near-limit points line failed: ${error?.name}`);
+  }
+}
+
+/** Pauses the app's background work until the next hour after Jira warned that the app's pool is nearly used (a later pause stays), logging the site's points of the hour. */
 export async function brakeNear(deps) {
+  await logNear(deps);
   return pauseUntil(deps, nextHour(deps.now()), 'near');
 }

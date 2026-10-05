@@ -76,6 +76,14 @@ describe('heavy lane under the points budget', () => {
     expect(deps.written).toEqual([{ id: 'a', error: ERR.tooExpensive('childIssuesOf', { n: null, points: null, limit: 2000 }) }]);
     expect(await deps.state.heavy.get(key('a'))).toBe(null);
   });
+  it('warns with the points spent, the limit and the cost it was admitted by when a group passes the group limit', async () => {
+    const deps = laneDeps({ queries: ['a'], compute: spending([2000, 1]), at: Date.parse('2026-10-05T07:40:00Z') });
+    await deps.state.heavy.put(entry('a', BUDGET_AT - 2000));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await quietly(() => onRefresh(deps, { body: { kind: 'heavy' } }));
+    expect(warn.mock.calls).toEqual([['childIssuesOf passed the group limit in the heavy lane: spent 2000 of 2000, admitted at 500 (no known cost)']]);
+    warn.mockRestore();
+  });
   it('gives a group that waited too long the error with its numbers and drops it without computing', async () => {
     const compute = spending([50]);
     const deps = laneDeps({ queries: ['a'], compute });

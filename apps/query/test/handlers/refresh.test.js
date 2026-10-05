@@ -823,6 +823,40 @@ describe('journal cut under the points budget', () => {
     const verify = deps.pushed.filter(([body]) => body.verify).map(([body]) => body.verify);
     expect(verify).toEqual([ids(50), ids(50, 51), ids(20, 101)]);
   });
+  const linesOf = (log, start) => log.mock.calls.map(([line]) => line).filter((line) => line.startsWith(start));
+  it('logs a pass the refresh reserve refuses with the points spent and when it may run again, when requests are logged', async () => {
+    const deps = await budgetDeps({ compute: { hasSubtasks: spending([10]), hasLinks: spending([10]) }, refreshSpent: 3000 });
+    deps.logKvs = { requests: true };
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await refreshOnce(deps);
+    expect(linesOf(log, 'refresh pass refused')).toEqual(['refresh pass refused by the points budget: refresh 3000, site 3000, rows 1, retry 07:30Z']);
+    log.mockRestore();
+  });
+  it('logs the cut a stopped pass writes with its done groups and the rows under its key, when requests are logged', async () => {
+    const deps = await budgetDeps({ compute: { hasSubtasks: spending([40]), hasLinks: spending([30, 1]) }, refreshSpent: 2930 });
+    deps.logKvs = { requests: true };
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await refreshOnce(deps);
+    expect(linesOf(log, 'refresh cut')).toEqual(['refresh cut: done 1, rows 1 under its key']);
+    log.mockRestore();
+  });
+  it('logs the raw last use Jira reports for each group a pass computes, by function name only, when requests are logged', async () => {
+    const deps = await budgetDeps({ compute: { hasSubtasks: spending([10]), hasLinks: spending([10]) } });
+    deps.logKvs = { requests: true };
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await refreshOnce(deps);
+    expect(linesOf(log, 'refresh used')).toEqual([`refresh used: hasSubtasks ${USED}, hasLinks ${USED}`]);
+    log.mockRestore();
+  });
+  it('logs the pause the passes set by their overhead, when requests are logged', async () => {
+    const deps = await budgetDeps({ compute: { hasSubtasks: spending([10]), hasLinks: spending([10]) } });
+    deps.logKvs = { requests: true };
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT } });
+    const { interval, overhead } = await deps.state.lastRefresh.get();
+    expect(linesOf(log, 'refresh interval')).toEqual([`refresh interval ${interval} s after overhead ${overhead}`]);
+    log.mockRestore();
+  });
   it('stops the pass at once and cuts the journal when the refresh reserve is spent', async () => {
     const compute = { hasSubtasks: spending([10]), hasLinks: spending([10]) };
     const deps = await budgetDeps({ compute, refreshSpent: 3000 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { admit, capOf, countQueryOf, passInterval, estimate, groupClass, groupLimit, lightLimit, hourKey, issuesWithin, LANES, laneOfRefresh, laneRoom, nextHour, pointsOf } from '../../src/core/points.js';
+import { admit, capOf, countQueryOf, passInterval, estimate, groupClass, groupLimit, lightLimit, hourKey, issuesWithin, LANES, laneOfRefresh, laneRoom, nextHour, pointsOf, pointsSummary } from '../../src/core/points.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
 import { CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from '../../src/core/limits.js';
 
@@ -281,5 +281,11 @@ describe('passInterval', () => {
   });
   it('waits at least 5 s and at most 300 s', () => {
     expect([passInterval(0, 9000), passInterval(1, 9000), passInterval(400, 9000), passInterval(100000, 9000)]).toEqual([5, 5, 300, 300]);
+  });
+});
+
+describe('pointsSummary', () => {
+  it('names the site sum, the lanes in name order, the cap and the key count', () => {
+    expect(pointsSummary({ byLane: { refresh: 2, fn: 1 }, total: 3, keys: 2 }, 9000)).toEqual('site 3, lanes {fn 1, refresh 2}, cap 9000, keys 2');
   });
 });

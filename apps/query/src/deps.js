@@ -47,15 +47,15 @@ function currentAppContext() {
 /** Production dependencies of every handler; `retryMaxMs` caps one Jira retry sleep (queue workers pass a longer cap); all KVS access goes through the write meter; Jira points go to the process's ledger, and the site's hourly points cap comes from QUERY_POINTS_TIER or QUERY_SITE_POINTS, and Jira's near-limit warning pauses the background until the next hour; the index parts, the event writer and the gap filler read and write the Forge SQL index. */
 export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
   const logKvs = { writes: process.env.QUERY_LOG_WRITES === '1', reads: process.env.QUERY_LOG_READS === '1', requests: process.env.QUERY_LOG_REQUESTS === '1' };
+  const siteCap = capOf(Number(process.env.QUERY_POINTS_TIER), Number(process.env.QUERY_SITE_POINTS));
   const metered = meterKvs(kvs, { readBytes: logKvs.reads });
   const points = createLedger({ kvs: metered.kvs, beginsWith: WhereConditions.beginsWith });
   const onNear = () => {
     brakeNear(deps).catch((error) => console.error(`near-limit pause failed: ${error?.name}`));
   };
   const jira = appJira({ retryMaxMs, ledger: points, onNear });
-  const meter = { ...metered, takeRequests: jira.takeRequests, points };
+  const meter = { ...metered, takeRequests: jira.takeRequests, points, cap: siteCap };
   const state = createState({ kvs: meter.kvs, hash: sha1, beginsWith: WhereConditions.beginsWith });
-  const siteCap = capOf(Number(process.env.QUERY_POINTS_TIER), Number(process.env.QUERY_SITE_POINTS));
   const repo = createIndexRepo();
   const deps = {
     jira,

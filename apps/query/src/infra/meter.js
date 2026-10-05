@@ -1,4 +1,4 @@
-import { DEFAULT_LANE } from '../core/points.js';
+import { DEFAULT_LANE, pointsSummary } from '../core/points.js';
 import { withPoints } from './jira.js';
 
 const FAMILIES = [
@@ -77,6 +77,16 @@ export function meterKvs(kvs, { readBytes = true } = {}) {
 
 const familyText = (families) => Object.entries(families).sort(([a], [b]) => a.localeCompare(b)).map(([name, f]) => `${name} ${f.sets}/${f.bytes}`).join(', ');
 
+/** Logs the site's points of the hour by lane with the cap and the ledger key count; a failed read is logged and leaves the call alone. */
+async function logPoints(label, meter) {
+  try {
+    const s = await meter.points.snapshot();
+    console.log(`points ${s.hour} ${label}: ${pointsSummary(s, meter.cap)}`);
+  } catch (error) {
+    console.error(`points line failed: ${error?.name}`);
+  }
+}
+
 const requestText = (counts) => Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([endpoint, c]) => `${endpoint} ${c.requests}${c.limited ? ` (429: ${c.limited})` : ''}${c.rate ? ` [${c.rate}]` : ''}`).join(', ');
 
 /**
@@ -99,6 +109,7 @@ export function withKvsLog(name, meter, log, handler, lane = DEFAULT_LANE) {
       if (log.reads && w.reads.gets + w.reads.queries) console.log(`kvs reads ${label}: ${w.reads.gets} gets, ${w.reads.queries} query pages, ${w.reads.bytes} bytes`);
       const r = log.requests && meter.takeRequests ? requestText(meter.takeRequests()) : '';
       if (r) console.log(`jira requests ${label}: ${r}`);
+      if (log.requests && meter.points?.snapshot) await logPoints(label, meter);
     }
   };
 }

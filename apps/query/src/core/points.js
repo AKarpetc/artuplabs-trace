@@ -174,3 +174,9 @@ export function knownCost(meta, job) {
   if (measured && bound?.floor && bound.points > measured.points && (job.floorAt ?? Infinity) > (meta.startedAt ?? 0)) return bound;
   return measured ?? bound;
 }
+
+/** Log text of a points snapshot: the site's sum, the lanes in name order, the cap and the ledger key count. */
+export function pointsSummary({ byLane, total, keys }, cap) {
+  const lanes = Object.entries(byLane).sort(([a], [b]) => a.localeCompare(b)).map(([lane, n]) => `${lane} ${n}`).join(', ');
+  return `site ${total}, lanes {${lanes}}, cap ${cap}, keys ${keys}`;
+}

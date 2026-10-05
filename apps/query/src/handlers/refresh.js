@@ -81,17 +81,26 @@ async function rowsOf(deps) {
 async function saveCut(deps, { key, startedAt, done, under = null }) {
   const cut = await deps.state.cut.get();
   const own = !cut || cut.startedAt === startedAt;
-  if (!own && under !== cut.key && key < cut.key) return;
+  if (!own && under !== cut.key && key < cut.key) return null;
   const list = [...new Set([...(cut?.done ?? []), ...done])];
   const next = own ? { key: cut?.key ?? key, startedAt, done: list } : { ...cut, done: list };
-  if (cut && JSON.stringify(next) === JSON.stringify(cut)) return;
+  if (cut && JSON.stringify(next) === JSON.stringify(cut)) return next;
   await deps.state.cut.set(next);
+  return next;
+}
+
+const minuteText = (at) => `${new Date(at).toISOString().slice(11, 16)}Z`;
+
+/** Logs the cut a stopped pass left, by its done count and the pass rows under its key (no values), when requests are logged. */
+function logCut(deps, cut, rows) {
+  if (!cut || !deps.logKvs?.requests) return;
+  console.log(`refresh cut: done ${cut.done.length}, rows ${rows.filter((r) => r.key <= cut.key).length} under its key`);
 }
 
 async function passRoom(deps, startedAt) {
   if (!deps.points) return { limit: Infinity };
-  const { byLane } = await deps.points.siteSpent(hourKey(startedAt));
-  if (!admit('refresh', POINTS_OVERHEAD, byLane, startedAt, deps.siteCap).ok) return { refused: retryAfter(startedAt) };
+  const { byLane, total } = await deps.points.siteSpent(hourKey(startedAt));
+  if (!admit('refresh', POINTS_OVERHEAD, byLane, startedAt, deps.siteCap).ok) return { refused: retryAfter(startedAt), spent: byLane.refresh ?? 0, total };
   return { limit: laneRoom('refresh', byLane, startedAt, deps.siteCap) };
 }
 
@@ -109,7 +118,8 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   const lastKey = rows[rows.length - 1].key;
   const room = await passRoom(deps, startedAt);
   if (room.refused) {
-    await saveCut(deps, { key: lastKey, startedAt, done: [], under: cut?.key ?? null });
+    if (deps.logKvs?.requests) console.log(`refresh pass refused by the points budget: refresh ${room.spent}, site ${room.total}, rows ${rows.length}, retry ${minuteText(room.refused)}`);
+    logCut(deps, await saveCut(deps, { key: lastKey, startedAt, done: [], under: cut?.key ?? null }), rows);
     return { budgeted: room.refused, events: rows.length, groups: 0, touched: [], kinds: summary.kinds, changed: 0, oldestEventMs: null };
   }
   const cap = deps.siteCap;
@@ -121,7 +131,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   let limited = null;
   let stopped = false;
   const spent = { pass: 0, runs: 0 };
-  const names = { computed: [], handed: [] };
+  const names = { computed: [], handed: [], used: [] };
   const measured = (task) => (deps.withPoints ? deps.withPoints(Infinity, async () => {
     try {
       return await task();
@@ -175,6 +185,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
             return;
           }
           names.computed.push(`${group.functionName}@${usedHoursAgo(group, startedAt)}h`);
+          names.used.push(`${group.functionName} ${lastUsed(group)}`);
           const ownDeadline = deps.now() + REFRESH_GROUP_BUDGET_MS;
           cutByWorker = ownDeadline > deadline;
           const limit = cap ? lightLimit(cap) : Infinity;
@@ -223,6 +234,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   }
   const { recomputed, handed, failed, postponed } = counts;
   const overhead = Math.max(0, spent.pass - spent.runs);
+  if (deps.logKvs?.requests && names.used.length) console.log(`refresh used: ${names.used.join(', ')}`);
   if (deps.logKvs?.requests) console.log(`refresh pass: ${counts.groups} groups, computed ${nameCounts(names.computed)}, handed ${nameCounts(names.handed)}${limited ? ', stopped by the rate limit' : ''}${stopped ? ', stopped by the points budget' : ''}, overhead ${overhead}`);
   if (limited) return { limited, events: rows.length, groups: counts.groups, touched: [], kinds: summary.kinds, changed: 0, oldestEventMs: null };
   if (queued || (handed && (await laneIdle(deps)))) await pushQuietly(deps, { kind: 'heavy' });
@@ -239,7 +251,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   }
   const doneHashes = done.map((key) => deps.hash(key));
   if (stopped) {
-    await saveCut(deps, { key: lastKey, startedAt, done: doneHashes, under: cut?.key ?? null });
+    logCut(deps, await saveCut(deps, { key: lastKey, startedAt, done: doneHashes, under: cut?.key ?? null }), rows);
     return { budgeted: retryAfter(startedAt), events: rows.length, groups: counts.groups, recomputed, handed, changed, stale, failed, postponed, touched: [], kinds: summary.kinds, oldestEventMs: null, overhead };
   }
   const finished = !stale && !postponed;
@@ -263,6 +275,9 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
     oldestEventMs: summary.firstAt === null ? null : startedAt - summary.firstAt,
   };
 }
+
+/** The latest `used` Jira reports for a group's precomputations, as Jira wrote it, or '-' without one. */
+const lastUsed = (group) => group.items.map((pc) => pc.used).filter(Boolean).sort().pop() ?? '-';
 
 const usedHoursAgo = (group, now) => {
   const used = group.items.map((pc) => Date.parse(pc.used ?? '')).filter(Number.isFinite);
@@ -374,13 +389,15 @@ async function refreshPasses(deps, body) {
   await pushVerify(deps, toVerify(body, passes));
   if (passes.length) {
     const overhead = passes[passes.length - 1].overhead ?? 0;
+    const interval = deps.siteCap ? passInterval(overhead, deps.siteCap) : null;
+    if (deps.logKvs?.requests && interval !== null) console.log(`refresh interval ${interval} s after overhead ${overhead}`);
     await deps.state.lastRefresh.set({
       at: deps.now(),
       passes: passes.length,
       changed: passes.reduce((s, p) => s + p.changed, 0),
       oldestEventMs: Math.max(...passes.map((p) => p.oldestEventMs ?? 0)),
       overhead,
-      ...(deps.siteCap ? { interval: passInterval(overhead, deps.siteCap) } : {}),
+      ...(interval === null ? {} : { interval }),
     });
   }
   return budgeted ? { passes, budgeted } : { passes };

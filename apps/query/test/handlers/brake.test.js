@@ -267,7 +267,7 @@ describe('heavy groups nobody uses', () => {
     await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, 999500);
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     await refreshOnce(deps);
-    expect(log.mock.calls).toEqual([['refresh pass: 1 groups, computed hasSubtasks@0h 1, handed none, overhead 0']]);
+    expect(log.mock.calls).toEqual([[`refresh used: hasSubtasks ${RECENT}`], ['refresh pass: 1 groups, computed hasSubtasks@0h 1, handed none, overhead 0']]);
     log.mockRestore();
   });
   it('recomputes no group, light or slow, that Jira has not used for a day; the reconcile rewrites it within an hour of its next use', async () => {
@@ -320,5 +320,21 @@ describe('compute job under the points budget', () => {
     expect(await onRefresh(deps, { body: job })).toEqual({ computed: key, stopped: 'group' });
     error.mockRestore();
     expect(await deps.state.job(key)).toMatchObject({ pts: 1500, floor: true });
+  });
+});
+
+describe('near-limit points line', () => {
+  it('logs the site points of the hour by lane, the cap and the key count when Jira first warns that the pool is nearly used', async () => {
+    const snapshot = async () => ({ hour: '2026100507', byLane: { heavy: 2500, refresh: 3000 }, total: 5500, keys: 3 });
+    const deps = makeDeps({ now: () => Date.parse('2026-10-05T07:40:00Z'), points: { snapshot }, siteCap: 9000 });
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await brakeNear(deps);
+    expect(log.mock.calls.filter(([line]) => line.startsWith('near'))).toEqual([['near limit 2026100507: site 5500, lanes {heavy 2500, refresh 3000}, cap 9000, keys 3']]);
+    log.mockRestore();
+  });
+  it('still pauses the background when the points cannot be read', async () => {
+    const deps = makeDeps({ now: () => Date.parse('2026-10-05T07:40:00Z'), points: { snapshot: async () => { throw new Error('kvs'); } }, siteCap: 9000 });
+    await quietly(() => brakeNear(deps));
+    expect(await brakeOf(deps)).toEqual({ until: Date.parse('2026-10-05T08:00:00Z'), reason: 'near' });
   });
 });
