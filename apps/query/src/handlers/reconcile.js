@@ -7,6 +7,7 @@ import { pool } from '../infra/pool.js';
 import { groupWrite, handOff, isDeadline, isHeavy, knownCost, listPrecomputations, overLimit, pushQuietly, rewrite, writeGroups } from './groups.js';
 import { brake, brakedUntil, isRateLimit, scheduleWake } from './brake.js';
 import { pushRefresh } from './refresh.js';
+import { backgroundAllowed, withdrawResults } from './licence.js';
 
 async function prunePoints(deps) {
   try {
@@ -18,10 +19,12 @@ async function prunePoints(deps) {
 
 /**
  * Hourly safety net: restarts the journal, rewrites due, skipped or failed groups within the reconcile points (heavy ones via the lane),
- * restarts the lane and checks the index; it waits while the background is paused, and a 429 pauses it.
+ * restarts the lane and checks the index; it waits while the background is paused, and a 429 pauses it; for an unlicensed site it only
+ * stores the licence error in the precomputations, once.
  */
 export async function onReconcile(deps) {
   await prunePoints(deps);
+  if (!(await backgroundAllowed(deps))) return { unlicensed: true, written: await withdrawResults(deps) };
   const until = await brakedUntil(deps);
   if (until) {
     await scheduleWake(deps, until);

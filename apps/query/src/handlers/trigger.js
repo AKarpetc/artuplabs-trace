@@ -4,6 +4,7 @@ import { EVENT_POINTS_CLAIM, LEASE_MS, PENDING_STALE_MS } from '../core/limits.j
 import { claimRoom } from './budget.js';
 import { brakeOf } from './brake.js';
 import { pushRefresh } from './refresh.js';
+import { backgroundAllowed } from './licence.js';
 
 /** Idempotency key of a product event: issue id, event time and the changed items; never the changelog id, which Forge does not document. */
 export function changeId(event, hash) {
@@ -33,9 +34,10 @@ async function indexWithin(deps, event) {
 /**
  * Product event → index rows (writes that need a Jira request only within the index-event points; the hourly index check catches the rest),
  * one journal record, and a refresh job unless one is pending or running; a failed index write is logged without values and left to the
- * hourly gap filler, so the journal still gets the event.
+ * hourly gap filler, so the journal still gets the event; an unlicensed site's event is dropped.
  */
 export async function onEvent(deps, event) {
+  if (!(await backgroundAllowed(deps))) return { unlicensed: true };
   const record = eventRecord(event);
   if (deps.debugEvents) {
     console.log(JSON.stringify({ event: event?.eventType, keys: Object.keys(event ?? {}), items: (Array.isArray(event?.changelog?.items) ? event.changelog.items : []).map((i) => [i?.field, i?.fieldId]), record }));

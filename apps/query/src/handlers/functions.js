@@ -248,13 +248,13 @@ function answer(fragment, operator) {
 /**
  * One JQL function clause → stored JQL (the complement for `not in`), or an error Jira shows in the editor for either operator (only a group too
  * dear for the Jira points budget has its error stored as the precomputation); never throws
- * (Jira answers a thrown call with "Your query couldn't be processed"); the log gets value-free text only.
+ * (Jira answers a thrown call with "Your query couldn't be processed"); the log gets value-free text only, and no line for an unlicensed site.
  */
 export async function handleFunction(deps, functionName, payload, context) {
   const reply = await evaluateSafely(deps, functionName, payload, context);
   if (!reply.error || reply.store === true) await listCreated(deps, functionName, payload, reply);
   if (!reply.error) return { jql: reply.jql };
-  if (reply.error !== ERR.computing()) await recordQuietly(deps, functionName, reply.log ?? LOG.rejected());
+  if (reply.error !== ERR.computing() && reply.error !== ERR.unlicensed()) await recordQuietly(deps, functionName, reply.log ?? LOG.rejected());
   return { error: reply.error, storeErrorAsPrecomputation: reply.store === true };
 }
 
