@@ -1,0 +1,1638 @@
+{
+ "version": 1,
+ "presentation": {
+  "scene": {
+   "background": 1447965,
+   "floor": {
+    "color": 2237739
+   },
+   "fog": {
+    "color": 1447965,
+    "near": 6,
+    "far": 14
+   },
+   "toneMapping": "aces",
+   "exposure": 0.85
+  },
+  "lighting": {
+   "hemisphere": {
+    "color": 16777215,
+    "groundColor": 3816773,
+    "intensity": 0.5
+   },
+   "directional": {
+    "intensity": 0.9,
+    "position": {
+     "x": -6,
+     "y": 10,
+     "z": 6
+    }
+   }
+  }
+ },
+ "modelCount": 55,
+ "catalogs": {
+  "colors": {
+   "title": "Выбери свой цвет",
+   "titleEn": "Choose your colour"
+  }
+ },
+ "collections": {
+  "colors/all": {
+   "title": "Цвет ткани",
+   "titleEn": "Fabric colour",
+   "room": "colors",
+   "style": "colors",
+   "cover": "real-photo/cream-armchair"
+  }
+ },
+ "rooms": {},
+ "licenses": {
+  "ArtUp Labs (generated from a CC0 photo)": 12,
+  "CC-BY-4.0": 194,
+  "CC0-1.0": 178
+ },
+ "models": [
+  {
+   "id": "photo:cream-armchair",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "photo:cream-armchair--graphite",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--graphite",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "photo:cream-armchair--beige",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--beige",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "photo:cream-armchair--navy",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--navy",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "photo:cream-armchair--emerald",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--emerald",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "photo:cream-armchair--terracotta",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--terracotta",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-clean",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-clean",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "photo:swivel-armchair-clean--graphite",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-clean--graphite",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-clean",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-clean--beige",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-clean--beige",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-clean",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-clean--navy",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-clean--navy",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-clean",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-clean--emerald",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-clean--emerald",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-clean",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-clean--terracotta",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-clean--terracotta",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-clean",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "photo:boucle-chair",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "photo:boucle-chair--graphite",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--graphite",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "photo:boucle-chair--beige",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--beige",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "photo:boucle-chair--navy",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--navy",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "photo:boucle-chair--emerald",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--emerald",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "photo:boucle-chair--terracotta",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--terracotta",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "photo:lounge-chair-solo",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair-solo",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "photo:lounge-chair-solo--graphite",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair-solo--graphite",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair-solo",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "photo:lounge-chair-solo--beige",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair-solo--beige",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair-solo",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "photo:lounge-chair-solo--navy",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair-solo--navy",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair-solo",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "photo:lounge-chair-solo--emerald",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair-solo--emerald",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair-solo",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "photo:lounge-chair-solo--terracotta",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair-solo--terracotta",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair-solo",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "photo:dining-table",
+   "name": "Extendable dining table (store photo)",
+   "nameRu": "Раздвижной обеденный стол (фото из магазина)",
+   "path": "real-photo/dining-table",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.524,
+    1.09,
+    0.76
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "generated:sofa-realistic",
+   "name": "Upholstered sofa (realistic)",
+   "nameRu": "Мягкий диван (реалистичный)",
+   "path": "generated/sofa-realistic",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.792,
+    1.02
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor"
+  },
+  {
+   "id": "generated:sofa-realistic--graphite",
+   "name": "Upholstered sofa (realistic)",
+   "nameRu": "Мягкий диван (реалистичный)",
+   "path": "generated/sofa-realistic--graphite",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.792,
+    1.02
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-realistic",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "generated:sofa-realistic--beige",
+   "name": "Upholstered sofa (realistic)",
+   "nameRu": "Мягкий диван (реалистичный)",
+   "path": "generated/sofa-realistic--beige",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.792,
+    1.02
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-realistic",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "generated:sofa-realistic--navy",
+   "name": "Upholstered sofa (realistic)",
+   "nameRu": "Мягкий диван (реалистичный)",
+   "path": "generated/sofa-realistic--navy",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.792,
+    1.02
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-realistic",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "generated:sofa-realistic--emerald",
+   "name": "Upholstered sofa (realistic)",
+   "nameRu": "Мягкий диван (реалистичный)",
+   "path": "generated/sofa-realistic--emerald",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.792,
+    1.02
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-realistic",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "generated:sofa-realistic--terracotta",
+   "name": "Upholstered sofa (realistic)",
+   "nameRu": "Мягкий диван (реалистичный)",
+   "path": "generated/sofa-realistic--terracotta",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.792,
+    1.02
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-realistic",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "generated:sofa-stylized",
+   "name": "Upholstered sofa (stylized)",
+   "nameRu": "Мягкий диван (стилизованный)",
+   "path": "generated/sofa-stylized",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.691,
+    0.815
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor"
+  },
+  {
+   "id": "generated:sofa-stylized--graphite",
+   "name": "Upholstered sofa (stylized)",
+   "nameRu": "Мягкий диван (стилизованный)",
+   "path": "generated/sofa-stylized--graphite",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.691,
+    0.815
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-stylized",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "generated:sofa-stylized--beige",
+   "name": "Upholstered sofa (stylized)",
+   "nameRu": "Мягкий диван (стилизованный)",
+   "path": "generated/sofa-stylized--beige",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.691,
+    0.815
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-stylized",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "generated:sofa-stylized--navy",
+   "name": "Upholstered sofa (stylized)",
+   "nameRu": "Мягкий диван (стилизованный)",
+   "path": "generated/sofa-stylized--navy",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.691,
+    0.815
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-stylized",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "generated:sofa-stylized--emerald",
+   "name": "Upholstered sofa (stylized)",
+   "nameRu": "Мягкий диван (стилизованный)",
+   "path": "generated/sofa-stylized--emerald",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.691,
+    0.815
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-stylized",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "generated:sofa-stylized--terracotta",
+   "name": "Upholstered sofa (stylized)",
+   "nameRu": "Мягкий диван (стилизованный)",
+   "path": "generated/sofa-stylized--terracotta",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    1.588,
+    0.691,
+    0.815
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/sofa-stylized",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "generated:armchair-realistic",
+   "name": "Upholstered wing armchair (realistic)",
+   "nameRu": "Мягкое кресло с подголовником (реалистичное)",
+   "path": "generated/armchair-realistic",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.807,
+    0.834,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor"
+  },
+  {
+   "id": "generated:armchair-realistic--graphite",
+   "name": "Upholstered wing armchair (realistic)",
+   "nameRu": "Мягкое кресло с подголовником (реалистичное)",
+   "path": "generated/armchair-realistic--graphite",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.807,
+    0.834,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-realistic",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "generated:armchair-realistic--beige",
+   "name": "Upholstered wing armchair (realistic)",
+   "nameRu": "Мягкое кресло с подголовником (реалистичное)",
+   "path": "generated/armchair-realistic--beige",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.807,
+    0.834,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-realistic",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "generated:armchair-realistic--navy",
+   "name": "Upholstered wing armchair (realistic)",
+   "nameRu": "Мягкое кресло с подголовником (реалистичное)",
+   "path": "generated/armchair-realistic--navy",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.807,
+    0.834,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-realistic",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "generated:armchair-realistic--emerald",
+   "name": "Upholstered wing armchair (realistic)",
+   "nameRu": "Мягкое кресло с подголовником (реалистичное)",
+   "path": "generated/armchair-realistic--emerald",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.807,
+    0.834,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-realistic",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "generated:armchair-realistic--terracotta",
+   "name": "Upholstered wing armchair (realistic)",
+   "nameRu": "Мягкое кресло с подголовником (реалистичное)",
+   "path": "generated/armchair-realistic--terracotta",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.807,
+    0.834,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-realistic",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "generated:armchair-stylized",
+   "name": "Upholstered wing armchair (stylized)",
+   "nameRu": "Мягкое кресло с подголовником (стилизованное)",
+   "path": "generated/armchair-stylized",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.963,
+    0.952,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor"
+  },
+  {
+   "id": "generated:armchair-stylized--graphite",
+   "name": "Upholstered wing armchair (stylized)",
+   "nameRu": "Мягкое кресло с подголовником (стилизованное)",
+   "path": "generated/armchair-stylized--graphite",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.963,
+    0.952,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-stylized",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "generated:armchair-stylized--beige",
+   "name": "Upholstered wing armchair (stylized)",
+   "nameRu": "Мягкое кресло с подголовником (стилизованное)",
+   "path": "generated/armchair-stylized--beige",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.963,
+    0.952,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-stylized",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "generated:armchair-stylized--navy",
+   "name": "Upholstered wing armchair (stylized)",
+   "nameRu": "Мягкое кресло с подголовником (стилизованное)",
+   "path": "generated/armchair-stylized--navy",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.963,
+    0.952,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-stylized",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "generated:armchair-stylized--emerald",
+   "name": "Upholstered wing armchair (stylized)",
+   "nameRu": "Мягкое кресло с подголовником (стилизованное)",
+   "path": "generated/armchair-stylized--emerald",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.963,
+    0.952,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-stylized",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "generated:armchair-stylized--terracotta",
+   "name": "Upholstered wing armchair (stylized)",
+   "nameRu": "Мягкое кресло с подголовником (стилизованное)",
+   "path": "generated/armchair-stylized--terracotta",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.963,
+    0.952,
+    1.168
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/armchair-stylized",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "generated:chair-realistic",
+   "name": "Gothic Revival side chair (realistic)",
+   "nameRu": "Стул в стиле неоготики (реалистичный)",
+   "path": "generated/chair-realistic",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.393,
+    0.471,
+    1.006
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor"
+  },
+  {
+   "id": "generated:chair-realistic--graphite",
+   "name": "Gothic Revival side chair (realistic)",
+   "nameRu": "Стул в стиле неоготики (реалистичный)",
+   "path": "generated/chair-realistic--graphite",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.393,
+    0.471,
+    1.006
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/chair-realistic",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "generated:chair-realistic--beige",
+   "name": "Gothic Revival side chair (realistic)",
+   "nameRu": "Стул в стиле неоготики (реалистичный)",
+   "path": "generated/chair-realistic--beige",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.393,
+    0.471,
+    1.006
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/chair-realistic",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "generated:chair-realistic--navy",
+   "name": "Gothic Revival side chair (realistic)",
+   "nameRu": "Стул в стиле неоготики (реалистичный)",
+   "path": "generated/chair-realistic--navy",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.393,
+    0.471,
+    1.006
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/chair-realistic",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "generated:chair-realistic--emerald",
+   "name": "Gothic Revival side chair (realistic)",
+   "nameRu": "Стул в стиле неоготики (реалистичный)",
+   "path": "generated/chair-realistic--emerald",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.393,
+    0.471,
+    1.006
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/chair-realistic",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "generated:chair-realistic--terracotta",
+   "name": "Gothic Revival side chair (realistic)",
+   "nameRu": "Стул в стиле неоготики (реалистичный)",
+   "path": "generated/chair-realistic--terracotta",
+   "collection": "colors/all",
+   "catalog": "colors",
+   "source": "Wikimedia Commons (The Met Open Access)",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg",
+   "authors": [
+    "The Metropolitan Museum of Art"
+   ],
+   "license": "ArtUp Labs (generated from a CC0 photo)",
+   "commercialUse": true,
+   "attributionRequired": true,
+   "sizeMeters": [
+    0.393,
+    0.471,
+    1.006
+   ],
+   "sceneViewerCompatibleSize": false,
+   "placement": "floor",
+   "colorOf": "generated/chair-realistic",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  }
+ ],
+ "sourceLabels": {}
+}

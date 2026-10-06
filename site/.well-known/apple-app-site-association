@@ -1,0 +1,17 @@
+{
+  "appclips": {
+    "apps": ["S9YSM4JGZ4.ru.artvisiontech.arxr.Clip"]
+  },
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["S9YSM4JGZ4.ru.artvisiontech.arxr"],
+        "components": [
+          { "/": "/ar-xr/demo/xrviewer.html" },
+          { "/": "/ar-xr/demo/viewer.html" },
+          { "/": "/ar-xr/demo/precheck.html" }
+        ]
+      }
+    ]
+  }
+}

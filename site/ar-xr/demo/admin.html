@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" data-i18n-attr="content:admin.metaDescription"
+    content="ArtUp AR XR demo admin: names, prices, visibility and XR scale of demo catalog models.">
+  <!-- Демо-админка — служебная страница без ссылок из демо: в поиск не попадает. -->
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#111418">
+  <title data-i18n="admin.docTitle">ArtUp AR XR — демо-админка</title>
+  <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
+  <!-- Один шрифт всего демо — Google Sans Flex (семейство задаёт styles/artuplabs-demo.css). -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+  <link type="text/css" href="./styles/demo.css?v=685612f58a" rel="stylesheet" />
+  <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); страница работает и без них. -->
+  <link type="text/css" href="../assets/ar-xr.css?v=2e0158b1d6" rel="stylesheet" />
+  <link type="text/css" href="./styles/artuplabs-demo.css?v=ce02129712" rel="stylesheet" />
+</head>
+
+<body>
+  <header class="ax-header demo-head">
+    <div class="ax-container ax-header-row">
+      <a class="ax-product" href="../" aria-label="ArtUp AR XR — о продукте" data-i18n-attr="aria-label:nav.productLabel">
+        <img src="../assets/ar-xr-icon.svg" alt="" width="26" height="26"><span>ArtUp AR XR</span>
+      </a>
+      <nav class="ax-nav" aria-label="Разделы демо" data-i18n-attr="aria-label:nav.label">
+        <ul>
+          <li><a href="./demo.html#catalog" data-i18n="nav.catalog">Каталог</a></li>
+          <li><a href="./plans.html" data-i18n="nav.plans">Мои планы</a></li>
+          <li data-color-page hidden><a href="./colors.html" data-i18n="nav.colors">Выбери свой цвет</a></li>
+        </ul>
+      </nav>
+      <div class="ax-header-actions">
+        <div data-lang-switch hidden></div>
+        <div id="accountSlot" class="account-slot" hidden></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <h1 data-i18n="admin.title">Демо-админка</h1>
+    <p class="muted" data-i18n="admin.lead">Название, цена, скрытие и масштаб в XR для моделей демо-каталога. Изменения видны на витрине и в XR после перезагрузки.</p>
+    <p id="admin-status" class="page-status" role="status" hidden></p>
+
+    <form id="admin-login" class="admin-login ax-card" hidden>
+      <div class="ax-field">
+        <label for="admin-token" data-i18n="admin.tokenLabel">Токен демо-админки</label>
+        <input id="admin-token" class="ax-input" type="password" autocomplete="off" required>
+        <span class="ax-hint" data-i18n="admin.tokenHint">Хранится только в этой вкладке до её закрытия.</span>
+      </div>
+      <button class="ax-btn ax-btn-primary" type="submit" data-i18n="account.signIn">Войти</button>
+    </form>
+
+    <section id="admin-workspace" class="admin-workspace" hidden>
+      <div class="page-toolbar">
+        <input id="admin-search" class="ax-input" type="search" placeholder="Поиск: название, путь, раздел" aria-label="Поиск моделей" data-i18n-attr="placeholder:admin.searchPlaceholder;aria-label:admin.searchLabel" style="max-width: 28rem">
+        <span id="admin-count" class="ax-muted"></span>
+        <button id="admin-logout" class="ax-btn ax-btn-ghost ax-btn-sm" type="button" data-i18n="account.signOut">Выйти</button>
+      </div>
+      <div id="admin-list" class="admin-list"></div>
+      <button id="admin-more" class="ax-btn ax-btn-secondary" type="button" hidden data-i18n="common.showMore">Показать ещё</button>
+    </section>
+  </main>
+
+  <footer class="page-footer" data-contacts>
+    <span>ArtUp Labs</span> <span class="contacts-sep" aria-hidden="true">·</span> <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>
+  </footer>
+
+  <script type="module" src="./dist/demoAdmin.bandle.js?v=d869d82a87"></script>
+</body>
+
+</html>

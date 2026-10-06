@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <title data-i18n="viewer.docTitle">ArtUp AR XR — просмотр модели</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <!-- app-clip-banner:start -->
+    <!-- app-clip-banner:end -->
+    <meta name="description" data-i18n-attr="content:viewer.metaDescription"
+      content="View a 3D model right in the browser and place it in your room with AR on iPhone or Android — no app to install.">
+    <meta name="theme-color" content="#0d121c">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Шрифт не блокирует первую отрисовку: без Google Fonts страница остаётся на системном. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap" media="print" onload="this.media='all'">
+    <link type="text/css" href="./styles/theme.css?v=2232987e58" rel="stylesheet" />
+    <link type="text/css" href="./styles/styles.css?v=74c90549a7" rel="stylesheet" />
+    <link type="text/css" href="./styles/viewer.css?v=395fc21dca" rel="stylesheet" />
+    <link type="text/css" href="./styles/loading.css?v=391a97178e" rel="stylesheet" />
+    <!-- Кнопка «Мои планы» демо ArtUp AR XR (другие окружения её не показывают). -->
+    <link type="text/css" href="./styles/artuplabs-demo.css?v=ce02129712" rel="stylesheet" />
+    <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
+</head>
+
+<body class="viewer-body">
+    <div id="loader" class="loader-wrapper">
+        <div class="loader"></div>
+    </div>
+
+    <div id="qrcode-wrapper" class="qr-code-wrapper hidden" onclick="closeQR()">
+        <div class="qr-code-border">
+            <div id="qr-code" class="qr-code">
+            </div>
+        </div>
+        <span class="qr-code__text" data-i18n="viewer.qrText">Отсканируйте этот QR-код с помощью мобильного устройства, чтобы увидеть эту модель в дополненной реальности.</span>
+    </div>
+
+
+    <!-- «Мои планы» в углу страницы (окружение со страницей планов, не во фрейме превью каталога). -->
+    <div id="plansSlot" class="plans-slot plans-slot--floating" hidden></div>
+
+    <div class="viewer-wrapper">
+        <div class="viewer" id="container">
+            <a class="back_button hidden" id="back" onclick="backOnClick()">&laquo; <span data-i18n="common.back">Назад</span></a>
+            <!-- <model-viewer> — скрытая пусковая площадка Android WebXR (без Google Scene Viewer); режим и
+                 артефакт задаёт src/viewer/render.js. Scene Viewer и Quick Look запускаются без него. -->
+            <model-viewer id="model-viewer" class="hidden" ar reveal="manual" loading="lazy" camera-controls
+                tone-mapping="neutral" shadow-intensity="1">
+                <div class="progress-bar hidden" slot="progress-bar">
+                    <div class="update-bar"></div>
+                </div>
+                <div id="ar-prompt">
+                    <img src="./img/ar_hand_prompt.png">
+                </div>
+                <button slot="ar-button" id="ar-button" class="ar-button" data-i18n="viewer.viewInSpace">
+                    Просмотр в пространстве
+                </button>
+            </model-viewer>
+            <!-- Скрыта, пока пусковая площадка не подтвердила, что выбранный AR consumer здесь доступен. -->
+            <button onclick="aRShow()" id="ar-button-repiter" class="ar-button hidden">
+                <span class="view-span" data-i18n="viewer.viewInSpace">
+                    Просмотр в пространстве
+                </span>
+            </button>
+            <div class="model-title">
+                <img id="titleIcon" class="title-icon hidden" width="50px" height="50px" />
+                <label id="modelTitle"></label>
+            </div>
+            <div id="colorPalette" class="color-palette hidden" role="radiogroup" aria-label="Цвет ткани" data-i18n-attr="aria-label:colors.paletteLabel"></div>
+            <div id="zoomButtons" class="zoom-buttons">
+                <a class="zoom zoom_in" onclick="zoomIn()"> <img src="./img/zoom_in.png"></a>
+                <a class="zoom zoom_out" onclick="zoomOut()"><img src="./img/zoom_out.png"> </a>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="./src/common/loading.js?v=662bf7395d"></script>
+    <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
+
+    <!-- <model-viewer> (со своей копией three.js) и его декодер meshopt подгружает src/viewer/render.js и только там,
+         где он пусковая площадка AR (Android WebXR): у десктопа, Scene Viewer и Quick Look на странице одна three.js. -->
+    <script type="module" src="./dist/viewer.bandle.js?v=235bff8922"></script>
+</body>
+
+</html>

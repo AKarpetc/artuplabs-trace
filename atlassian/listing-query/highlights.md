@@ -1,37 +1,38 @@
 # ArtUp Query — highlights and screenshot captions
 
 Exactly 3 highlights; title ≤ 50 characters, summary ≤ 220 (limits as found for the other apps —
-re-check). Each maps to a row of brief §4 (`../25_app5_jql.md`). Numbers are from the acceptance
-runs on `artuplabs-dev` (50,000 issues); each carries a refresh marker for after Tasks 30 and 32.
+re-check). Each maps to a row of brief §4 (`../25_app5_jql.md`). Wording follows the live site (Tier 1).
+Only measured numbers appear; freshness figures are marked `<!-- refresh after gates run 2 -->` and are
+filled in after the gate measurements.
 
-## Highlight 1 — Fresh
+## Highlight 1 — Complete
 
-**Title:** Results update within seconds of an edit
-
-**Summary:** On a 50,000-issue site the 90th percentile was 24.7 s for subtask and link functions and
-7.1 s for board sprints. Sprint history stays under a minute. Bulk imports can take minutes.
-<!-- refresh after acceptance -->
-
-**Source:** brief §4 row "30+ minutes for a filter to synch"; freshness run, n = 30 (query, board);
-sprint run n = 5, full run in progress. **Screenshot:** `screenshots/` status page.
-
-## Highlight 2 — Complete
-
-**Title:** Complete at any size, errors that explain
+**Title:** Complete, or an error that explains
 
 **Summary:** Every function matched a REST reference on 50,000 issues: 24/24, 85/85 (a sprint of 1,093
-issues included) and 17/17. A wrong argument gives a message in the JQL editor, never an empty list.
-<!-- refresh after acceptance -->
+issues included) and 17/17. A result too large for Jira's API allowance is an error with the numbers,
+never a cut-off list.
 
 **Source:** brief §4 rows "childrenOfEpicsInQuery doesn't always show all" and "none of the functions
 return any values"; completeness runs M1, M2, M3. **Screenshot:** error in the JQL editor.
+
+## Highlight 2 — Kept up to date
+
+**Title:** Kept up to date from Jira events
+
+**Summary:** Edits reach results through Jira's change events. Small subqueries answer quickly; large results and bulk imports update later, within Jira's API allowance for apps.
+<!-- refresh after gates run 2: measured freshness and the subquery size it holds for -->
+
+**Source:** brief §4 row "30+ minutes for a filter to synch"; freshness runs to be repeated on the
+Tier 1 allowance (gates run 2). **Screenshot:** `screenshots/` status page.
 
 ## Highlight 3 — Runs on Atlassian
 
 **Title:** Nothing leaves Atlassian, nothing is written
 
-**Summary:** No external servers and no egress. The app reads work items and keeps only ids, dates and
-metadata in Forge storage; it never writes to your issues and never stores issue text.
+**Summary:** No external servers and no egress. The app reads work items and keeps only ids, dates,
+metadata and the arguments of the functions in use in Forge storage; it never writes to your issues and
+never stores issue text.
 
 **Source:** manifest (no external permissions, one write scope: `write:app-data:jira`, used only for
 JQL function precomputations), brief §4 row "Appfire spams Jira Cloud". **Screenshot:** the admin page.

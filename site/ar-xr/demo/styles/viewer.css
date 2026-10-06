@@ -1,0 +1,190 @@
+/*
+ * Просмотр одной модели. Файл подключается только `viewer.html` и переопределяет общие
+ * правила `styles.css` для этой страницы — landing их продолжает использовать как есть.
+ */
+
+.viewer-body {
+    background: linear-gradient(180deg, var(--avt-canvas-night-soft) 0%, var(--avt-canvas-night-mid) 100%);
+    color: var(--avt-ink-inverse);
+    font-family: var(--avt-font);
+    -webkit-font-smoothing: antialiased;
+}
+
+.viewer-body .back_button {
+    top: calc(var(--avt-space-3) + var(--avt-safe-top));
+    left: calc(var(--avt-space-3) + var(--avt-safe-left));
+    z-index: 20;
+    margin: 0;
+    padding: 10px 18px;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-pill);
+    background: var(--avt-glass-strong);
+    color: var(--avt-ink-inverse);
+    font-family: var(--avt-font);
+    font-size: 14px;
+    font-weight: 600;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/*
+ * Подпись модели — необязательная настройка презентации (`presentation.ui.modelTitle`).
+ * Плашку рисует сам текст, поэтому у модели без подписи не остаётся пустого прямоугольника.
+ */
+.viewer-body .model-title {
+    bottom: calc(76px + var(--avt-safe-bottom));
+    left: calc(var(--avt-space-3) + var(--avt-safe-left));
+    gap: var(--avt-space-2);
+    max-width: min(70%, 420px);
+}
+
+.viewer-body #modelTitle:not(:empty) {
+    padding: 8px 14px;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-pill);
+    background: var(--avt-glass);
+    color: var(--avt-ink-inverse);
+    font-size: 15px;
+    font-weight: 600;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.viewer-body .title-icon {
+    margin: 0;
+    border-radius: var(--avt-radius-sm);
+}
+
+.viewer-body .zoom {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    margin: 0 0 0 var(--avt-space-2);
+    padding: 0;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-pill);
+    background: var(--avt-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.viewer-body .zoom-buttons {
+    right: calc(var(--avt-space-3) + var(--avt-safe-right));
+    bottom: calc(var(--avt-space-3) + var(--avt-safe-bottom));
+}
+
+.viewer-body .zoom > img {
+    width: 22px;
+    height: 22px;
+}
+
+/*
+ * Автор, источник и лицензия модели библиотеки (src/common/model/modelCredit.mjs): CC BY требует
+ * показывать их рядом с моделью. Строка внизу слева над кнопкой AR (вверху — кнопка «Мои планы»),
+ * ссылка ведёт на источник.
+ */
+.viewer-body .model-credit {
+    position: absolute;
+    bottom: calc(76px + var(--avt-safe-bottom));
+    left: calc(var(--avt-space-3) + var(--avt-safe-left));
+    z-index: 10;
+    max-width: min(70%, 520px);
+    margin: 0;
+    padding: 6px 12px;
+    border: 1px solid var(--avt-glass-border);
+    border-radius: var(--avt-radius-sm);
+    background: var(--avt-glass);
+    color: var(--avt-ink-inverse);
+    font-size: 12px;
+    line-height: 1.35;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.viewer-body .model-credit a {
+    color: inherit;
+}
+
+/*
+ * Кнопка запуска AR: и слот model-viewer, и её видимый дубль на странице. Пусковая площадка
+ * скрыта, поэтому дубль — единственная кнопка, которую видит посетитель.
+ */
+.viewer-body .ar-button {
+    left: 50%;
+    bottom: calc(var(--avt-space-4) + var(--avt-safe-bottom));
+    display: inline-flex;
+    align-items: center;
+    gap: var(--avt-space-2);
+    min-height: 52px;
+    padding: 0 26px 0 44px;
+    border: none;
+    border-radius: var(--avt-radius-pill);
+    background-color: transparent;
+    background-image: url(./../img/ar_icon.png), linear-gradient(135deg, var(--avt-brand-bright), var(--avt-brand));
+    background-repeat: no-repeat, no-repeat;
+    background-size: 20px 20px, cover;
+    background-position: 16px 50%, center;
+    color: #ffffff;
+    font-family: var(--avt-font);
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: var(--avt-shadow-lg);
+}
+
+.viewer-body .ar-button:active {
+    filter: brightness(1.08);
+}
+
+.viewer-body .qr-code-wrapper {
+    /* width/height 100% из styles.css плюс padding не должны вылезать за экран. */
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    gap: var(--avt-space-4);
+    align-content: center;
+    padding: var(--avt-space-5);
+    background: rgba(8, 13, 22, 0.92);
+    opacity: 1;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.viewer-body .qr-code-border {
+    display: grid;
+    place-items: center;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: var(--avt-space-4);
+    border-radius: var(--avt-radius-lg);
+    background: #ffffff;
+    box-shadow: var(--avt-shadow-lg);
+}
+
+/* styles.css задаёт .qr-code 400x400 (.qr-code__min 190x190) с отступом сверху — здесь размер
+   определяет картинка, иначе она прижимается к левому верхнему углу пустой карточки. */
+.viewer-body .qr-code {
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.viewer-body .qr-code-border canvas {
+    display: none;
+}
+
+.viewer-body .qr-code-border img {
+    display: block;
+    width: min(280px, 60vw);
+    height: auto;
+}
+
+.viewer-body .qr-code__text {
+    max-width: 380px;
+    color: var(--avt-ink-inverse);
+    font-size: 15px;
+    line-height: 22px;
+    text-align: center;
+}

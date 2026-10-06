@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <title data-i18n="xr.docTitle">ArtUp AR XR — XR-комната</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <!-- app-clip-banner:start -->
+    <!-- app-clip-banner:end -->
+    <meta name="description" data-i18n-attr="content:xr.metaDescription"
+      content="XR room: place several furniture items in your space, move, rotate and scale them, and save the plan — right in the browser.">
+    <meta name="theme-color" content="#0d121c">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Шрифт не блокирует первую отрисовку: без Google Fonts страница остаётся на системном. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap" media="print" onload="this.media='all'">
+    <link type="text/css" href="./styles/theme.css?v=2232987e58" rel="stylesheet" />
+    <link type="text/css" href="./styles/styles.css?v=74c90549a7" rel="stylesheet" />
+    <link type="text/css" href="./styles/loading.css?v=391a97178e" rel="stylesheet" />
+    <link type="text/css" href="./styles/xr.css?v=d56a5b17a7" rel="stylesheet" />
+    <link type="text/css" href="./styles/font-awesome-4.7.0/css/font-awesome.css?v=c495654869" rel="stylesheet" />
+    <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
+    <!-- Общие токены ArtUp AR XR (владелец — лендинг /ar-xr/); XR-страница работает и без них. -->
+    <link type="text/css" href="../assets/ar-xr.css?v=2e0158b1d6" rel="stylesheet" />
+    <link type="text/css" href="./styles/artuplabs-demo.css?v=ce02129712" rel="stylesheet" />
+</head>
+
+<body class="xr-body">
+
+    <!-- Путь без WebXR: страница предлагает открыть ссылку на устройстве, которое его поддерживает. -->
+    <section id="xrFallback" class="xr-fallback hidden">
+        <p class="xr-hero__eyebrow"><a class="xr-hero__brand" href="./demo.html"><img class="xr-hero__logo" src="../assets/ar-xr-icon.svg" alt="" width="24" height="24"><span>ArtUp AR XR</span></a><span class="xr-hero__eyebrow-tail" data-i18n="xr.roomLabel">XR-комната</span></p>
+        <h1 class="xr-fallback__title" data-i18n="xr.fallbackTitle">Откройте на телефоне с поддержкой AR</h1>
+        <p id="xrFallbackHint" class="xr-fallback__hint"></p>
+        <div id="qr-code" class="qr-code hidden"></div>
+        <p class="xr-fallback__note" data-i18n="xr.fallbackNote">
+            QR-код ведёт на эту же страницу. На Android нужен Chrome с поддержкой ARCore,
+            на iPhone — запуск через приложение по ссылке.
+        </p>
+    </section>
+
+    <!-- iPhone в режиме App Clip: XR открывается в нашем приложении через карточку Safari. -->
+    <section id="xrAppClip" class="xr-fallback hidden">
+        <p class="xr-hero__eyebrow"><a class="xr-hero__brand" href="./demo.html"><img class="xr-hero__logo" src="../assets/ar-xr-icon.svg" alt="" width="24" height="24"><span>ArtUp AR XR</span></a><span class="xr-hero__eyebrow-tail" data-i18n="xr.roomLabel">XR-комната</span></p>
+        <h1 class="xr-fallback__title" data-i18n="xr.appClipTitle">Откройте в приложении</h1>
+        <p id="xrAppClipSafariHint" class="xr-fallback__hint" data-i18n="xr.appClipSafariHint">Нажмите «Открыть» в карточке вверху экрана — расстановка откроется в нашем приложении без установки.</p>
+        <div id="xrAppClipOtherBrowser" class="xr-fallback__hint hidden">
+            <span data-i18n="xr.appClipOpenInSafari">Откройте эту страницу в Safari:</span>
+            <span id="xrAppClipPageUrl" class="xr-fallback__url"></span>
+        </div>
+        <p id="xrAppClipProject" class="xr-fallback__note hidden">
+            <a id="xrAppClipProjectLink" href="#" data-i18n="xr.appClipProjectLink">Открыть проект в приложении</a><br>
+            <span data-i18n="xr.appClipProjectNote">Ссылка открывает этот проект для всех, у кого она есть.</span>
+        </p>
+        <a id="xrAppClipStore" class="xr-fallback__note hidden" href="#" data-i18n="xr.appClipStore">Установить приложение из App Store</a>
+        <div id="qr-code-appclip" class="qr-code hidden"></div>
+        <p class="xr-fallback__note" data-i18n="xr.appClipAndroid">На Android отсканируйте QR-код — XR откроется в Chrome.</p>
+    </section>
+
+    <div id="main" class="main hidden">
+        <header class="xr-hero">
+            <p class="xr-hero__eyebrow"><a class="xr-hero__brand" href="./demo.html"><img class="xr-hero__logo" src="../assets/ar-xr-icon.svg" alt="" width="24" height="24"><span>ArtUp AR XR</span></a><span class="xr-hero__eyebrow-tail" data-i18n="xr.roomLabel">XR-комната</span><span class="xr-hero__tools"><span id="plansSlot" class="plans-slot" hidden></span><span id="handoffSlot" class="handoff-slot" hidden></span><span data-lang-switch hidden></span></span></p>
+            <h1 class="xr-hero__title" data-i18n="xr.heroTitle">Расставьте товары в своей комнате</h1>
+            <p class="xr-hero__lead">
+                <span data-i18n="xr.heroLead">Наведите камеру на пол, выберите модель из каталога и поставьте её на место.</span>
+                <span id="xrRoomPersistenceNote" data-i18n="xr.persistenceNote">Готовую расстановку сохраните кнопкой «Сохранить план». Планы сохраняются на этом устройстве — без регистрации — и открываются в «Мои планы».</span>
+            </p>
+
+            <ol class="xr-steps">
+                <li class="xr-steps__item">
+                    <span class="xr-steps__icon" aria-hidden="true"><i class="fa fa-mobile"></i></span>
+                    <span class="xr-steps__text" data-i18n-html="xr.step1"><b>Сканируйте</b> пространство — медленно поведите камерой по полу</span>
+                </li>
+                <li class="xr-steps__item">
+                    <span class="xr-steps__icon" aria-hidden="true"><i class="fa fa-th-large"></i></span>
+                    <span class="xr-steps__text" data-i18n-html="xr.step2"><b>Выберите</b> категорию и модель в нижней панели</span>
+                </li>
+                <li class="xr-steps__item">
+                    <span class="xr-steps__icon" aria-hidden="true"><i class="fa fa-crosshairs"></i></span>
+                    <span class="xr-steps__text" data-i18n-html="xr.step3"><b>Поставьте</b> модель туда, где виден круг прицела</span>
+                </li>
+            </ol>
+
+            <details class="xr-guide">
+                <summary class="xr-guide__summary" data-i18n="xr.guideSummary">Подробная инструкция</summary>
+                <div class="xr-guide__body">
+                    <p data-i18n-html="xr.guidePlace"><b>Место.</b> Нужен хорошо освещённый участок, по которому можно пройти несколько шагов.</p>
+                    <p data-i18n-html="xr.guideStart"><b>Старт.</b> Нажмите «Свободная расстановка» или «По двум углам комнаты» и поводите камерой, пока на полу не появится круг прицела.</p>
+                    <p data-i18n-html="xr.guidePlacing"><b>Размещение.</b> Выберите модель — она встанет там, где стоит круг.</p>
+                    <p data-i18n-html="xr.guideEditing"><b>Редактирование.</b> У выбранной модели появляется зелёная подложка: её можно двигать,
+                        поворачивать, масштабировать и удалять кнопками справа.</p>
+                    <p data-i18n-html="xr.guideSaving"><b>Сохранение.</b> Кнопка «Сохранить план» вверху экрана сохраняет расстановку с названием
+                        и итогом; если вы начали со свободной расстановки, она попросит отметить два угла стены.
+                        Сохранённые планы — в «Мои планы».</p>
+                    <p class="xr-guide__contacts" data-contacts><span data-i18n="xr.guideHelp">Нужна помощь?</span> <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+                </div>
+            </details>
+
+            <a href="#" id="openModal" class="xr-hero__link" data-i18n="xr.whatIsXr">Что такое XR?</a>
+        </header>
+
+        <section id="roomPanel" class="room-panel" aria-labelledby="roomPanelTitle">
+            <div class="room-panel__head">
+                <h2 id="roomPanelTitle" class="room-panel__title" data-i18n="xr.roomPanelTitle">План</h2>
+                <span id="roomActive" class="room-panel__active" data-i18n="xr.noRoom">Новый план — ещё не сохранён</span>
+            </div>
+
+            <p class="room-panel__hint" data-i18n="xr.roomPanelHint">
+                Выберите план, чтобы продолжить его, или начните новый — кнопка «Сохранить план» в XR сама
+                создаст план с названием. Планы сохраняются на этом устройстве — без регистрации.
+                Ссылка и QR-код открывают план на другом устройстве только для просмотра.
+            </p>
+
+            <div id="roomList" class="room-panel__list"></div>
+
+            <button id="roomCreate" type="button" class="avt-btn avt-btn--ghost avt-btn--block room-panel__button">
+                <i class="fa fa-plus" aria-hidden="true"></i> <span data-i18n="xr.newRoom">Новый план</span>
+            </button>
+        </section>
+
+        <!-- Что расставлять: каталог, комната и стиль выбираются до старта, лента в XR сразу показывает
+             этот набор. Панель видна, только если у каталога есть комнаты и стили. -->
+        <section id="xrPick" class="xr-pick hidden" aria-labelledby="xrPickTitle">
+            <h2 id="xrPickTitle" class="xr-pick__title" data-i18n="xr.pickTitle">Что расставляем</h2>
+            <label id="xrPickCatalogField" class="xr-pick__field hidden">
+                <span class="xr-pick__label" data-i18n="xr.pickCatalog">Каталог</span>
+                <select id="xrPickCatalog" class="xr-pick__select"></select>
+            </label>
+            <label class="xr-pick__field">
+                <span class="xr-pick__label" data-i18n="xr.pickRoom">Комната</span>
+                <select id="xrPickRoom" class="xr-pick__select"></select>
+            </label>
+            <label class="xr-pick__field">
+                <span class="xr-pick__label" data-i18n="xr.pickStyle">Стиль</span>
+                <select id="xrPickStyle" class="xr-pick__select"></select>
+            </label>
+            <p id="xrPickCount" class="xr-pick__count" aria-live="polite"></p>
+            <p class="xr-pick__links"><a href="./demo.html#catalog" data-i18n="xr.pickInCatalog">Выбрать в каталоге</a> · <a href="./plans.html" data-i18n="nav.plans">Мои планы</a></p>
+            <div class="xr-pick__currency"><span class="xr-pick__label" data-i18n="xr.priceCurrency">Валюта цен</span><div id="xrCurrency" hidden></div></div>
+        </section>
+        <!-- Появляется, когда immersive-ar подтверждён и сцена с каталогом готова;
+             нажатие внутри жеста пользователя запрашивает XR-сессию (showAr).
+             Строка состояния ниже объясняет, почему кнопки ещё нет или что отказало. -->
+        <!-- Где в сессии стоит лента моделей. Выбор запоминается в браузере; `?ribbon=left|bottom`
+             в ссылке важнее запомненного. -->
+        <fieldset id="xrRibbon" class="xr-ribbon">
+            <legend class="xr-pick__label" data-i18n="xr.ribbonLegend">Лента моделей в XR</legend>
+            <div class="xr-ribbon__options">
+                <label class="xr-ribbon__option">
+                    <input type="radio" name="xrRibbon" value="bottom" class="xr-ribbon__input">
+                    <span class="xr-ribbon__text" data-i18n="xr.ribbonBottom">Снизу</span>
+                </label>
+                <label class="xr-ribbon__option">
+                    <input type="radio" name="xrRibbon" value="left" class="xr-ribbon__input">
+                    <span class="xr-ribbon__text" data-i18n="xr.ribbonLeft">Слева</span>
+                </label>
+            </div>
+        </fieldset>
+        <div class="xr-launch">
+            <div id="xrStartStatus" class="xr-start-status hidden" role="status"></div>
+            <button onclick="showAr()" id="xrStart" type="button"
+                class="ar-button xr-start avt-btn avt-btn--primary hidden" data-i18n="xr.startCornersBasic">По двум углам комнаты</button>
+            <button onclick="showArFree()" id="xrStartFree" type="button"
+                class="ar-button xr-start avt-btn avt-btn--ghost hidden" data-i18n="xr.startFreeBasic">Свободная расстановка</button>
+            <p id="xrStartHint" class="xr-start-hint" data-i18n="xr.startHintBasic">По двум углам — сначала отметьте левый и правый угол стены, расстановка выровняется по комнате. Свободная — модели сразу ставятся на пол.</p>
+        </div>
+    </div>
+
+    <div id="calibrationUI" class="calibration-ui hidden">
+        <h3 id="calibrationText" class="calibration-ui__text" data-i18n="xr.calibrationStep1">Шаг 1: Наведите прицел (кружок) на левый угол стены и коснитесь экрана</h3>
+    </div>
+
+    <div id="ar-main" class="ar-main hidden">
+        <span class="log" id="log"></span>
+        <div id="roomBadge" class="room-badge hidden"></div>
+        <!-- Над камерой — только «Сохранить план» и «Мои планы» (под кнопкой выхода, видны, если проект
+             этого устройства можно менять); цен над камерой нет: смета — в листе «Сохранить план». -->
+        <div id="xrControls" class="xr-controls hidden" data-xr-dom>
+            <button id="xrSavePlan" type="button" class="xr-controls__button xr-controls__button--save" onclick="openSavePlan()">
+                <i class="fa fa-floppy-o" aria-hidden="true"></i><span data-i18n="xr.savePlan">Сохранить план</span>
+            </button>
+            <button id="xrDesigns" type="button" class="xr-controls__button" onclick="openXrDesigns()">
+                <i class="fa fa-folder-open-o" aria-hidden="true"></i><span data-i18n="nav.plans">Мои планы</span>
+            </button>
+        </div>
+
+        <div id="xrColors" class="color-palette xr-colors hidden" data-xr-dom role="radiogroup" aria-label="Цвет ткани" data-i18n-attr="aria-label:colors.paletteLabel"></div>
+
+        <div id="toolbar" class="toolbar">
+            <button id="transformDoneBtn" onclick="transformDone()" class="toolbar_button hidden" title="Готово" aria-label="Готово" data-i18n-attr="title:xr.done;aria-label:xr.done">
+                <i class="fa fa-check" aria-hidden="true"></i>
+            </button>
+
+            <div id="toolbarButtons" class="toolbar__buttons">
+                <button id="roomPrecheck" onclick="openRoomPrecheck()" class="toolbar_button hidden" title="Список товаров" aria-label="Список товаров" data-i18n-attr="title:xr.productList;aria-label:xr.productList">
+                    <i class="fa fa-list" aria-hidden="true"></i>
+                </button>
+                <button id="roomSave" onclick="saveArRoom()" class="toolbar_button toolbar_button__selected toolbar_button__creator hidden" title="Сохранить план" aria-label="Сохранить план" data-i18n-attr="title:xr.savePlan;aria-label:xr.savePlan">
+                    <i class="fa fa-floppy-o" aria-hidden="true"></i>
+                </button>
+                <button onclick="unselect()" class="toolbar_button toolbar_button__selected hidden" title="Снять выделение" aria-label="Снять выделение" data-i18n-attr="title:xr.unselect;aria-label:xr.unselect">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+                <button onclick="rotateModel()" class="toolbar_button toolbar_button__selected hidden" title="Повернуть" aria-label="Повернуть" data-i18n-attr="title:xr.rotate;aria-label:xr.rotate">
+                    <i class="fa fa-repeat" aria-hidden="true"></i>
+                </button>
+                <button id="scaleModelButton" onclick="scaleModel()" class="toolbar_button toolbar_button__selected hidden" title="Масштаб" aria-label="Масштаб" data-i18n-attr="title:xr.scale;aria-label:xr.scale">
+                    <i class="fa fa-expand" aria-hidden="true"></i>
+                </button>
+                <button onclick="resetModel()" class="toolbar_button toolbar_button__selected hidden" title="Сбросить поворот и размер" aria-label="Сбросить поворот и размер" data-i18n-attr="title:xr.reset;aria-label:xr.reset">
+                    <i class="fa fa-undo" aria-hidden="true"></i>
+                </button>
+                <button onclick="removeModel()" class="toolbar_button toolbar_button__selected hidden" title="Удалить" aria-label="Удалить" data-i18n-attr="title:xr.remove;aria-label:xr.remove">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                </button>
+
+                <button id="putModel" onclick="putModel()" class="toolbar_button toolbar_button__selected__put hidden" title="Поставить" aria-label="Поставить" data-i18n-attr="title:xr.put;aria-label:xr.put">
+                    <i class="fa fa-stop-circle" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Каталог внутри сессии: панель у нижнего края — единственная зона, достижимая
+             большим пальцем на телефоне, который держат двумя руками при сканировании. -->
+        <div id="optionsButtons" class="session-buttons hidden">
+            <button id="arBack" onclick="arBack()" class="session-button session-button--back hidden" data-alias="undefined"
+                data-aliasindex="0" data-base-type="types" title="Назад к категориям" aria-label="Назад к категориям" data-i18n-attr="title:xr.backToCategories;aria-label:xr.backToCategories">
+                <span class="session-button__icon" aria-hidden="true"><i class="fa fa-chevron-left"></i></span>
+                <span class="session-button__label" data-i18n="common.back">Назад</span>
+            </button>
+
+            <div id="places" class="option-buttons"></div>
+        </div>
+
+        <div id="place-finder" class="place-finder">
+            <div class="place-finder-hands"></div>
+        </div>
+
+        <a id="close" onclick="closeSession()" class="session-close" data-xr-dom title="Выйти из XR" aria-label="Выйти из XR" data-i18n-attr="title:xr.exit;aria-label:xr.exit"></a>
+    </div>
+
+    <div id="modal" class="xr-modal hidden">
+        <div class="xr-modal__content avt-card">
+            <button id="closeModal" class="xr-modal__close" type="button" aria-label="Закрыть" data-i18n-attr="aria-label:common.close">&times;</button>
+            <h2 class="xr-modal__title" data-i18n="xr.modalTitle">Что такое XR</h2>
+            <p data-i18n-html="xr.modalIntro"><b>XR (Extended Reality)</b> — общее название технологий, которые объединяют реальный и виртуальный
+                миры: <b>VR</b>, <b>AR</b> и <b>MR</b>.</p>
+            <ul class="xr-modal__list">
+                <li data-i18n-html="xr.modalVr"><b>VR</b> — гарнитура и полное погружение в цифровую реальность.</li>
+                <li data-i18n-html="xr.modalAr"><b>AR</b> — виртуальные объекты поверх окружения на экране смартфона.</li>
+                <li data-i18n-html="xr.modalMr"><b>MR</b> — виртуальные объекты взаимодействуют с реальным миром и с вами.</li>
+            </ul>
+            <p class="avt-muted" data-i18n="xr.modalNote">XR Room использует AR: модели стоят на реальном полу вашей комнаты.</p>
+        </div>
+    </div>
+
+    <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
+    <script type="module" src="./dist/webXRScene.bandle.js?v=d713511a6b"></script>
+
+    <script>
+        document.getElementById('openModal').addEventListener('click', function (event) {
+            event.preventDefault();
+            document.getElementById('modal').classList.remove('hidden');
+        });
+
+        document.getElementById('closeModal').addEventListener('click', function () {
+            document.getElementById('modal').classList.add('hidden');
+        });
+
+        document.getElementById('modal').addEventListener('click', function (event) {
+            if (event.target === this)
+                this.classList.add('hidden');
+        });
+    </script>
+</body>
+
+</html>

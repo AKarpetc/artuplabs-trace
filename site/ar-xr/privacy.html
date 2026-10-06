@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Политика конфиденциальности — ArtUp AR XR</title>
+  <meta name="description" content="Политика обработки персональных данных ArtUp AR XR (ArtUp Labs).">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="assets/ar-xr-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+  <link rel="stylesheet" href="assets/ar-xr.css?v=dcc46cda">
+  <link rel="stylesheet" href="assets/site.css?v=2b50b7ee">
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search).get("lang");
+      var saved = null;
+      try {
+        saved = localStorage.getItem("artup-lang");
+        if (!saved && localStorage.getItem("privacy-lang")) {
+          saved = localStorage.getItem("privacy-lang");
+          localStorage.setItem("artup-lang", saved); // lang.js reads only the shared key
+        }
+      } catch (e) {}
+      var nav = "en"; // English by default; Russian only after a switch or ?lang=ru
+      var lang = [q, saved, nav].filter(function (v) { return v === "ru" || v === "en"; })[0];
+      document.documentElement.lang = lang;
+    })();
+  </script>
+</head>
+<body class="ax-page">
+  <a class="ax-skip" href="#main" data-i18n="skip">Перейти к содержанию</a>
+
+  <header class="ax-header">
+    <div class="ax-container ax-header-row">
+      <a class="ax-brand" href="../" title="ArtUp Labs"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28"><span class="ax-brand-name">ArtUp Labs</span></a>
+      <span class="ax-brand-sep" aria-hidden="true"></span>
+      <a class="ax-product" href="./"><img src="assets/ar-xr-icon.svg" alt="" width="26" height="26">AR XR</a>
+      <nav class="ax-nav" aria-label="AR XR">
+        <ul>
+          <li><a href="./">AR XR</a></li>
+          <li><a href="demo/"><span data-lang="ru">Демо</span><span data-lang="en">Demo</span></a></li>
+          <li><a href="support.html"><span data-lang="ru">Поддержка</span><span data-lang="en">Support</span></a></li>
+          <li><a href="privacy.html" aria-current="page"><span data-lang="ru">Конфиденциальность</span><span data-lang="en">Privacy</span></a></li>
+          <li><a href="app-privacy.html"><span data-lang="ru">Приложение</span><span data-lang="en">App</span></a></li>
+        </ul>
+      </nav>
+      <div class="ax-header-actions">
+        <div class="ax-segmented ax-lang" role="group" aria-label="Язык / Language" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang-set="ru" lang="ru" aria-pressed="true">RU</button>
+          <button type="button" data-lang-set="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/"><span data-lang="ru">Открыть демо</span><span data-lang="en">Open demo</span></a>
+      </div>
+    </div>
+  </header>
+
+  <section class="lx-doc-hero">
+    <div class="ax-container">
+      <div class="lx-doc-top">
+        <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24">ArtUp AR XR</p>
+      </div>
+      <h1 data-lang="ru">Политика конфиденциальности</h1>
+      <h1 data-lang="en">Privacy Policy</h1>
+      <p data-lang="ru">Политика в отношении обработки персональных данных. Редакция от 4 октября 2026 г.</p>
+      <p data-lang="en">Personal data processing policy. Effective October 4, 2026.</p>
+    </div>
+  </section>
+
+  <main id="main">
+
+  <div class="ax-container lx-doc-layout" data-lang="ru" lang="ru">
+    <nav class="lx-toc" aria-label="Содержание">
+      <p>Содержание</p>
+      <ol>
+        <li><a href="#ru-general">Общие положения</a></li>
+        <li><a href="#ru-terms">Термины</a></li>
+        <li><a href="#ru-data">Какие данные мы обрабатываем</a></li>
+        <li><a href="#ru-purposes">Цели обработки</a></li>
+        <li><a href="#ru-basis">Правовые основания</a></li>
+        <li><a href="#ru-third">Передача третьим лицам</a></li>
+        <li><a href="#ru-demo">Демо: планы и аккаунт</a></li>
+        <li><a href="#ru-storage">Сроки и хранение</a></li>
+        <li><a href="#ru-browser">Cookies и хранилище браузера</a></li>
+        <li><a href="#ru-rights">Ваши права</a></li>
+        <li><a href="#ru-security">Защита данных</a></li>
+        <li><a href="#ru-apps">Приложения</a></li>
+        <li><a href="#ru-contacts">Контакты и изменения</a></li>
+      </ol>
+    </nav>
+
+    <article class="lx-doc">
+      <div class="lx-summary">
+        <p><strong>Коротко:</strong> мы получаем ваши данные, только когда вы сами пишете нам на почту или
+        пользуетесь демо (планы комнат, аккаунт), и используем их лишь для ответа и работы демо.
+        Рекламных трекеров на сайте нет; посещения считаются в обобщённом виде через Cloudflare Web Analytics,
+        без cookies.</p>
+      </div>
+
+      <h2 id="ru-general">Общие положения</h2>
+      <p>Настоящая политика определяет порядок обработки и защиты персональных данных пользователей сайта artuplabs.com/ar-xr и сервисов ArtUp AR XR, которые предоставляет ArtUp Labs (далее — «Компания», «мы»), в соответствии с
+      Законом Республики Казахстан от 21 мая 2013 года № 94-V «О персональных данных и их защите».</p>
+      <p>Оператор персональных данных — ArtUp Labs (торговое название ИП Карпец Артём, Республика Казахстан). Пользуясь сайтом, вы
+      подтверждаете, что ознакомились с этой политикой.</p>
+
+      <h2 id="ru-terms">Термины</h2>
+      <dl>
+        <dt>Сайт</dt>
+        <dd>Раздел artuplabs.com/ar-xr со всеми страницами, включая демо-страницы AR и XR.</dd>
+        <dt>Сервисы</dt>
+        <dd>Продукты Компании для бизнеса: AR-примерка, 360° обзор, XR-витрина и мобильные приложения, которые
+        позволяют покупателям рассмотреть товар и «примерить» его в своём пространстве до покупки.</dd>
+        <dt>AR-примерка (дополненная реальность)</dt>
+        <dd>Показ 3D-модели товара поверх изображения с камеры устройства — например, как новая мебель будет
+        стоять в комнате.</dd>
+        <dt>360° обзор</dt>
+        <dd>Интерактивный просмотр 3D-модели товара со всех сторон с возможностью рассмотреть детали.</dd>
+        <dt>XR</dt>
+        <dd>Расширенная реальность: общее название технологий дополненной и виртуальной реальности, в том числе
+        виртуальных шоурумов.</dd>
+        <dt>Пользователь</dt>
+        <dd>Любой посетитель сайта или пользователь сервисов.</dd>
+        <dt>Персональные данные</dt>
+        <dd>Любая информация, относящаяся прямо или косвенно к определённому или определяемому физическому
+        лицу.</dd>
+        <dt>Обработка персональных данных</dt>
+        <dd>Любое действие с персональными данными: сбор, запись, систематизация, хранение, уточнение,
+        использование, передача, удаление и уничтожение.</dd>
+      </dl>
+
+      <h2 id="ru-data">Какие данные мы обрабатываем</h2>
+      <p>Данные, которые вы сообщаете, когда пишете нам на <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>:</p>
+      <ul>
+        <li>адрес электронной почты и имя (если вы его указали);</li>
+        <li>текст письма и вложения, которые вы решили отправить.</li>
+      </ul>
+      <p>Данные демо (идентификатор проекта устройства, планы комнат, при регистрации — адрес электронной почты
+      и хэш пароля) описаны ниже в разделе «Демо: планы и аккаунт». Технические данные, которые получает любой веб-сервер: IP-адрес, тип браузера, время и адрес запроса.
+      Мы не используем их для идентификации пользователей.</p>
+      <p>Мы не собираем специальные категории персональных данных и биометрические данные.</p>
+
+      <h2 id="ru-purposes">Цели обработки</h2>
+      <ul>
+        <li>ответы на ваши письма и связь с вами по вопросам сервисов;</li>
+        <li>работа демо: сохранение планов комнат и учётной записи;</li>
+        <li>подготовка предложения и заключение договора — если вы сами об этом просите;</li>
+        <li>обеспечение работы и безопасности сайта.</li>
+      </ul>
+
+      <h2 id="ru-basis">Правовые основания</h2>
+      <p>Мы обрабатываем данные на основании вашего согласия, которое вы выражаете, написав нам или
+      зарегистрировавшись в демо, а также для заключения и исполнения договора, стороной которого вы
+      являетесь или собираетесь стать.</p>
+
+      <h2 id="ru-third">Передача третьим лицам</h2>
+      <p>Мы не продаём и не передаём ваши данные третьим лицам для их собственных целей. Для работы сайта мы
+      пользуемся услугами подрядчиков, которые обрабатывают данные по нашему поручению:</p>
+      <ul>
+        <li>Zoho Mail (Zoho Corporation) — электронная почта: приём ваших писем и ответы на них;</li>
+        <li>Cloudflare (Cloudflare, Inc.) — хостинг сайта, хранение данных демо (Cloudflare R2) и обобщённая статистика посещений (Cloudflare Web Analytics);</li>
+        <li>Yandex Cloud — хранение файлов 3D-моделей;</li>
+        <li>сеть доставки контента jsDelivr — загрузка стандартных библиотек страниц;</li>
+        <li>Google Fonts (Google LLC) — загрузка шрифтов страниц.</li>
+      </ul>
+      <p>Серверы этих подрядчиков находятся за пределами Республики Казахстан, поэтому ваши данные могут
+      передаваться за рубеж (трансграничная передача) — в объёме, необходимом для работы сайта и демо, и с
+      соблюдением требований законодательства РК.</p>
+      <p>Данные могут быть переданы государственным органам только в случаях, предусмотренных законом.</p>
+
+      <h2 id="ru-demo">Демо: планы и аккаунт</h2>
+      <p>Демо ArtUp AR XR (artuplabs.com/ar-xr/demo) сохраняет данные, нужные для работы раздела «Мои планы»:</p>
+      <ul>
+        <li>идентификатор проекта устройства — случайный, не связанный с вашей личностью;</li>
+        <li>сохранённые планы комнат: идентификаторы 3D-моделей, их положение в сцене и расчёт стоимости;</li>
+        <li>если вы регистрируетесь — адрес электронной почты и хэш пароля (PBKDF2; сам пароль мы не храним).</li>
+      </ul>
+      <p>Эти данные хранятся в Cloudflare R2 (серверы Cloudflare за пределами Казахстана, в ЕС и США). Чтобы удалить планы или
+      аккаунт, напишите на <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.</p>
+
+      <h2 id="ru-storage">Сроки и хранение</h2>
+      <p>Мы храним данные до достижения целей обработки или до отзыва согласия, после чего удаляем их,
+      если закон не требует хранить их дольше.</p>
+
+      <h2 id="ru-browser">Cookies и хранилище браузера</h2>
+      <p>Сайт не использует рекламные и аналитические cookies. Для работы конфигуратора сайт сохраняет в
+      хранилище вашего браузера (localStorage) случайный идентификатор, не связанный с вашей личностью.
+      Вы можете удалить его в настройках браузера.</p>
+      <p>Для подсчёта посещений в обобщённом виде сайт использует Cloudflare Web Analytics (сервис Cloudflare, Inc.).
+      Его скрипт загружается с static.cloudflareinsights.com и передаёт Cloudflare адрес страницы, источник перехода
+      (referrer), тип браузера, операционной системы и устройства, а также показатели скорости загрузки страницы;
+      в отчёте Cloudflare указывается и страна посетителя. По данным Cloudflare, скрипт не использует cookies и
+      localStorage и ничего не сохраняет в браузере, IP-адрес отбрасывается в ближайшем дата-центре Cloudflare, а
+      отдельные посетители не отслеживаются между сайтами. Мы видим только сводную статистику. Подробнее — в
+      <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">политике конфиденциальности Cloudflare</a>.</p>
+
+      <h2 id="ru-rights">Ваши права</h2>
+      <p>Вы вправе:</p>
+      <ul>
+        <li>получить доступ к своим персональным данным и сведения об их обработке;</li>
+        <li>потребовать изменить или дополнить (уточнить) данные;</li>
+        <li>потребовать заблокировать данные;</li>
+        <li>потребовать удалить (уничтожить) данные;</li>
+        <li>отозвать согласие на обработку данных.</li>
+      </ul>
+      <p>Эти права предусмотрены Законом Республики Казахстан № 94-V «О персональных данных и их защите».
+      Чтобы воспользоваться ими, напишите на
+      <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>. Мы ответим в сроки, установленные
+      законодательством РК.</p>
+
+      <h2 id="ru-security">Защита данных</h2>
+      <p>Мы принимаем организационные и технические меры для защиты данных от неправомерного доступа,
+      изменения, раскрытия и уничтожения: доступ к данным есть только у сотрудников, которым он нужен для
+      работы, а сайт работает по защищённому протоколу HTTPS.</p>
+
+      <h2 id="ru-apps">Приложения</h2>
+      <p>Для мобильных приложений Компании действуют отдельные политики:</p>
+      <ul>
+        <li><a href="app-privacy.html">ArtUp AR XR (iOS и App Clip)</a></li>
+      </ul>
+
+      <h2 id="ru-contacts">Контакты и изменения</h2>
+      <p>ArtUp Labs — торговое название ИП Карпец Артём, Республика Казахстан<br>
+      Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a><br>
+      <a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
+      <p>Мы можем обновлять политику. Новая редакция вступает в силу с момента публикации на этой странице.</p>
+    </article>
+  </div>
+
+  <div class="ax-container lx-doc-layout" data-lang="en" lang="en">
+    <nav class="lx-toc" aria-label="Contents">
+      <p>Contents</p>
+      <ol>
+        <li><a href="#en-general">General</a></li>
+        <li><a href="#en-terms">Definitions</a></li>
+        <li><a href="#en-data">Data we process</a></li>
+        <li><a href="#en-purposes">Purposes</a></li>
+        <li><a href="#en-basis">Legal basis</a></li>
+        <li><a href="#en-third">Service providers</a></li>
+        <li><a href="#en-demo">Demo: plans and account</a></li>
+        <li><a href="#en-storage">Retention</a></li>
+        <li><a href="#en-browser">Cookies and browser storage</a></li>
+        <li><a href="#en-rights">Your rights</a></li>
+        <li><a href="#en-security">Security</a></li>
+        <li><a href="#en-apps">Apps</a></li>
+        <li><a href="#en-contacts">Contact and changes</a></li>
+      </ol>
+    </nav>
+
+    <article class="lx-doc">
+      <div class="lx-summary">
+        <p><strong>In short:</strong> we receive your data only when you email us yourself or use the demo
+        (room plans, account), and we use it only to reply and to run the demo. The website has no
+        advertising trackers; page views are counted in aggregate with Cloudflare Web Analytics, without cookies.</p>
+      </div>
+
+      <h2 id="en-general">General</h2>
+      <p>This policy describes how ArtUp Labs (the "Company", "we") processes and protects personal data of users of artuplabs.com/ar-xr and the ArtUp AR XR services, in accordance with the Law of the
+      Republic of Kazakhstan No. 94-V of 21 May 2013 "On Personal Data and Their Protection".</p>
+      <p>The data controller is ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan). By using the website you confirm
+      that you have read this policy.</p>
+
+      <h2 id="en-terms">Definitions</h2>
+      <dl>
+        <dt>Website</dt>
+        <dd>artuplabs.com/ar-xr and all of its pages, including the AR and XR demo pages.</dd>
+        <dt>Services</dt>
+        <dd>The Company's business products: AR try-on, 360° view, XR showroom and mobile apps that let shoppers
+        examine a product and "try it on" in their own space before buying.</dd>
+        <dt>AR try-on (augmented reality)</dt>
+        <dd>Showing a 3D model of a product over the device camera view — for example, how new furniture will
+        look in a room.</dd>
+        <dt>360° view</dt>
+        <dd>Interactive viewing of a product's 3D model from every side, with a close look at the details.</dd>
+        <dt>XR</dt>
+        <dd>Extended reality: the umbrella term for augmented and virtual reality technologies, including virtual
+        showrooms.</dd>
+        <dt>User</dt>
+        <dd>Any visitor of the website or user of the services.</dd>
+        <dt>Personal data</dt>
+        <dd>Any information relating directly or indirectly to an identified or identifiable individual.</dd>
+        <dt>Processing</dt>
+        <dd>Any operation on personal data: collection, recording, organisation, storage, correction, use,
+        transfer, deletion and destruction.</dd>
+      </dl>
+
+      <h2 id="en-data">Data we process</h2>
+      <p>Data you provide when you email us at <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>:</p>
+      <ul>
+        <li>your email address and name (if you include it);</li>
+        <li>the text of your message and any attachments you choose to send.</li>
+      </ul>
+      <p>Demo data (a device project identifier, room plans and, if you register, your email address and a
+      password hash) is described below in "Demo: plans and account". Technical data any web server receives: IP address, browser type, request time and URL. We do not use
+      it to identify users.</p>
+      <p>We do not collect special categories of personal data or biometric data.</p>
+
+      <h2 id="en-purposes">Purposes</h2>
+      <ul>
+        <li>replying to your emails and contacting you about the services;</li>
+        <li>operating the demo: saving room plans and your account;</li>
+        <li>preparing an offer and entering into a contract — if you ask for one;</li>
+        <li>operating and securing the website.</li>
+      </ul>
+
+      <h2 id="en-basis">Legal basis</h2>
+      <p>We process data based on the consent you express by emailing us or registering in the demo,
+      and to enter into and perform a contract to which you are or intend to become a party.</p>
+
+      <h2 id="en-third">Service providers</h2>
+      <p>We do not sell your data or share it with third parties for their own purposes. To run the website we
+      use providers that process data on our behalf:</p>
+      <ul>
+        <li>Zoho Mail (Zoho Corporation) — email: receiving your messages and replying to them;</li>
+        <li>Cloudflare (Cloudflare, Inc.) — website hosting, demo data storage (Cloudflare R2) and aggregate visit statistics (Cloudflare Web Analytics);</li>
+        <li>Yandex Cloud — 3D model file storage;</li>
+        <li>the jsDelivr content delivery network — loading standard page libraries;</li>
+        <li>Google Fonts (Google LLC) — loading page fonts.</li>
+      </ul>
+      <p>These providers' servers are located outside the Republic of Kazakhstan, so your data may be
+      transferred across borders — to the extent needed to run the website and the demo, and in compliance
+      with Kazakhstan law.</p>
+      <p>Data may be disclosed to public authorities only where required by law.</p>
+
+      <h2 id="en-demo">Demo: plans and account</h2>
+      <p>The ArtUp AR XR demo (artuplabs.com/ar-xr/demo) stores the data needed for "My plans":</p>
+      <ul>
+        <li>a device project identifier — random and not linked to your identity;</li>
+        <li>saved room plans: 3D model identifiers, their positions in the scene and the price quote;</li>
+        <li>if you register — your email address and a password hash (PBKDF2; we never store the password itself).</li>
+      </ul>
+      <p>This data is stored in Cloudflare R2 (Cloudflare servers outside Kazakhstan, in the EU and US). To delete your plans or
+      account, email <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.</p>
+
+      <h2 id="en-storage">Retention</h2>
+      <p>We keep data until the purposes of processing are achieved or you withdraw your consent, and
+      then delete it unless the law requires us to keep it longer.</p>
+
+      <h2 id="en-browser">Cookies and browser storage</h2>
+      <p>The website uses no advertising or analytics cookies. For the configurator to work, the website stores
+      a random identifier in your browser storage (localStorage) that is not linked to your identity. You can
+      delete it in your browser settings.</p>
+      <p>To count page views in aggregate, the website uses Cloudflare Web Analytics (a service of Cloudflare, Inc.).
+      Its script loads from static.cloudflareinsights.com and sends Cloudflare the page URL, the referrer, the browser,
+      operating system and device type, and page load performance metrics; Cloudflare's report also shows the
+      visitor's country. According to Cloudflare, the script uses no cookies or localStorage and stores nothing in
+      the browser, the IP address is discarded at the nearest Cloudflare data center, and individual visitors are not
+      tracked across websites. We see only aggregate statistics. See the
+      <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare Privacy Policy</a>.</p>
+
+      <h2 id="en-rights">Your rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li>access your personal data and obtain information about its processing;</li>
+        <li>request that your data be changed or supplemented (rectified);</li>
+        <li>request that your data be blocked;</li>
+        <li>request that your data be deleted (destroyed);</li>
+        <li>withdraw your consent to processing.</li>
+      </ul>
+      <p>These rights are provided by Law of the Republic of Kazakhstan No. 94-V "On Personal Data and Their
+      Protection". To exercise them, email <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>.
+      We will respond within the time limits set by Kazakhstan law.</p>
+
+      <h2 id="en-security">Security</h2>
+      <p>We take organisational and technical measures to protect data from unauthorised access, alteration,
+      disclosure and destruction: only staff who need the data for their work can access it, and the website is
+      served over HTTPS.</p>
+
+      <h2 id="en-apps">Apps</h2>
+      <p>The Company's mobile apps have their own policies:</p>
+      <ul>
+        <li><a href="app-privacy.html">ArtUp AR XR (iOS and App Clip)</a></li>
+      </ul>
+
+      <h2 id="en-contacts">Contact and changes</h2>
+      <p>ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan)<br>
+      Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a><br>
+      <a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
+      <p>We may update this policy. A new version takes effect when it is published on this page.</p>
+    </article>
+  </div>
+
+  </main>
+
+  <footer class="ax-footer">
+    <div class="ax-container ax-footer-row">
+      <div>
+        <a class="ax-brand" href="../"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p><a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="./">ArtUp AR XR</a></li>
+          <li><a href="support.html"><span data-lang="ru">Поддержка</span><span data-lang="en">Support</span></a></li>
+          <li><a href="privacy.html"><span data-lang="ru">Политика конфиденциальности</span><span data-lang="en">Privacy Policy</span></a></li>
+          <li><a href="offer.html"><span data-lang="ru">Публичная оферта</span><span data-lang="en">Public offer (Russian)</span></a></li>
+          <li><a href="app-privacy.html"><span data-lang="ru">Конфиденциальность приложения</span><span data-lang="en">App privacy</span></a></li>
+          <li><a href="../">artuplabs.com</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    window.ARTUP_I18N = {
+      ru: {},
+      en: {
+        "meta.title": "Privacy Policy — ArtUp AR XR",
+        "meta.description": "Privacy Policy of ArtUp AR XR (ArtUp Labs).",
+        "skip": "Skip to content",
+        "lang.label": "Language"
+      }
+    };
+  </script>
+  <script src="assets/lang.js?v=6abb7ca1"></script>
+  <script>
+    (function () {
+      // The RU/EN switch itself is assets/lang.js (data-lang-set); the page text uses data-lang blocks.
+      window.ArtupLang.onChange(function (lang) {
+        try { localStorage.setItem("privacy-lang", lang); } catch (e) {}
+        try {
+          var url = new URL(location.href);
+          url.searchParams.set("lang", lang);
+          url.hash = "";
+          history.replaceState(null, "", url);
+        } catch (e) {}
+        window.scrollTo({ top: 0 });
+      });
+
+      if (!("IntersectionObserver" in window)) return;
+      var links = {};
+      document.querySelectorAll(".lx-toc a").forEach(function (a) { links[a.getAttribute("href").slice(1)] = a; });
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var link = links[entry.target.id];
+          if (!link) return;
+          link.closest("ol").querySelectorAll("a").forEach(function (a) { a.classList.remove("active"); });
+          link.classList.add("active");
+        });
+      }, { rootMargin: "-90px 0px -70% 0px" });
+      document.querySelectorAll(".lx-doc h2[id]").forEach(function (h) { observer.observe(h); });
+    })();
+  </script>
+</body>
+</html>

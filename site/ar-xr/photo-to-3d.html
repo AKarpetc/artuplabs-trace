@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Фото → 3D — ArtUp AR XR</title>
+  <meta name="description" content="Нет 3D-моделей? ArtUp AR XR сделает 3D-модель по фотографии товара за 1–3 дня — для AR и XR-комнаты. Примеры: реалистичные и стилизованные модели.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="assets/ar-xr-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+  <link rel="stylesheet" href="assets/ar-xr.css?v=dcc46cda">
+  <link rel="stylesheet" href="assets/site.css?v=2b50b7ee">
+  <link rel="stylesheet" href="photo-to-3d/p3d.css?v=f4229950">
+</head>
+<body class="ax-page">
+  <a class="ax-skip" href="#main" data-i18n="skip">Перейти к содержанию</a>
+
+  <header class="ax-header">
+    <div class="ax-container ax-header-row">
+      <a class="ax-brand" href="../" title="ArtUp Labs"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28"><span class="ax-brand-name">ArtUp Labs</span></a>
+      <span class="ax-brand-sep" aria-hidden="true"></span>
+      <a class="ax-product" href="./"><img src="assets/ar-xr-icon.svg" alt="" width="26" height="26">AR XR</a>
+      <nav class="ax-nav" aria-label="AR XR">
+        <ul>
+          <li><a href="./">AR XR</a></li>
+          <li><a href="demo/" data-i18n="nav.demo">Демо</a></li>
+          <li><a href="photo-to-3d.html" aria-current="page" data-i18n="nav.photo3d">Фото → 3D</a></li>
+          <li><a href="support.html" data-i18n="nav.support">Поддержка</a></li>
+          <li><a href="privacy.html" data-i18n="nav.privacy">Конфиденциальность</a></li>
+          <li><a href="app-privacy.html" data-i18n="nav.app">Приложение</a></li>
+        </ul>
+      </nav>
+      <div class="ax-header-actions">
+        <div class="ax-segmented ax-lang" role="group" aria-label="Язык / Language" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang-set="ru" lang="ru" aria-pressed="true">RU</button>
+          <button type="button" data-lang-set="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/" data-i18n="cta.demo">Открыть демо</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="lx-doc-hero">
+    <div class="ax-container">
+      <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24"><span data-i18n="hero.eyebrow">ArtUp AR XR · Фото → 3D</span></p>
+      <h1 data-i18n="hero.title">Нет 3D-моделей? Сделаем по одной фотографии</h1>
+      <p style="max-width:46rem" data-i18n="hero.lead">У большинства мебельных магазинов нет 3D-моделей товаров. Мы делаем модель по одной фотографии из каталога — без 3D-сканирования и без 3D-художника, — и покупатель ставит товар у себя в комнате с телефона. Ниже — реальные результаты двух движков генерации без ручных правок: реалистичный и стилизованный.</p>
+    </div>
+  </section>
+
+  <main id="main" class="ax-section" style="padding-top:2.5rem">
+    <section class="rp-section" style="padding:0 0 2.5rem" id="real-photos" aria-labelledby="rp-title">
+      <div class="ax-container">
+        <div class="ax-section-head">
+          <p class="ax-eyebrow" data-i18n="rp.eyebrow">Реальные фото → 3D</p>
+          <h2 id="rp-title" data-i18n="rp.title">Сфотографировали в шоуруме на обычный телефон — получили 3D-модель</h2>
+          <p data-i18n="rp.lead">Это мебель из настоящих магазинов: 1–2 снимка на телефон, без студии и без 3D-сканера. Пришлите фото вашего товара — мы сами подготовим модель, она будет готова через 1–3 дня.</p>
+        </div>
+        <div class="p3d-grid rp-grid">
+          <figure class="p3d-tile rp-card">
+            <div class="p3d-stage">
+              <model-viewer data-src="library/real-photo/cream-armchair/web.glb" ios-src="library/real-photo/cream-armchair/model.usdz" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="25deg 75deg 125%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" shadow-intensity="1" exposure="1.05" loading="lazy" alt="3D-модель: Кресло" data-i18n-attr="alt:rp.cream-armchair"><button slot="ar-button" class="p3d-ar" data-i18n="rp.ar">Посмотреть у себя в комнате</button></model-viewer>
+              <img class="rp-photo" src="photo-to-3d/real/cream-armchair.jpg" alt="Исходное фото с телефона: Кресло" data-i18n-attr="alt:rp.cream-armchair" loading="lazy" decoding="async">
+              <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="rp.wait">Загружаем 3D-модель…</span><span class="p3d-ph-err" data-i18n="rp.err">Не удалось загрузить модель</span></div>
+            </div>
+            <figcaption><b data-i18n="rp.cream-armchair">Кресло</b><span data-i18n="rp.cream-armchair.photos">1 фото с телефона</span></figcaption>
+          </figure>
+          <figure class="p3d-tile rp-card">
+            <div class="p3d-stage">
+              <model-viewer data-src="library/real-photo/swivel-armchair-clean/web.glb" ios-src="library/real-photo/swivel-armchair-clean/model.usdz" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="25deg 75deg 125%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" shadow-intensity="1" exposure="1.05" loading="lazy" alt="3D-модель: Поворотное кресло" data-i18n-attr="alt:rp.swivel-armchair-2"><button slot="ar-button" class="p3d-ar" data-i18n="rp.ar">Посмотреть у себя в комнате</button></model-viewer>
+              <img class="rp-photo" src="photo-to-3d/real/swivel-armchair-2.jpg" alt="Исходное фото с телефона: Поворотное кресло" data-i18n-attr="alt:rp.swivel-armchair-2" loading="lazy" decoding="async">
+              <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="rp.wait">Загружаем 3D-модель…</span><span class="p3d-ph-err" data-i18n="rp.err">Не удалось загрузить модель</span></div>
+            </div>
+            <figcaption><b data-i18n="rp.swivel-armchair-2">Поворотное кресло</b><span data-i18n="rp.swivel-armchair-2.photos">2 фото с телефона</span></figcaption>
+          </figure>
+          <figure class="p3d-tile rp-card">
+            <div class="p3d-stage">
+              <model-viewer data-src="library/real-photo/dining-table/web.glb" ios-src="library/real-photo/dining-table/model.usdz" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="25deg 75deg 125%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" shadow-intensity="1" exposure="1.05" loading="lazy" alt="3D-модель: Раздвижной обеденный стол" data-i18n-attr="alt:rp.dining-table"><button slot="ar-button" class="p3d-ar" data-i18n="rp.ar">Посмотреть у себя в комнате</button></model-viewer>
+              <img class="rp-photo" src="photo-to-3d/real/dining-table.jpg" alt="Исходное фото с телефона: Раздвижной обеденный стол" data-i18n-attr="alt:rp.dining-table" loading="lazy" decoding="async">
+              <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="rp.wait">Загружаем 3D-модель…</span><span class="p3d-ph-err" data-i18n="rp.err">Не удалось загрузить модель</span></div>
+            </div>
+            <figcaption><b data-i18n="rp.dining-table">Раздвижной обеденный стол</b><span data-i18n="rp.dining-table.photos">2 фото с телефона</span></figcaption>
+          </figure>
+          <figure class="p3d-tile rp-card">
+            <div class="p3d-stage">
+              <model-viewer data-src="library/real-photo/boucle-chair/web.glb" ios-src="library/real-photo/boucle-chair/model.usdz" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="25deg 75deg 125%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" shadow-intensity="1" exposure="1.05" loading="lazy" alt="3D-модель: Кресло-кокон из букле" data-i18n-attr="alt:rp.boucle-chair"><button slot="ar-button" class="p3d-ar" data-i18n="rp.ar">Посмотреть у себя в комнате</button></model-viewer>
+              <img class="rp-photo" src="photo-to-3d/real/boucle-chair.jpg" alt="Исходное фото с телефона: Кресло-кокон из букле" data-i18n-attr="alt:rp.boucle-chair" loading="lazy" decoding="async">
+              <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="rp.wait">Загружаем 3D-модель…</span><span class="p3d-ph-err" data-i18n="rp.err">Не удалось загрузить модель</span></div>
+            </div>
+            <figcaption><b data-i18n="rp.boucle-chair">Кресло-кокон из букле</b><span data-i18n="rp.boucle-chair.photos">1 фото с телефона</span></figcaption>
+          </figure>
+          <figure class="p3d-tile rp-card">
+            <div class="p3d-stage">
+              <model-viewer data-src="library/real-photo/lounge-chair-solo/web.glb" ios-src="library/real-photo/lounge-chair-solo/model.usdz" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="25deg 75deg 125%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" shadow-intensity="1" exposure="1.05" loading="lazy" alt="3D-модель: Кресло с деревянными подлокотниками" data-i18n-attr="alt:rp.lounge-chair"><button slot="ar-button" class="p3d-ar" data-i18n="rp.ar">Посмотреть у себя в комнате</button></model-viewer>
+              <img class="rp-photo" src="photo-to-3d/real/lounge-chair.jpg" alt="Исходное фото с телефона: Кресло с деревянными подлокотниками" data-i18n-attr="alt:rp.lounge-chair" loading="lazy" decoding="async">
+              <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="rp.wait">Загружаем 3D-модель…</span><span class="p3d-ph-err" data-i18n="rp.err">Не удалось загрузить модель</span></div>
+            </div>
+            <figcaption><b data-i18n="rp.lounge-chair">Кресло с деревянными подлокотниками</b><span data-i18n="rp.lounge-chair.photos">1 фото с телефона</span></figcaption>
+          </figure>
+        </div>
+        <p class="p3d-hint" data-i18n="rp.hint">В углу — исходное фото. Вращайте модель мышью или пальцем; на телефоне кнопка «Посмотреть у себя в комнате» ставит мебель в AR в реальном размере (размеры ориентировочные).</p>
+        <p class="p3d-hint" data-i18n="rp.quality">Качество модели зависит от исходных фото: камеры телефона, освещения, ракурсов и того, что попало в кадр. Чем больше ракурсов (спереди, сбоку, сзади) и чище фон, тем точнее модель; лишние предметы из кадра мы убираем вручную — как столик рядом с этим креслом.</p>
+        <div class="ax-actions" style="margin-top:14px">
+          <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/xrviewer.html?set=colors&amp;models=real-photo/cream-armchair,real-photo/swivel-armchair-clean,real-photo/dining-table,real-photo/boucle-chair,real-photo/lounge-chair-solo" data-i18n="rp.xr">Открыть в XR-комнате</a>
+          <a class="ax-btn ax-btn-secondary ax-btn-sm" href="demo/colors.html" data-i18n="rp.colors">Выбрать цвет ткани</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="ax-container">
+      <ol class="lx-steps" aria-label="Как это работает" data-i18n-attr="aria-label:steps.label">
+        <li><strong data-i18n="s1.title">Фото</strong><p data-i18n="s1.text">Одна готовая фотография товара — без сканирования и без 3D-художника.</p></li>
+        <li><strong data-i18n="s2.title">Генерация</strong><p data-i18n="s2.text">Текстурированная 3D-модель готова через 1–3 дня: мы сами раскладываем фото по ракурсам и проверяем результат.</p></li>
+        <li><strong data-i18n="s3.title">У вас в комнате</strong><p data-i18n="s3.text">Вращайте модель здесь или нажмите «Посмотреть у себя в комнате» на телефоне. В XR-комнате модель встаёт рядом с другими вашими товарами.</p></li>
+      </ol>
+      <div class="p3d-legend">
+        <span data-i18n-html="legend.real"><strong>Реалистичная</strong> — фотореалистичные материалы, наш выбор для мебели.</span>
+        <span data-i18n-html="legend.styl"><strong>Стилизованная</strong> — проще, «игровое» затенение.</span>
+        <span data-i18n="legend.drag">Перетаскивайте, чтобы вращать · щипок или колесо — масштаб.</span>
+      </div>
+
+      <h2 class="p3d-section-title" id="examples" data-i18n="museum.title">Фото → 3D-модель</h2>
+      <p class="p3d-note" data-i18n="museum.note">Слева — единственный исходник: одна фотография (музейные изображения в общественном достоянии, CC0). Посередине и справа — модели, сгенерированные по ней, без правок.</p>
+    <section class="p3d-item" aria-labelledby="item-chair">
+      <h3 id="item-chair" data-i18n="item.chair">Неоготический стул</h3>
+      <div class="p3d-grid">
+      <figure class="p3d-tile">
+        <div class="p3d-stage"><img src="photo-to-3d/chair.jpg" alt="Исходная фотография: Неоготический стул" data-i18n-attr="alt:item.chair.photoAlt" loading="lazy" decoding="async"></div>
+        <figcaption><b data-i18n="cap.input">Исходник: одна фотография</b><span data-i18n-html="item.chair.credit">Фото: <a href="https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg" target="_blank" rel="noopener">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-chair-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Неоготический стул" data-i18n-attr="alt:item.chair.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-chair-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Неоготический стул" data-i18n-attr="alt:item.chair.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-armchair">
+      <h3 id="item-armchair" data-i18n="item.armchair">Мягкое кресло с «ушами»</h3>
+      <div class="p3d-grid">
+      <figure class="p3d-tile">
+        <div class="p3d-stage"><img src="photo-to-3d/armchair.jpg" alt="Исходная фотография: Мягкое кресло с «ушами»" data-i18n-attr="alt:item.armchair.photoAlt" loading="lazy" decoding="async"></div>
+        <figcaption><b data-i18n="cap.input">Исходник: одна фотография</b><span data-i18n-html="item.armchair.credit">Фото: <a href="https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg" target="_blank" rel="noopener">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-armchair-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Мягкое кресло с «ушами»" data-i18n-attr="alt:item.armchair.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-armchair-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Мягкое кресло с «ушами»" data-i18n-attr="alt:item.armchair.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-table">
+      <h3 id="item-table" data-i18n="item.table">Полукруглый приставной столик</h3>
+      <div class="p3d-grid">
+      <figure class="p3d-tile">
+        <div class="p3d-stage"><img src="photo-to-3d/table.jpg" alt="Исходная фотография: Полукруглый приставной столик" data-i18n-attr="alt:item.table.photoAlt" loading="lazy" decoding="async"></div>
+        <figcaption><b data-i18n="cap.input">Исходник: одна фотография</b><span data-i18n-html="item.table.credit">Фото: <a href="https://commons.wikimedia.org/wiki/File:Side_table_(one_of_a_pair)_MET_DP-14204-001.jpg" target="_blank" rel="noopener">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-table-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Полукруглый приставной столик" data-i18n-attr="alt:item.table.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-table-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Полукруглый приставной столик" data-i18n-attr="alt:item.table.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-sofa">
+      <h3 id="item-sofa" data-i18n="item.sofa">Мягкий диван</h3>
+      <div class="p3d-grid">
+      <figure class="p3d-tile">
+        <div class="p3d-stage"><img src="photo-to-3d/sofa.jpg" alt="Исходная фотография: Мягкий диван" data-i18n-attr="alt:item.sofa.photoAlt" loading="lazy" decoding="async"></div>
+        <figcaption><b data-i18n="cap.input">Исходник: одна фотография</b><span data-i18n-html="item.sofa.credit">Фото: <a href="https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg" target="_blank" rel="noopener">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-sofa-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Мягкий диван" data-i18n-attr="alt:item.sofa.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-sofa-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Мягкий диван" data-i18n-attr="alt:item.sofa.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-lamp">
+      <h3 id="item-lamp" data-i18n="item.lamp">Торшер с витражным абажуром</h3>
+      <div class="p3d-grid">
+      <figure class="p3d-tile">
+        <div class="p3d-stage"><img src="photo-to-3d/lamp.jpg" alt="Исходная фотография: Торшер с витражным абажуром" data-i18n-attr="alt:item.lamp.photoAlt" loading="lazy" decoding="async"></div>
+        <figcaption><b data-i18n="cap.input">Исходник: одна фотография</b><span data-i18n-html="item.lamp.credit">Фото: <a href="https://commons.wikimedia.org/wiki/File:Floor_Lamp_MET_DT8293.jpg" target="_blank" rel="noopener">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-lamp-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Торшер с витражным абажуром" data-i18n-attr="alt:item.lamp.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-lamp-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Торшер с витражным абажуром" data-i18n-attr="alt:item.lamp.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-bookcase">
+      <h3 id="item-bookcase" data-i18n="item.bookcase">Книжный шкаф со стеклянными дверцами</h3>
+      <div class="p3d-grid">
+      <figure class="p3d-tile">
+        <div class="p3d-stage"><img src="photo-to-3d/bookcase.jpg" alt="Исходная фотография: Книжный шкаф со стеклянными дверцами" data-i18n-attr="alt:item.bookcase.photoAlt" loading="lazy" decoding="async"></div>
+        <figcaption><b data-i18n="cap.input">Исходник: одна фотография</b><span data-i18n-html="item.bookcase.credit">Фото: <a href="https://commons.wikimedia.org/wiki/File:Bookcase_MET_ADA3165.jpg" target="_blank" rel="noopener">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-bookcase-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Книжный шкаф со стеклянными дверцами" data-i18n-attr="alt:item.bookcase.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/m-bookcase-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Книжный шкаф со стеклянными дверцами" data-i18n-attr="alt:item.bookcase.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+
+      <h2 class="p3d-section-title" id="catalog" data-i18n="catalog.title">Ещё модели по фотографиям из каталогов магазинов</h2>
+      <p class="p3d-note" data-i18n="catalog.note">Ещё 10 товаров, сгенерированных по настоящим фотографиям из каталогов мебельных магазинов. Фотографии принадлежат магазинам, поэтому показываем только получившиеся модели.</p>
+    <section class="p3d-item" aria-labelledby="item-c01">
+      <h3 id="item-c01" data-i18n="item.c01">Кресло для отдыха</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c01-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Кресло для отдыха" data-i18n-attr="alt:item.c01.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c01-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Кресло для отдыха" data-i18n-attr="alt:item.c01.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c02">
+      <h3 id="item-c02" data-i18n="item.c02">Мягкий обеденный стул</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c02-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Мягкий обеденный стул" data-i18n-attr="alt:item.c02.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c02-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Мягкий обеденный стул" data-i18n-attr="alt:item.c02.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c03">
+      <h3 id="item-c03" data-i18n="item.c03">Акцентное кресло</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c03-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Акцентное кресло" data-i18n-attr="alt:item.c03.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c03-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Акцентное кресло" data-i18n-attr="alt:item.c03.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c04">
+      <h3 id="item-c04" data-i18n="item.c04">Письменный стол</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c04-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Письменный стол" data-i18n-attr="alt:item.c04.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c04-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Письменный стол" data-i18n-attr="alt:item.c04.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c05">
+      <h3 id="item-c05" data-i18n="item.c05">Приставной столик</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c05-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Приставной столик" data-i18n-attr="alt:item.c05.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c05-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Приставной столик" data-i18n-attr="alt:item.c05.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c06">
+      <h3 id="item-c06" data-i18n="item.c06">Журнальный столик-пуф с местом для хранения</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c06-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Журнальный столик-пуф с местом для хранения" data-i18n-attr="alt:item.c06.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c06-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Журнальный столик-пуф с местом для хранения" data-i18n-attr="alt:item.c06.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c07">
+      <h3 id="item-c07" data-i18n="item.c07">Угловой диван с шезлонгом</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c07-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Угловой диван с шезлонгом" data-i18n-attr="alt:item.c07.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c07-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Угловой диван с шезлонгом" data-i18n-attr="alt:item.c07.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c08">
+      <h3 id="item-c08" data-i18n="item.c08">Двухместный диванчик</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c08-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Двухместный диванчик" data-i18n-attr="alt:item.c08.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c08-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Двухместный диванчик" data-i18n-attr="alt:item.c08.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c09">
+      <h3 id="item-c09" data-i18n="item.c09">Книжный стеллаж в стиле рустик</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c09-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Книжный стеллаж в стиле рустик" data-i18n-attr="alt:item.c09.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c09-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Книжный стеллаж в стиле рустик" data-i18n-attr="alt:item.c09.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+    <section class="p3d-item" aria-labelledby="item-c10">
+      <h3 id="item-c10" data-i18n="item.c10">Настольная лампа</h3>
+      <div class="p3d-grid p3d-two">
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c10-realistic.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Реалистичная 3D-модель: Настольная лампа" data-i18n-attr="alt:item.c10.altR"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.real">Реалистичная</b><span data-i18n="cap.realText">Фотореалистичные PBR-материалы — для мебельного магазина</span></figcaption>
+      </figure>
+      <figure class="p3d-tile">
+        <div class="p3d-stage">
+          <model-viewer data-src="photo-to-3d/c10-stylized.glb" camera-controls auto-rotate rotation-per-second="14deg" camera-orbit="150deg 72deg 105%" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" loading="lazy" alt="Стилизованная 3D-модель: Настольная лампа" data-i18n-attr="alt:item.c10.altS"><button slot="ar-button" class="p3d-ar" data-i18n="ar">Посмотреть у себя в комнате</button></model-viewer>
+          <div class="p3d-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg><span class="p3d-ph-wait" data-i18n="ph.wait">3D-модель загрузится, когда вы до неё прокрутите</span><span class="p3d-ph-err" data-i18n="ph.err">Не удалось загрузить модель</span></div>
+        </div>
+        <figcaption><b data-i18n="cap.styl">Стилизованная</b><span data-i18n="cap.stylText">Упрощённое, «игровое» затенение</span></figcaption>
+      </figure>
+      </div>
+    </section>
+
+      <p class="p3d-foot" data-i18n="foot.note">Модели показаны в том виде, в каком их выдала генерация, — только оптимизированы для веба, без ручных правок. Музейные фотографии — изображения в общественном достоянии (CC0) с Wikimedia Commons (The Metropolitan Museum of Art Open Access), источник указан под каждым товаром.</p>
+
+      <div class="lx-contact" style="margin-top:3rem">
+        <h2 data-i18n="cta.title">Модели для вашего каталога — уже сегодня</h2>
+        <p data-i18n="cta.text">Пришлите фотографии товаров: мы сгенерируем 3D-модели сейчас — 3 900 ₸ за модель, до двух попыток, — и подключим их к AR и XR-комнате. Или генерируйте сами в личном кабинете: в «Бизнесе» включены 3 модели в месяц, в «Премиуме» — 10; сверх включённых — от 2 400 ₸ за модель.</p>
+        <div class="ax-actions">
+          <a class="ax-btn ax-btn-light ax-btn-lg" href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg><span data-i18n="cta.whatsapp">Написать в WhatsApp</span></a>
+          <a class="ax-btn ax-btn-outline ax-btn-lg" href="mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20%D0%A4%D0%BE%D1%82%D0%BE%20%E2%86%92%203D" data-i18n="cta.email" data-i18n-attr="href:cta.email.href">Написать на почту</a>
+          <a class="ax-btn ax-btn-outline ax-btn-lg" href="demo/" data-i18n="cta.demo">Открыть демо</a>
+          <a class="ax-btn ax-btn-outline ax-btn-lg" href="./#pricing" data-i18n="cta.pricing">Тарифы</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="ax-footer">
+    <div class="ax-container ax-footer-row">
+      <div>
+        <a class="ax-brand" href="../"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
+        <p data-i18n="footer.legal">ArtUp AR XR — продукт ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).</p>
+        <p data-i18n-html="footer.mail">Почта: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p><a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
+      </div>
+      <nav aria-label="Ссылки в подвале" data-i18n-attr="aria-label:footer.nav">
+        <ul>
+          <li><a href="./">ArtUp AR XR</a></li>
+          <li><a href="demo/" data-i18n="nav.demo">Демо</a></li>
+          <li><a href="photo-to-3d.html" data-i18n="footer.photo3d">Фото → 3D</a></li>
+          <li><a href="support.html" data-i18n="footer.support">Поддержка</a></li>
+          <li><a href="privacy.html" data-i18n="footer.privacy">Политика конфиденциальности</a></li>
+          <li><a href="offer.html" data-i18n="footer.offer">Публичная оферта</a></li>
+          <li><a href="app-privacy.html" data-i18n="footer.appPrivacy">Конфиденциальность приложения</a></li>
+          <li><a href="../">ArtUp Labs</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+  <script>
+    window.ARTUP_I18N = {
+      ru: {},
+      en: {
+        "meta.title": "Photo → 3D — ArtUp AR XR",
+        "meta.description": "No 3D models? ArtUp AR XR makes a 3D model from a product photo in 1–3 days — ready for AR and the XR room. Realistic and stylized examples.",
+        "skip": "Skip to content",
+        "lang.label": "Language",
+        "nav.label": "AR XR",
+        "nav.demo": "Demo",
+        "nav.photo3d": "Photo → 3D",
+        "nav.support": "Support",
+        "nav.privacy": "Privacy",
+        "nav.app": "App",
+        "cta.demo": "Open demo",
+        "hero.eyebrow": "ArtUp AR XR · Photo → 3D",
+        "hero.title": "No 3D models? We make them from one photo",
+        "hero.lead": "Most furniture stores have no 3D models of their products. We generate one from a single catalog photo — no 3D scanning, no 3D artist — so shoppers can place the product in their own room from a phone. Below are real results from two generation engines, with no manual edits: realistic and stylized.",
+        "steps.label": "How it works",
+        "s1.title": "Photo",
+        "s1.text": "One existing product photo — no scanning, no 3D artist.",
+        "s2.title": "Generate",
+        "s2.text": "A textured 3D model is ready in 1–3 days: we arrange the photos by angle and check the result ourselves.",
+        "rp.cream-armchair": "Armchair",
+        "rp.cream-armchair.photos": "1 photo from a phone",
+        "rp.swivel-armchair-2": "Swivel armchair",
+        "rp.swivel-armchair-2.photos": "2 photos from a phone",
+        "rp.dining-table": "Extendable dining table",
+        "rp.dining-table.photos": "2 photos from a phone",
+        "rp.boucle-chair": "Bouclé cocoon chair",
+        "rp.boucle-chair.photos": "1 photo from a phone",
+        "rp.quality": "Model quality depends on the source photos: the phone camera, lighting, angles and what else is in the frame. More angles (front, side, back) and a cleaner background give a more accurate model; we remove extra objects by hand — like the side table next to this chair.",
+        "rp.xr": "Open in the XR room",
+        "rp.colors": "Choose the fabric colour",
+        "rp.lounge-chair": "Lounge chair with wooden arms",
+        "rp.lounge-chair.photos": "1 photo from a phone",
+        "rp.eyebrow": "Real photos → 3D",
+        "rp.title": "Shot in a showroom on an ordinary phone — turned into a 3D model",
+        "rp.lead": "This is furniture from real stores: 1–2 phone snapshots, no studio and no 3D scanner. Send photos of your product — we prepare the model ourselves, ready in 1–3 days.",
+        "rp.hint": "The source photo is in the corner. Rotate the model with your mouse or finger; on a phone, “View in your room” places the furniture in AR at real size (approximate dimensions).",
+        "rp.ar": "View in your room",
+        "rp.wait": "Loading the 3D model…",
+        "rp.err": "Could not load the model",
+        "s3.title": "Place in your room",
+        "s3.text": "Rotate it here, or tap “View in your room” on a phone. In the XR room it stands next to your other products.",
+        "legend.real": "<strong>Realistic</strong> — photoreal materials, our pick for furniture.",
+        "legend.styl": "<strong>Stylized</strong> — simpler, game-like shading.",
+        "legend.drag": "Drag to rotate · pinch or scroll to zoom.",
+        "museum.title": "Photo → 3D model",
+        "museum.note": "Left: the only input — one photo (public-domain museum images, CC0). Middle and right: the models generated from it, unedited.",
+        "cap.input": "Input: one photo",
+        "cap.real": "Realistic",
+        "cap.realText": "Photoreal PBR materials — ready for a furniture store",
+        "cap.styl": "Stylized",
+        "cap.stylText": "Simpler, game-like shading",
+        "ar": "View in your room",
+        "ph.wait": "3D model loads when you scroll to it",
+        "ph.err": "Couldn't load the model",
+        "catalog.title": "More models from retailer catalog photos",
+        "catalog.note": "10 more products generated from real furniture-retailer catalog photos. Those photos belong to the retailers, so we show only the resulting models.",
+        "foot.note": "Models are shown as generated, optimized only for the web (no manual edits). Museum photos are public-domain (CC0) images from Wikimedia Commons (The Metropolitan Museum of Art Open Access), credited under each item.",
+        "cta.title": "Models for your catalog — starting today",
+        "cta.text": "Send us your product photos: we generate the 3D models now — KZT 3,900 (about $9) per model, up to two attempts — and connect them to AR and the XR room. Or generate them yourself in the dashboard: Business includes 3 models a month, Premium 10; beyond the included ones, from KZT 2,400 (about $5) per model.",
+        "cta.whatsapp": "Message on WhatsApp",
+        "cta.email": "Email us",
+        "cta.email.href": "mailto:hello@artuplabs.com?subject=ArtUp%20AR%20XR%3A%20Photo%20to%203D",
+        "cta.pricing": "Pricing",
+        "footer.legal": "ArtUp AR XR is a product of ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan).",
+        "footer.mail": "Email: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com</a>",
+        "footer.nav": "Footer links",
+        "footer.photo3d": "Photo → 3D",
+        "footer.support": "Support",
+        "footer.privacy": "Privacy Policy",
+        "footer.offer": "Public offer (Russian)",
+        "footer.appPrivacy": "App privacy",
+        "item.chair": "Gothic Revival side chair",
+        "item.chair.altR": "Realistic 3D model: Gothic Revival side chair",
+        "item.chair.altS": "Stylized 3D model: Gothic Revival side chair",
+        "item.chair.photoAlt": "Source photo: Gothic Revival side chair",
+        "item.chair.credit": "Photo: <a href=\"https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg\" target=\"_blank\" rel=\"noopener\">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)",
+        "item.armchair": "Upholstered wing armchair",
+        "item.armchair.altR": "Realistic 3D model: Upholstered wing armchair",
+        "item.armchair.altS": "Stylized 3D model: Upholstered wing armchair",
+        "item.armchair.photoAlt": "Source photo: Upholstered wing armchair",
+        "item.armchair.credit": "Photo: <a href=\"https://commons.wikimedia.org/wiki/File:Easy_Chair_MET_178100.jpg\" target=\"_blank\" rel=\"noopener\">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)",
+        "item.table": "Demilune side table",
+        "item.table.altR": "Realistic 3D model: Demilune side table",
+        "item.table.altS": "Stylized 3D model: Demilune side table",
+        "item.table.photoAlt": "Source photo: Demilune side table",
+        "item.table.credit": "Photo: <a href=\"https://commons.wikimedia.org/wiki/File:Side_table_(one_of_a_pair)_MET_DP-14204-001.jpg\" target=\"_blank\" rel=\"noopener\">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)",
+        "item.sofa": "Upholstered sofa",
+        "item.sofa.altR": "Realistic 3D model: Upholstered sofa",
+        "item.sofa.altS": "Stylized 3D model: Upholstered sofa",
+        "item.sofa.photoAlt": "Source photo: Upholstered sofa",
+        "item.sofa.credit": "Photo: <a href=\"https://commons.wikimedia.org/wiki/File:Sofa_MET_49N_237AR2.jpg\" target=\"_blank\" rel=\"noopener\">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)",
+        "item.lamp": "Stained glass floor lamp",
+        "item.lamp.altR": "Realistic 3D model: Stained glass floor lamp",
+        "item.lamp.altS": "Stylized 3D model: Stained glass floor lamp",
+        "item.lamp.photoAlt": "Source photo: Stained glass floor lamp",
+        "item.lamp.credit": "Photo: <a href=\"https://commons.wikimedia.org/wiki/File:Floor_Lamp_MET_DT8293.jpg\" target=\"_blank\" rel=\"noopener\">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)",
+        "item.bookcase": "Glass-front bookcase",
+        "item.bookcase.altR": "Realistic 3D model: Glass-front bookcase",
+        "item.bookcase.altS": "Stylized 3D model: Glass-front bookcase",
+        "item.bookcase.photoAlt": "Source photo: Glass-front bookcase",
+        "item.bookcase.credit": "Photo: <a href=\"https://commons.wikimedia.org/wiki/File:Bookcase_MET_ADA3165.jpg\" target=\"_blank\" rel=\"noopener\">The Metropolitan Museum of Art</a>, CC0 (Wikimedia Commons)",
+        "item.c01": "Lounge armchair",
+        "item.c01.altR": "Realistic 3D model: Lounge armchair",
+        "item.c01.altS": "Stylized 3D model: Lounge armchair",
+        "item.c02": "Upholstered dining chair",
+        "item.c02.altR": "Realistic 3D model: Upholstered dining chair",
+        "item.c02.altS": "Stylized 3D model: Upholstered dining chair",
+        "item.c03": "Accent chair",
+        "item.c03.altR": "Realistic 3D model: Accent chair",
+        "item.c03.altS": "Stylized 3D model: Accent chair",
+        "item.c04": "Writing desk",
+        "item.c04.altR": "Realistic 3D model: Writing desk",
+        "item.c04.altS": "Stylized 3D model: Writing desk",
+        "item.c05": "Side table",
+        "item.c05.altR": "Realistic 3D model: Side table",
+        "item.c05.altS": "Stylized 3D model: Side table",
+        "item.c06": "Storage ottoman coffee table",
+        "item.c06.altR": "Realistic 3D model: Storage ottoman coffee table",
+        "item.c06.altS": "Stylized 3D model: Storage ottoman coffee table",
+        "item.c07": "Chaise sectional sofa",
+        "item.c07.altR": "Realistic 3D model: Chaise sectional sofa",
+        "item.c07.altS": "Stylized 3D model: Chaise sectional sofa",
+        "item.c08": "Loveseat",
+        "item.c08.altR": "Realistic 3D model: Loveseat",
+        "item.c08.altS": "Stylized 3D model: Loveseat",
+        "item.c09": "Rustic bookcase",
+        "item.c09.altR": "Realistic 3D model: Rustic bookcase",
+        "item.c09.altS": "Stylized 3D model: Rustic bookcase",
+        "item.c10": "Table lamp",
+        "item.c10.altR": "Realistic 3D model: Table lamp",
+        "item.c10.altS": "Stylized 3D model: Table lamp"
+      }
+    };
+  </script>
+  <script src="assets/lang.js?v=6abb7ca1"></script>
+  <script src="photo-to-3d/p3d.js?v=257f60cb"></script>
+</body>
+</html>

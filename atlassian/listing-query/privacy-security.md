@@ -7,28 +7,44 @@ Status: draft answers by topic (the live form's exact wording was not opened). V
 ## 1. What data is read, and what is stored
 
 **Read** (as the app, `asApp`, through Atlassian's REST API): work items (key, project, type, status,
-dates, parent, epic), issue links, the hierarchy, the changelog of Sprint and status, and the metadata
-of comments and attachments (author account id, dates, visibility type, file extension).
+dates, parent, epic), issue links, the hierarchy, the changelog of Sprint and status, sprints and
+boards, and the metadata of comments and attachments (author account id, dates, visibility type and
+the role or group it names, file extension).
 
 **Stored** in Forge SQL and Forge storage:
 
 | What | Contents |
 |---|---|
-| Issue index | issue ids, project ids, hierarchy and link edges, status categories, dates |
-| Sprint history | sprint ids, board ids, changelog entry ids, the moves of a work item into and out of a sprint with dates |
-| Comments and attachments | comment and attachment ids, **account id of the author**, dates, comment visibility type (restricted comments are ignored by every function), file extension |
-| Results | cached result ids of functions, per query, and the queue of pending updates |
-| Settings | the excluded projects, the state of the index |
-| Error log | function name, time and error message; **never the arguments** (they hold the customer's JQL) — Q-R14 |
+| Status and sprint index (Forge SQL) | issue ids and project ids with status changes (date, old and new status category); sprint ids, board ids, **sprint names**, states and dates; the moves of a work item into and out of a sprint with dates and changelog entry ids. **No copy of the hierarchy or the links** (read from Jira at computation time) |
+| Comments and attachments (Forge SQL) | comment and attachment ids, **account id of the author**, dates, comment visibility: type and the **name or id of the role or group** (restricted comments are ignored by every function), file extension |
+| Results (KVS) | cached result ids of functions, per query, and the queue of pending updates |
+| **Arguments of functions in use (KVS)** | the JQL of subqueries, a **user name or email address given to `by`**, dates and expressions. In the update queue about ten minutes after the last call; in the queue of large results until computed (at most six hours); in a cached copy of the list of function calls that Jira keeps, rewritten about hourly. Jira itself keeps the arguments and the result of each call |
+| Settings (KVS) | the excluded projects, the state of the index, the list of Jira field ids and names (one hour) |
+| Error log (KVS) | function name, time and a fixed message without values; **never the arguments** — Q-R14 |
 
 **Never stored:** issue summaries, descriptions, comment bodies, attachment content or names, custom
-field values, user names or email addresses.
+field values. Display names and avatars returned by Jira are not stored (display names are read from
+`user/search` only to resolve an id).
 
-**Personal data:** the Atlassian account id of the authors of comments and attachments is the only
-personal data. Display names are not read or stored.
+**Personal data:** the Atlassian account id of the authors of comments and attachments, and any user
+name or email address a person types as an argument of `by` (kept while the function is in use).
 
 Developer console → "Does your app store personal data?": **Yes — Atlassian account ids of comment and
-attachment authors** `[OWNER: confirm the wording on the live form; the safe answer is Yes]`.
+attachment authors, and a user name or email address given as a function argument**
+`[OWNER: confirm the wording on the live form; the safe answer is Yes]`.
+
+### Access of a subquery (for the security questionnaire) `[OWNER: confirm Q-R3 with this wording]`
+
+A subquery is evaluated with the app's access, not the user's (Forge gives a JQL function no other
+option; precomputations are shared by all users). Jira applies the result to each user's search and
+removes work items the user cannot see, so a hidden work item is never returned. But the functions that
+follow links or the hierarchy (`linkedIssuesOf` and its recursive forms, `subtasksOf`, `parentsOf`,
+`epicsOf`, `issuesInEpics`, `childIssuesOf`) read their subquery across all projects. A work item the
+user can see is returned when it is linked to, or is the parent, child or epic of, a matching work item
+in a project the user cannot browse. A user who can write JQL can vary the condition and learn whether
+a hidden matching work item exists; the message for an invalid subquery can show whether a project
+exists. Excluding a project removes its own work items from results but does not stop them from being
+the source of a subquery. This is published in the site's security page, documentation and here.
 
 ## 2. Scopes requested, and why
 
@@ -62,15 +78,16 @@ items never match a function the app computes; under `not in` the result is the 
 
 ## 5. Retention and deletion
 
-Data is deleted when a work item, comment or attachment is deleted (the app receives the delete
-events). On uninstall, Atlassian removes the app's Forge storage and SQL data under its
+Rows are deleted when a work item, comment or attachment is deleted (the app receives the delete
+events; normally within seconds, and a project reindex removes rows left by a lost event). Function
+arguments are kept only while the function is in use (see the table above). On uninstall, Atlassian removes the app's Forge storage and SQL data under its
 app-uninstall handling `[OWNER: confirm Atlassian's exact retention wording for uninstall]`. A
 project excluded by an administrator is purged from the index.
 
 ## 6. Logging
 
-Forge function logs and the app's error log contain the function name, the time and the error
-message. Not the arguments, no issue content, no user data.
+Forge function logs and the app's error log contain the function name, the time and a fixed error
+message without values. Not the arguments, no issue content, no user data.
 
 ## 7. Sub-processors
 

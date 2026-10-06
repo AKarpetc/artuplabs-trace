@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Политика конфиденциальности приложения — ArtUp AR XR</title>
+  <meta name="description" content="Политика конфиденциальности iOS-приложения ArtUp AR XR и App Clip.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="assets/ar-xr-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+  <link rel="stylesheet" href="assets/ar-xr.css?v=dcc46cda">
+  <link rel="stylesheet" href="assets/site.css?v=2b50b7ee">
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search).get("lang");
+      var saved = null;
+      try {
+        saved = localStorage.getItem("artup-lang");
+        if (!saved && localStorage.getItem("privacy-lang")) {
+          saved = localStorage.getItem("privacy-lang");
+          localStorage.setItem("artup-lang", saved); // lang.js reads only the shared key
+        }
+      } catch (e) {}
+      var nav = "en"; // English by default; Russian only after a switch or ?lang=ru
+      var lang = [q, saved, nav].filter(function (v) { return v === "ru" || v === "en"; })[0];
+      document.documentElement.lang = lang;
+    })();
+  </script>
+</head>
+<body class="ax-page">
+  <a class="ax-skip" href="#main" data-i18n="skip">Перейти к содержанию</a>
+
+  <header class="ax-header">
+    <div class="ax-container ax-header-row">
+      <a class="ax-brand" href="../" title="ArtUp Labs"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28"><span class="ax-brand-name">ArtUp Labs</span></a>
+      <span class="ax-brand-sep" aria-hidden="true"></span>
+      <a class="ax-product" href="./"><img src="assets/ar-xr-icon.svg" alt="" width="26" height="26">AR XR</a>
+      <nav class="ax-nav" aria-label="AR XR">
+        <ul>
+          <li><a href="./">AR XR</a></li>
+          <li><a href="demo/"><span data-lang="ru">Демо</span><span data-lang="en">Demo</span></a></li>
+          <li><a href="support.html"><span data-lang="ru">Поддержка</span><span data-lang="en">Support</span></a></li>
+          <li><a href="privacy.html"><span data-lang="ru">Конфиденциальность</span><span data-lang="en">Privacy</span></a></li>
+          <li><a href="app-privacy.html" aria-current="page"><span data-lang="ru">Приложение</span><span data-lang="en">App</span></a></li>
+        </ul>
+      </nav>
+      <div class="ax-header-actions">
+        <div class="ax-segmented ax-lang" role="group" aria-label="Язык / Language" data-i18n-attr="aria-label:lang.label">
+          <button type="button" data-lang-set="ru" lang="ru" aria-pressed="true">RU</button>
+          <button type="button" data-lang-set="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+        <a class="ax-btn ax-btn-primary ax-btn-sm" href="demo/"><span data-lang="ru">Открыть демо</span><span data-lang="en">Open demo</span></a>
+      </div>
+    </div>
+  </header>
+
+  <section class="lx-doc-hero">
+    <div class="ax-container">
+      <div class="lx-doc-top">
+        <p class="ax-eyebrow"><img class="lx-hero-icon" src="assets/ar-xr-icon.svg" alt="" width="24" height="24">ArtUp AR XR · <span data-lang="ru">iOS и App Clip</span><span data-lang="en">iOS and App Clip</span></p>
+      </div>
+      <h1 data-lang="ru">Политика конфиденциальности приложения</h1>
+      <h1 data-lang="en">App Privacy Policy</h1>
+      <p data-lang="ru">iOS-приложение ArtUp AR XR и App Clip. Редакция от 4 октября 2026 г.</p>
+      <p data-lang="en">ArtUp AR XR iOS app and App Clip. Effective October 4, 2026.</p>
+    </div>
+  </section>
+
+  <main id="main">
+  <div class="ax-container lx-doc-layout lx-doc-single">
+
+  <article class="lx-doc" data-lang="ru" lang="ru">
+    <div class="lx-summary">
+      <p><strong>Коротко:</strong> приложение не собирает персональные данные, не требует входа, не
+      использует рекламу и отслеживание и не содержит собственной аналитики. Страницы сайта artuplabs.com,
+      которые открываются в приложении, считают посещения в обобщённом виде через Cloudflare Web Analytics.</p>
+    </div>
+
+    <p>Эта политика относится к iOS-приложению ArtUp AR XR и его App Clip (далее — «приложение»), которые выпускает ArtUp Labs (торговое название ИП Карпец Артём, Республика Казахстан), artuplabs.com.</p>
+
+    <h2>Какие данные собирает приложение</h2>
+    <p>Приложение не собирает персональные данные, не требует регистрации и входа, не использует рекламу и
+    отслеживание (tracking), не содержит собственных инструментов аналитики и не передаёт данные третьим лицам
+    для их собственных целей. Исключение — обобщённая статистика посещений страниц сайта, описанная в разделе
+    «Сетевые запросы».</p>
+
+    <h2>Камера</h2>
+    <p>Камера нужна, чтобы показать 3D-модель в вашей комнате и сканировать QR-коды. Изображение с камеры
+    обрабатывается только на устройстве средствами ARKit: оно не записывается, не сохраняется и никуда не
+    отправляется.</p>
+
+    <h2>Сетевые запросы</h2>
+    <p>Приложение загружает страницы и 3D-модели с наших серверов (artuplabs.com, размещён в Cloudflare, и models-for-demo.website.yandexcloud.net, Yandex Cloud), а страницы подгружают шрифты с серверов Google Fonts (Google LLC); эти серверы находятся за пределами Республики Казахстан. Как и при любом обращении к сайту, серверы получают
+    технические данные запроса (IP-адрес, время, запрошенный адрес); мы не используем их для
+    идентификации пользователей. Ссылки на другие сайты открываются в Safari и регулируются политиками этих
+    сайтов.</p>
+    <p>Страницы artuplabs.com, в том числе открытые внутри приложения или App Clip, могут загружать скрипт
+    Cloudflare Web Analytics (сервис Cloudflare, Inc.), которым сайт считает посещения в обобщённом виде. Скрипт
+    передаёт Cloudflare адрес страницы, источник перехода (referrer), тип браузера, операционной системы и
+    устройства и показатели скорости загрузки; в отчёте Cloudflare указывается и страна. По данным Cloudflare,
+    скрипт не использует cookies и localStorage, IP-адрес отбрасывается в ближайшем дата-центре Cloudflare, а
+    пользователи не отслеживаются между сайтами и приложениями других компаний. Мы видим только сводную
+    статистику. Подробнее — в <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">политике конфиденциальности Cloudflare</a>.</p>
+
+    <h2>Хранение на устройстве</h2>
+    <p>Для ускорения работы приложение может кешировать загруженные модели на устройстве. Кеш удаляется
+    вместе с приложением.</p>
+
+    <h2>Дети</h2>
+    <p>Приложение не предназначено специально для детей и не собирает данные о них.</p>
+
+    <h2>Контакты</h2>
+    <p>Вопросы о конфиденциальности: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>, <a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a>.
+    Об изменениях политики мы сообщим на этой странице.</p>
+    <p>Данные демо на сайте (планы комнат, аккаунт) описаны в <a href="privacy.html">политике конфиденциальности сайта</a>. Персональные данные обрабатываются в соответствии с Законом Республики Казахстан от 21 мая 2013 года № 94-V «О персональных данных и их защите»; права субъекта данных (доступ, уточнение, блокирование, удаление, отзыв согласия) вы можете реализовать, написав на hello@artuplabs.com — мы ответим в сроки, установленные законодательством РК.</p>
+  </article>
+
+  <article class="lx-doc" data-lang="en" lang="en">
+    <div class="lx-summary">
+      <p><strong>In short:</strong> the app collects no personal data, requires no sign-in, uses no
+      advertising or tracking and has no analytics of its own. Pages from artuplabs.com that open in the app
+      count visits in aggregate with Cloudflare Web Analytics.</p>
+    </div>
+
+    <p>This policy covers the ArtUp AR XR iOS app and its App Clip (the "app"), published by ArtUp Labs (trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan), artuplabs.com.</p>
+
+    <h2>Data collection</h2>
+    <p>The app collects no personal data, requires no account or sign-in, uses no advertising or tracking,
+    contains no analytics tools of its own, and shares no data with third parties for their own purposes. The one
+    exception is the aggregate page-view statistics of the website described under "Network requests".</p>
+
+    <h2>Camera</h2>
+    <p>The camera is used to place 3D models in your room and to scan QR codes. Camera frames are processed
+    on the device by ARKit only; they are never recorded, stored or transmitted.</p>
+
+    <h2>Network requests</h2>
+    <p>The app loads pages and 3D models from our servers (artuplabs.com, hosted on Cloudflare, and models-for-demo.website.yandexcloud.net, Yandex Cloud), and the pages load fonts from Google Fonts (Google LLC) servers; these servers are located outside the Republic of Kazakhstan. As with any website, the servers receive technical request data
+    (IP address, time, requested URL); we do not use it to identify users. Links to other sites open in
+    Safari and are governed by those sites' policies.</p>
+    <p>Pages on artuplabs.com, including those opened inside the app or App Clip, may load the Cloudflare Web
+    Analytics script (a service of Cloudflare, Inc.), which the website uses to count page views in aggregate. The
+    script sends Cloudflare the page URL, the referrer, the browser, operating system and device type, and page
+    load performance metrics; Cloudflare's report also shows the country. According to Cloudflare, the script uses
+    no cookies or localStorage, the IP address is discarded at the nearest Cloudflare data center, and users are
+    not tracked across other companies' websites and apps. We see only aggregate statistics. See the
+    <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare Privacy Policy</a>.</p>
+
+    <h2>On-device storage</h2>
+    <p>The app may cache downloaded models on the device. The cache is removed with the app.</p>
+
+    <h2>Children</h2>
+    <p>The app is not directed to children and collects no data about them.</p>
+
+    <h2>Contact</h2>
+    <p>Privacy questions: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>, <a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a>. Changes to
+    this policy will be posted on this page.</p>
+    <p>Website demo data (room plans, account) is covered by the <a href="privacy.html">website Privacy Policy</a>. Personal data is processed in accordance with the Law of the Republic of Kazakhstan No. 94-V of 21 May 2013 "On Personal Data and Their Protection"; you can exercise your data subject rights (access, rectification, blocking, deletion, withdrawal of consent) by emailing hello@artuplabs.com — we will respond within the time limits set by Kazakhstan law.</p>
+  </article>
+  </div>
+
+  </main>
+
+  <footer class="ax-footer">
+    <div class="ax-container ax-footer-row">
+      <div>
+        <a class="ax-brand" href="../"><img class="ax-brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Email: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+        <p><a href="https://wa.me/77778490070" target="_blank" rel="noopener"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: +7 777 849 00 70</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="./">ArtUp AR XR</a></li>
+          <li><a href="support.html"><span data-lang="ru">Поддержка</span><span data-lang="en">Support</span></a></li>
+          <li><a href="privacy.html"><span data-lang="ru">Политика конфиденциальности</span><span data-lang="en">Privacy Policy</span></a></li>
+          <li><a href="offer.html"><span data-lang="ru">Публичная оферта</span><span data-lang="en">Public offer (Russian)</span></a></li>
+          <li><a href="app-privacy.html"><span data-lang="ru">Конфиденциальность приложения</span><span data-lang="en">App privacy</span></a></li>
+          <li><a href="../">artuplabs.com</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    window.ARTUP_I18N = {
+      ru: {},
+      en: {
+        "meta.title": "App Privacy Policy — ArtUp AR XR",
+        "meta.description": "Privacy Policy of the ArtUp AR XR iOS app and App Clip.",
+        "skip": "Skip to content",
+        "lang.label": "Language"
+      }
+    };
+  </script>
+  <script src="assets/lang.js?v=6abb7ca1"></script>
+  <script>
+    (function () {
+      // The RU/EN switch itself is assets/lang.js (data-lang-set); the page text uses data-lang blocks.
+      window.ArtupLang.onChange(function (lang) {
+        try { localStorage.setItem("privacy-lang", lang); } catch (e) {}
+        try {
+          var url = new URL(location.href);
+          url.searchParams.set("lang", lang);
+          url.hash = "";
+          history.replaceState(null, "", url);
+        } catch (e) {}
+        window.scrollTo({ top: 0 });
+      });
+
+      if (!("IntersectionObserver" in window)) return;
+      var links = {};
+      document.querySelectorAll(".lx-toc a").forEach(function (a) { links[a.getAttribute("href").slice(1)] = a; });
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var link = links[entry.target.id];
+          if (!link) return;
+          link.closest("ol").querySelectorAll("a").forEach(function (a) { a.classList.remove("active"); });
+          link.classList.add("active");
+        });
+      }, { rootMargin: "-90px 0px -70% 0px" });
+      document.querySelectorAll(".lx-doc h2[id]").forEach(function (h) { observer.observe(h); });
+    })();
+  </script>
+</body>
+</html>

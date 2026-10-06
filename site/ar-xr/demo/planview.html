@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111418">
+  <title data-i18n="planview.docTitle">ArtUp AR XR — дизайн в 3D</title>
+  <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
+  <!-- Один шрифт всего демо — Google Sans Flex (семейство задаёт styles/artuplabs-demo.css). -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+  <link type="text/css" href="./styles/demo.css?v=685612f58a" rel="stylesheet" />
+  <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); страница работает и без них. -->
+  <link type="text/css" href="../assets/ar-xr.css?v=2e0158b1d6" rel="stylesheet" />
+  <link type="text/css" href="./styles/artuplabs-demo.css?v=ce02129712" rel="stylesheet" />
+</head>
+
+<body class="planview-body">
+  <header class="ax-header demo-head">
+    <div class="ax-container ax-header-row">
+      <a class="ax-product" href="../" aria-label="ArtUp AR XR — о продукте" data-i18n-attr="aria-label:nav.productLabel">
+        <img src="../assets/ar-xr-icon.svg" alt="" width="26" height="26"><span>ArtUp AR XR</span>
+      </a>
+      <nav class="ax-nav" aria-label="Разделы демо" data-i18n-attr="aria-label:nav.label">
+        <ul>
+          <li><a href="./demo.html#catalog" data-i18n="nav.catalog">Каталог</a></li>
+          <li><a href="./plans.html" data-i18n="nav.plans">Мои планы</a></li>
+          <li data-color-page hidden><a href="./colors.html" data-i18n="nav.colors">Выбери свой цвет</a></li>
+        </ul>
+      </nav>
+      <div class="ax-header-actions">
+        <div id="plansSlot" class="plans-slot" hidden></div>
+        <div id="handoffSlot" class="handoff-slot" hidden></div>
+        <div data-lang-switch hidden></div>
+        <div id="accountSlot" class="account-slot" hidden></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="planview">
+    <div id="planview-stage" class="planview__stage" aria-label="3D" data-i18n-attr="aria-label:planview.stageLabel">
+      <p id="planview-status" class="planview__status" role="status" data-i18n="common.loading">Загрузка…</p>
+    </div>
+    <aside class="planview__panel">
+      <h1 id="planview-title" class="planview__title" data-i18n="planview.title">Дизайн</h1>
+      <p id="planview-meta" class="ax-muted planview__meta"></p>
+      <div id="planview-currency" hidden></div>
+      <ol id="planview-items" class="planview__items"></ol>
+      <div id="planview-quote" class="planview__quote"></div>
+      <div class="ax-actions planview__actions">
+        <a id="planview-xr" class="ax-btn ax-btn-primary" href="./xrviewer.html" data-i18n="designs.openXr">Открыть в XR</a>
+        <a id="planview-back" class="ax-btn ax-btn-secondary" href="./plans.html" data-i18n="planview.back">Назад к планам</a>
+      </div>
+      <p id="planview-hint" class="ax-hint planview__hint" data-i18n="planview.hint">Вращайте сцену мышью или пальцем, колесо или щипок — приблизить. Линия на полу — стена, по углам которой калибровалась комната.</p>
+      <p class="planview__contacts" data-contacts><a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
+    </aside>
+  </main>
+
+  <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
+  <script type="module" src="./dist/planview.bandle.js?v=f2bae1f835"></script>
+</body>
+
+</html>

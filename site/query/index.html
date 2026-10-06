@@ -4,30 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ArtUp Query — JQL functions for Jira Cloud</title>
-  <meta name="description" content="ArtUp Query for Jira Cloud: 24 JQL functions for subtasks, links, sprint history, comments, attachments and field math. Results update within seconds, stay complete on 50,000 issues and never write to your issues. Runs on Atlassian.">
+  <meta name="description" content="ArtUp Query for Jira Cloud: 24 JQL functions for subtasks, links, sprint history, comments, attachments and field math in the ordinary Jira search. A complete result or a clear error with the numbers, never a cut-off list; never writes to your issues. Runs on Atlassian.">
   <meta name="color-scheme" content="light dark">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../style.css">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="../style.css?v=cbfa66d8">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main" data-i18n-html="t1">Skip to content</a>
 
   <header class="site-header">
     <div class="container">
-      <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ArtUp Labs</a>
-      <nav class="site-nav" aria-label="Main">
+      <a class="brand" href="../index.html"><img class="brand-mark" src="../assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main" data-i18n-attr="aria-label:a1">
         <ul>
-          <li><a href="../index.html">Home</a></li>
+          <li data-i18n-html="t3"><a href="../index.html">Home</a></li>
+          <li><a href="../shopify/">AR Room</a></li>
           <li><a href="../export/">ArtUp Export</a></li>
           <li><a href="../reports/">ArtUp Reports</a></li>
           <li><a href="./" aria-current="page">ArtUp Query</a></li>
-          <li><a href="../docs.html">Docs</a></li>
-          <li><a href="../support.html">Support</a></li>
-          <li><a href="../security.html">Security</a></li>
-          <li><a href="../privacy.html">Privacy</a></li>
-          <li><a href="../terms.html">Terms</a></li>
+          <li data-i18n-html="t6"><a href="../docs.html">Docs</a></li>
+          <li data-i18n-html="t7"><a href="../support.html">Support</a></li>
+          <li data-i18n-html="t8"><a href="../security.html">Security</a></li>
+          <li data-i18n-html="t9"><a href="../privacy.html">Privacy</a></li>
+          <li data-i18n-html="t10"><a href="../terms.html">Terms</a></li>
         </ul>
       </nav>
+      <div class="lang-toggle" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.label"><button type="button" data-lang-set="ru" lang="ru" aria-pressed="false">RU</button><button type="button" data-lang-set="en" lang="en" aria-pressed="true">EN</button></div>
     </div>
   </header>
 
@@ -37,26 +40,26 @@
         <div class="hero-head">
           <img class="app-icon" src="icon.svg" alt="" width="56" height="56">
           <div>
-            <p class="eyebrow">ArtUp Query for Jira Cloud</p>
-            <h1 id="hero-title">JQL functions that stay fresh</h1>
-            <p class="lead">Subtasks and links of a query, sprint history, comments, attachments, date and field math — in the ordinary Jira search, filters and boards. Write <code>issue in subtasksOf("project = DEMO")</code> and the result follows your edits within seconds. The app only reads your work items and runs on Atlassian.</p>
-            <div class="actions">
+            <p class="eyebrow" data-i18n-html="t11">ArtUp Query for Jira Cloud</p>
+            <h1 id="hero-title" data-i18n-html="t12">JQL functions with complete answers</h1>
+            <p class="lead" data-i18n-html="t13">Subtasks and links of a query, sprint history, comments, attachments, date and field math — in the ordinary Jira search, filters and boards. Write <code>issue in subtasksOf("project = DEMO")</code> and the result follows your edits. You get the full result or a clear error with the numbers, never a cut-off list. The app only reads your work items and runs on Atlassian.</p>
+            <div class="actions" data-i18n-html="t14">
               <a class="btn btn-primary" href="https://marketplace.atlassian.com/">Get it on the Atlassian Marketplace</a>
               <a class="btn btn-secondary" href="#functions-title">The 24 functions</a>
               <a class="btn btn-secondary" href="../docs/query/">Documentation</a>
             </div>
-            <ul class="pills" aria-label="Highlights">
-              <li>Runs on Atlassian</li>
-              <li>Free for up to 10 users</li>
-              <li>Works with in and not in</li>
-              <li>26 languages, light and dark</li>
+            <ul class="pills" aria-label="Highlights" data-i18n-attr="aria-label:a2">
+              <li data-i18n-html="t15">Runs on Atlassian</li>
+              <li data-i18n-html="t16">Free for up to 10 users</li>
+              <li data-i18n-html="t17">Works with in and not in</li>
+              <li data-i18n-html="t18">26 languages, light and dark</li>
             </ul>
           </div>
         </div>
         <div class="shot">
           <div class="frame">
             <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
-            <pre class="code"><code><span class="tok-c">// Work items blocked by something that is not done yet</span>
+            <pre class="code" data-i18n-html="t19"><code><span class="tok-c">// Work items blocked by something that is not done yet</span>
 project = DEMO AND issue in linkedIssuesOf("project = DEMO AND statusCategory != Done", "is blocked by")
 
 <span class="tok-c">// What was added to the sprint after it started</span>
@@ -66,44 +69,43 @@ issue in addedAfterSprintStart("DEMO board")
 issue in expression("project = DEMO", "timespent &gt; originalestimate * 1.2")</code></pre>
           </div>
         </div>
-        <!-- screenshots: add the Task 34 step 2 frames here (reference, status, search, admin, error) -->
       </div>
     </section>
 
     <section class="section" aria-labelledby="features-title">
       <div class="container">
-        <h2 id="features-title">Three things that set it apart</h2>
-        <p class="section-lead">The complaints about the existing JQL add-ons are stale results, incomplete results and data kept by the vendor. ArtUp Query is built around the opposite.</p>
+        <h2 id="features-title" data-i18n-html="t20">Three things that set it apart</h2>
+        <p class="section-lead" data-i18n-html="t21">The complaints about the existing JQL add-ons are stale results, incomplete results and data kept by the vendor. ArtUp Query is built around the opposite.</p>
         <ul class="features">
           <li class="card">
-            <h3>Fresh within seconds</h3>
-            <p>Change a work item and the result follows. On a test site with 50,000 issues the 90th percentile was 24.7 seconds for subtask and link functions and 7.1 seconds for board sprints; comments and attachments took about 11 and 12 seconds, and sprint history stayed under a minute.<sup><a href="#note-load">1</a></sup> <!-- refresh after acceptance --></p>
+            <h3 data-i18n-html="t22">Complete, or an error that explains</h3>
+            <p data-i18n-html="t23">A result is never partial. On a test site with 50,000 issues every function matched a reference computed from the Jira REST API: 24 of 24, 85 of 85 (a sprint of 1,093 issues among them) and 17 of 17 checks.<sup><a href="#note-load">1</a></sup> How many issues one function can read depends on the function and on Jira's API allowance for apps; a subquery that is too large gets an error that names the limit and how far to narrow it.</p>
           </li>
           <li class="card">
-            <h3>Complete at any size</h3>
-            <p>On the same site every function matched a reference computed from the Jira REST API: 24 of 24, 85 of 85 (a sprint of 1,093 issues among them) and 17 of 17 checks.<sup><a href="#note-load">1</a></sup> A result that cannot be returned in full is an error with a number, never a cut-off list. <!-- refresh after acceptance --></p>
+            <h3 data-i18n-html="t24">Kept up to date from Jira events</h3>
+            <p data-i18n-html="t25">Functions that read the app's index and functions over small subqueries answer within seconds. After an edit the result follows on its own; large results and bulk imports update later, at the pace Jira's API allowance for apps permits.</p>
           </li>
           <li class="card">
-            <h3>Runs on Atlassian, writes nothing</h3>
-            <p>No external servers and no egress. The app reads work items and keeps only ids, dates and metadata in Forge storage. It never edits an issue and does not ask for <code>write:jira-work</code>.</p>
+            <h3 data-i18n-html="t26">Runs on Atlassian, writes nothing</h3>
+            <p data-i18n-html="t27">No external servers and no egress. The app reads work items and keeps only ids, dates, metadata and the arguments of the functions in use in Forge storage. It never edits an issue and does not ask for <code>write:jira-work</code>.</p>
           </li>
         </ul>
-        <p class="meta" id="note-load" style="margin-top:1.5rem"><sup>1</sup> Measured on a Jira Cloud test site with 50,000 issues. Freshness: 30 edits for subtask, link and board functions, 10 for comments and attachments. Seconds for ordinary edits; bulk imports and bulk edits can take minutes. Time depends on your site.</p>
+        <p class="meta" id="note-load" style="margin-top:1.5rem" data-i18n-html="t28"><sup>1</sup> Measured on a Jira Cloud test site with 50,000 issues: the result of every function was compared with a reference computed from the Jira REST API. What one function can read on your site depends on the function and on Jira's API allowance for apps.</p>
       </div>
     </section>
 
     <section class="section band" aria-labelledby="functions-title">
       <div class="container">
-        <h2 id="functions-title">24 functions in seven groups</h2>
-        <p class="section-lead">All of them work with <code>in</code> and <code>not in</code>, accept any JQL, a saved filter or a list of keys as the argument, and nest. Full reference with examples in the <a href="../docs/query/#reference">documentation</a>.</p>
+        <h2 id="functions-title" data-i18n-html="t29">24 functions in seven groups</h2>
+        <p class="section-lead" data-i18n-html="t30">All of them work with <code>in</code> and <code>not in</code>, accept any JQL, a saved filter or a list of keys as the argument, and nest. Full reference with examples in the <a href="../docs/query/#reference">documentation</a>.</p>
         <ul class="features">
-          <li class="card"><h3>Work items of a query</h3><p><code>subtasksOf</code>, <code>parentsOf</code>, <code>epicsOf</code>, <code>issuesInEpics</code>, <code>childIssuesOf</code>, <code>linkedIssuesOf</code>, <code>linkedIssuesOfRecursive</code>, <code>linkedIssuesOfRecursiveLimited</code></p></li>
-          <li class="card"><h3>Links and subtasks</h3><p><code>hasLinks</code>, <code>hasLinkType</code>, <code>hasSubtasks</code></p></li>
-          <li class="card"><h3>Board sprints</h3><p><code>previousSprint</code>, <code>nextSprint</code></p></li>
-          <li class="card"><h3>Sprint history</h3><p><code>addedAfterSprintStart</code>, <code>removedAfterSprintStart</code>, <code>completeInSprint</code>, <code>incompleteInSprint</code></p></li>
-          <li class="card"><h3>Comments</h3><p><code>commented</code>, <code>lastComment</code>, <code>hasComments</code></p></li>
-          <li class="card"><h3>Attachments</h3><p><code>fileAttached</code>, <code>hasAttachments</code></p></li>
-          <li class="card"><h3>Compare fields</h3><p><code>dateCompare</code>, <code>expression</code></p></li>
+          <li class="card"><h3 data-i18n-html="t31">Work items of a query</h3><p><code>subtasksOf</code>, <code>parentsOf</code>, <code>epicsOf</code>, <code>issuesInEpics</code>, <code>childIssuesOf</code>, <code>linkedIssuesOf</code>, <code>linkedIssuesOfRecursive</code>, <code>linkedIssuesOfRecursiveLimited</code></p></li>
+          <li class="card"><h3 data-i18n-html="t32">Links and subtasks</h3><p><code>hasLinks</code>, <code>hasLinkType</code>, <code>hasSubtasks</code></p></li>
+          <li class="card"><h3 data-i18n-html="t33">Board sprints</h3><p><code>previousSprint</code>, <code>nextSprint</code></p></li>
+          <li class="card"><h3 data-i18n-html="t34">Sprint history</h3><p><code>addedAfterSprintStart</code>, <code>removedAfterSprintStart</code>, <code>completeInSprint</code>, <code>incompleteInSprint</code></p></li>
+          <li class="card"><h3 data-i18n-html="t35">Comments</h3><p><code>commented</code>, <code>lastComment</code>, <code>hasComments</code></p></li>
+          <li class="card"><h3 data-i18n-html="t36">Attachments</h3><p><code>fileAttached</code>, <code>hasAttachments</code></p></li>
+          <li class="card"><h3 data-i18n-html="t37">Compare fields</h3><p><code>dateCompare</code>, <code>expression</code></p></li>
         </ul>
       </div>
     </section>
@@ -112,9 +114,9 @@ issue in expression("project = DEMO", "timespent &gt; originalestimate * 1.2")</
       <div class="container">
         <div class="stack">
           <div>
-            <span class="kicker">Coming from ScriptRunner?</span>
-            <h2 id="sr-title">Change one word</h2>
-            <p class="section-lead">Function names and arguments are the same where the meaning is the same. Write <code>issue in</code> instead of <code>issueFunction in</code>. ScriptRunner Enhanced Search on Cloud works only on its own search screen; ArtUp Query works in the standard Jira search, in filters and on boards. The differences are listed in the <a href="../docs/query/#scriptrunner">documentation</a>.</p>
+            <span class="kicker" data-i18n-html="t38">Coming from ScriptRunner?</span>
+            <h2 id="sr-title" data-i18n-html="t39">Change one word</h2>
+            <p class="section-lead" data-i18n-html="t40">Function names and arguments are the same where the meaning is the same. Write <code>issue in</code> instead of <code>issueFunction in</code>. ScriptRunner Enhanced Search on Cloud works only on its own search screen; ArtUp Query works in the standard Jira search, in filters and on boards. The differences are listed in the <a href="../docs/query/#scriptrunner">documentation</a>.</p>
           </div>
           <div class="frame">
             <div class="frame-bar" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -130,35 +132,35 @@ issue in subtasksOf("project = DEMO")</code></pre>
 
     <section class="section band" aria-labelledby="how-title">
       <div class="container">
-        <h2 id="how-title">How it works</h2>
-        <p class="section-lead">Three steps, no configuration.</p>
+        <h2 id="how-title" data-i18n-html="t41">How it works</h2>
+        <p class="section-lead" data-i18n-html="t42">Three steps, no configuration.</p>
         <ol class="steps">
-          <li><strong>Install.</strong><p>A Jira administrator installs ArtUp Query from the Atlassian Marketplace. Sites with up to 10 users use it free.</p></li>
-          <li><strong>Look up a function.</strong><p>Open <em>Apps → ArtUp Query</em>: every function with its arguments and an example you can copy, and the state of the index.</p></li>
-          <li><strong>Search.</strong><p>In the Jira search, switch to JQL and type <code>issue in</code> and a function. Save it as a filter or use it on a board.</p></li>
+          <li><strong data-i18n-html="t43">Install.</strong><p data-i18n-html="t44">A Jira administrator installs ArtUp Query from the Atlassian Marketplace. Sites with up to 10 users use it free.</p></li>
+          <li><strong data-i18n-html="t45">Look up a function.</strong><p data-i18n-html="t46">Open <em>Apps → ArtUp Query</em>: every function with its arguments and an example you can copy, and the state of the index.</p></li>
+          <li><strong data-i18n-html="t47">Search.</strong><p data-i18n-html="t48">In the Jira search, switch to JQL and type <code>issue in</code> and a function. Save it as a filter or use it on a board.</p></li>
         </ol>
       </div>
     </section>
 
     <section class="section" aria-labelledby="honest-title">
       <div class="container">
-        <span class="kicker">No silent losses</span>
-        <h2 id="honest-title">Honest about timing and errors</h2>
-        <p class="section-lead">Seconds for ordinary edits; bulk imports and bulk edits can take minutes, because Jira delivers the changes in a queue. A new site builds its index once — about half a minute to a minute for 50,000 issues — and until then the sprint, comment and attachment functions say so. <!-- refresh after acceptance --> A wrong argument, an unknown board or a result that is too large produces a message in the JQL editor that tells you what to fix, instead of an empty list.</p>
+        <span class="kicker" data-i18n-html="t49">No silent losses</span>
+        <h2 id="honest-title" data-i18n-html="t50">Honest about timing and errors</h2>
+        <p class="section-lead" data-i18n-html="t51">Functions that read the app's index and functions over small subqueries answer within seconds. Edits reach the results through Jira's change events, which arrive in a queue: ordinary edits show up soon, while large results, bulk imports and bulk edits take longer, at the pace Jira's API allowance for apps permits. A new site builds its index once, and until then the sprint, comment and attachment functions answer “Index is building: n of m issues”. A wrong argument, an unknown board or a result that is too large produces a message in the JQL editor that tells you what to fix, with the numbers, instead of an empty or cut-off list.</p>
       </div>
     </section>
 
     <section class="section band" aria-labelledby="trust-title">
       <div class="container">
-        <h2 id="trust-title">Your work items stay on Atlassian</h2>
-        <p class="section-lead">ArtUp Query runs on Atlassian Forge. There are no ArtUp Labs servers in the path.</p>
+        <h2 id="trust-title" data-i18n-html="t52">Your work items stay on Atlassian</h2>
+        <p class="section-lead" data-i18n-html="t53">ArtUp Query runs on Atlassian Forge. There are no ArtUp Labs servers in the path.</p>
         <ul class="facts">
-          <li><strong>Runs on Atlassian</strong>No external servers and no egress.</li>
-          <li><strong>Never stores text</strong>The index holds ids, dates, status categories, comment and attachment metadata and file extensions — not issue text, comment bodies or attachment content.</li>
-          <li><strong>Only reads your issues</strong>No <code>write:jira-work</code>. The one write scope, <code>write:app-data:jira</code>, saves the results of JQL functions.</li>
-          <li><strong>Exclude projects</strong>Administrators can keep a project out of the index and reindex it.</li>
-          <li><strong>No arguments in the log</strong>The error log keeps the function name and the message, never the JQL you passed.</li>
-          <li><strong>Company- and team-managed</strong>Works in both kinds of projects, on boards and in filters.</li>
+          <li data-i18n-html="t54"><strong>Runs on Atlassian</strong>No external servers and no egress.</li>
+          <li data-i18n-html="t55"><strong>Never stores text</strong>The index holds ids, dates, status categories, comment and attachment metadata and file extensions — not issue text, comment bodies or attachment content.</li>
+          <li data-i18n-html="t56"><strong>Only reads your issues</strong>No <code>write:jira-work</code>. The one write scope, <code>write:app-data:jira</code>, saves the results of JQL functions.</li>
+          <li data-i18n-html="t57"><strong>Exclude projects</strong>Administrators can keep a project out of the index and reindex it.</li>
+          <li data-i18n-html="t58"><strong>No arguments in the log</strong>The error log keeps the function name and the message, never the JQL you passed.</li>
+          <li data-i18n-html="t59"><strong>Company- and team-managed</strong>Works in both kinds of projects, on boards and in filters.</li>
         </ul>
       </div>
     </section>
@@ -167,10 +169,10 @@ issue in subtasksOf("project = DEMO")</code></pre>
       <div class="container">
         <div class="price-card">
           <div>
-            <h2 id="price-title">Free for up to 10 users</h2>
-            <p>Larger sites subscribe through the Atlassian Marketplace, billed by Atlassian with your other apps: $175 per month for 200 users. Start a free trial from Jira's <em>Apps</em> menu.</p>
+            <h2 id="price-title" data-i18n-html="t60">Free for up to 10 users</h2>
+            <p data-i18n-html="t61">Larger sites subscribe through the Atlassian Marketplace, billed by Atlassian with your other apps: $175 per month for 200 users. Start a free trial from Jira's <em>Apps</em> menu.</p>
           </div>
-          <div class="actions">
+          <div class="actions" data-i18n-html="t62">
             <a class="btn btn-primary" href="https://marketplace.atlassian.com/">Pricing on the Marketplace</a>
             <a class="btn btn-secondary" href="../docs/query/">Documentation</a>
             <a class="btn btn-secondary" href="../support.html">Support</a>
@@ -183,25 +185,104 @@ issue in subtasksOf("project = DEMO")</code></pre>
   <footer class="site-footer">
     <div class="container">
       <div>
-        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
-        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
+        <p data-i18n-html="t63"><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p data-i18n-html="t64">Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · <span style="white-space:nowrap"><svg class="wa-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="vertical-align:-3px"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z"/></svg> WhatsApp: <a href="https://wa.me/77778490070" target="_blank" rel="noopener">+7 777 849 00 70</a></span> · Security: <a href="mailto:security@artuplabs.com">security@artuplabs.com</a></p>
       </div>
-      <nav aria-label="Footer">
+      <nav aria-label="Footer" data-i18n-attr="aria-label:a3">
         <ul>
+          <li><a href="../shopify/">AR Room</a></li>
           <li><a href="../export/">ArtUp Export</a></li>
           <li><a href="../reports/">ArtUp Reports</a></li>
           <li><a href="./">ArtUp Query</a></li>
-          <li><a href="../docs/export/">Export docs</a></li>
-          <li><a href="../docs/reports/">Reports docs</a></li>
-          <li><a href="../docs/query/">Query docs</a></li>
-          <li><a href="../docs.html">Trace docs</a></li>
-          <li><a href="../support.html">Support</a></li>
-          <li><a href="../security.html">Security</a></li>
-          <li><a href="../privacy.html">Privacy</a></li>
-          <li><a href="../terms.html">Terms</a></li>
+          <li data-i18n-html="t65"><a href="../docs/export/">Export docs</a></li>
+          <li data-i18n-html="t66"><a href="../docs/reports/">Reports docs</a></li>
+          <li data-i18n-html="t67"><a href="../docs/query/">Query docs</a></li>
+          <li data-i18n-html="t68"><a href="../docs.html">Trace docs</a></li>
+          <li data-i18n-html="t69"><a href="../support.html">Support</a></li>
+          <li data-i18n-html="t70"><a href="../security.html">Security</a></li>
+          <li data-i18n-html="t71"><a href="../privacy.html">Privacy</a></li>
+          <li data-i18n-html="t72"><a href="../terms.html">Terms</a></li>
         </ul>
       </nav>
     </div>
   </footer>
+  <script>window.ARTUP_I18N = { en: {}, ru: {
+  "lang.label": "Язык",
+  "t1": "Перейти к содержимому",
+  "t3": "<a href=\"../index.html\">Главная<\/a>",
+  "t6": "<a href=\"../docs.html\">Документация<\/a>",
+  "t7": "<a href=\"../support.html\">Поддержка<\/a>",
+  "t8": "<a href=\"../security.html\">Безопасность<\/a>",
+  "t9": "<a href=\"../privacy.html\">Конфиденциальность<\/a>",
+  "t10": "<a href=\"../terms.html\">Условия<\/a>",
+  "t11": "ArtUp Query для Jira Cloud",
+  "t12": "Функции JQL с полными ответами",
+  "t13": "Подзадачи и связи задач из запроса, история спринтов, комментарии, вложения, сравнение дат и арифметика по полям — в обычном поиске Jira, фильтрах и на досках. Напишите <code>issue in subtasksOf(\"project = DEMO\")<\/code>, и результат будет следовать за вашими правками. Вы получаете полный результат или понятную ошибку с числами, а не обрезанный список. Приложение только читает ваши задачи и работает на инфраструктуре Atlassian.",
+  "t14": "<a class=\"btn btn-primary\" href=\"https://marketplace.atlassian.com/\">Установить с Atlassian Marketplace<\/a> <a class=\"btn btn-secondary\" href=\"#functions-title\">24 функции<\/a> <a class=\"btn btn-secondary\" href=\"../docs/query/\">Документация<\/a>",
+  "t15": "Работает на Atlassian",
+  "t16": "Бесплатно до 10 пользователей",
+  "t17": "Работает с in и not in",
+  "t18": "26 языков, светлая и тёмная темы",
+  "t19": "<code><span class=\"tok-c\">// Задачи, заблокированные чем-то ещё не завершённым<\/span>\nproject = DEMO AND issue in linkedIssuesOf(\"project = DEMO AND statusCategory != Done\", \"is blocked by\")\n\n<span class=\"tok-c\">// Что добавили в спринт после его начала<\/span>\nissue in addedAfterSprintStart(\"DEMO board\")\n\n<span class=\"tok-c\">// Списано больше оценки на 20 % и более<\/span>\nissue in expression(\"project = DEMO\", \"timespent &gt; originalestimate * 1.2\")<\/code>",
+  "t20": "Три отличия",
+  "t21": "На существующие дополнения JQL жалуются за устаревшие результаты, неполные результаты и данные, которые хранит поставщик. ArtUp Query построено наоборот.",
+  "t22": "Полный результат или понятная ошибка",
+  "t23": "Результат никогда не бывает частичным. На тестовом сайте с 50 000 задач каждая функция совпала с эталоном, вычисленным через Jira REST API: 24 из 24, 85 из 85 (в том числе спринт из 1 093 задач) и 17 из 17 проверок.<sup><a href=\"#note-load\">1<\/a><\/sup> Сколько задач может прочитать одна функция, зависит от функции и от лимита Jira API для приложений; на слишком большой подзапрос приходит ошибка, в которой названы предел и то, насколько сузить запрос.",
+  "t24": "Обновляется по событиям Jira",
+  "t25": "Функции, которые читают индекс приложения, и функции над небольшими подзапросами отвечают за секунды. После правки результат обновляется сам; большие результаты и массовые импорты обновляются позже — с той скоростью, которую позволяет лимит Jira API для приложений.",
+  "t26": "Работает на Atlassian и ничего не изменяет",
+  "t27": "Без внешних серверов и без egress. Приложение читает задачи и хранит в хранилище Forge только идентификаторы, даты, метаданные и аргументы используемых функций. Оно никогда не изменяет задачи и не запрашивает <code>write:jira-work<\/code>.",
+  "t28": "<sup>1<\/sup> Замер на тестовом сайте Jira Cloud с 50 000 задач: результат каждой функции сравнивался с эталоном, вычисленным через Jira REST API. Сколько может прочитать одна функция на вашем сайте, зависит от функции и от лимита Jira API для приложений.",
+  "t29": "24 функции в семи группах",
+  "t30": "Все они работают с <code>in<\/code> и <code>not in<\/code>, принимают в аргументе любой JQL, сохранённый фильтр или список ключей и вкладываются друг в друга. Полный справочник с примерами — в <a href=\"../docs/query/#reference\">документации<\/a>.",
+  "t31": "Задачи из запроса",
+  "t32": "Связи и подзадачи",
+  "t33": "Спринты доски",
+  "t34": "История спринтов",
+  "t35": "Комментарии",
+  "t36": "Вложения",
+  "t37": "Сравнение полей",
+  "t38": "Переходите со ScriptRunner?",
+  "t39": "Замените одно слово",
+  "t40": "Имена функций и аргументы совпадают там, где совпадает смысл. Пишите <code>issue in<\/code> вместо <code>issueFunction in<\/code>. ScriptRunner Enhanced Search в Cloud работает только на своём экране поиска; ArtUp Query работает в стандартном поиске Jira, в фильтрах и на досках. Различия перечислены в <a href=\"../docs/query/#scriptrunner\">документации<\/a>.",
+  "t41": "Как это работает",
+  "t42": "Три шага, без настройки.",
+  "t43": "Установите.",
+  "t44": "Администратор Jira устанавливает ArtUp Query из Atlassian Marketplace. Сайты до 10 пользователей пользуются им бесплатно.",
+  "t45": "Найдите функцию.",
+  "t46": "Откройте <em>Apps → ArtUp Query<\/em>: каждая функция с аргументами и примером, который можно скопировать, а также состояние индекса.",
+  "t47": "Ищите.",
+  "t48": "В поиске Jira переключитесь на JQL и введите <code>issue in<\/code> и функцию. Сохраните запрос как фильтр или используйте его на доске.",
+  "t49": "Ничего не теряется молча",
+  "t50": "Честно о сроках и ошибках",
+  "t51": "Функции, которые читают индекс приложения, и функции над небольшими подзапросами отвечают за секунды. Правки попадают в результаты через события изменений Jira, которые приходят очередью: обычные правки появляются скоро, а большие результаты, массовые импорты и массовые правки — дольше, с той скоростью, которую позволяет лимит Jira API для приложений. Новый сайт один раз строит индекс, и до этого функции спринтов, комментариев и вложений отвечают «Index is building: n of m issues». Неверный аргумент, неизвестная доска или слишком большой результат дают в редакторе JQL сообщение с числами, которое говорит, что исправить, — а не пустой или обрезанный список.",
+  "t52": "Ваши задачи остаются в Atlassian",
+  "t53": "ArtUp Query работает на Atlassian Forge. Серверов ArtUp Labs на пути данных нет.",
+  "t54": "<strong>Работает на Atlassian<\/strong>Без внешних серверов и без egress.",
+  "t55": "<strong>Текст не хранится<\/strong>В индексе — идентификаторы, даты, категории статусов, метаданные комментариев и вложений и расширения файлов, но не текст задач, тексты комментариев и содержимое вложений.",
+  "t56": "<strong>Только чтение задач<\/strong>Без <code>write:jira-work<\/code>. Единственное разрешение на запись, <code>write:app-data:jira<\/code>, сохраняет результаты функций JQL.",
+  "t57": "<strong>Исключение проектов<\/strong>Администраторы могут исключить проект из индекса и переиндексировать его.",
+  "t58": "<strong>Без аргументов в логе<\/strong>Журнал ошибок хранит имя функции и сообщение, но никогда — переданный вами JQL.",
+  "t59": "<strong>Company- и team-managed<\/strong>Работает в проектах обоих видов, на досках и в фильтрах.",
+  "t60": "Бесплатно до 10 пользователей",
+  "t61": "Для больших сайтов — подписка через Atlassian Marketplace; счёт выставляет Atlassian вместе с другими вашими приложениями: $175 в месяц за 200 пользователей. Бесплатный пробный период запускается из меню <em>Apps<\/em> в Jira.",
+  "t62": "<a class=\"btn btn-primary\" href=\"https://marketplace.atlassian.com/\">Цены на Marketplace<\/a> <a class=\"btn btn-secondary\" href=\"../docs/query/\">Документация<\/a> <a class=\"btn btn-secondary\" href=\"../support.html\">Поддержка<\/a>",
+  "t63": "<strong>ArtUp Labs<\/strong> — торговое название ИП Карпец Артём, Республика Казахстан.",
+  "t64": "Связь: <a href=\"mailto:hello@artuplabs.com\">hello@artuplabs.com<\/a> · <span style=\"white-space:nowrap\"><svg class=\"wa-icon\" viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:-3px\"><path d=\"M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z\"/><path d=\"M9 8.6c.1 3.4 2.9 6.3 6.4 6.4l1.1-1.5-2-1.1-.9.8a4.3 4.3 0 0 1-2.2-2.2l.8-.9-1.1-2z\"/><\/svg> WhatsApp: <a href=\"https://wa.me/77778490070\" target=\"_blank\" rel=\"noopener\">+7 777 849 00 70<\/a><\/span> · Безопасность: <a href=\"mailto:security@artuplabs.com\">security@artuplabs.com<\/a>",
+  "t65": "<a href=\"../docs/export/\">Документация Export<\/a>",
+  "t66": "<a href=\"../docs/reports/\">Документация Reports<\/a>",
+  "t67": "<a href=\"../docs/query/\">Документация Query<\/a>",
+  "t68": "<a href=\"../docs.html\">Документация Trace<\/a>",
+  "t69": "<a href=\"../support.html\">Поддержка<\/a>",
+  "t70": "<a href=\"../security.html\">Безопасность<\/a>",
+  "t71": "<a href=\"../privacy.html\">Конфиденциальность<\/a>",
+  "t72": "<a href=\"../terms.html\">Условия<\/a>",
+  "a1": "Основное меню",
+  "a2": "Главное",
+  "a3": "Нижнее меню",
+  "meta.title": "ArtUp Query — функции JQL для Jira Cloud",
+  "meta.description": "ArtUp Query для Jira Cloud: 24 функции JQL для подзадач, связей, истории спринтов, комментариев, вложений и арифметики по полям в обычном поиске Jira. Полный результат или понятная ошибка с числами, а не обрезанный список; задачи никогда не изменяются. Работает на инфраструктуре Atlassian."
+} };</script>
+  <script src="/ar-xr/assets/lang.js?v=6abb7ca1"></script>
 </body>
 </html>

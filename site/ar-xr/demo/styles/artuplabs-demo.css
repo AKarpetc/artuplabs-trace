@@ -1,0 +1,440 @@
+/*
+ * Демо ArtUp AR XR (artuplabs.com/ar-xr/demo/): бренд поверх демо-стилей и стили новых частей —
+ * цены, выбор для XR, «Мои дизайны», просмотр дизайна в 3D, аккаунт, язык, вход с телефона,
+ * демо-админка, итог и «Сохранить план» в XR.
+ *
+ * Общие токены и компоненты (.ax-*) — в ../assets/ar-xr.css (владелец — лендинг). Здесь для них
+ * только запасные правила через :where() (нулевая специфичность): если общий файл не загрузился,
+ * окна, листы и кнопки остаются рабочими, а когда он есть — его правила важнее независимо от порядка.
+ */
+
+/* ─── Бренд поверх Material-токенов витрины (тёмная тема демо) ─────────────── */
+:root {
+  --md-primary: #6ea8ff;
+  --md-on-primary: #0b1320;
+  --md-primary-container: #1b2a42;
+  --md-on-primary-container: #d6e6ff;
+  --md-surface: #111418;
+  --md-surface-container-low: #161a1f;
+  --md-surface-container: #1d2229;
+  --md-surface-container-high: #222831;
+  --md-surface-container-highest: #2a313b;
+  --md-on-surface: #e3e8ef;
+  --md-on-surface-variant: #a3adbb;
+  --md-outline-variant: #2f3640;
+  --demo-accent: var(--ax-accent, #6ea8ff);
+  --demo-surface: var(--ax-surface, #1d2229);
+  --demo-border: var(--ax-border, #2f3640);
+  --demo-text: var(--ax-text, #e3e8ef);
+  --demo-muted: var(--ax-muted, #a3adbb);
+  /* Один шрифт всего демо — Google Sans Flex (ссылку на него грузит каждая страница демо): он же
+     для общих токенов сайта (--ax-font), витрины (--font-brand, --font-plain) и viewer/XR (--avt-font). */
+  --demo-font: "Google Sans Flex", sans-serif;
+  --ax-font: var(--demo-font);
+  --font-brand: var(--demo-font);
+  --font-plain: var(--demo-font);
+  --avt-font: var(--demo-font);
+}
+
+/* Поля и кнопки не наследуют шрифт страницы сами; старые правила styles.css (viewer) называют Roboto. */
+:where(button, input, select, textarea, optgroup) { font-family: inherit; }
+.ar-button, .back_button, .qr-code__text, .viewer-progress, .viewer-error { font-family: var(--demo-font); }
+
+/* ─── Запасные правила общих компонентов (без ../assets/ar-xr.css) ────────── */
+:where(.ax-overlay) { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .6); }
+:where(.ax-overlay[hidden]) { display: none; }
+:where(.ax-modal, .ax-sheet) { width: 100%; max-width: 32rem; max-height: calc(100vh - 32px); overflow: auto; background: #1d2229; color: #e3e8ef; border-radius: 16px; }
+:where(.ax-modal-head) { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 20px 8px; }
+:where(.ax-modal-head h2) { margin: 0; font-size: 1.2rem; }
+:where(.ax-modal-body) { padding: 8px 20px 16px; }
+:where(.ax-modal-foot) { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 20px; }
+:where(.ax-btn) { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 16px; border: 1px solid #2f3640; border-radius: 10px; background: #222831; color: inherit; font: 600 15px/1.2 var(--demo-font); cursor: pointer; text-decoration: none; }
+:where(.ax-btn-primary) { background: #3d7fe6; border-color: transparent; color: #fff; }
+:where(.ax-btn-danger) { color: #fd9891; }
+:where(.ax-input) { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid #2f3640; border-radius: 10px; background: #111418; color: inherit; font: 16px var(--demo-font); }
+:where(.ax-field) { display: flex; flex-direction: column; gap: 6px; margin: 0 0 16px; }
+:where(.ax-segmented) { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid #2f3640; border-radius: 999px; }
+:where(.ax-segmented button) { min-width: 40px; padding: 6px 12px; border: 0; border-radius: 999px; background: transparent; color: inherit; cursor: pointer; }
+:where(.ax-segmented button[aria-pressed="true"]) { background: #2a313b; }
+:where(.ax-card) { padding: 20px; border: 1px solid #2f3640; border-radius: 16px; background: #1d2229; }
+:where(.ax-hint, .ax-muted) { color: #a3adbb; font-size: .9em; }
+:where(.ax-error) { color: #fd9891; }
+:where(.ax-icon-btn) { width: 40px; height: 40px; border: 0; border-radius: 8px; background: transparent; color: inherit; font-size: 22px; cursor: pointer; }
+:where(.ax-actions) { display: flex; flex-wrap: wrap; gap: 8px; }
+:where(.ax-header) { position: sticky; top: 0; z-index: 30; background: #111418; border-bottom: 1px solid #2f3640; }
+:where(.ax-header-row) { display: flex; align-items: center; gap: 12px 20px; min-height: 60px; max-width: 72rem; margin: 0 auto; padding: 0 16px; }
+:where(.ax-product) { display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; font-weight: 650; }
+:where(.ax-nav ul) { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; overflow-x: auto; }
+:where(.ax-nav a) { display: block; padding: 6px 10px; color: #a3adbb; text-decoration: none; }
+:where(.ax-header-actions) { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+/* ─── Шапка демо ─────────────────────────────────────────────────────────── */
+/* Вырез и, в приложении, его кнопки сверху слева: `--safe-top` из demo.css (те же правила, что у .top-bar). */
+.demo-head { padding-top: var(--safe-top); }
+.demo-head .ax-product img { border-radius: 6px; }
+.account-slot { display: flex; align-items: center; gap: 8px; }
+.account-slot[hidden] { display: none; }
+.account-email { max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--demo-muted); font-size: .9rem; }
+.account-tabs { margin: 0 0 16px; }
+.account-modal .ax-error:empty { display: none; }
+
+@media (max-width: 600px) {
+  .demo-head .ax-header-row { flex-wrap: wrap; gap: 4px 12px; padding-bottom: 6px; }
+  .demo-head .ax-nav { order: 3; flex-basis: 100%; }
+  .account-email { display: none; }
+  .search-bar { top: calc(100px + var(--safe-top, 0px)); }
+}
+
+/* ─── Цены в каталоге ────────────────────────────────────────────────────── */
+.catalog__prices { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+.currency-switch[hidden] { display: none; }
+.price-note { font-size: 13px; }
+.model-card__price { margin: 4px 0 0; font: 600 17px/1.3 var(--font-brand); color: var(--demo-text); }
+
+/* ─── Выбор для XR ───────────────────────────────────────────────────────── */
+/* Флажок 18 px, а нажимается вся подпись — на любом устройстве не ниже 40 px. */
+.pick-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; font-size: 14px; color: var(--demo-muted); cursor: pointer; user-select: none; }
+.pick-toggle input { width: 18px; height: 18px; accent-color: var(--demo-accent); }
+.pick-toggle input:disabled { opacity: .7; }
+.model-card__pick { margin-top: 8px; }
+.style-section__pick { margin-left: auto; }
+.selection-bar {
+  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+  width: max-content; max-width: calc(100vw - 24px); padding: 10px 14px;
+  border: 1px solid var(--demo-border); border-radius: 16px;
+  background: var(--demo-surface); color: var(--demo-text);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+}
+.selection-bar #xr-selection-count { font-weight: 600; }
+
+/* ─── Лист стоимости ─────────────────────────────────────────────────────── */
+.quote-overlay { z-index: 2000; }
+.quote-table { width: 100%; border-collapse: collapse; margin: 0 0 12px; font-size: 15px; }
+.quote-table th, .quote-table td { padding: 6px 4px; border-bottom: 1px solid var(--demo-border); text-align: left; vertical-align: top; }
+.quote-table th:nth-child(n+2), .quote-table td:nth-child(n+2) { text-align: right; white-space: nowrap; }
+.quote-totals { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 12px 0; }
+.quote-totals dt { color: var(--demo-muted); }
+.quote-totals dd { margin: 0; text-align: right; font-weight: 600; }
+.quote-totals dd.ax-price { font-size: 1.3rem; }
+
+.xr-hero__brand { display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
+.xr-hero__brand .xr-hero__logo { padding: 0; background: none; }
+.xr-pick__links { margin: 0; font-size: 14px; }
+.xr-pick__links a { color: #93bfff; }
+.xr-pick__currency { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.xr-pick__currency #xrCurrency[hidden] { display: none; }
+.xr-pick__currency:has(#xrCurrency[hidden]) { display: none; }
+
+/* ─── Мои дизайны и демо-админка ─────────────────────────────────────────── */
+.page-main { max-width: 72rem; margin: 0 auto; padding: 24px 16px 96px; }
+.page-main h1 { margin: 0 0 8px; font: 600 clamp(26px, 3vw, 34px)/1.2 var(--font-brand); }
+.page-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 20px; }
+.page-status { margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; background: var(--demo-surface); }
+.page-status[hidden] { display: none; }
+.plans-list { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); }
+.plan-card h3 { margin: 0; }
+.plan-card__meta { margin: 0; }
+.plan-card__total { margin: 0; font-weight: 600; font-size: 1.1rem; }
+.plans-empty { max-width: 40rem; }
+.plans-empty p { margin: 0 0 16px; }
+
+.admin-login { max-width: 26rem; }
+.admin-login[hidden], .admin-workspace[hidden], #admin-more[hidden] { display: none; }
+.admin-list { display: grid; gap: 12px; margin: 16px 0; }
+.admin-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px 16px; align-items: start; padding: 14px; }
+.admin-row img { width: 96px; height: 96px; object-fit: contain; border-radius: 10px; background: #fff; }
+.admin-row__info h3 { margin: 0; font-size: 1.05rem; }
+.admin-row__info p { margin: 2px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.admin-row--custom { border-color: var(--demo-accent); }
+.admin-row__form { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: end; gap: 8px 12px; }
+.admin-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--demo-muted); }
+/* Поля делят ширину ряда и сужаются: на планшете «Сбросить» не уходит одна на следующую строку. */
+.admin-field { flex: 1 1 8rem; min-width: 7rem; }
+.admin-field .ax-input { min-width: 0; width: 100%; }
+.admin-row__form .ax-btn, .admin-row__form .ax-checkbox { flex: none; white-space: nowrap; }
+.admin-row__result { flex-basis: 100%; }
+@media (min-width: 760px) {
+  .admin-row { grid-template-columns: 96px minmax(0, 1fr) auto; }
+  .admin-row__form { grid-column: 2 / -1; }
+}
+
+/* ─── Язык, вход с телефона, контакты, сообщения ─────────────────────────── */
+.lang-switch[hidden], .handoff-slot[hidden] { display: none; }
+.lang-switch button { min-width: 36px; padding: 4px 10px; font-size: 13px; font-weight: 600; }
+.lang-switch--locked { opacity: .5; pointer-events: none; }
+.handoff-slot { display: flex; }
+.handoff-modal { max-width: 22rem; text-align: center; }
+.handoff-qr { display: grid; place-items: center; margin: 4px auto 12px; padding: 12px; border-radius: 12px; background: #fff; width: max-content; }
+.handoff-qr img, .handoff-qr canvas { display: block; width: 240px; height: 240px; }
+.handoff-qr a { color: #0b1320; overflow-wrap: anywhere; max-width: 240px; }
+.page-footer { max-width: 72rem; margin: 0 auto; padding: 0 16px 48px; color: var(--demo-muted); font-size: 14px; }
+.page-footer a, .footer a, .planview__contacts a, .xr-guide__contacts a { color: var(--demo-accent); }
+.ax-toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  z-index: 3000; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  max-width: min(92vw, 34rem); padding: 12px 16px; border-radius: 14px;
+  background: rgba(13, 18, 28, .94); color: #f8fafc; border: 1px solid rgba(255, 255, 255, .18);
+  font: 500 15px/1.35 var(--demo-font); box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
+}
+.ax-toast a { color: #93bfff; font-weight: 600; }
+.ax-toast--error { border-color: #fd9891; }
+
+@media (max-width: 600px) {
+  .handoff-slot { display: none; }
+}
+
+/* ─── Мои дизайны: сравнение и карточки ─────────────────────────────────── */
+.designs-compare { grid-column: 1 / -1; padding: 16px 20px; }
+.designs-compare__title { margin: 0 0 8px; font-size: 1rem; color: var(--demo-muted); font-weight: 600; }
+.designs-compare ol { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.designs-compare li { display: flex; align-items: baseline; gap: 12px; padding: 4px 0; border-bottom: 1px dashed var(--demo-border); }
+.designs-compare li:last-child { border-bottom: 0; }
+.designs-compare li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.designs-compare li b, .design-card__total { font-variant-numeric: tabular-nums; }
+.design-card { display: flex; flex-direction: column; gap: 8px; }
+.design-card__strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; min-height: 0; }
+.design-card__strip:empty { display: none; }
+.design-card__strip img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 8px; background: #fff; }
+.design-card__total { margin: 0; font: 650 1.6rem/1.2 var(--font-brand); color: var(--demo-text); }
+.design-card .plan-card__actions { margin-top: auto; }
+
+/* ─── Дизайн в 3D ────────────────────────────────────────────────────────── */
+main.planview { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; min-height: calc(100vh - 61px - var(--safe-top)); max-width: none; margin: 0; padding: 0; }
+.planview__stage { position: relative; min-height: 60vh; background: #15191f; }
+.planview__stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.planview__status { position: absolute; left: 16px; top: 16px; z-index: 1; margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(13, 18, 28, .8); }
+.planview__status[hidden] { display: none; }
+.planview__panel { display: flex; flex-direction: column; gap: 12px; padding: 20px 16px; border-left: 1px solid var(--demo-border); overflow: auto; }
+.planview__title { margin: 0; font: 600 1.5rem/1.2 var(--font-brand); }
+.planview__meta { margin: 0; }
+.planview__items { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; }
+.planview__items li { display: flex; gap: 12px; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--demo-border); }
+.planview__items b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.planview__quote .quote-table { display: none; }
+.planview__hint, .planview__contacts { margin: 0; }
+/* Узкая колонка панели: контакты столбцом, без висящих « · » в конце строки. */
+.planview__contacts[data-contacts] { flex-direction: column; align-items: flex-start; }
+.planview__contacts[data-contacts] > .contacts-sep { display: none; }
+#planview-currency { align-self: flex-start; }
+#planview-currency[hidden] { display: none; }
+@media (max-width: 860px) {
+  main.planview { grid-template-columns: 1fr; }
+  .planview__stage { min-height: 56vh; }
+  .planview__panel { border-left: 0; border-top: 1px solid var(--demo-border); }
+}
+
+/* ─── XR: инструменты стартового экрана ─────────────────────────────────── */
+.xr-hero__tools { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.xr-hero__tools .lang-switch { color: #f8fafc; }
+.xr-guide__contacts { margin-top: 8px; }
+
+/* ─── «Мои планы» с числом планов устройства ─────────────────────────────── */
+.plans-slot { display: flex; }
+.plans-slot[hidden] { display: none; }
+.plans-button { gap: 6px; white-space: nowrap; }
+.plans-button[aria-current="page"] { border-color: var(--demo-accent); }
+.plans-button__badge {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--demo-accent); color: #0b1320; font: 700 12px/1 var(--demo-font); font-variant-numeric: tabular-nums;
+}
+.plans-button__badge[hidden] { display: none; }
+/* viewer.html: отступ сверху — `--avt-safe-top` из theme.css (вырез и кнопки приложения), как у кнопки «Назад» viewer.css. */
+.plans-slot--floating { position: fixed; top: calc(12px + var(--avt-safe-top)); right: calc(12px + env(safe-area-inset-right, 0px)); z-index: 50; }
+.plans-slot--floating .plans-button { background: rgba(13, 18, 28, .78); color: #f8fafc; border: 1px solid rgba(255, 255, 255, .2); text-decoration: none; padding: 6px 12px; border-radius: 999px; font: 600 14px/1.2 var(--demo-font); display: inline-flex; align-items: center; }
+.xr-hero__tools .plans-button { text-transform: none; letter-spacing: normal; }
+
+/* ─── Листы (sheet.js): шапка, верх с полем и кнопками, прокручиваемое тело ─ */
+.quote-whatsapp { margin-top: 8px; }
+.ax-sheet-overlay { z-index: 2100; }
+/* Сверху — ниже выреза и кнопок приложения: `--safe-top` (demo.css) или `--avt-safe-top` (theme.css), смотря что загрузила страница. */
+.ax-overlay.ax-sheet-overlay--top { place-items: start center; padding: calc(8px + var(--safe-top, var(--avt-safe-top, 0px))) 8px 0; align-content: start; }
+.app-sheet { display: flex; flex-direction: column; max-height: calc(100% - 16px); overflow: hidden; }
+.ax-sheet-overlay--top .app-sheet { border-radius: 16px; border-bottom: 1px solid var(--demo-border); max-height: calc(100% - 8px); }
+.ax-sheet-overlay--top .app-sheet::before { display: none; }
+.app-sheet .ax-modal-head { flex: none; }
+.app-sheet__top { flex: none; padding: 4px 20px 8px; }
+.app-sheet__top:empty { display: none; }
+.app-sheet__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.app-sheet__field { margin-bottom: 8px; }
+.app-sheet__actions { justify-content: flex-end; }
+.app-sheet__actions .ax-btn { min-height: 44px; }
+.app-sheet .ax-error:empty { display: none; }
+.app-sheet__note { margin: 0 0 12px; }
+.app-sheet .ax-icon-btn { width: 44px; height: 44px; }
+.save-plan-sheet__items { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+
+/* ─── XR-оверлей: фиксированные места, ничего не перекрывается ──────────────
+ * Ряд 1 (сверху): «Выйти» слева, чип плана справа. Ряд 2: «Сохранить план» и «Мои планы» под «Выйти».
+ * Ряд 3: строка сообщений по центру — уже, чем промежуток между левым краем и колонкой инструментов.
+ * Колонка инструментов — справа (56 px), лента моделей — снизу; калибровка — у нижнего края (лента
+ * в это время скрыта). Отступы учитывают safe area.
+ */
+.ar-main {
+  --xr-edge: 12px;
+  /* `--avt-safe-top` (theme.css): во время XR приложение задаёт `--arxr-app-bar: 0px`, остаётся только вырез. */
+  --xr-top: calc(var(--xr-edge) + var(--avt-safe-top));
+  --xr-left: calc(var(--xr-edge) + env(safe-area-inset-left, 0px));
+  --xr-right: calc(var(--xr-edge) + env(safe-area-inset-right, 0px));
+  --xr-tools: 64px;
+}
+.xr-controls {
+  position: fixed; z-index: 920;
+  top: calc(var(--xr-top) + 44px + 8px);
+  left: var(--xr-left);
+  max-width: calc(100vw - var(--xr-left) - var(--xr-right) - var(--xr-tools) - 8px);
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.xr-controls.hidden { display: none; }
+.xr-controls__button {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px;
+  background: rgba(13, 18, 28, .72); color: #f8fafc; font: 600 14px/1 var(--demo-font); white-space: nowrap; cursor: pointer;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.xr-controls__button--save { background: #1f9d6b; border-color: transparent; }
+.ar-main .room-badge {
+  top: var(--xr-top); right: var(--xr-right);
+  max-width: calc(100vw - var(--xr-left) - 44px - 8px - var(--xr-right));
+  min-height: 32px; box-sizing: border-box; display: flex; align-items: center;
+}
+.ar-main .log {
+  top: calc(var(--xr-top) + 44px + 8px + 40px + 8px + 40px + 8px);
+  max-width: calc(100vw - 2 * (var(--xr-edge) + var(--xr-tools) + 8px));
+  border-radius: 14px;
+}
+/* Колонка инструментов начинается под чипом плана; по горизонтали она не пересекается ни с рядом кнопок, ни со строкой сообщений. */
+.ar-main .toolbar { top: calc(var(--xr-top) + 44px + 8px); }
+.calibration-ui {
+  top: auto; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(76px + env(safe-area-inset-right, 0px));
+}
+.ar-main--ribbon-left .session-buttons { top: calc(var(--xr-top) + 44px + 8px + 40px + 8px + 40px + 8px); }
+.ar-main--ribbon-left .log { left: calc(var(--xr-left) + 84px + 24px); right: calc(var(--xr-right) + var(--xr-tools) + 8px); transform: none; max-width: none; }
+
+/* ─── Мобильная эргономика: зона касания ≥ 40 px, ничего не перекрывается ──────
+ * Проверка: scratchpad e2e/ergo-check.mjs (360×740, 375×667, 390×844, 412×915, 844×390; RU и EN).
+ */
+/* «Мои планы» в шапке — кнопкой с числом; ссылка того же раздела в меню лишняя. */
+.ax-header-row:has(.plans-slot:not([hidden])) .ax-nav a[href^="./plans.html"] { display: none; }
+.ax-overlay { grid-template-columns: minmax(0, 1fr); }
+.ax-overlay *, .ax-overlay *::before, .ax-overlay *::after { box-sizing: border-box; }
+.quote-table td:first-child { overflow-wrap: anywhere; }
+[data-contacts] { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
+[data-contacts] > a:not(.btn):not(.ax-btn) { display: inline-flex; align-items: center; min-height: 40px; white-space: nowrap; }
+.footer [data-contacts], .footer p[data-contacts] { justify-content: center; }
+/* Узкий экран: контакты подвала — столбцом, разделители « · » скрыты (ни одной висящей точки в конце строки). */
+@media (max-width: 600px) {
+  [data-contacts] > .contacts-sep { display: none; }
+  .footer [data-contacts], .page-footer[data-contacts] { flex-direction: column; align-items: center; text-align: center; }
+  /* В подвале каталога — по левому краю, как подпись об авторах моделей под ним. */
+  .footer [data-contacts] { flex-basis: 100%; align-items: flex-start; text-align: left; }
+}
+/* Конец страницы с кнопкой «Наверх»: подвал заканчивается над кнопкой, а не под ней. */
+body:has(#scrollTopButton) .footer { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+/* Шапка на телефоне: строка 1 — логотип и «Мои планы», строка 2 — разделы и RU | EN. */
+@media (max-width: 600px) {
+  .demo-head .ax-header-row { flex-wrap: wrap; gap: 4px 8px; padding: 4px 12px; min-height: 0; }
+  .demo-head .ax-header-actions { display: contents; }
+  .demo-head .ax-product { order: 1; }
+  .demo-head .plans-slot { order: 2; margin-left: auto; }
+  .demo-head .ax-nav { order: 3; flex: 1 1 auto; flex-basis: auto; min-width: 0; }
+  .demo-head [data-lang-switch] { order: 4; }
+  .demo-head .handoff-slot, .demo-head .account-slot { order: 5; }
+  .search-bar { top: calc(96px + var(--safe-top, 0px)); }
+}
+
+@media (pointer: coarse) {
+  .demo-head .ax-product, .demo-head .ax-nav a { min-height: 40px; display: flex; align-items: center; }
+  .lang-switch button, .currency-switch button { min-width: 44px; min-height: 40px; }
+  .ax-btn-sm, .plans-button, .ax-btn { min-height: 40px; }
+  .chip { height: 40px; }
+  .ax-checkbox { min-height: 40px; display: inline-flex; align-items: center; }
+  .search-bar input { align-self: stretch; }
+  .model-card__credit a { display: inline-block; padding: 13px 0; margin: -13px 0; }
+  .ax-icon-btn { width: 44px; height: 44px; }
+  .xr-hero__brand, .xr-hero__link { min-height: 40px; display: inline-flex; align-items: center; }
+  .xr-designs__item { min-height: 48px; }
+}
+
+/* Кнопка «Наверх» поднимается над панелью выбора, а страница получает отступ под панель. */
+body:has(#xr-selection-bar:not(.d-none)) { padding-bottom: 140px; }
+body:has(#xr-selection-bar:not(.d-none)) .fab { bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
+
+/* Стартовый экран XR: инструменты (Мои планы, RU | EN) переносятся на свою строку, а не за край. */
+.xr-hero__eyebrow { flex-wrap: wrap; row-gap: 8px; }
+.xr-hero__tools { flex-wrap: wrap; }
+
+/* Лента XR: подпись в две строки вместо обрезки; полное название — в title кнопки. */
+.session-button__label {
+  white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.2;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+}
+
+.app-sheet .ax-modal-head h2 { min-width: 0; overflow-wrap: anywhere; }
+.app-sheet .ax-modal-head .ax-icon-btn { flex: none; }
+.model-card__actions .btn { flex: 1 1 auto; min-height: 40px; }
+.viewer-body .model-credit a { display: inline-block; padding: 13px 0; margin: -13px 0; }
+.plans-slot .plans-button { min-height: 40px; }
+.toolbar__buttons { justify-content: safe flex-end; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .ar-main { --xr-tools: 112px; }
+  .ar-main .toolbar { width: 104px; }
+  .ar-main .toolbar__buttons { display: grid; grid-template-columns: repeat(2, 48px); gap: 8px; align-content: end; justify-content: end; }
+  .session-button__label { font-size: 11px; padding: 0 4px; }
+}
+/* Длинное название плана не раздвигает сетку шире экрана (иначе мобильный браузер уменьшает всю страницу). */
+.plans-list > *, .designs-compare, .designs-compare li { min-width: 0; }
+.designs-compare ol { grid-template-columns: minmax(0, 1fr); }
+.designs-compare li span { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .session-button { width: 84px; }
+}
+
+/* «Мои планы» в XR: список планов с итогом и режимом. */
+.xr-designs { display: grid; gap: 8px; }
+.xr-designs__item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 12px; text-align: left;
+  border: 1px solid var(--demo-border); border-radius: 12px; background: transparent; color: inherit; cursor: pointer; font: inherit;
+}
+.xr-designs__item[aria-current="true"] { border-color: var(--demo-accent); }
+.xr-designs__name { font-weight: 600; overflow-wrap: anywhere; }
+.xr-designs__total { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.xr-designs__meta { grid-column: 1 / -1; color: var(--demo-muted); font-size: 13px; }
+
+/* Кнопки режима старта: длинная подпись переносится, а не уходит за край кнопки. */
+.xr-launch .xr-start { white-space: normal; height: auto; min-height: 52px; padding: 10px 16px; line-height: 1.25; text-align: center; }
+
+/* Чип открытого плана: одна строка с многоточием (полное имя — в title и в «Мои планы»). */
+.ar-main .room-badge { display: block; line-height: 20px; }
+/* Без открытого плана чипа нет: правила выше задают `display` и иначе перебивают `.hidden` (пустая плашка справа сверху). */
+.ar-main .room-badge.hidden { display: none; }
+
+/* Палитра ткани (просмотр модели, страница «Выбери свой цвет», XR): круглые образцы, выбранный — с кольцом. */
+.color-palette { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 8px 12px; }
+.color-palette.hidden { display: none; }
+/* Над кнопкой AR и плашкой автора модели (.model-credit), которая на десктопе стоит слева над кнопкой. */
+#colorPalette { position: fixed; left: 0; right: 0; bottom: 132px; z-index: 5; }
+@media (max-width: 600px) { #colorPalette { bottom: 168px; } }
+.color-swatch { display: inline-block; width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .85);
+  background: var(--swatch, #888); box-shadow: 0 1px 4px rgba(0, 0, 0, .35); cursor: pointer; padding: 0; }
+.color-swatch--original { background: conic-gradient(#d8c3a5 0 25%, #2f4a7a 0 50%, #b5654a 0 75%, #2f6b57 0); }
+.color-swatch[aria-checked="true"], .color-swatch:focus-visible { outline: 3px solid var(--ax-accent, #4f8cff); outline-offset: 2px; }
+.colors-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.colors-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.colors-card img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #ececec; border-radius: 10px; }
+.colors-card h2 { font-size: 18px; margin: 0; }
+.colors-card .color-palette { justify-content: flex-start; padding: 0; }
+.colors-card .color-swatch { width: 30px; height: 30px; }
+.colors-card .color-palette { gap: 8px; }
+.colors-card__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Палитра ткани в XR — над панелью инструментов выбранной модели. */
+.xr-colors { position: fixed; left: 0; right: 0; bottom: 150px; z-index: 20; }
+.colors-xr { display: flex; gap: 24px; align-items: center; padding: 18px; margin: 0 0 24px; }
+.colors-xr__qr { flex: none; width: 184px; height: 184px; padding: 8px; background: #fff; border-radius: 12px; }
+.colors-xr__qr img, .colors-xr__qr canvas { display: block; width: 168px; height: 168px; }
+.colors-xr__text h2 { margin: 0 0 6px; font-size: 22px; }
+.colors-xr__text p { margin: 0 0 14px; }
+@media (max-width: 600px) { .colors-xr { flex-direction: column; align-items: flex-start; } }
