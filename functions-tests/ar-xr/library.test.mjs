@@ -60,6 +60,18 @@ describe('library proxy', () => {
         assert.equal(fetchCalls.length, 0);
     });
 
+    test('colors-manifest.json comes from ASSETS /ar-xr/data/colors-manifest.json, not from R2', async () => {
+        const colors = { version: 1, collections: {}, models: [{ id: 'generated:sofa--navy', path: 'generated/sofa--navy', colorOf: 'generated/sofa' }] };
+        env.ASSETS.files.set('/ar-xr/data/colors-manifest.json', colors);
+        await env.ARXR.put('library/colors-manifest.json', new Uint8Array([1]));
+        const res = await lib('colors-manifest.json');
+        assert.equal(res.status, 200);
+        assert.deepEqual(await res.json(), colors);
+        assert.deepEqual(env.ASSETS.calls, ['/ar-xr/data/colors-manifest.json']);
+        assert.equal(res.headers.get('Cache-Control'), 'public, max-age=300');
+        assert.equal(fetchCalls.length, 0);
+    });
+
     test('app-manifest.json missing in ASSETS → its status, no-store, no origin fetch', async () => {
         const res = await lib('app-manifest.json');
         assert.equal(res.status, 404);

@@ -14,11 +14,13 @@ const MANIFEST_CACHE_CONTROL = 'public, max-age=300';
 /**
  * Манифесты библиотеки — статика ASSETS, а не файлы R2/Yandex: `manifest.json` — демо (IKEA с ценой),
  * `app-manifest.json` — каталог приложения (открытые лицензии и модели «по фото», без цен;
- * генерирует demo-site/library-tools/make_app_manifest.py).
+ * генерирует demo-site/library-tools/make_app_manifest.py), `colors-manifest.json` — набор «Выбери свой цвет»
+ * (модели ArtUp и их цвета ткани; генерирует demo-site/library-tools/make_colors_manifest.py).
  */
 export const MANIFEST_ASSETS = {
     'manifest.json': MANIFEST_PATH,
-    'app-manifest.json': '/ar-xr/data/app-manifest.json'
+    'app-manifest.json': '/ar-xr/data/app-manifest.json',
+    'colors-manifest.json': '/ar-xr/data/colors-manifest.json'
 };
 
 const CONTENT_TYPES = {
