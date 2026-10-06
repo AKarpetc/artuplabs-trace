@@ -30,7 +30,7 @@
    }
   }
  },
- "modelCount": 30,
+ "modelCount": 55,
  "catalogs": {
   "colors": {
    "title": "Выбери свой цвет",
@@ -43,7 +43,7 @@
    "titleEn": "Fabric colour",
    "room": "colors",
    "style": "colors",
-   "cover": "generated/sofa-realistic"
+   "cover": "real-photo/cream-armchair"
   }
  },
  "rooms": {},
@@ -53,6 +53,721 @@
   "CC0-1.0": 178
  },
  "models": [
+  {
+   "id": "photo:cream-armchair",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "photo:cream-armchair--graphite",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--graphite",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "photo:cream-armchair--beige",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--beige",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "photo:cream-armchair--navy",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--navy",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "photo:cream-armchair--emerald",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--emerald",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "photo:cream-armchair--terracotta",
+   "name": "Armchair (store photo)",
+   "nameRu": "Кресло (фото из магазина)",
+   "path": "real-photo/cream-armchair--terracotta",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.701,
+    0.86,
+    0.86
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/cream-armchair",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-2",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-2",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "photo:swivel-armchair-2--graphite",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-2--graphite",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-2",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-2--beige",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-2--beige",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-2",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-2--navy",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-2--navy",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-2",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-2--emerald",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-2--emerald",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-2",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "photo:swivel-armchair-2--terracotta",
+   "name": "Swivel armchair (store photo)",
+   "nameRu": "Поворотное кресло (фото из магазина)",
+   "path": "real-photo/swivel-armchair-2--terracotta",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.895,
+    0.802,
+    0.9
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/swivel-armchair-2",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "photo:boucle-chair",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "photo:boucle-chair--graphite",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--graphite",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "photo:boucle-chair--beige",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--beige",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "photo:boucle-chair--navy",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--navy",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "photo:boucle-chair--emerald",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--emerald",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "photo:boucle-chair--terracotta",
+   "name": "Bouclé cocoon chair (store photo)",
+   "nameRu": "Кресло-кокон из букле (фото из магазина)",
+   "path": "real-photo/boucle-chair--terracotta",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.118,
+    1.016,
+    0.8
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/boucle-chair",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "photo:lounge-chair",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
+  {
+   "id": "photo:lounge-chair--graphite",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair--graphite",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair",
+   "color": {
+    "id": "graphite",
+    "hex": "#3b3d40",
+    "name": "Graphite",
+    "nameRu": "Графит"
+   }
+  },
+  {
+   "id": "photo:lounge-chair--beige",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair--beige",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair",
+   "color": {
+    "id": "beige",
+    "hex": "#d8c3a5",
+    "name": "Beige",
+    "nameRu": "Бежевый"
+   }
+  },
+  {
+   "id": "photo:lounge-chair--navy",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair--navy",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair",
+   "color": {
+    "id": "navy",
+    "hex": "#2f4a7a",
+    "name": "Navy",
+    "nameRu": "Тёмно-синий"
+   }
+  },
+  {
+   "id": "photo:lounge-chair--emerald",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair--emerald",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair",
+   "color": {
+    "id": "emerald",
+    "hex": "#2f6b57",
+    "name": "Emerald",
+    "nameRu": "Изумрудный"
+   }
+  },
+  {
+   "id": "photo:lounge-chair--terracotta",
+   "name": "Lounge chair with wooden arms (store photo)",
+   "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
+   "path": "real-photo/lounge-chair--terracotta",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    0.99,
+    0.77,
+    0.88
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all",
+   "colorOf": "real-photo/lounge-chair",
+   "color": {
+    "id": "terracotta",
+    "hex": "#b5654a",
+    "name": "Terracotta",
+    "nameRu": "Терракота"
+   }
+  },
+  {
+   "id": "photo:dining-table",
+   "name": "Extendable dining table (store photo)",
+   "nameRu": "Раздвижной обеденный стол (фото из магазина)",
+   "path": "real-photo/dining-table",
+   "source": "ArtUp Labs",
+   "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
+   "authors": [
+    "ArtUp Labs"
+   ],
+   "license": "ArtUp Labs (generated from a store phone photo)",
+   "commercialUse": true,
+   "attributionRequired": false,
+   "sizeMeters": [
+    1.524,
+    1.09,
+    0.76
+   ],
+   "sceneViewerCompatibleSize": true,
+   "placement": "floor",
+   "catalog": "colors",
+   "collection": "colors/all"
+  },
   {
    "id": "generated:sofa-realistic",
    "name": "Upholstered sofa (realistic)",
