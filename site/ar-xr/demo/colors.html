@@ -4,8 +4,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" data-i18n-attr="content:colors.lead"
+    content="One model, five fabric colours, no new photo shoot.">
   <meta name="theme-color" content="#111418">
-  <title data-i18n="planview.docTitle">ArtUp AR XR — дизайн в 3D</title>
+  <title data-i18n="colors.docTitle">ArtUp AR XR — выбери свой цвет</title>
   <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
   <!-- Один шрифт всего демо — Google Sans Flex (семейство задаёт styles/artuplabs-demo.css). -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +19,7 @@
   <link type="text/css" href="./styles/artuplabs-demo.css?v=448b26f8fe" rel="stylesheet" />
 </head>
 
-<body class="planview-body">
+<body>
   <header class="ax-header demo-head">
     <div class="ax-container ax-header-row">
       <a class="ax-product" href="../" aria-label="ArtUp AR XR — о продукте" data-i18n-attr="aria-label:nav.productLabel">
@@ -27,7 +29,7 @@
         <ul>
           <li><a href="./demo.html#catalog" data-i18n="nav.catalog">Каталог</a></li>
           <li><a href="./plans.html" data-i18n="nav.plans">Мои планы</a></li>
-          <li data-color-page hidden><a href="./colors.html" data-i18n="nav.colors">Выбери свой цвет</a></li>
+          <li data-color-page hidden><a aria-current="page" href="./colors.html" data-i18n="nav.colors">Выбери свой цвет</a></li>
         </ul>
       </nav>
       <div class="ax-header-actions">
@@ -39,27 +41,22 @@
     </div>
   </header>
 
-  <main class="planview">
-    <div id="planview-stage" class="planview__stage" aria-label="3D" data-i18n-attr="aria-label:planview.stageLabel">
-      <p id="planview-status" class="planview__status" role="status" data-i18n="common.loading">Загрузка…</p>
+  <main class="page-main">
+    <h1 data-i18n="colors.title">Выбери свой цвет</h1>
+    <p class="muted" data-i18n="colors.lead">Одна модель — пять цветов ткани, без новой съёмки.</p>
+    <div class="page-toolbar">
+      <a id="colors-all-room" class="ax-btn ax-btn-secondary ax-btn-sm" href="./xrviewer.html" data-i18n="colors.allToRoom">Все модели в комнату</a>
     </div>
-    <aside class="planview__panel">
-      <h1 id="planview-title" class="planview__title" data-i18n="planview.title">Дизайн</h1>
-      <p id="planview-meta" class="ax-muted planview__meta"></p>
-      <div id="planview-currency" hidden></div>
-      <ol id="planview-items" class="planview__items"></ol>
-      <div id="planview-quote" class="planview__quote"></div>
-      <div class="ax-actions planview__actions">
-        <a id="planview-xr" class="ax-btn ax-btn-primary" href="./xrviewer.html" data-i18n="designs.openXr">Открыть в XR</a>
-        <a id="planview-back" class="ax-btn ax-btn-secondary" href="./plans.html" data-i18n="planview.back">Назад к планам</a>
-      </div>
-      <p id="planview-hint" class="ax-hint planview__hint" data-i18n="planview.hint">Вращайте сцену мышью или пальцем, колесо или щипок — приблизить. Линия на полу — стена, по углам которой калибровалась комната.</p>
-      <p class="planview__contacts" data-contacts><a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a></p>
-    </aside>
+    <p id="colors-status" class="page-status" role="status" hidden></p>
+    <div id="colors-list" class="colors-list" aria-live="polite"></div>
   </main>
 
+  <footer class="page-footer" data-contacts>
+    <span>ArtUp Labs</span> <span class="contacts-sep" aria-hidden="true">·</span> <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a>
+  </footer>
+
   <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
-  <script type="module" src="./dist/planview.bandle.js?v=69562ad3f5"></script>
+  <script type="module" src="./dist/colors.bandle.js?v=966fe73580"></script>
 </body>
 
 </html>

@@ -16,12 +16,12 @@
     <link type="text/css" href="./styles/theme.css?v=2232987e58" rel="stylesheet" />
     <link type="text/css" href="./styles/styles.css?v=74c90549a7" rel="stylesheet" />
     <link type="text/css" href="./styles/loading.css?v=391a97178e" rel="stylesheet" />
-    <link type="text/css" href="./styles/xr.css?v=c222ffc22f" rel="stylesheet" />
+    <link type="text/css" href="./styles/xr.css?v=d56a5b17a7" rel="stylesheet" />
     <link type="text/css" href="./styles/font-awesome-4.7.0/css/font-awesome.css?v=c495654869" rel="stylesheet" />
     <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
     <!-- Общие токены ArtUp AR XR (владелец — лендинг /ar-xr/); XR-страница работает и без них. -->
     <link type="text/css" href="../assets/ar-xr.css?v=2e0158b1d6" rel="stylesheet" />
-    <link type="text/css" href="./styles/artuplabs-demo.css?v=78562a94a5" rel="stylesheet" />
+    <link type="text/css" href="./styles/artuplabs-demo.css?v=448b26f8fe" rel="stylesheet" />
 </head>
 
 <body class="xr-body">
@@ -183,6 +183,8 @@
             </button>
         </div>
 
+        <div id="xrColors" class="color-palette xr-colors hidden" data-xr-dom role="radiogroup" aria-label="Цвет ткани" data-i18n-attr="aria-label:colors.paletteLabel"></div>
+
         <div id="toolbar" class="toolbar">
             <button id="transformDoneBtn" onclick="transformDone()" class="toolbar_button hidden" title="Готово" aria-label="Готово" data-i18n-attr="title:xr.done;aria-label:xr.done">
                 <i class="fa fa-check" aria-hidden="true"></i>
@@ -252,7 +254,7 @@
     </div>
 
     <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
-    <script type="module" src="./dist/webXRScene.bandle.js?v=c9643afcc9"></script>
+    <script type="module" src="./dist/webXRScene.bandle.js?v=8cccf970d4"></script>
 
     <script>
         document.getElementById('openModal').addEventListener('click', function (event) {

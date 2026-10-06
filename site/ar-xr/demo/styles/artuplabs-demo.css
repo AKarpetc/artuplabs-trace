@@ -411,3 +411,24 @@ body:has(#xr-selection-bar:not(.d-none)) .fab { bottom: calc(140px + env(safe-ar
 .ar-main .room-badge { display: block; line-height: 20px; }
 /* Без открытого плана чипа нет: правила выше задают `display` и иначе перебивают `.hidden` (пустая плашка справа сверху). */
 .ar-main .room-badge.hidden { display: none; }
+
+/* Палитра ткани (просмотр модели, страница «Выбери свой цвет», XR): круглые образцы, выбранный — с кольцом. */
+.color-palette { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 8px 12px; }
+.color-palette.hidden { display: none; }
+/* Над кнопкой AR и плашкой автора модели (.model-credit), которая на десктопе стоит слева над кнопкой. */
+#colorPalette { position: fixed; left: 0; right: 0; bottom: 132px; z-index: 5; }
+@media (max-width: 600px) { #colorPalette { bottom: 168px; } }
+.color-swatch { display: inline-block; width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .85);
+  background: var(--swatch, #888); box-shadow: 0 1px 4px rgba(0, 0, 0, .35); cursor: pointer; padding: 0; }
+.color-swatch--original { background: conic-gradient(#d8c3a5 0 25%, #2f4a7a 0 50%, #b5654a 0 75%, #2f6b57 0); }
+.color-swatch[aria-checked="true"], .color-swatch:focus-visible { outline: 3px solid var(--ax-accent, #4f8cff); outline-offset: 2px; }
+.colors-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.colors-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.colors-card img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #ececec; border-radius: 10px; }
+.colors-card h2 { font-size: 18px; margin: 0; }
+.colors-card .color-palette { justify-content: flex-start; padding: 0; }
+.colors-card .color-swatch { width: 30px; height: 30px; }
+.colors-card .color-palette { gap: 8px; }
+.colors-card__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Палитра ткани в XR — над панелью инструментов выбранной модели. */
+.xr-colors { position: fixed; left: 0; right: 0; bottom: 150px; z-index: 20; }

@@ -18,7 +18,7 @@
     <link type="text/css" href="./styles/viewer.css?v=395fc21dca" rel="stylesheet" />
     <link type="text/css" href="./styles/loading.css?v=391a97178e" rel="stylesheet" />
     <!-- Кнопка «Мои планы» демо ArtUp AR XR (другие окружения её не показывают). -->
-    <link type="text/css" href="./styles/artuplabs-demo.css?v=78562a94a5" rel="stylesheet" />
+    <link type="text/css" href="./styles/artuplabs-demo.css?v=448b26f8fe" rel="stylesheet" />
     <link rel="icon" href="../assets/ar-xr-icon.svg" type="image/svg+xml">
 </head>
 
@@ -66,6 +66,7 @@
                 <img id="titleIcon" class="title-icon hidden" width="50px" height="50px" />
                 <label id="modelTitle"></label>
             </div>
+            <div id="colorPalette" class="color-palette hidden" role="radiogroup" aria-label="Цвет ткани" data-i18n-attr="aria-label:colors.paletteLabel"></div>
             <div id="zoomButtons" class="zoom-buttons">
                 <a class="zoom zoom_in" onclick="zoomIn()"> <img src="./img/zoom_in.png"></a>
                 <a class="zoom zoom_out" onclick="zoomOut()"><img src="./img/zoom_out.png"> </a>
@@ -78,7 +79,7 @@
 
     <!-- <model-viewer> (со своей копией three.js) и его декодер meshopt подгружает src/viewer/render.js и только там,
          где он пусковая площадка AR (Android WebXR): у десктопа, Scene Viewer и Quick Look на странице одна three.js. -->
-    <script type="module" src="./dist/viewer.bandle.js?v=f75dcd8d5f"></script>
+    <script type="module" src="./dist/viewer.bandle.js?v=acefcb4133"></script>
 </body>
 
 </html>

@@ -997,7 +997,8 @@
 
 /* `.hidden` выше объявлен раньше этих панелей и проигрывал им по порядку. */
 .xr-pick.hidden,
-.xr-pick__field.hidden {
+.xr-pick__field.hidden,
+.xr-pick__links.hidden {
     display: none;
 }
 
