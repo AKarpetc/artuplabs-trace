@@ -1,10 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import api, { assumeTrustedRoute } from '@forge/api';
 import {
-  BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, FIELDS_PAGE, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
+  BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, FIELD_RANGES, FIELDS_PAGE, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
   POINTS_PAGE_MIN, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
 import { DEFAULT_LANE, pointsOf } from '../core/points.js';
+import { withoutOrder } from '../core/jql-build.js';
 import { endpointOf, rateHeaderText, rateLimitOf } from '../core/rate.js';
 import { pool } from './pool.js';
 
@@ -198,21 +199,76 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     return out;
   }
 
-  async function searchIssues(jql, fields, { reconcile = [] } = {}) {
-    const out = [];
-    let nextPageToken;
-    do {
-      const page = await call('POST', '/rest/api/3/search/jql', {
-        jql,
-        fields,
-        maxResults: Math.min(pageSize(), FIELDS_PAGE),
-        ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, RECONCILE_MAX).map(Number) } : {}),
-        ...(nextPageToken ? { nextPageToken } : {}),
+  async function fieldPage(jql, fields, reconcile, nextPageToken) {
+    const page = await call('POST', '/rest/api/3/search/jql', {
+      jql,
+      fields,
+      maxResults: Math.min(pageSize(), FIELDS_PAGE),
+      ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, RECONCILE_MAX).map(Number) } : {}),
+      ...(nextPageToken ? { nextPageToken } : {}),
+    });
+    return { issues: (page?.issues ?? []).map((x) => ({ ...x, id: String(x.id) })), nextPageToken: page?.nextPageToken ?? null };
+  }
+
+  /**
+   * The issues of a query with their fields, in id order. Jira returns at most FIELDS_PAGE issues a page with fields, so a result past one
+   * page is read in FIELD_RANGES id ranges side by side (from after the first page; the last range has no upper bound), fewer at once after a
+   * near-limit warning; while a range still has pages and a reader is free, the rest of it is halved between them, at most FIELD_RANGES times.
+   */
+  async function searchIssues(query, fields, { reconcile = [] } = {}) {
+    const where = withoutOrder(query).trim();
+    const within = (a, b) => [where && `(${where})`, a === null ? '' : `id > ${a}`, b === null ? '' : `id <= ${b}`].filter(Boolean).join(' AND ');
+    const ordered = (jql, order) => `${jql} ORDER BY id ${order}`.trim();
+    const first = await fieldPage(ordered(within(null, null), 'ASC'), fields, reconcile, null);
+    if (!first.nextPageToken || !first.issues.length) return first.issues;
+    const top = await call('POST', '/rest/api/3/search/jql', {
+      jql: ordered(within(null, null), 'DESC'),
+      fields: ['id'],
+      maxResults: 1,
+      ...(reconcile.length ? { reconcileIssues: reconcile.slice(0, RECONCILE_MAX).map(Number) } : {}),
+    });
+    const low = Number(first.issues[first.issues.length - 1].id);
+    const high = Math.max(low, Number(top?.issues?.[0]?.id ?? low));
+    const step = Math.max(1, Math.ceil((high - low) / FIELD_RANGES));
+    const bounds = Array.from({ length: FIELD_RANGES }, (_, i) => low + i * step).filter((a, i) => i === 0 || a < high);
+    const queue = bounds.map((a, i) => [a, i === bounds.length - 1 ? null : bounds[i + 1]]);
+    const together = clock() < nearUntil ? BULK_CONCURRENCY_NEAR : FIELD_RANGES;
+    const out = [...first.issues];
+    const readers = [];
+    let reading = 0;
+    let splits = 0;
+
+    async function read(range) {
+      let [a, b] = range;
+      let nextPageToken = null;
+      for (;;) {
+        const page = await fieldPage(ordered(within(a, b), 'ASC'), fields, reconcile, nextPageToken);
+        out.push(...page.issues);
+        if (!page.nextPageToken || !page.issues.length) break;
+        const last = Number(page.issues[page.issues.length - 1].id);
+        const end = b ?? high;
+        if (!queue.length && reading < together && splits < FIELD_RANGES && end - last > 1) {
+          const middle = Math.floor((last + end) / 2);
+          splits += 1;
+          start([middle, b]);
+          [a, b, nextPageToken] = [last, middle, null];
+        } else nextPageToken = page.nextPageToken;
+      }
+      if (queue.length) await read(queue.shift());
+    }
+
+    function start(range) {
+      reading += 1;
+      const reader = read(range).finally(() => {
+        reading -= 1;
       });
-      out.push(...(page.issues ?? []).map((x) => ({ ...x, id: String(x.id) })));
-      nextPageToken = page.nextPageToken;
-    } while (nextPageToken);
-    return out;
+      reader.catch(() => {});
+      readers.push(reader);
+    }
+
+    while (queue.length && reading < together) start(queue.shift());
+    for (let i = 0; i < readers.length; i += 1) await readers[i];
+    return out.sort((x, y) => Number(x.id) - Number(y.id));
   }
 
   async function searchPage(jql, nextPageToken, { maxResults = ID_PAGE, fields = ['id'] } = {}) {

@@ -25,3 +25,18 @@ export function isNotIn(operator) {
 export function forOperator(jql, operator) {
   return isNotIn(operator) ? `NOT (${jql})` : jql;
 }
+
+/** The query without the ORDER BY clause that ends it (one inside a quoted text stays), so it can be wrapped or ordered anew. */
+export function withoutOrder(jql) {
+  const text = String(jql);
+  let quoted = null;
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '\\') i += 1;
+      else if (c === quoted) quoted = null;
+    } else if (c === '"' || c === "'") quoted = c;
+    else if ((i === 0 || /\s/.test(c)) && /^\s*order\s+by\s/i.test(text.slice(i))) return text.slice(0, i);
+  }
+  return text;
+}

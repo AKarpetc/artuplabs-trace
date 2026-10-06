@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
 const { createJira, currentPoints, JiraError, PointsError, RateLimitError, withDeadline, withPoints } = await import('../../src/infra/jira.js');
-const { FIELDS_PAGE, NEAR_LIMIT_MS, POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
+const { FIELD_RANGES, FIELDS_PAGE, NEAR_LIMIT_MS, POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -397,14 +397,100 @@ describe('points scope', () => {
     await withPoints(5, () => createJira(request).searchPage('a', null));
     expect(calls[0].body.maxResults).toEqual(POINTS_PAGE_MIN);
   });
-  it('reads the issues of a query with their fields in pages of FIELDS_PAGE, passing the issues to reconcile', async () => {
-    const { request, calls } = scripted([reply(200, { issues: [{ id: '1', fields: { subtasks: [] } }], nextPageToken: 'n' }), reply(200, { issues: [{ id: '2', fields: { subtasks: [{ id: '3' }] } }] })]);
-    const issues = await createJira(request).searchIssues('a', ['subtasks'], { reconcile: ['2'] });
-    expect(issues).toEqual([{ id: '1', fields: { subtasks: [] } }, { id: '2', fields: { subtasks: [{ id: '3' }] } }]);
-    expect(calls.map((c) => c.body)).toEqual([
-      { jql: 'a', fields: ['subtasks'], maxResults: FIELDS_PAGE, reconcileIssues: [2] },
-      { jql: 'a', fields: ['subtasks'], maxResults: FIELDS_PAGE, reconcileIssues: [2], nextPageToken: 'n' },
-    ]);
+  describe('searchIssues', () => {
+    const issueOf = (id) => ({ id: String(id), fields: { subtasks: [] } });
+    function siteOf(all) {
+      const calls = [];
+      const request = async (path, init) => {
+        const body = JSON.parse(init.body);
+        calls.push(body);
+        const after = Number(/id > (\d+)/.exec(body.jql)?.[1] ?? -Infinity);
+        const upTo = Number(/id <= (\d+)/.exec(body.jql)?.[1] ?? Infinity);
+        const desc = body.jql.endsWith('ORDER BY id DESC');
+        const start = Number(body.nextPageToken ?? 0);
+        const hits = all.filter((id) => id > after && id <= upTo);
+        const ordered = desc ? [...hits].reverse() : hits;
+        const page = ordered.slice(start, start + body.maxResults);
+        const more = start + body.maxResults < ordered.length;
+        return reply(200, { issues: page.map(issueOf), ...(more ? { nextPageToken: String(start + body.maxResults) } : {}) });
+      };
+      return { calls, request };
+    }
+    it('reads a small result with its fields in one page, ordered by id, passing the issues to reconcile', async () => {
+      const { calls, request } = siteOf([3, 1, 2].sort());
+      expect(await createJira(request).searchIssues('a', ['subtasks'], { reconcile: ['2'] })).toEqual([1, 2, 3].map(issueOf));
+      expect(calls[0]).toEqual({ jql: '(a) ORDER BY id ASC', fields: ['subtasks'], maxResults: FIELDS_PAGE, reconcileIssues: [2] });
+    });
+    it('orders a query that names its own order by id instead', async () => {
+      const { calls, request } = siteOf([1]);
+      await createJira(request).searchIssues('a ORDER BY rank', ['subtasks']);
+      expect(calls[0].jql).toEqual('(a) ORDER BY id ASC');
+    });
+    it('reads a large result in id ranges side by side, every issue once and in id order', async () => {
+      const all = Array.from({ length: 1500 }, (_, i) => 10 + 3 * i);
+      const { calls, request } = siteOf(all);
+      const issues = await createJira(request).searchIssues('a', ['subtasks']);
+      expect(issues.map((x) => Number(x.id))).toEqual(all);
+      const ranges = new Set(calls.map((c) => /id > \d+/.exec(c.jql)?.[0]).filter(Boolean));
+      expect(ranges.size).toEqual(FIELD_RANGES);
+    });
+    it('reads the pages of its ranges at the same time', async () => {
+      const all = Array.from({ length: 1500 }, (_, i) => i + 1);
+      const site = siteOf(all);
+      let open = 0;
+      let most = 0;
+      const request = async (path, init) => {
+        open += 1;
+        most = Math.max(most, open);
+        await new Promise((resolve) => { setTimeout(resolve, 1); });
+        open -= 1;
+        return site.request(path, init);
+      };
+      await createJira(request).searchIssues('a', ['subtasks']);
+      expect(most).toEqual(FIELD_RANGES);
+    });
+    it('halves a range that still has pages between free readers, every issue once, in id order and within a partial page per range', async () => {
+      const all = [...Array.from({ length: 1200 }, (_, i) => i + 1), 100000];
+      const { calls, request } = siteOf(all);
+      const issues = await createJira(request).searchIssues('a', ['subtasks']);
+      expect(issues.map((x) => Number(x.id))).toEqual(all);
+      const ranges = new Set(calls.map((c) => /id > \d+( AND id <= \d+)?/.exec(c.jql)?.[0]).filter(Boolean));
+      expect([ranges.size > FIELD_RANGES, calls.length <= Math.ceil(all.length / FIELDS_PAGE) + 2 * FIELD_RANGES + 1]).toEqual([true, true]);
+    });
+    it('asks for the highest id with the issues to reconcile', async () => {
+      const { calls, request } = siteOf(Array.from({ length: 300 }, (_, i) => i + 1));
+      await createJira(request).searchIssues('a', ['subtasks'], { reconcile: ['7'] });
+      expect(calls.find((c) => c.jql.endsWith('ORDER BY id DESC')).reconcileIssues).toEqual([7]);
+    });
+    it('reads the issues above the highest id it was told of', async () => {
+      const all = Array.from({ length: 300 }, (_, i) => i + 1);
+      const site = siteOf(all);
+      const request = (path, init) => (JSON.parse(init.body).jql.endsWith('ORDER BY id DESC') ? reply(200, { issues: [{ id: '150' }] }) : site.request(path, init));
+      const issues = await createJira(request).searchIssues('a', ['subtasks']);
+      expect(issues.map((x) => Number(x.id))).toEqual(all);
+    });
+    it('reads fewer ranges at once after Jira warned that the limit is near', async () => {
+      const site = siteOf(Array.from({ length: 1500 }, (_, i) => i + 1));
+      let open = 0;
+      let most = 0;
+      const request = async (path, init) => {
+        if (path.endsWith('/field')) return reply(200, [], { 'x-ratelimit-nearlimit': 'true' });
+        open += 1;
+        most = Math.max(most, open);
+        await new Promise((resolve) => { setTimeout(resolve, 1); });
+        open -= 1;
+        return site.request(path, init);
+      };
+      const jira = createJira(request, { clock: () => 0 });
+      await jira.call('GET', '/rest/api/3/field');
+      await jira.searchIssues('a', ['subtasks']);
+      expect(most).toEqual(BULK_CONCURRENCY_NEAR);
+    });
+    it('reads a query that is only an order', async () => {
+      const { calls, request } = siteOf(Array.from({ length: 300 }, (_, i) => i + 1));
+      const issues = await createJira(request).searchIssues('ORDER BY rank', ['subtasks']);
+      expect([calls[0].jql, calls[1].jql, issues.length]).toEqual(['ORDER BY id ASC', 'ORDER BY id DESC', 300]);
+    });
   });
   it('asks for a full page outside a limited scope', async () => {
     const { request, calls } = scripted([reply(200, { issues: [] })]);

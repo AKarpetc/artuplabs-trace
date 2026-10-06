@@ -23,12 +23,17 @@ describe('hierarchy compute', () => {
     const result = await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'S' }, ctx);
     expect(result.ids).toEqual(['10']);
   });
-  it('subtasksOf reads the subtasks within the search of its subquery, with no bulkfetch at any size', async () => {
+  it('subtasksOf reads the ids of a subquery Jira counts at up to 1 000 issues in one search, and the subtasks of a larger one within its search', async () => {
     const extra = Array.from({ length: 1001 }, (_, i) => issue(5000 + i));
     const jira = fakeJira({ issues: [...ISSUES, ...extra], searches: { S: [...extra.map((x) => x.id), '10'], T: ['11', '10'] } });
     await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'S' }, ctx);
     await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'T' }, ctx);
-    expect(jira.calls).toEqual([['search', 'S', [], ['subtasks']], ['search', 'T', [], ['subtasks']]]);
+    expect(jira.calls).toEqual([['count', 'S'], ['search', 'S', [], ['subtasks']], ['count', 'T'], ['search', 'T', []]]);
+  });
+  it('subtasksOf still keeps only parents with subtasks when the count was too low', async () => {
+    const extra = Array.from({ length: 1001 }, (_, i) => issue(5000 + i));
+    const jira = fakeJira({ issues: [...ISSUES, ...extra], searches: { S: [...extra.map((x) => x.id), '10', '11'] }, counts: { S: 900 } });
+    expect((await createHierarchyCompute({ jira }).subtasksOf({ subquery: 'S' }, ctx)).ids).toEqual(['10']);
   });
   it('reads the fields of the subquery within its search for parentsOf, issuesInEpics and hasSubtasks', async () => {
     const jira = fakeJira({ issues: ISSUES, searches: { S: ['100', '11', '1'] } });

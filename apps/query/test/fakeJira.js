@@ -12,7 +12,7 @@ export function issue(id, { level = 0, parent, subtasks = [], links = [] } = {})
 }
 
 /** In-memory Jira: explicit search answers, `parent in (…)` and the subtask search computed from the issues; any other query finds no issues, as Jira's search answers an invalid one. */
-export function fakeJira({ issues = [], searches = {}, linkTypes = [], boards = [], sprints = {} } = {}) {
+export function fakeJira({ issues = [], searches = {}, counts = {}, linkTypes = [], boards = [], sprints = {} } = {}) {
   const byId = new Map(issues.map((i) => [i.id, i]));
   const calls = [];
   async function idsOf(jql) {
@@ -34,6 +34,10 @@ export function fakeJira({ issues = [], searches = {}, linkTypes = [], boards = 
     async searchIds(jql, options = {}) {
       calls.push(['search', jql, options.reconcile ?? []]);
       return idsOf(jql);
+    },
+    async approximateCount(jql) {
+      calls.push(['count', jql]);
+      return jql in counts ? counts[jql] : (await idsOf(jql)).length;
     },
     async searchIssues(jql, fields, options = {}) {
       calls.push(['search', jql, options.reconcile ?? [], fields]);

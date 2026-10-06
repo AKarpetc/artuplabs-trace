@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY, forOperator, isNotIn, pageCall, quote } from '../../src/core/jql-build.js';
+import { EMPTY, forOperator, isNotIn, pageCall, quote, withoutOrder } from '../../src/core/jql-build.js';
 
 describe('quote', () => {
   it('escapes quotes and backslashes', () => {
@@ -36,5 +36,17 @@ describe('forOperator', () => {
   });
   it('tells a not in operator', () => {
     expect([isNotIn('not in'), isNotIn('NOT_IN'), isNotIn('in'), isNotIn(null)]).toEqual([true, true, false, false]);
+  });
+});
+
+describe('withoutOrder', () => {
+  it('drops the ORDER BY clause that ends a query', () => {
+    expect([withoutOrder('project = A ORDER BY rank ASC'), withoutOrder('project = A order by created')]).toEqual(['project = A', 'project = A']);
+  });
+  it('leaves nothing of a query that is only an order', () => {
+    expect([withoutOrder('ORDER BY rank'), withoutOrder('  order by created DESC')]).toEqual(['', '']);
+  });
+  it('keeps a query without one, and an "order by" inside quotes', () => {
+    expect([withoutOrder('project = A'), withoutOrder('summary ~ "order by" AND x = 1')]).toEqual(['project = A', 'summary ~ "order by" AND x = 1']);
   });
 });

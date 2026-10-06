@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { admit, capOf, countQueryOf, passInterval, estimate, groupClass, groupLimit, lightLimit, hourKey, issuesWithin, LANES, laneOfRefresh, laneRoom, nextHour, pointsOf, pointsSummary } from '../../src/core/points.js';
 import { FUNCTIONS } from '../../src/core/catalog.js';
-import { CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from '../../src/core/limits.js';
+import { BULK_CONCURRENCY_NEAR, CHANGELOG_POINT_FACTOR, COMMENT_POINT_FACTOR, FIELD_RANGES, FIELDS_PAGE, POINTS_OVERHEAD, POINTS_OVERRUN, SITE_POINTS_TIER1, SITE_POINTS_TIER2, VALUE_LIMIT } from '../../src/core/limits.js';
 
 const list = (n, make = (i) => ({ id: String(i) })) => Array.from({ length: n }, (_, i) => make(i));
 
@@ -62,6 +62,12 @@ describe('pointsOf', () => {
 });
 
 describe('estimate', () => {
+  it('leaves room in its overhead for the requests of a search read in id ranges, the count and the parse', () => {
+    expect(2 * FIELD_RANGES + 1 + 1 + 1 <= POINTS_OVERHEAD).toEqual(true);
+  });
+  it('lets a finished computation pass its limit by one round of range pages', () => {
+    expect(Math.max(FIELD_RANGES, BULK_CONCURRENCY_NEAR) * (FIELDS_PAGE + 1) <= POINTS_OVERRUN).toEqual(true);
+  });
   it('reads the subquery of subtasksOf once with its subtasks, a point per issue and per page of FIELDS_PAGE', () => {
     expect([estimate('subtasksOf', VALUE_LIMIT), estimate('subtasksOf', 1200), estimate('subtasksOf', 1500)]).toEqual([
       { points: 1010 + POINTS_OVERHEAD, floor: false }, { points: 1212 + POINTS_OVERHEAD, floor: false }, { points: 1515 + POINTS_OVERHEAD, floor: false },

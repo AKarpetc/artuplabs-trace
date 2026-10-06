@@ -8,7 +8,7 @@ export const SUBTASK_FILTER = 'issuetype in subTaskIssueTypes()';
 /**
  * Value sources of the hierarchy functions and hasSubtasks; watched ids are kept in id order, so a new issue changes only the last cache chunk.
  * A function that needs fields of the issues its search finds reads them within that search (a point per issue and per page), not by a second
- * bulkfetch of every id.
+ * bulkfetch of every id; subtasksOf needs them only past 1 000 issues, so it reads the ids alone in one search when Jira counts no more.
  */
 export function createHierarchyCompute({ jira }) {
   const inner = (subquery, reconcile) => jira.searchIds(subquery, { reconcile });
@@ -37,9 +37,17 @@ export function createHierarchyCompute({ jira }) {
 
   return {
     async subtasksOf({ subquery }, { reconcile }) {
-      const issues = await innerWith(subquery, reconcile, ['subtasks']);
-      const ids = idsOf(issues);
-      const parents = ids.length > VALUE_LIMIT ? idsOf(issues.filter((x) => x.fields?.subtasks?.length)) : ids;
+      const counted = await jira.approximateCount(subquery);
+      let ids;
+      let parents;
+      if (counted > VALUE_LIMIT) {
+        const issues = await innerWith(subquery, reconcile, ['subtasks']);
+        ids = idsOf(issues);
+        parents = ids.length > VALUE_LIMIT ? idsOf(issues.filter((x) => x.fields?.subtasks?.length)) : ids;
+      } else {
+        ids = await inner(subquery, reconcile);
+        parents = ids.length > VALUE_LIMIT ? idsOf((await jira.bulkIssues(ids, ['subtasks'])).filter((x) => x.fields?.subtasks?.length)) : ids;
+      }
       return { ids: sortIds(parents), field: 'parent', rootFilter: SUBTASK_FILTER, watch: sortIds(ids) };
     },
     async parentsOf({ subquery }, { reconcile }) {

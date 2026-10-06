@@ -126,6 +126,8 @@ export const COMMENT_POINT_FACTOR = 1;
 export const POINTS_OVERHEAD = 20;
 /** Issues a search page returns at most when it asks for fields besides the id. */
 export const FIELDS_PAGE = 100;
+/** Id ranges a search with fields reads side by side once its result passes one page, and the most times it halves a range still being read (a page of 100 takes 0,4–0,9 s on the dev site, docs/live-checks.md). */
+export const FIELD_RANGES = 8;
 /** Smallest search page a points scope asks for when little of its limit is left. */
 export const POINTS_PAGE_MIN = 100;
 /** Points a process spends on one lane before it rewrites its ledger key during an invocation. */
