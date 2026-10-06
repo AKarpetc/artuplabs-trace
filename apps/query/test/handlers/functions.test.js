@@ -207,6 +207,15 @@ describe('handleFunction with not in', () => {
   });
 });
 
+describe('budget timer of a function call', () => {
+  it('stops the timer once the answer is in', async () => {
+    let signal;
+    const deps = fnDeps({ parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) }, { sleep: (ms, options) => { signal = options?.signal; return never(); } });
+    await handleFunction(deps, 'parentsOf', payload('q'), DEV);
+    expect(signal?.aborted).toBe(true);
+  });
+});
+
 describe('licence of a function call', () => {
   const answer = { parentsOf: async () => ({ ids: ['3'], field: 'id', watch: [] }) };
   it('reads the environment from the app context', async () => {

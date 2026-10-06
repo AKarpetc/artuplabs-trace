@@ -16,6 +16,7 @@ import { createIndexRepo } from './infra/indexRepo.js';
 import { runMigrations } from './infra/schema.js';
 import { createQueueClient } from './infra/queue.js';
 import { meterKvs } from './infra/meter.js';
+import { sleep } from './infra/timer.js';
 import { createHierarchyCompute } from './compute/hierarchy.js';
 import { createLinkCompute } from './compute/links.js';
 import { createBoardCompute } from './compute/boards.js';
@@ -88,9 +89,7 @@ export function createDeps({ retryMaxMs = RETRY_MAX_MS } = {}) {
     appVersion: () => currentAppContext()?.appVersion ?? null,
     newToken: () => randomBytes(4).toString('hex'),
     now: () => Date.now(),
-    sleep: (ms) => new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    }),
+    sleep,
     levels: Number(process.env.QUERY_TREE_LEVELS) || TREE_LEVELS,
     debugEvents: process.env.QUERY_DEBUG_EVENTS === '1',
     isAdmin,

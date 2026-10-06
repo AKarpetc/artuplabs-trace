@@ -34,7 +34,7 @@ export function createExclusion({ jira, state, now }) {
   async function excludedChildren(bases, inExcluded) {
     const removed = [];
     for (const base of bases) {
-      const page = await jira.searchPage(`${base} AND ${inExcluded}`, null);
+      const page = await jira.searchPage(`${base} AND ${inExcluded}`, null, { maxResults: EXCLUDED_IDS_MAX + 1 });
       removed.push(...page.ids.map(String));
       if (page.nextPageToken || removed.length > EXCLUDED_IDS_MAX) return null;
     }

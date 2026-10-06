@@ -107,6 +107,19 @@ describe('reads', () => {
   });
 });
 
+describe('answers that are not retried', () => {
+  it('does not retry a 501', async () => {
+    const { request, calls } = scripted([reply(501, {}), reply(200, {})]);
+    const error = await createJira(request, { sleep: async () => {} }).call('GET', '/x').catch((e) => e);
+    expect([error.name, error.status, calls.length]).toEqual(['JiraError', 501, 1]);
+  });
+  it('fails a success whose body is not JSON with a Jira error', async () => {
+    const request = async () => ({ status: 200, headers: { get: () => null }, text: async () => '<html>' });
+    const error = await createJira(request).call('GET', '/x').catch((e) => e);
+    expect([error.name, error.status]).toEqual(['JiraError', 200]);
+  });
+});
+
 describe('backoff and roles', () => {
   it('backs off exponentially when Retry-After is missing', async () => {
     const { request } = scripted([reply(502, {}), reply(500, {}), reply(200, [])]);

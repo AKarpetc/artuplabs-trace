@@ -221,7 +221,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
           counts.failed += 1;
           const status = error?.name === 'JiraError' ? error.status : null;
           console.error(`refresh of ${group.functionName} failed: ${error?.name} ${status ?? ''}`);
-          await deps.state.recordError({ at: deps.now(), functionName: group.functionName, message: LOG.refreshFailed(status) });
+          await recordQuietly(deps, group.functionName, LOG.refreshFailed(status));
           if (((await deps.state.skip.get(group.key)) ?? Infinity) > startedAt) await deps.state.skip.set(group.key, startedAt);
           await handOver(group, {}, { retry: true, notBefore: startedAt + REFRESH_RETRY_DELAY_S * 1000 });
           done.push(group.key);
@@ -280,6 +280,15 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
     overhead,
     oldestEventMs: summary.firstAt === null ? null : startedAt - summary.firstAt,
   };
+}
+
+/** Adds a line to the error log; a failed write is logged without values and the pass goes on. */
+async function recordQuietly(deps, functionName, message) {
+  try {
+    await deps.state.recordError({ at: deps.now(), functionName, message });
+  } catch (error) {
+    console.error(`${functionName} error log failed: ${error?.name}`);
+  }
 }
 
 /** The latest `used` Jira reports for a group's precomputations, as Jira wrote it, or '-' without one. */

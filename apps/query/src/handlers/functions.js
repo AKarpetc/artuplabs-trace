@@ -208,7 +208,9 @@ async function evaluateClause(deps, functionName, payload, context) {
   const cached = await fromCache(deps, functionName, userArgs, page);
   if (cached.fragment) return answer(cached.fragment, operator);
   const work = budgetedCompute(deps, functionName, args, userArgs, groupKey(functionName, userArgs), cached.meta).catch((failed) => ({ failed }));
-  const outcome = await Promise.race([work, deps.sleep(FUNCTION_BUDGET_MS).then(() => TIMEOUT)]);
+  const timer = new AbortController();
+  const outcome = await Promise.race([work, deps.sleep(FUNCTION_BUDGET_MS, { signal: timer.signal }).then(() => TIMEOUT)]);
+  timer.abort();
   if (outcome === TIMEOUT) return defer(deps, functionName, userArgs);
   if (outcome.refused) return outcome.refused;
   if (outcome.failed) {

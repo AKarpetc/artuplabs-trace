@@ -12,10 +12,12 @@ const ids = (n, from = 1) => Array.from({ length: n }, (_, i) => String(from + i
 function make({ excluded = ['OPS'], searches = {}, pages = {} } = {}) {
   const state = createState({ kvs: createFakeKvs() });
   const searched = [];
+  const pageSizes = [];
   let now = 1000;
   const jira = {
-    searchPage: async (jql) => {
+    searchPage: async (jql, token, options = {}) => {
       searched.push(`page ${jql}`);
+      pageSizes.push(options.maxResults ?? null);
       return pages[jql] ?? { ids: [], nextPageToken: null };
     },
     projects: vi.fn(async () => [{ id: '1', key: 'OPS' }, { id: '2', key: 'DEV' }, { id: '3', key: 'HR' }]),
@@ -25,7 +27,7 @@ function make({ excluded = ['OPS'], searches = {}, pages = {} } = {}) {
       return answer ?? [];
     },
   };
-  return { exclude: createExclusion({ jira, state, now: () => now }), state, jira, searched, excluded, advance: (ms) => { now += ms; } };
+  return { exclude: createExclusion({ jira, state, now: () => now }), state, jira, searched, pageSizes, excluded, advance: (ms) => { now += ms; } };
 }
 const withList = async (m, keys) => {
   await m.state.setExcluded(keys);
@@ -93,6 +95,11 @@ describe('exclusion', () => {
     const many = { 'parent in (7) AND project in ("OPS")': { ids: ids(EXCLUDED_IDS_MAX + 1, 5000), nextPageToken: null } };
     const n = await withList(make({ pages: many, searches: { 'parent in (7) AND project not in ("OPS")': ['4'] } }), ['OPS']);
     expect((await n.exclude({ ids: ['7'], field: 'parent', watch: null })).ids).toEqual(['4']);
+  });
+  it('reads one more excluded child than one clause may list, and no more', async () => {
+    const m = await withList(make(), ['OPS']);
+    await m.exclude({ ids: ['7'], field: 'parent', watch: null });
+    expect(m.pageSizes).toEqual([EXCLUDED_IDS_MAX + 1]);
   });
   it('returns a native answer unfiltered and runs no search for it', async () => {
     const m = await withList(make(), ['OPS']);

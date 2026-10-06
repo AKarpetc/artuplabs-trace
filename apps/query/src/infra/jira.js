@@ -100,6 +100,17 @@ const wait = (ms) => new Promise((resolve) => {
 const enc = encodeURIComponent;
 const chunks = (list, size) => Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, (i + 1) * size));
 
+const RETRIED = new Set([500, 502, 503, 504]);
+const NOT_JSON = Symbol('not JSON');
+
+function jsonOf(raw) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return NOT_JSON;
+  }
+}
+
 function messagesOf(raw) {
   try {
     const body = JSON.parse(raw);
@@ -109,7 +120,7 @@ function messagesOf(raw) {
   }
 }
 
-/** Jira REST client over `request(path, init)`; 5xx and a 429 whose wait fits `retryMaxMs` are retried (Retry-After or exponential backoff, each sleep capped); a longer 429 throws RateLimitError at once; bulkfetch narrows after a near-limit warning; no request starts after the deadline of the current scope or past the limit of its points scope; the points of each answer go to its scopes and to `ledger.add(lane, points)`; the first near-limit warning of each window calls `onNear(at)`. */
+/** Jira REST client over `request(path, init)`; 500, 502, 503, 504 and a 429 whose wait fits `retryMaxMs` are retried (Retry-After or exponential backoff, each sleep capped); a longer 429 throws RateLimitError at once, a success whose body is not JSON a JiraError; bulkfetch narrows after a near-limit warning; no request starts after the deadline of the current scope or past the limit of its points scope; the points of each answer go to its scopes and to `ledger.add(lane, points)`; the first near-limit warning of each window calls `onNear(at)`. */
 export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS, retryMaxMs = RETRY_MAX_MS, clock = Date.now, ledger = null, onNear = null } = {}) {
   let counts = {};
   let nearUntil = 0;
@@ -150,12 +161,12 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
         count(`${method} ${endpoint}`, res, facts, at, rate);
         if (res.status === 429) console.warn(`rate limited ${method} ${endpoint} attempt ${attempt}: ${rate}`);
         wait = facts.retryAt === null ? RETRY_BASE_MS * 2 ** attempt : facts.retryAt - at;
-        retry = (res.status === 429 || res.status >= 500) && attempt < tries && (res.status !== 429 || wait <= retryMaxMs);
+        retry = (res.status === 429 || RETRIED.has(res.status)) && attempt < tries && (res.status !== 429 || wait <= retryMaxMs);
         if (retry) await charge(1);
         else {
           raw = await res.text();
-          answer = res.status < 400 && raw ? JSON.parse(raw) : null;
-          await charge(pointsOf(method, endpoint, answer));
+          answer = res.status < 400 && raw ? jsonOf(raw) : null;
+          await charge(pointsOf(method, endpoint, answer === NOT_JSON ? null : answer));
         }
       } finally {
         landed();
@@ -165,7 +176,7 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
         continue;
       }
       if (res.status === 429) throw new RateLimitError(facts, messagesOf(raw));
-      if (res.status >= 400) throw new JiraError(res.status, messagesOf(raw));
+      if (res.status >= 400 || answer === NOT_JSON) throw new JiraError(res.status, messagesOf(raw));
       return answer;
     }
   }

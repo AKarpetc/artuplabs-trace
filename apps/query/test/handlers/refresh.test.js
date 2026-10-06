@@ -52,6 +52,20 @@ describe('refreshOnce', () => {
     ]);
     expect(await deps.journal.read(10)).toEqual([]);
   });
+  it('finishes the pass when the error log cannot be written', async () => {
+    const pcs = [
+      { id: 'bad', functionName: 'previousSprint', arguments: ['Secret board'], value: 'sprint = 1', used: RECENT },
+      { id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT },
+    ];
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = makeDeps({ pcs, compute: { previousSprint: async () => { throw jiraError(403); }, hasSubtasks: async () => ({ ids: ['2'], field: 'id', watch: null }) } });
+    deps.state.recordError = async () => { throw Object.assign(new Error('kvs down'), { name: 'KvsError' }); };
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created', 'sprint'] }, 999500);
+    expect(await refreshOnce(deps)).toMatchObject({ failed: 1, changed: 1 });
+    expect(error.mock.calls.at(-1)).toEqual(['previousSprint error log failed: KvsError']);
+    error.mockRestore();
+    expect(await deps.journal.read(10)).toEqual([]);
+  });
   it('skips unused and idle groups on an ordinary change', async () => {
     const pcs = [{ id: 'never', functionName: 'hasLinks', arguments: [], value: 'id in (5)' }];
     const compute = { hasLinks: vi.fn(async () => ({ ids: ['6'], field: 'id', watch: null })) };
