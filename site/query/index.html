@@ -87,7 +87,7 @@ issue in expression("project = DEMO", "timespent &gt; originalestimate * 1.2")</
           </li>
           <li class="card">
             <h3 data-i18n-html="t26">Runs on Atlassian, writes nothing</h3>
-            <p data-i18n-html="t27">No external servers and no egress. The app reads work items and keeps only ids, dates and metadata in Forge storage. It never edits an issue and does not ask for <code>write:jira-work</code>.</p>
+            <p data-i18n-html="t27">No external servers and no egress. The app reads work items and keeps only ids, dates, metadata and the arguments of the functions in use in Forge storage. It never edits an issue and does not ask for <code>write:jira-work</code>.</p>
           </li>
         </ul>
         <p class="meta" id="note-load" style="margin-top:1.5rem" data-i18n-html="t28"><sup>1</sup> Measured on a Jira Cloud test site with 50,000 issues: the result of every function was compared with a reference computed from the Jira REST API. What one function can read on your site depends on the function and on Jira's API allowance for apps.</p>
@@ -231,7 +231,7 @@ issue in subtasksOf("project = DEMO")</code></pre>
   "t24": "Обновляется по событиям Jira",
   "t25": "Функции, которые читают индекс приложения, и функции над небольшими подзапросами отвечают за секунды. После правки результат обновляется сам; большие результаты и массовые импорты обновляются позже — с той скоростью, которую позволяет лимит Jira API для приложений.",
   "t26": "Работает на Atlassian и ничего не изменяет",
-  "t27": "Без внешних серверов и без egress. Приложение читает задачи и хранит в хранилище Forge только идентификаторы, даты и метаданные. Оно никогда не изменяет задачи и не запрашивает <code>write:jira-work<\/code>.",
+  "t27": "Без внешних серверов и без egress. Приложение читает задачи и хранит в хранилище Forge только идентификаторы, даты, метаданные и аргументы используемых функций. Оно никогда не изменяет задачи и не запрашивает <code>write:jira-work<\/code>.",
   "t28": "<sup>1<\/sup> Замер на тестовом сайте Jira Cloud с 50 000 задач: результат каждой функции сравнивался с эталоном, вычисленным через Jira REST API. Сколько может прочитать одна функция на вашем сайте, зависит от функции и от лимита Jira API для приложений.",
   "t29": "24 функции в семи группах",
   "t30": "Все они работают с <code>in<\/code> и <code>not in<\/code>, принимают в аргументе любой JQL, сохранённый фильтр или список ключей и вкладываются друг в друга. Полный справочник с примерами — в <a href=\"../docs/query/#reference\">документации<\/a>.",

@@ -54,7 +54,7 @@
 
     <main id="main" class="doc">
       <h1 data-i18n-html="t23">ArtUp Query documentation</h1>
-      <p class="meta" data-i18n-html="t24">ArtUp Query for Jira Cloud · Last updated: 2026-10-05</p>
+      <p class="meta" data-i18n-html="t24">ArtUp Query for Jira Cloud · Last updated: 2026-10-07</p>
 
       <div class="notice">
         <p data-i18n-html="t25"><strong>In short:</strong> type <code>issue in</code> and a function in the Jira search, a filter, a board or a dashboard — for example <code>issue in subtasksOf("project = DEMO AND status = Done")</code>. There are 24 functions in seven groups. They work with <code>in</code> and <code>not in</code>, and the app only reads your work items. You get the full result or an error with the numbers, never a cut-off list.</p>
@@ -206,7 +206,9 @@
       <ul>
         <li data-i18n-html="t122">Functions that read the app's index (links, subtasks, sprint history, comments, attachments) and functions over small subqueries answer within seconds.</li>
         <li data-i18n-html="t123">Edits reach the results through Jira's change events, which arrive in a queue. Ordinary edits show up soon; bulk imports and bulk edits take longer.</li>
-        <li data-i18n-html="t124">Large results update later: the app spreads their recomputation over time so that it stays within the allowance.</li>
+        <li data-i18n-html="t124">Large results update later: the app recomputes a result that costs more than a small share of the allowance at most once an hour, spread over time so that it stays within the allowance. A result too large for the allowance gets an error with the numbers. <!-- refresh after gates run 2 --></li>
+        <li data-i18n-html="qf1">Changes in the members of a group or role reach <code>inGroup</code> and <code>inRole</code> only when the app's hourly check rewrites the result, not at once.</li>
+        <li data-i18n-html="qf2">A sprint function called without a sprint uses the active sprint of the board; if the board has several active sprints, the one with the lowest id.</li>
         <li data-i18n-html="t125">A new site builds its index once, at the pace the allowance permits. Until it is ready, the sprint, comment and attachment functions answer “Index is building: n of m issues”.</li>
       </ul>
       <p data-i18n-html="t126">The <em>Status</em> tab shows what is waiting and how far the index has come. Times depend on your site and on Jira's own load.</p>
@@ -229,7 +231,7 @@
           </tbody>
         </table>
       </div>
-      <p data-i18n-html="t140">The <em>Status</em> tab keeps the recent errors with the function name and message. It never stores the arguments, which hold your JQL.</p>
+      <p data-i18n-html="t140">The <em>Status</em> tab keeps the recent errors with the function name and a fixed message. It never stores the arguments, which hold your JQL.</p>
 
       <h2 id="scriptrunner" data-i18n-html="t141">8. Coming from ScriptRunner</h2>
       <p data-i18n-html="t142">Names and arguments are the same wherever the meaning is the same. Write <code>issue in</code> instead of <code>issueFunction in</code>: <code>issue in subtasksOf("project = DEMO")</code>. ScriptRunner Enhanced Search on Cloud works only on its own search screen; ArtUp Query works in the standard Jira search.</p>
@@ -252,13 +254,14 @@
       <h2 id="limits" data-i18n-html="t158">9. Limits</h2>
       <ul>
         <li data-i18n-html="t159">Jira Cloud only; company-managed and team-managed projects.</li>
-        <li data-i18n-html="t160">The functions are the same for every user: results do not depend on who runs them, and the app reads as itself. Work items a user cannot see are still hidden by Jira when it applies the result to the search.</li>
+        <li data-i18n-html="t160">The functions are the same for every user: results do not depend on who runs them, and the app reads as itself. Jira hides work items a user cannot see when it applies the result to the search.</li>
+        <li data-i18n-html="qf3"><strong>A subquery runs with the app's access.</strong> Hidden work items are never returned, but the functions that follow links or the hierarchy (<code>linkedIssuesOf</code> and its recursive forms, <code>subtasksOf</code>, <code>parentsOf</code>, <code>epicsOf</code>, <code>issuesInEpics</code>, <code>childIssuesOf</code>) read the subquery across all projects, also those a user cannot browse. A work item the user can see is returned when it is linked to, or is the parent, child or epic of, a matching work item in such a project; by varying the condition a user can learn whether a hidden work item that matches it exists, and the message for an invalid subquery can show whether a project exists. Excluding a project removes its own work items from results but does not stop them from being the source of a subquery. See <a href="../../security.html#query-architecture">Security</a>.</li>
         <li data-i18n-html="t161">A result that cannot be returned in full is an error with the numbers, not a cut-off list. How many issues one function can read depends on the function and on Jira's API allowance for apps; the error names the limit.</li>
         <li data-i18n-html="t162">No search in the text of comments or attachments.</li>
       </ul>
 
       <h2 id="data" data-i18n-html="t163">10. Data handling</h2>
-      <p data-i18n-html="t164">No external servers and no egress. The app reads work items, links, the hierarchy, Sprint and status changes, and comment and attachment metadata as the app. It stores ids, dates, status categories, the account ids of comment and attachment authors, the visibility type of comments, file extensions and cached result ids; it does not store issue text, comment bodies or attachment content. The only write scope, <code>write:app-data:jira</code>, saves the JQL function results. Details: <a href="../../privacy.html#query">Privacy Policy</a> and <a href="../../security.html#query-architecture">Security</a>.</p>
+      <p data-i18n-html="t164">No external servers and no egress. The app reads work items, links, the hierarchy, Sprint and status changes, and comment and attachment metadata as the app. It stores ids, dates, status categories, sprint names, the account ids of comment and attachment authors, the visibility of comments (type and role or group), file extensions and cached result ids, and, while a function is in use, its arguments (the JQL, and any user name or email address given to <code>by</code>) for minutes to hours; it keeps no copy of the hierarchy or the links, and does not store issue text, comment bodies or attachment content. The only write scope, <code>write:app-data:jira</code>, saves the JQL function results. Details: <a href="../../privacy.html#query">Privacy Policy</a> and <a href="../../security.html#query-architecture">Security</a>.</p>
 
       <h2 id="support" data-i18n-html="t165">11. Languages and support</h2>
       <p data-i18n-html="t166">The app pages follow each user's Jira language (26 languages) and the light or dark theme.</p>
@@ -312,7 +315,7 @@
   "t21": "<a href=\"#data\">Обработка данных<\/a>",
   "t22": "<a href=\"#support\">Языки и поддержка<\/a>",
   "t23": "Документация ArtUp Query",
-  "t24": "ArtUp Query для Jira Cloud · Обновлено: 2026-10-05",
+  "t24": "ArtUp Query для Jira Cloud · Обновлено: 2026-10-07",
   "t25": "<strong>Коротко:<\/strong> введите <code>issue in<\/code> и функцию в поиске Jira, фильтре, на доске или дашборде — например <code>issue in subtasksOf(\"project = DEMO AND status = Done\")<\/code>. Функций 24, в семи группах. Они работают с <code>in<\/code> и <code>not in<\/code>, а приложение только читает ваши задачи. Вы получаете полный результат или ошибку с числами, а не обрезанный список.",
   "t26": "1. Установка и первый поиск",
   "t27": "Администратор Jira устанавливает <strong>ArtUp Query<\/strong> из Atlassian Marketplace (<em>Apps<\/em> → <em>Explore more apps<\/em>).",
@@ -412,7 +415,9 @@
   "t121": "Функции поддерживают свои результаты в актуальном состоянии по событиям Jira — в пределах лимита Jira API для приложений, то есть объёма, который приложение может прочитать из Jira за час.",
   "t122": "Функции, которые читают индекс приложения (связи, подзадачи, история спринтов, комментарии, вложения), и функции над небольшими подзапросами отвечают за секунды.",
   "t123": "Правки попадают в результаты через события изменений Jira, которые приходят очередью. Обычные правки появляются скоро; массовые импорты и массовые правки — дольше.",
-  "t124": "Большие результаты обновляются позже: приложение распределяет их пересчёт во времени, чтобы оставаться в пределах лимита.",
+  "t124": "Большие результаты обновляются позже: результат, который стоит больше небольшой доли лимита, приложение пересчитывает не чаще раза в час, распределяя пересчёт во времени, чтобы оставаться в пределах лимита. Результат, слишком большой для лимита, получает ошибку с числами.",
+  "qf1": "Изменения состава группы или роли доходят до <code>inGroup<\/code> и <code>inRole<\/code> только когда ежечасная сверка приложения переписывает результат, а не сразу.",
+  "qf2": "Функция спринта, вызванная без спринта, берёт активный спринт доски; если у доски несколько активных спринтов — тот, у которого наименьший идентификатор.",
   "t125": "Новый сайт один раз строит индекс — с той скоростью, которую позволяет лимит. Пока индекс не готов, функции спринтов, комментариев и вложений отвечают «Index is building: n of m issues».",
   "t126": "Вкладка <em>Status<\/em> показывает, что ждёт в очереди и насколько заполнен индекс. Время зависит от вашего сайта и от нагрузки на саму Jira.",
   "t127": "Если функции нужно больше нескольких секунд на вычисление, она отвечает «Computing, retry in a minute» и заканчивает работу в фоне — никогда не пустым или частичным результатом.",
@@ -428,7 +433,7 @@
   "t137": "Администратор исключил этот проект.",
   "t138": "На сайте больше 10 пользователей и нет активной лицензии.",
   "t139": "Условие некорректно; сообщение перечисляет допустимые варианты.",
-  "t140": "Вкладка <em>Status<\/em> хранит последние ошибки с именем функции и сообщением. Аргументы, в которых ваш JQL, она никогда не хранит.",
+  "t140": "Вкладка <em>Status<\/em> хранит последние ошибки с именем функции и фиксированным сообщением. Аргументы, в которых ваш JQL, она никогда не хранит.",
   "t141": "8. Переход со ScriptRunner",
   "t142": "Имена и аргументы совпадают везде, где совпадает смысл. Пишите <code>issue in<\/code> вместо <code>issueFunction in<\/code>: <code>issue in subtasksOf(\"project = DEMO\")<\/code>. ScriptRunner Enhanced Search в Cloud работает только на своём экране поиска; ArtUp Query работает в стандартном поиске Jira.",
   "t143": "Различие",
@@ -448,11 +453,12 @@
   "t157": "Недоступно в этой версии; комментарии с ограниченной видимостью не учитываются.",
   "t158": "9. Ограничения",
   "t159": "Только Jira Cloud; проекты company-managed и team-managed.",
-  "t160": "Функции одинаковы для всех пользователей: результат не зависит от того, кто выполняет запрос, а приложение читает данные от своего имени. Задачи, которые пользователь не видит, Jira всё равно скрывает, когда применяет результат к поиску.",
+  "t160": "Функции одинаковы для всех пользователей: результат не зависит от того, кто выполняет запрос, а приложение читает данные от своего имени. Задачи, которые пользователь не видит, Jira скрывает, когда применяет результат к поиску.",
+  "qf3": "<strong>Подзапрос выполняется с правами приложения.<\/strong> Скрытые задачи не возвращаются, но функции, которые идут по связям или иерархии (<code>linkedIssuesOf<\/code> и его рекурсивные формы, <code>subtasksOf<\/code>, <code>parentsOf<\/code>, <code>epicsOf<\/code>, <code>issuesInEpics<\/code>, <code>childIssuesOf<\/code>), читают подзапрос по всем проектам, в том числе по тем, которые пользователь не может просматривать. Задача, которую пользователь видит, попадает в результат, если она связана с подходящей задачей такого проекта или является её родителем, потомком или эпиком; меняя условие, пользователь может узнать, существует ли скрытая задача, подходящая под него, а сообщение о неверном подзапросе может показать, существует ли проект. Исключение проекта убирает его задачи из результатов, но не мешает им быть источником подзапроса. См. <a href=\"../../security.html#query-architecture\">Безопасность<\/a>.",
   "t161": "Результат, который нельзя вернуть полностью, — это ошибка с числами, а не обрезанный список. Сколько задач может прочитать одна функция, зависит от функции и от лимита Jira API для приложений; предел назван в ошибке.",
   "t162": "Поиска по тексту комментариев и вложений нет.",
   "t163": "10. Обработка данных",
-  "t164": "Без внешних серверов и без egress. Приложение от своего имени читает задачи, связи, иерархию, изменения полей Sprint и статуса и метаданные комментариев и вложений. Оно хранит идентификаторы, даты, категории статусов, идентификаторы аккаунтов авторов комментариев и вложений, тип видимости комментариев, расширения файлов и идентификаторы закэшированных результатов; текст задач, тексты комментариев и содержимое вложений оно не хранит. Единственное разрешение на запись, <code>write:app-data:jira<\/code>, сохраняет результаты функций JQL. Подробнее: <a href=\"../../privacy.html#query\">Политика конфиденциальности<\/a> и <a href=\"../../security.html#query-architecture\">Безопасность<\/a>.",
+  "t164": "Без внешних серверов и без egress. Приложение от своего имени читает задачи, связи, иерархию, изменения полей Sprint и статуса и метаданные комментариев и вложений. Оно хранит идентификаторы, даты, категории статусов, названия спринтов, идентификаторы аккаунтов авторов комментариев и вложений, видимость комментариев (тип, роль или группа), расширения файлов и идентификаторы закэшированных результатов, а также, пока функция используется, её аргументы (JQL и имя пользователя или адрес электронной почты в <code>by<\/code>) — от минут до часов; копий иерархии и связей оно не хранит, текст задач, тексты комментариев и содержимое вложений не хранит. Единственное разрешение на запись, <code>write:app-data:jira<\/code>, сохраняет результаты функций JQL. Подробнее: <a href=\"../../privacy.html#query\">Политика конфиденциальности<\/a> и <a href=\"../../security.html#query-architecture\">Безопасность<\/a>.",
   "t165": "11. Языки и поддержка",
   "t166": "Страницы приложения следуют языку Jira каждого пользователя (26 языков) и светлой или тёмной теме.",
   "t167": "Вопросы, сообщения об ошибках и пожелания: <a href=\"mailto:hello@artuplabs.com?subject=ArtUp%20Query\">hello@artuplabs.com<\/a>. Укажите URL вашего сайта Jira, выполненный JQL и сообщение, которое вы увидели. См. <a href=\"../../support.html\">Поддержка<\/a>.",
