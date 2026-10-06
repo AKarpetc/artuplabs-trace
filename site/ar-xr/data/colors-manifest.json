@@ -227,10 +227,10 @@
    }
   },
   {
-   "id": "photo:swivel-armchair-2",
+   "id": "photo:swivel-armchair-clean",
    "name": "Swivel armchair (store photo)",
    "nameRu": "Поворотное кресло (фото из магазина)",
-   "path": "real-photo/swivel-armchair-2",
+   "path": "real-photo/swivel-armchair-clean",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -250,10 +250,10 @@
    "collection": "colors/all"
   },
   {
-   "id": "photo:swivel-armchair-2--graphite",
+   "id": "photo:swivel-armchair-clean--graphite",
    "name": "Swivel armchair (store photo)",
    "nameRu": "Поворотное кресло (фото из магазина)",
-   "path": "real-photo/swivel-armchair-2--graphite",
+   "path": "real-photo/swivel-armchair-clean--graphite",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -271,7 +271,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/swivel-armchair-2",
+   "colorOf": "real-photo/swivel-armchair-clean",
    "color": {
     "id": "graphite",
     "hex": "#3b3d40",
@@ -280,10 +280,10 @@
    }
   },
   {
-   "id": "photo:swivel-armchair-2--beige",
+   "id": "photo:swivel-armchair-clean--beige",
    "name": "Swivel armchair (store photo)",
    "nameRu": "Поворотное кресло (фото из магазина)",
-   "path": "real-photo/swivel-armchair-2--beige",
+   "path": "real-photo/swivel-armchair-clean--beige",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -301,7 +301,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/swivel-armchair-2",
+   "colorOf": "real-photo/swivel-armchair-clean",
    "color": {
     "id": "beige",
     "hex": "#d8c3a5",
@@ -310,10 +310,10 @@
    }
   },
   {
-   "id": "photo:swivel-armchair-2--navy",
+   "id": "photo:swivel-armchair-clean--navy",
    "name": "Swivel armchair (store photo)",
    "nameRu": "Поворотное кресло (фото из магазина)",
-   "path": "real-photo/swivel-armchair-2--navy",
+   "path": "real-photo/swivel-armchair-clean--navy",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -331,7 +331,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/swivel-armchair-2",
+   "colorOf": "real-photo/swivel-armchair-clean",
    "color": {
     "id": "navy",
     "hex": "#2f4a7a",
@@ -340,10 +340,10 @@
    }
   },
   {
-   "id": "photo:swivel-armchair-2--emerald",
+   "id": "photo:swivel-armchair-clean--emerald",
    "name": "Swivel armchair (store photo)",
    "nameRu": "Поворотное кресло (фото из магазина)",
-   "path": "real-photo/swivel-armchair-2--emerald",
+   "path": "real-photo/swivel-armchair-clean--emerald",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -361,7 +361,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/swivel-armchair-2",
+   "colorOf": "real-photo/swivel-armchair-clean",
    "color": {
     "id": "emerald",
     "hex": "#2f6b57",
@@ -370,10 +370,10 @@
    }
   },
   {
-   "id": "photo:swivel-armchair-2--terracotta",
+   "id": "photo:swivel-armchair-clean--terracotta",
    "name": "Swivel armchair (store photo)",
    "nameRu": "Поворотное кресло (фото из магазина)",
-   "path": "real-photo/swivel-armchair-2--terracotta",
+   "path": "real-photo/swivel-armchair-clean--terracotta",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -391,7 +391,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/swivel-armchair-2",
+   "colorOf": "real-photo/swivel-armchair-clean",
    "color": {
     "id": "terracotta",
     "hex": "#b5654a",
@@ -573,10 +573,10 @@
    }
   },
   {
-   "id": "photo:lounge-chair",
+   "id": "photo:lounge-chair-solo",
    "name": "Lounge chair with wooden arms (store photo)",
    "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
-   "path": "real-photo/lounge-chair",
+   "path": "real-photo/lounge-chair-solo",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -596,10 +596,10 @@
    "collection": "colors/all"
   },
   {
-   "id": "photo:lounge-chair--graphite",
+   "id": "photo:lounge-chair-solo--graphite",
    "name": "Lounge chair with wooden arms (store photo)",
    "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
-   "path": "real-photo/lounge-chair--graphite",
+   "path": "real-photo/lounge-chair-solo--graphite",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -617,7 +617,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/lounge-chair",
+   "colorOf": "real-photo/lounge-chair-solo",
    "color": {
     "id": "graphite",
     "hex": "#3b3d40",
@@ -626,10 +626,10 @@
    }
   },
   {
-   "id": "photo:lounge-chair--beige",
+   "id": "photo:lounge-chair-solo--beige",
    "name": "Lounge chair with wooden arms (store photo)",
    "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
-   "path": "real-photo/lounge-chair--beige",
+   "path": "real-photo/lounge-chair-solo--beige",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -647,7 +647,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/lounge-chair",
+   "colorOf": "real-photo/lounge-chair-solo",
    "color": {
     "id": "beige",
     "hex": "#d8c3a5",
@@ -656,10 +656,10 @@
    }
   },
   {
-   "id": "photo:lounge-chair--navy",
+   "id": "photo:lounge-chair-solo--navy",
    "name": "Lounge chair with wooden arms (store photo)",
    "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
-   "path": "real-photo/lounge-chair--navy",
+   "path": "real-photo/lounge-chair-solo--navy",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -677,7 +677,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/lounge-chair",
+   "colorOf": "real-photo/lounge-chair-solo",
    "color": {
     "id": "navy",
     "hex": "#2f4a7a",
@@ -686,10 +686,10 @@
    }
   },
   {
-   "id": "photo:lounge-chair--emerald",
+   "id": "photo:lounge-chair-solo--emerald",
    "name": "Lounge chair with wooden arms (store photo)",
    "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
-   "path": "real-photo/lounge-chair--emerald",
+   "path": "real-photo/lounge-chair-solo--emerald",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -707,7 +707,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/lounge-chair",
+   "colorOf": "real-photo/lounge-chair-solo",
    "color": {
     "id": "emerald",
     "hex": "#2f6b57",
@@ -716,10 +716,10 @@
    }
   },
   {
-   "id": "photo:lounge-chair--terracotta",
+   "id": "photo:lounge-chair-solo--terracotta",
    "name": "Lounge chair with wooden arms (store photo)",
    "nameRu": "Кресло с деревянными подлокотниками (фото из магазина)",
-   "path": "real-photo/lounge-chair--terracotta",
+   "path": "real-photo/lounge-chair-solo--terracotta",
    "source": "ArtUp Labs",
    "sourceUrl": "https://artuplabs.com/ar-xr/#real-photos",
    "authors": [
@@ -737,7 +737,7 @@
    "placement": "floor",
    "catalog": "colors",
    "collection": "colors/all",
-   "colorOf": "real-photo/lounge-chair",
+   "colorOf": "real-photo/lounge-chair-solo",
    "color": {
     "id": "terracotta",
     "hex": "#b5654a",
