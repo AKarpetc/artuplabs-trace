@@ -1,4 +1,5 @@
 import { decideLicence } from '../access.js';
+import { noteLicence } from './licence.js';
 import { shippedFunctions, usage } from '../core/catalog.js';
 import { CODE } from '../core/errors.js';
 import { LEASE_MS } from '../core/limits.js';
@@ -31,6 +32,7 @@ export function createResolverDefinitions(deps) {
       environmentType: context?.environmentType ?? '',
     }),
     getStatus: async ({ context }) => {
+      await noteLicence(deps, context?.license);
       if (!licensed(context)) throw new Error(CODE.unlicensed);
       const [pending, lease, lastRefresh, errors, progress, excluded] = await Promise.all([
         deps.state.pending.get(), deps.state.lease.get(), deps.state.lastRefresh.get(), deps.state.errors(), deps.state.progress.get(), deps.state.excluded(),

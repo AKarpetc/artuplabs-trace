@@ -8,6 +8,7 @@ import { admit, countQueryOf, estimate, groupClass, groupLimit, hourKey, issuesW
 import { forOperator } from '../core/jql-build.js';
 import { buildFragment, valuesOf } from '../core/tree.js';
 import { brake, brakeOf, isRateLimit } from './brake.js';
+import { noteLicence } from './licence.js';
 
 const TIMEOUT = Symbol('timeout');
 
@@ -198,7 +199,9 @@ async function evaluateSafely(deps, functionName, payload, context) {
 }
 
 async function evaluateClause(deps, functionName, payload, context) {
-  if (!decideLicence(licenceInput(payload, context, deps.appContext?.())).licensed) return { error: ERR.unlicensed(), log: ERR.unlicensed() };
+  const licence = licenceInput(payload, context, deps.appContext?.());
+  await noteLicence(deps, licence.license);
+  if (!decideLicence(licence).licensed) return { error: ERR.unlicensed(), log: ERR.unlicensed() };
   const parsed = parseArgs(functionName, payload?.clause?.arguments);
   if (parsed.error) return { log: parsed.error, ...parsed };
   const { args, userArgs, page } = parsed;

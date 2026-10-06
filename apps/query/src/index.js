@@ -52,12 +52,12 @@ export const dateCompare = handlers.dateCompare;
 export const expression = handlers.expression;
 
 /** Product event trigger: Forge gives a trigger no custom timeout, so it keeps the short retry cap of a function call and a failed index write is left to the hourly gap filler. */
-export const onEvent = withKvsLog('on-event', deps.meter, deps.logKvs, resumed((event) => handleEvent(deps, event)), 'index-event');
+export const onEvent = withKvsLog('on-event', deps.meter, deps.logKvs, resumed((event, context) => handleEvent(deps, event, context)), 'index-event');
 /** Consumer of the query-refresh queue. */
-export const onRefresh = withKvsLog((event) => `on-refresh:${event?.body?.verify ? 'verify' : event?.body?.kind}`, workerDeps.meter, workerDeps.logKvs, resumed((event) => handleRefresh(workerDeps, event)), (event) => laneOfRefresh(event?.body));
+export const onRefresh = withKvsLog((event) => `on-refresh:${event?.body?.verify ? 'verify' : event?.body?.kind}`, workerDeps.meter, workerDeps.logKvs, resumed((event, context) => handleRefresh(workerDeps, event, context)), (event) => laneOfRefresh(event?.body));
 /** Hourly reconcile. */
-export const onReconcile = withKvsLog('on-reconcile', workerDeps.meter, workerDeps.logKvs, resumed(() => handleReconcile(workerDeps)), 'reconcile');
+export const onReconcile = withKvsLog('on-reconcile', workerDeps.meter, workerDeps.logKvs, resumed((event, context) => handleReconcile(workerDeps, context)), 'reconcile');
 /** Consumer of the query-backfill queue. */
-export const onBackfill = withKvsLog('on-backfill', workerDeps.meter, workerDeps.logKvs, resumed((event) => handleBackfill(workerDeps, event)), 'backfill');
+export const onBackfill = withKvsLog('on-backfill', workerDeps.meter, workerDeps.logKvs, resumed((event, context) => handleBackfill(workerDeps, event, context)), 'backfill');
 /** App installed or upgraded (a trigger: the default timeout, so a part's preparation that runs out is redone by the hourly gap filler). */
 export const onLifecycle = withKvsLog('on-lifecycle', workerDeps.meter, workerDeps.logKvs, () => handleLifecycle(workerDeps), 'backfill');

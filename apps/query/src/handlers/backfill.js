@@ -156,11 +156,11 @@ async function finish(deps, part, p) {
  * then it queues itself to continue; it stops when a newer backfill started or another copy of this job finished the part; a finished
  * part starts the projects kept for it; while the background waits for Jira's rate limit, or when a 429 stops a slice, it queues itself for
  * the reset; it spends the backfill points only, and when they are out it keeps its progress and queues itself for just after the next
- * allowance (half past or the hour). A `purge` job deletes the rows of the excluded projects; no other job runs for an unlicensed site.
+ * allowance (half past or the hour). A `purge` job deletes the rows of the excluded projects; no other job runs under an inactive licence.
  */
-export async function onBackfill(deps, event) {
+export async function onBackfill(deps, event, context) {
   if (event?.body?.kind === 'purge') return purgeExcluded(deps);
-  if (!(await backgroundAllowed(deps))) return { unlicensed: true };
+  if (!(await backgroundAllowed(deps, context))) return { unlicensed: true };
   const { part, generation, chain } = event?.body ?? {};
   const p = part && deps.indexParts[part] ? await deps.state.progress.getPart(part) : null;
   if (!p || p.generation !== generation || p.finishedAt || (chain ?? null) !== (p.chain ?? null)) return { skipped: true };

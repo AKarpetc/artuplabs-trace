@@ -309,10 +309,10 @@ const nameCounts = (list) => {
 /**
  * Queue consumer: a compute job, the heavy lane, a wake after a rate-limit pause, or refresh passes under a lease until the journal is
  * empty or the budget is spent; while the background waits for Jira's rate limit, refresh waits for the wake, and a 429 pauses it; nothing
- * runs for an unlicensed site.
+ * runs under an inactive licence.
  */
-export async function onRefresh(deps, event) {
-  if (!(await backgroundAllowed(deps))) return { unlicensed: true };
+export async function onRefresh(deps, event, context) {
+  if (!(await backgroundAllowed(deps, context))) return { unlicensed: true };
   const body = event?.body ?? {};
   if (body.kind === 'compute') return runCompute(deps, body);
   if (body.kind === 'heavy') return runHeavy(deps);

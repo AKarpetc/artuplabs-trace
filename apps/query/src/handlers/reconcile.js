@@ -19,12 +19,12 @@ async function prunePoints(deps) {
 
 /**
  * Hourly safety net: restarts the journal, rewrites due, skipped or failed groups within the reconcile points (heavy ones via the lane),
- * restarts the lane and checks the index; it waits while the background is paused, and a 429 pauses it; for an unlicensed site it only
+ * restarts the lane and checks the index; it waits while the background is paused, and a 429 pauses it; under an inactive licence it only
  * stores the licence error in the precomputations, once.
  */
-export async function onReconcile(deps) {
+export async function onReconcile(deps, context) {
   await prunePoints(deps);
-  if (!(await backgroundAllowed(deps))) return { unlicensed: true, written: await withdrawResults(deps) };
+  if (!(await backgroundAllowed(deps, context))) return { unlicensed: true, written: await withdrawResults(deps) };
   const until = await brakedUntil(deps);
   if (until) {
     await scheduleWake(deps, until);

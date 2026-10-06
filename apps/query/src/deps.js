@@ -36,7 +36,7 @@ const isAdmin = async () => {
   return (await res.json()).permissions?.ADMINISTER?.havePermission === true;
 };
 
-/** The Forge app context of the running invocation, or null outside one (then the licence check fails closed). */
+/** The Forge app context of the running invocation, or null outside one (then a function call is unlicensed and the background goes by the licence last seen). */
 function currentAppContext() {
   try {
     return getAppContext();
