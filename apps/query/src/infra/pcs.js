@@ -1,10 +1,11 @@
 import { errorKindOf } from '../core/affected.js';
-import { KVS_PAGE, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES } from '../core/limits.js';
+import { KVS_PAGE, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES, PCS_LEGACY_CHUNK } from '../core/limits.js';
 
 const META = 'q:pcs:m';
 const DIRTY = 'q:pcs:dirty';
 const ADDED = 'q:pcs:add:';
 const chunkKey = (gen, i) => `q:pcs:${gen}:${i}`;
+const chunkCount = (meta) => meta.chunks ?? Math.ceil((meta.n ?? 0) / PCS_LEGACY_CHUNK);
 const bytesOf = (value) => Buffer.byteLength(JSON.stringify(value));
 
 /** Slim records cut into chunks whose JSON stays within PCS_CHUNK_MAX_BYTES, or null when one record alone is longer. */
@@ -44,7 +45,8 @@ export const slimRecord = (pc) => ({
  * Cache of Jira's precomputation list in KVS: chunks `q:pcs:<gen>:<i>` of slim records within PCS_CHUNK_MAX_BYTES and `q:pcs:m`
  * `{ at, n, gen, chunks }`, plus the records function calls add as Jira creates their precomputations (`q:pcs:add:<id>`, newer than the
  * chunks). Jira is read again after PCS_CACHE_MS, after `markDirty` or when a chunk is missing; whoever reads it writes a new generation,
- * then drops the old one; a list with a record longer than a chunk is not stored, so each read asks Jira.
+ * then drops the old one (a meta of the older format without `chunks` by PCS_LEGACY_CHUNK records a chunk); a list with a record longer
+ * than a chunk is not stored, so each read asks Jira, and the older generation is dropped.
  */
 export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
   async function added() {
@@ -66,21 +68,34 @@ export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
     return chunks.every(Array.isArray) ? chunks.flat() : null;
   }
 
+  async function drop(meta) {
+    for (let i = 0; i < chunkCount(meta); i += 1) await kvs.delete(chunkKey(meta.gen, i));
+  }
+
+  async function prune(at, list) {
+    const listed = new Set(list.map((pc) => pc.id));
+    for (const row of await added()) if (listed.has(row.value.id) || at - row.value.at >= PCS_CACHE_MS) await kvs.delete(row.key);
+  }
+
   async function fresh(old) {
     const at = clock();
     const list = ((await jira.precomputations()) ?? []).map(slimRecord);
     const chunks = chunksOf(list);
     if (!chunks) {
       console.error('precomputation list not cached: a record is longer than a chunk');
+      if (old) {
+        await drop(old);
+        await kvs.delete(META);
+      }
+      await prune(at, list);
       return list;
     }
     for (let i = 0; i < chunks.length; i += 1) await kvs.set(chunkKey(at, i), chunks[i]);
     await kvs.set(META, { at, n: list.length, gen: at, chunks: chunks.length });
     const won = (await kvs.get(META))?.gen === at;
     const stale = won ? old : { gen: at, chunks: chunks.length };
-    if (stale && stale.gen !== (won ? at : null)) for (let i = 0; i < (stale.chunks ?? 0); i += 1) await kvs.delete(chunkKey(stale.gen, i));
-    const listed = new Set(list.map((pc) => pc.id));
-    for (const row of await added()) if (listed.has(row.value.id) || at - row.value.at >= PCS_CACHE_MS) await kvs.delete(row.key);
+    if (stale && stale.gen !== (won ? at : null)) await drop(stale);
+    await prune(at, list);
     return list;
   }
 

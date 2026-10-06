@@ -172,6 +172,8 @@ export const PCS_CACHE_MS = 60 * 60 * 1000;
 export const KVS_VALUE_MAX_BYTES = 240 * 1024;
 /** Largest `q:pcs:<gen>:<i>` chunk of the cached precomputation list, in bytes of its JSON, with room below the KVS value limit. */
 export const PCS_CHUNK_MAX_BYTES = 200 * 1024;
+/** Records one chunk of the cached precomputation list held in the older format, whose meta names no chunk count. */
+export const PCS_LEGACY_CHUNK = 100;
 /** Share of the refresh reserve the fixed cost of journal passes may take; it sets the pause between passes. */
 export const REFRESH_OVERHEAD_SHARE = 0.5;
 /** Shortest pause between journal passes, in seconds. */

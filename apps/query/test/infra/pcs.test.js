@@ -59,6 +59,24 @@ describe('precomputation list cache', () => {
     await cache.list();
     expect([[...kvs.data.keys()].filter((k) => k.startsWith('q:pcs:')), asked]).toEqual([[], [1000, 1000]]);
   });
+  it('drops the chunks of a list stored in the old format of 100 records a chunk', async () => {
+    const { cache, kvs } = setup([pc(1)]);
+    await kvs.set('q:pcs:m', { at: 500, n: 150, gen: 500 });
+    await kvs.set('q:pcs:500:0', []);
+    await kvs.set('q:pcs:500:1', []);
+    await cache.list();
+    expect([...kvs.data.keys()].filter((k) => k.startsWith('q:pcs:500:'))).toEqual([]);
+  });
+  it('drops the added records Jira lists and the older generation when the list cannot be stored', async () => {
+    const list = [pc(1)];
+    const { cache, kvs, advance } = setup(list);
+    await cache.list();
+    await cache.add({ id: 'p2', functionName: 'parentsOf', arguments: ['q'], operator: 'in', hasValue: true, errorKind: null });
+    list.push(pc(2), pc(3, { arguments: ['x'.repeat(PCS_CHUNK_MAX_BYTES)] }));
+    advance(PCS_CACHE_MS);
+    await cache.list();
+    expect([...kvs.data.keys()].filter((k) => k.startsWith('q:pcs:'))).toEqual([]);
+  });
   it('drops the chunks of the older generation once a new one is written', async () => {
     const { cache, kvs, advance } = setup([pc(1)]);
     await cache.list();
