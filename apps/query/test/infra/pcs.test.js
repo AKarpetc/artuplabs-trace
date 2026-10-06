@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createPcsCache } from '../../src/infra/pcs.js';
 import { ERR } from '../../src/core/errors.js';
-import { PCS_CACHE_MS, PCS_CHUNK } from '../../src/core/limits.js';
+import { KVS_VALUE_MAX_BYTES, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES } from '../../src/core/limits.js';
 
 const pc = (i, extra = {}) => ({ id: `p${i}`, functionName: 'parentsOf', arguments: ['q'], operator: 'in', used: '2026-10-05T07:00:00Z', updated: '2026-10-05T06:00:00Z', value: 'id in (1)', ...extra });
 
 function setup(list) {
   let now = 1000;
-  const kvs = createFakeKvs({ pageSize: 100 });
+  const kvs = createFakeKvs({ pageSize: 100, maxBytes: KVS_VALUE_MAX_BYTES });
   const asked = [];
   const jira = { precomputations: async () => { asked.push(now); return list; } };
   const cache = createPcsCache({ kvs, jira, beginsWith, clock: () => now });
@@ -46,11 +46,18 @@ describe('precomputation list cache', () => {
     expect(asked).toEqual([1000, 1010]);
   });
   it('stores a long list in chunks of one generation and reads it back whole', async () => {
-    const list = Array.from({ length: PCS_CHUNK * 2 + 5 }, (_, i) => pc(i));
+    const list = Array.from({ length: 100 }, (_, i) => pc(i, { arguments: [`key in (${'ABC-1234, '.repeat(300)})`] }));
     const { cache, kvs } = setup(list);
     await cache.list();
-    expect([...kvs.data.keys()].filter((k) => k.startsWith('q:pcs:')).sort()).toEqual(['q:pcs:1000:0', 'q:pcs:1000:1', 'q:pcs:1000:2', 'q:pcs:m']);
+    const chunks = [...kvs.data.keys()].filter((k) => k.startsWith('q:pcs:1000:'));
+    expect([chunks.length > 1, chunks.every((k) => Buffer.byteLength(JSON.stringify(kvs.data.get(k))) <= PCS_CHUNK_MAX_BYTES)]).toEqual([true, true]);
     expect((await cache.list()).map((p) => p.id)).toEqual(list.map((p) => p.id));
+  });
+  it('answers without storing the list when one record alone is longer than a chunk', async () => {
+    const { cache, kvs, asked } = setup([pc(1), pc(2, { arguments: ['x'.repeat(PCS_CHUNK_MAX_BYTES)] })]);
+    expect((await cache.list()).map((p) => p.id)).toEqual(['p1', 'p2']);
+    await cache.list();
+    expect([[...kvs.data.keys()].filter((k) => k.startsWith('q:pcs:')), asked]).toEqual([[], [1000, 1000]]);
   });
   it('drops the chunks of the older generation once a new one is written', async () => {
     const { cache, kvs, advance } = setup([pc(1)]);
@@ -93,7 +100,7 @@ describe('precomputation list cache', () => {
     const set = kvs.set;
     kvs.set = async (key, value) => {
       await set(key, value);
-      if (key === 'q:pcs:m') await set('q:pcs:m', { at: 999, n: 1, gen: 999 });
+      if (key === 'q:pcs:m') await set('q:pcs:m', { at: 999, n: 1, gen: 999, chunks: 1 });
     };
     await cache.list();
     expect([...kvs.data.keys()].filter((k) => k.startsWith('q:pcs:1000:'))).toEqual([]);

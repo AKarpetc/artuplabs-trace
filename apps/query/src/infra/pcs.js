@@ -1,10 +1,31 @@
 import { errorKindOf } from '../core/affected.js';
-import { KVS_PAGE, PCS_CACHE_MS, PCS_CHUNK } from '../core/limits.js';
+import { KVS_PAGE, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES } from '../core/limits.js';
 
 const META = 'q:pcs:m';
 const DIRTY = 'q:pcs:dirty';
 const ADDED = 'q:pcs:add:';
 const chunkKey = (gen, i) => `q:pcs:${gen}:${i}`;
+const bytesOf = (value) => Buffer.byteLength(JSON.stringify(value));
+
+/** Slim records cut into chunks whose JSON stays within PCS_CHUNK_MAX_BYTES, or null when one record alone is longer. */
+export function chunksOf(list, maxBytes = PCS_CHUNK_MAX_BYTES) {
+  const chunks = [];
+  let chunk = [];
+  let size = 2;
+  for (const record of list) {
+    const bytes = bytesOf(record) + 1;
+    if (bytes + 2 > maxBytes) return null;
+    if (chunk.length && size + bytes > maxBytes) {
+      chunks.push(chunk);
+      chunk = [];
+      size = 2;
+    }
+    chunk.push(record);
+    size += bytes;
+  }
+  if (chunk.length) chunks.push(chunk);
+  return chunks;
+}
 
 /** A precomputation as the cache keeps it: no value, no error text, only whether each is stored and the kind of the error. */
 export const slimRecord = (pc) => ({
@@ -20,9 +41,10 @@ export const slimRecord = (pc) => ({
 });
 
 /**
- * Cache of Jira's precomputation list in KVS: chunks `q:pcs:<gen>:<i>` of PCS_CHUNK slim records and `q:pcs:m` `{ at, n, gen }`, plus the
- * records function calls add as Jira creates their precomputations (`q:pcs:add:<id>`, newer than the chunks). Jira is read again after
- * PCS_CACHE_MS, after `markDirty` or when a chunk is missing; whoever reads it writes a new generation, then drops the old one.
+ * Cache of Jira's precomputation list in KVS: chunks `q:pcs:<gen>:<i>` of slim records within PCS_CHUNK_MAX_BYTES and `q:pcs:m`
+ * `{ at, n, gen, chunks }`, plus the records function calls add as Jira creates their precomputations (`q:pcs:add:<id>`, newer than the
+ * chunks). Jira is read again after PCS_CACHE_MS, after `markDirty` or when a chunk is missing; whoever reads it writes a new generation,
+ * then drops the old one; a list with a record longer than a chunk is not stored, so each read asks Jira.
  */
 export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
   async function added() {
@@ -39,20 +61,24 @@ export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
 
   async function stored(meta) {
     const dirty = await kvs.get(DIRTY);
-    if (!meta || clock() - meta.at >= PCS_CACHE_MS || (dirty ?? 0) > meta.at) return null;
-    const chunks = await Promise.all(Array.from({ length: Math.ceil(meta.n / PCS_CHUNK) }, (_, i) => kvs.get(chunkKey(meta.gen, i))));
+    if (!meta || !Number.isInteger(meta.chunks) || clock() - meta.at >= PCS_CACHE_MS || (dirty ?? 0) > meta.at) return null;
+    const chunks = await Promise.all(Array.from({ length: meta.chunks }, (_, i) => kvs.get(chunkKey(meta.gen, i))));
     return chunks.every(Array.isArray) ? chunks.flat() : null;
   }
 
   async function fresh(old) {
     const at = clock();
     const list = ((await jira.precomputations()) ?? []).map(slimRecord);
-    const count = Math.ceil(list.length / PCS_CHUNK);
-    for (let i = 0; i < count; i += 1) await kvs.set(chunkKey(at, i), list.slice(i * PCS_CHUNK, (i + 1) * PCS_CHUNK));
-    await kvs.set(META, { at, n: list.length, gen: at });
+    const chunks = chunksOf(list);
+    if (!chunks) {
+      console.error('precomputation list not cached: a record is longer than a chunk');
+      return list;
+    }
+    for (let i = 0; i < chunks.length; i += 1) await kvs.set(chunkKey(at, i), chunks[i]);
+    await kvs.set(META, { at, n: list.length, gen: at, chunks: chunks.length });
     const won = (await kvs.get(META))?.gen === at;
-    const stale = won ? old : { gen: at, n: list.length };
-    if (stale && stale.gen !== (won ? at : null)) for (let i = 0; i < Math.ceil(stale.n / PCS_CHUNK); i += 1) await kvs.delete(chunkKey(stale.gen, i));
+    const stale = won ? old : { gen: at, chunks: chunks.length };
+    if (stale && stale.gen !== (won ? at : null)) for (let i = 0; i < (stale.chunks ?? 0); i += 1) await kvs.delete(chunkKey(stale.gen, i));
     const listed = new Set(list.map((pc) => pc.id));
     for (const row of await added()) if (listed.has(row.value.id) || at - row.value.at >= PCS_CACHE_MS) await kvs.delete(row.key);
     return list;

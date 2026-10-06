@@ -1,5 +1,5 @@
-/** In-memory KVS with get/set/delete and a key-prefix query that returns at most `pageSize` results per page. */
-export function createFakeKvs({ pageSize = 2 } = {}) {
+/** In-memory KVS with get/set/delete and a key-prefix query that returns at most `pageSize` results per page; a value whose JSON is longer than `maxBytes` is refused as Forge refuses it. */
+export function createFakeKvs({ pageSize = 2, maxBytes = Infinity } = {}) {
   const data = new Map();
   const calls = { queries: 0, ops: [] };
   const kvs = {
@@ -10,6 +10,7 @@ export function createFakeKvs({ pageSize = 2 } = {}) {
     },
     async set(key, value) {
       calls.ops.push(`set ${key}`);
+      if (Buffer.byteLength(JSON.stringify(value)) > maxBytes) throw Object.assign(new Error('value too large'), { name: 'KvsError' });
       data.set(key, structuredClone(value));
     },
     async delete(key) {
