@@ -16,7 +16,7 @@
   <link type="text/css" href="./styles/demo.css?v=685612f58a" rel="stylesheet" />
   <!-- Общие токены ArtUp AR XR (их владелец — лендинг /ar-xr/); страница работает и без них. -->
   <link type="text/css" href="../assets/ar-xr.css?v=2e0158b1d6" rel="stylesheet" />
-  <link type="text/css" href="./styles/artuplabs-demo.css?v=448b26f8fe" rel="stylesheet" />
+  <link type="text/css" href="./styles/artuplabs-demo.css?v=ce02129712" rel="stylesheet" />
 </head>
 
 <body>
@@ -44,9 +44,14 @@
   <main class="page-main">
     <h1 data-i18n="colors.title">Выбери свой цвет</h1>
     <p class="muted" data-i18n="colors.lead">Одна модель — пять цветов ткани, без новой съёмки.</p>
-    <div class="page-toolbar">
-      <a id="colors-all-room" class="ax-btn ax-btn-secondary ax-btn-sm" href="./xrviewer.html" data-i18n="colors.allToRoom">Все модели в комнату</a>
-    </div>
+    <section id="colors-xr" class="colors-xr avt-card" aria-labelledby="colors-xr-title">
+      <div id="colors-xr-qr" class="colors-xr__qr" role="img" aria-label="QR-код XR-комнаты" data-i18n-attr="aria-label:colors.xrQrLabel"></div>
+      <div class="colors-xr__text">
+        <h2 id="colors-xr-title" data-i18n="colors.xrTitle">Цвет — прямо в вашей комнате</h2>
+        <p class="muted" data-i18n="colors.xrLead">Наведите камеру телефона на QR-код: откроется XR-комната с пятью моделями. Поставьте мебель, коснитесь её и выберите цвет ткани — модель перекрасится на месте.</p>
+        <a id="colors-all-room" class="ax-btn ax-btn-primary ax-btn-sm" href="./xrviewer.html" data-i18n="colors.allToRoom">Все модели в комнату</a>
+      </div>
+    </section>
     <p id="colors-status" class="page-status" role="status" hidden></p>
     <div id="colors-list" class="colors-list" aria-live="polite"></div>
   </main>
@@ -56,7 +61,7 @@
   </footer>
 
   <script src="./src/common/qrcode.min.js?v=517b55d368"></script>
-  <script type="module" src="./dist/colors.bandle.js?v=966fe73580"></script>
+  <script type="module" src="./dist/colors.bandle.js?v=3342c07f5d"></script>
 </body>
 
 </html>

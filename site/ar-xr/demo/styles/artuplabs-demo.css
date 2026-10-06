@@ -432,3 +432,9 @@ body:has(#xr-selection-bar:not(.d-none)) .fab { bottom: calc(140px + env(safe-ar
 .colors-card__actions { display: flex; gap: 8px; flex-wrap: wrap; }
 /* Палитра ткани в XR — над панелью инструментов выбранной модели. */
 .xr-colors { position: fixed; left: 0; right: 0; bottom: 150px; z-index: 20; }
+.colors-xr { display: flex; gap: 24px; align-items: center; padding: 18px; margin: 0 0 24px; }
+.colors-xr__qr { flex: none; width: 184px; height: 184px; padding: 8px; background: #fff; border-radius: 12px; }
+.colors-xr__qr img, .colors-xr__qr canvas { display: block; width: 168px; height: 168px; }
+.colors-xr__text h2 { margin: 0 0 6px; font-size: 22px; }
+.colors-xr__text p { margin: 0 0 14px; }
+@media (max-width: 600px) { .colors-xr { flex-direction: column; align-items: flex-start; } }
