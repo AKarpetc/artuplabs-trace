@@ -83,7 +83,7 @@ issue in expression("project = DEMO", "timespent &gt; originalestimate * 1.2")</
           </li>
           <li class="card">
             <h3 data-i18n-html="t24">Kept up to date from Jira events</h3>
-            <p data-i18n-html="t25">Functions that read the app's index and functions over small subqueries answer within seconds. After an edit the result follows on its own; large results and bulk imports update later, at the pace Jira's API allowance for apps permits.</p>
+            <p data-i18n-html="t25">After an edit the result follows on its own. With room in the hour's allowance, a changed label or link showed in the result in about 15 seconds on a test site; with about 100 functions in use the 90th percentile was about 277 seconds. Bulk edits beyond the hour's allowance wait for the next half hour or hour, and a result too large for the allowance is an error with the numbers.</p>
           </li>
           <li class="card">
             <h3 data-i18n-html="t26">Runs on Atlassian, writes nothing</h3>
@@ -146,7 +146,7 @@ issue in subtasksOf("project = DEMO")</code></pre>
       <div class="container">
         <span class="kicker" data-i18n-html="t49">No silent losses</span>
         <h2 id="honest-title" data-i18n-html="t50">Honest about timing and errors</h2>
-        <p class="section-lead" data-i18n-html="t51">Functions that read the app's index and functions over small subqueries answer within seconds. Edits reach the results through Jira's change events, which arrive in a queue: ordinary edits show up soon, while large results, bulk imports and bulk edits take longer, at the pace Jira's API allowance for apps permits. A new site builds its index once, and until then the sprint, comment and attachment functions answer “Index is building: n of m issues”. A wrong argument, an unknown board or a result that is too large produces a message in the JQL editor that tells you what to fix, with the numbers, instead of an empty or cut-off list.</p>
+        <p class="section-lead" data-i18n-html="t51">Edits reach the results through Jira's change events, which arrive in a queue. With room in the hour's allowance, a changed label or link showed in the result in about 15 seconds on a test site; with about 100 functions in use the 90th percentile was about 277 seconds; bulk imports and bulk edits beyond the hour's allowance wait for the next half hour or hour. A new site builds its index once, at the pace the allowance permits (about 840 work items per hour for the sprint history on a busy site, so a project of 10,000 work items takes about 12 hours), and until then the sprint, comment and attachment functions answer “Index is building: n of m issues”. A wrong argument, an unknown board or a result that is too large produces a message in the JQL editor that tells you what to fix, with the numbers, instead of an empty or cut-off list.</p>
       </div>
     </section>
 
@@ -229,7 +229,7 @@ issue in subtasksOf("project = DEMO")</code></pre>
   "t22": "Полный результат или понятная ошибка",
   "t23": "Результат никогда не бывает частичным. На тестовом сайте с 50 000 задач каждая функция совпала с эталоном, вычисленным через Jira REST API: 24 из 24, 85 из 85 (в том числе спринт из 1 093 задач) и 17 из 17 проверок.<sup><a href=\"#note-load\">1<\/a><\/sup> Сколько задач может прочитать одна функция, зависит от функции и от лимита Jira API для приложений; на слишком большой подзапрос приходит ошибка, в которой названы предел и то, насколько сузить запрос.",
   "t24": "Обновляется по событиям Jira",
-  "t25": "Функции, которые читают индекс приложения, и функции над небольшими подзапросами отвечают за секунды. После правки результат обновляется сам; большие результаты и массовые импорты обновляются позже — с той скоростью, которую позволяет лимит Jira API для приложений.",
+  "t25": "После правки результат обновляется сам. При свободном часовом лимите изменённая метка или связь появлялась в результате примерно за 15 секунд на тестовом сайте; при примерно 100 используемых функциях 90-й процентиль составил около 277 секунд. Массовые правки сверх часового лимита ждут следующего получаса или часа, а результат, слишком большой для лимита, — это ошибка с числами.",
   "t26": "Работает на Atlassian и ничего не изменяет",
   "t27": "Без внешних серверов и без egress. Приложение читает задачи и хранит в хранилище Forge только идентификаторы, даты, метаданные и аргументы используемых функций. Оно никогда не изменяет задачи и не запрашивает <code>write:jira-work<\/code>.",
   "t28": "<sup>1<\/sup> Замер на тестовом сайте Jira Cloud с 50 000 задач: результат каждой функции сравнивался с эталоном, вычисленным через Jira REST API. Сколько может прочитать одна функция на вашем сайте, зависит от функции и от лимита Jira API для приложений.",
@@ -255,7 +255,7 @@ issue in subtasksOf("project = DEMO")</code></pre>
   "t48": "В поиске Jira переключитесь на JQL и введите <code>issue in<\/code> и функцию. Сохраните запрос как фильтр или используйте его на доске.",
   "t49": "Ничего не теряется молча",
   "t50": "Честно о сроках и ошибках",
-  "t51": "Функции, которые читают индекс приложения, и функции над небольшими подзапросами отвечают за секунды. Правки попадают в результаты через события изменений Jira, которые приходят очередью: обычные правки появляются скоро, а большие результаты, массовые импорты и массовые правки — дольше, с той скоростью, которую позволяет лимит Jira API для приложений. Новый сайт один раз строит индекс, и до этого функции спринтов, комментариев и вложений отвечают «Index is building: n of m issues». Неверный аргумент, неизвестная доска или слишком большой результат дают в редакторе JQL сообщение с числами, которое говорит, что исправить, — а не пустой или обрезанный список.",
+  "t51": "Правки попадают в результаты через события изменений Jira, которые приходят очередью. При свободном часовом лимите изменённая метка или связь появлялась в результате примерно за 15 секунд на тестовом сайте; при примерно 100 используемых функциях 90-й процентиль составил около 277 секунд; массовые импорты и массовые правки сверх часового лимита ждут следующего получаса или часа. Новый сайт один раз строит индекс с той скоростью, которую позволяет лимит (около 840 задач в час для истории спринтов на занятом сайте, то есть проект в 10 000 задач — около 12 часов), и до этого функции спринтов, комментариев и вложений отвечают «Index is building: n of m issues». Неверный аргумент, неизвестная доска или слишком большой результат дают в редакторе JQL сообщение с числами, которое говорит, что исправить, — а не пустой или обрезанный список.",
   "t52": "Ваши задачи остаются в Atlassian",
   "t53": "ArtUp Query работает на Atlassian Forge. Серверов ArtUp Labs на пути данных нет.",
   "t54": "<strong>Работает на Atlassian<\/strong>Без внешних серверов и без egress.",
