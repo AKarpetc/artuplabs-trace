@@ -158,7 +158,7 @@ export async function refreshOnce(deps, { deadline = Infinity } = {}) {
   try {
     await inScope(deps, room.limit, async () => {
       const every = summary.kinds.includes(REWRITE_ALL_KIND);
-      const stored = groupPrecomputations(await measured(() => listPrecomputations(deps)), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
+      const stored = groupPrecomputations(await listPrecomputations(deps, { full: measured }), { now: startedAt, activeMs: every ? Infinity : ACTIVE_MS });
       const inWindow = (g) => isUsed(g) && usedWithin(g, startedAt, REFRESH_USED_MS);
       const groups = every ? stored : stored.filter(inWindow);
       if (!every) for (const g of stored.filter((x) => !inWindow(x) && skipWanted(x, summary))) await markSkip(g);

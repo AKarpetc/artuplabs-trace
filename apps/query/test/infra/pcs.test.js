@@ -1,19 +1,23 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createPcsCache } from '../../src/infra/pcs.js';
 import { ERR } from '../../src/core/errors.js';
-import { KVS_VALUE_MAX_BYTES, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES, PCS_RECENT_SKEW_MS } from '../../src/core/limits.js';
+import { KVS_VALUE_MAX_BYTES, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES, PCS_RECENT_PAGES, PCS_RECENT_SKEW_MS } from '../../src/core/limits.js';
 
 const pc = (i, extra = {}) => ({ id: `p${i}`, functionName: 'parentsOf', arguments: ['q'], operator: 'in', used: '2026-10-05T07:00:00Z', updated: '2026-10-05T06:00:00Z', value: 'id in (1)', ...extra });
 
-function setup(list, recent = null) {
+function setup(list, recent = async () => [], { log = false } = {}) {
   let now = 1000;
   const kvs = createFakeKvs({ pageSize: 100, maxBytes: KVS_VALUE_MAX_BYTES });
   const asked = [];
   const askedRecent = [];
   const jira = { precomputations: async () => { asked.push(now); return list; } };
-  if (recent) jira.recentPrecomputations = async (since) => { askedRecent.push(since); return recent(); };
-  const cache = createPcsCache({ kvs, jira, beginsWith, clock: () => now });
+  jira.recentPrecomputations = async (since) => {
+    askedRecent.push(since);
+    const got = await recent();
+    return Array.isArray(got) ? { records: got, end: 'done' } : got;
+  };
+  const cache = createPcsCache({ kvs, jira, beginsWith, clock: () => now, log });
   return { kvs, asked, askedRecent, cache, advance: (ms) => { now += ms; } };
 }
 
@@ -42,6 +46,25 @@ describe('precomputation list cache', () => {
     await cache.list();
     advance(10);
     expect((await cache.list()).map((p) => p.used)).toEqual(['2026-10-05T07:00:00Z']);
+  });
+  it('reads the full list through the given wrapper and the recently used ones outside it', async () => {
+    const { cache, advance } = setup([pc(1)], async () => []);
+    const wrapped = [];
+    const full = async (task) => { wrapped.push('full'); return task(); };
+    await cache.list({ full });
+    advance(10);
+    await cache.list({ full });
+    expect(wrapped).toEqual(['full']);
+  });
+  it('logs a recently used read cut by its page limit or the points budget when asked to', async () => {
+    const lines = [];
+    const spy = vi.spyOn(console, 'log').mockImplementation((line) => lines.push(line));
+    const { cache, advance } = setup([pc(1)], async () => ({ records: [], end: 'pages' }), { log: true });
+    await cache.list();
+    advance(10);
+    await cache.list();
+    spy.mockRestore();
+    expect(lines).toEqual([`recently used precomputations cut at ${PCS_RECENT_PAGES} pages: 0 read`]);
   });
   it('passes on a rate limit met while reading the recently used precomputations', async () => {
     const { cache, advance } = setup([pc(1)], async () => { throw Object.assign(new Error('429'), { name: 'RateLimitError', status: 429 }); });

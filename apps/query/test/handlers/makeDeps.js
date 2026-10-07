@@ -65,7 +65,7 @@ export function makeDeps({ pcs = [], compute = {}, searches = {}, invalid = {}, 
     deadlines,
     ...extra,
   };
-  if (!('pcList' in extra)) deps.pcList = createPcsCache({ kvs, jira: { precomputations: () => deps.jira.precomputations(), recentPrecomputations: async (since) => (deps.jira.recentPrecomputations ? deps.jira.recentPrecomputations(since) : []) }, beginsWith, clock: () => deps.now() });
+  if (!('pcList' in extra)) deps.pcList = createPcsCache({ kvs, jira: { precomputations: () => deps.jira.precomputations(), recentPrecomputations: async (since) => (deps.jira.recentPrecomputations ? deps.jira.recentPrecomputations(since) : { records: [], end: 'done' }) }, beginsWith, clock: () => deps.now() });
   return deps;
 }
 

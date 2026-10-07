@@ -1078,6 +1078,13 @@ describe('pass overhead and the pause between passes', () => {
     const deps = await overheadDeps();
     expect((await refreshOnce(deps)).overhead).toEqual(10);
   });
+  it('counts the read of recently used precomputations over the cached list in the overhead', async () => {
+    const deps = await overheadDeps();
+    deps.jira.recentPrecomputations = async () => { await spend(20); return { records: [], end: 'done' }; };
+    await refreshOnce(deps);
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-created'] }, BUDGET_AT - 400);
+    expect((await refreshOnce(deps)).overhead).toEqual(30);
+  });
   it('records the overhead of the last pass and the pause it sets', async () => {
     const deps = await overheadDeps({ checkCost: 50 });
     await onRefresh(deps, { body: { kind: 'refresh', ts: BUDGET_AT } });
@@ -1188,11 +1195,11 @@ describe('a group used again after a day without use', () => {
     const parentsOf = vi.fn(async () => ({ ids: ['3'], field: 'id', watch: ['9'] }));
     const pc = { id: 'p', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: longAgo };
     const deps = makeDeps({ pcs: [pc], compute: { parentsOf } });
-    deps.jira.recentPrecomputations = async () => [];
+    deps.jira.recentPrecomputations = async () => ({ records: [], end: 'done' });
     await deps.journal.append({ ids: ['9'], kinds: ['issue-updated'] }, 999500);
     await refreshOnce(deps);
     deps.advance(60000);
-    deps.jira.recentPrecomputations = async () => [{ ...pc, used: new Date(deps.now() - 1000).toISOString() }];
+    deps.jira.recentPrecomputations = async () => ({ records: [{ ...pc, used: new Date(deps.now() - 1000).toISOString() }], end: 'done' });
     await deps.journal.append({ ids: ['9'], kinds: ['issue-updated'] }, deps.now() - 500);
     await refreshOnce(deps);
     expect(parentsOf.mock.calls.length).toEqual(1);

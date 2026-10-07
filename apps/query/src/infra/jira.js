@@ -400,16 +400,27 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     projects: async () => (await paged('/rest/api/3/project/search')).map((p) => ({ id: String(p.id), key: p.key })),
     sprints: (boardId) => paged(`/rest/agile/1.0/board/${enc(boardId)}/sprint?state=active,closed,future`),
     precomputations: () => paged('/rest/api/3/jql/function/computation', PRECOMPUTATION_PAGE),
+    /**
+     * Precomputations used since `since`, by latest use, at most PCS_RECENT_PAGES pages: `end` is 'done', 'pages' or 'points' (the points budget
+     * or deadline refused a page; the pages read are kept). One used between two pages moves up and may be missed until the next read.
+     */
     recentPrecomputations: async (since) => {
-      const out = [];
+      const records = [];
       for (let page = 0, startAt = 0; page < PCS_RECENT_PAGES; page += 1) {
-        const items = (await call('GET', `/rest/api/3/jql/function/computation?orderBy=-used&startAt=${startAt}&maxResults=${PRECOMPUTATION_PAGE}`))?.values ?? [];
-        const newer = items.filter((pc) => Date.parse(pc.used ?? '') >= since);
-        out.push(...newer);
+        let body;
+        try {
+          body = await call('GET', `/rest/api/3/jql/function/computation?orderBy=-used&startAt=${startAt}&maxResults=${PRECOMPUTATION_PAGE}`);
+        } catch (error) {
+          if (error?.name === 'PointsError' || error?.name === 'DeadlineError') return { records, end: 'points' };
+          throw error;
+        }
+        const items = body?.values ?? [];
+        const times = items.map((pc) => Date.parse(pc.used ?? ''));
+        records.push(...items.filter((_, i) => times[i] >= since));
         startAt += items.length;
-        if (newer.length < items.length || !items.length) break;
+        if (body?.isLast === true || !items.length || times.some((t) => t < since)) return { records, end: 'done' };
       }
-      return out;
+      return { records, end: 'pages' };
     },
     writePrecomputations: async (updates) => {
       for (const batch of chunks(updates, PRECOMPUTATION_BATCH)) await call('POST', '/rest/api/3/jql/function/computation?skipNotFoundPrecomputations=true', { values: batch });

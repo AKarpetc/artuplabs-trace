@@ -1,5 +1,5 @@
 import { errorKindOf } from '../core/affected.js';
-import { KVS_PAGE, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES, PCS_LEGACY_CHUNK, PCS_RECENT_SKEW_MS } from '../core/limits.js';
+import { KVS_PAGE, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES, PCS_LEGACY_CHUNK, PCS_RECENT_PAGES, PCS_RECENT_SKEW_MS } from '../core/limits.js';
 
 const META = 'q:pcs:m';
 const DIRTY = 'q:pcs:dirty';
@@ -48,7 +48,7 @@ export const slimRecord = (pc) => ({
  * then drops the old one (a meta of the older format without `chunks` by PCS_LEGACY_CHUNK records a chunk); a list with a record longer
  * than a chunk is not stored, so each read asks Jira, and the older generation is dropped.
  */
-export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
+export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now, log = false }) {
   async function added() {
     const rows = [];
     let cursor;
@@ -77,9 +77,9 @@ export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
     for (const row of await added()) if (listed.has(row.value.id) || at - row.value.at >= PCS_CACHE_MS) await kvs.delete(row.key);
   }
 
-  async function fresh(old) {
+  async function fresh(old, full) {
     const at = clock();
-    const list = ((await jira.precomputations()) ?? []).map(slimRecord);
+    const list = ((await full(() => jira.precomputations())) ?? []).map(slimRecord);
     const chunks = chunksOf(list);
     if (!chunks) {
       console.error('precomputation list not cached: a record is longer than a chunk');
@@ -100,9 +100,11 @@ export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
   }
 
   async function recent(meta) {
-    if (!jira.recentPrecomputations) return [];
     try {
-      return (await jira.recentPrecomputations(meta.at - PCS_RECENT_SKEW_MS)).map(slimRecord);
+      const { records, end } = await jira.recentPrecomputations(meta.at - PCS_RECENT_SKEW_MS);
+      if (log && end === 'pages') console.log(`recently used precomputations cut at ${PCS_RECENT_PAGES} pages: ${records.length} read`);
+      if (log && end === 'points') console.log(`recently used precomputations cut by the points budget: ${records.length} read`);
+      return records.map(slimRecord);
     } catch (error) {
       if (error?.name !== 'JiraError') throw error;
       console.error(`recently used precomputations not read: ${error.status ?? ''}`);
@@ -113,14 +115,14 @@ export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
   return {
     /**
      * The precomputation list: the cached chunks while they are fresh, with the precomputations Jira used since they were read laid over
-     * them (else Jira's whole list), and the records function calls added over that.
+     * them (else Jira's whole list, read inside `full`), and the records function calls added over that.
      */
-    async list() {
+    async list({ full = (task) => task() } = {}) {
       const meta = await kvs.get(META);
       const cached = await stored(meta);
       const newer = new Map((cached ? await recent(meta) : []).map((pc) => [pc.id, pc]));
       const known = new Set((cached ?? []).map((pc) => pc.id));
-      const base = cached ? [...cached.map((pc) => newer.get(pc.id) ?? pc), ...[...newer.values()].filter((pc) => !known.has(pc.id))] : await fresh(meta);
+      const base = cached ? [...cached.map((pc) => newer.get(pc.id) ?? pc), ...[...newer.values()].filter((pc) => !known.has(pc.id))] : await fresh(meta, full);
       const extra = new Map((await added()).map((row) => [row.value.id, row.value.record]));
       return [...base.filter((pc) => !extra.has(pc.id)), ...extra.values()];
     },

@@ -89,22 +89,48 @@ describe('reads', () => {
     expect(await createJira(request).precomputations()).toEqual([{ id: 'a' }, { id: 'b' }]);
     expect(calls.map((c) => c.path)).toEqual(['/rest/api/3/jql/function/computation?startAt=0&maxResults=100', '/rest/api/3/jql/function/computation?startAt=1&maxResults=100']);
   });
+  const since = Date.parse('2026-10-07T03:00:00Z');
+  const usedPage = (records, isLast = false) => reply(200, { values: records, isLast });
   it('reads precomputations by the latest use until one was last used before the given time', async () => {
     const { request, calls } = scripted([
-      reply(200, { values: [{ id: 'a', used: '2026-10-07T03:10:00.000+0000' }], isLast: false }),
-      reply(200, { values: [{ id: 'b', used: '2026-10-07T03:05:00.000+0000' }, { id: 'c', used: '2026-10-07T02:00:00.000+0000' }], isLast: false }),
+      usedPage([{ id: 'a', used: '2026-10-07T03:10:00.000+0000' }]),
+      usedPage([{ id: 'b', used: '2026-10-07T03:05:00.000+0000' }, { id: 'c', used: '2026-10-07T02:00:00.000+0000' }]),
     ]);
-    const recent = await createJira(request).recentPrecomputations(Date.parse('2026-10-07T03:00:00Z'));
-    expect([recent.map((p) => p.id), calls.map((c) => c.path)]).toEqual([['a', 'b'], [
+    const recent = await createJira(request).recentPrecomputations(since);
+    expect([recent, calls.map((c) => c.path)]).toEqual([{ records: [{ id: 'a', used: '2026-10-07T03:10:00.000+0000' }, { id: 'b', used: '2026-10-07T03:05:00.000+0000' }], end: 'done' }, [
       '/rest/api/3/jql/function/computation?orderBy=-used&startAt=0&maxResults=100',
       '/rest/api/3/jql/function/computation?orderBy=-used&startAt=1&maxResults=100',
     ]]);
   });
-  it('reads at most PCS_RECENT_PAGES pages of recently used precomputations', async () => {
-    const page = (i) => reply(200, { values: [{ id: `p${i}`, used: '2026-10-07T03:10:00.000+0000' }], isLast: false });
-    const { request, calls } = scripted(Array.from({ length: PCS_RECENT_PAGES + 2 }, (_, i) => page(i)));
-    const recent = await createJira(request).recentPrecomputations(Date.parse('2026-10-07T03:00:00Z'));
-    expect([recent.length, calls.length]).toEqual([PCS_RECENT_PAGES, PCS_RECENT_PAGES]);
+  it('reads at most PCS_RECENT_PAGES pages of recently used precomputations and says the read was cut', async () => {
+    const { request, calls } = scripted(Array.from({ length: PCS_RECENT_PAGES + 2 }, (_, i) => usedPage([{ id: `p${i}`, used: '2026-10-07T03:10:00.000+0000' }])));
+    const recent = await createJira(request).recentPrecomputations(since);
+    expect([recent.records.length, recent.end, calls.length]).toEqual([PCS_RECENT_PAGES, 'pages', PCS_RECENT_PAGES]);
+  });
+  it('stops at the page Jira marks as the last', async () => {
+    const { request, calls } = scripted([usedPage([{ id: 'a', used: '2026-10-07T03:10:00.000+0000' }], true), usedPage([])]);
+    const recent = await createJira(request).recentPrecomputations(since);
+    expect([recent.end, calls.length]).toEqual(['done', 1]);
+  });
+  it('passes over a precomputation without a use time and reads on', async () => {
+    const { request } = scripted([
+      usedPage([{ id: 'x', used: null }, { id: 'a', used: '2026-10-07T03:10:00.000+0000' }]),
+      usedPage([{ id: 'b', used: '2026-10-07T02:00:00.000+0000' }]),
+    ]);
+    expect((await createJira(request).recentPrecomputations(since)).records.map((p) => p.id)).toEqual(['a']);
+  });
+  it('returns the pages read when the points budget refuses the next one', async () => {
+    const page = usedPage(Array.from({ length: 5 }, (_, i) => ({ id: `p${i}`, used: '2026-10-07T03:10:00.000+0000' })));
+    const { request, calls } = scripted([page, usedPage([])]);
+    const jira = createJira(request);
+    const recent = await withPoints(3, () => jira.recentPrecomputations(since), { scope: 'pass' });
+    expect([recent.records.length, recent.end, calls.length]).toEqual([5, 'points', 1]);
+  });
+  it('returns nothing read when the points budget refuses the first page', async () => {
+    const { request, calls } = scripted([usedPage([])]);
+    const jira = createJira(request);
+    const recent = await withPoints(0, () => jira.recentPrecomputations(since), { scope: 'pass' });
+    expect([recent, calls.length]).toEqual([{ records: [], end: 'points' }, 0]);
   });
   it('writes precomputations in batches of 50', async () => {
     const { request, calls } = scripted([reply(204), reply(204), reply(204)]);

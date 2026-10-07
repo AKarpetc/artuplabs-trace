@@ -92,8 +92,8 @@ export async function rewrite(deps, group, reconcile, { limit = Infinity, compar
   return groupWrite(group, result, deps.levels, compare);
 }
 
-/** The precomputation list: the cached one when the dependencies keep it, else Jira's own. */
-export const listPrecomputations = (deps) => (deps.pcList?.list ? deps.pcList.list() : deps.jira.precomputations());
+/** The precomputation list: the cached one when the dependencies keep it, else Jira's own; a read of Jira's whole list runs inside `full`. */
+export const listPrecomputations = (deps, { full = (task) => task() } = {}) => (deps.pcList?.list ? deps.pcList.list({ full }) : full(() => deps.jira.precomputations()));
 
 /**
  * Writes each group a later computation has not written (skipping one whose current posted meta holds the same value) and then its cache
