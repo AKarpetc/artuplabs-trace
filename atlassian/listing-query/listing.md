@@ -4,8 +4,8 @@ Status: draft for the owner. Nothing is submitted. Character limits are the unve
 the other ArtUp apps (name 60, tagline 130, summary 250) — re-check each on the live "Create listing"
 form before pasting. Wording follows the live site (Tier 1 texts, SITE-1/SITE-2). Only measured numbers or numbers with a
 source appear: the completeness checks come from the 50,000-issue run on `artuplabs-dev`; every figure
-that depends on freshness or indexing speed is marked `<!-- refresh after gates run 2 -->` and is filled
-in after the gate measurements, not before.
+that depends on freshness or indexing speed comes from the second run of the points budget gates
+(2026-10-07, Tier 1 = 9,000 points per hour; `apps/query/docs/live-checks.md`).
 Items in `[OWNER: …]` are decisions or checks that are not mine to make.
 
 ## App name
@@ -49,10 +49,12 @@ of keys as the argument. No separate search screen: the functions work in the or
    comparison. How many issues one function can read depends on the function and on Jira's API
    allowance for apps; a subquery that is too large gets an error that names the limit and how far to
    narrow it, never a silently truncated list.
-2. **Kept up to date from Jira events.** Functions that read the app's index and functions over small
-   subqueries answer quickly. After an edit the result follows on its own; large results and
-   bulk imports update later, at the pace Jira's API allowance for apps permits.
-   <!-- refresh after gates run 2: measured freshness (90th percentile) and the subquery size for which "quickly" is measured in seconds -->
+2. **Kept up to date from Jira events.** After an edit the result follows on its own, at the pace Jira's
+   API allowance for apps permits. On a test site, with room in the hour's allowance, a changed label or
+   link showed in the result in about 15 seconds; with about 100 functions in use the 90th percentile
+   was about 277 seconds, and a few changes took longer than 10 minutes. Bulk edits beyond the
+   hour's allowance wait for the next half hour or hour.
+
 3. **Runs on Atlassian, writes nothing to your issues.** No external servers, no egress. The app only
    reads work items and keeps only ids, dates, metadata and the arguments of the functions in use in
    Atlassian's Forge storage. It never edits an issue, adds no properties to issues and does not ask
@@ -97,13 +99,15 @@ produces a message in the JQL editor that says what to fix — not an empty list
 ### Be honest about timing
 
 The app keeps results up to date from Jira events, within Jira's API allowance for apps — the amount an
-app may read from Jira per hour. A result over a small subquery is recomputed on every edit. A larger
-one is recomputed at most once an hour, spread over time so that the app stays within the allowance; a
-result too large for the allowance gets an error with the numbers. Bulk imports and bulk edits can take
-longer to show up, because Jira delivers the change events to the app in a queue. A new site builds its
-index once, at the pace the allowance permits, and until then the sprint, comment and attachment
-functions answer "Index is building: n of m issues".
-<!-- refresh after gates run 2: subquery size for "on every edit", size for "an error with the numbers", index build time for a 50,000-issue site -->
+app may read from Jira per hour. While the allowance has room, a label or link change showed in about 15
+seconds on a test site; with about 100 functions in use the 90th percentile was about 277 seconds. A
+larger result is recomputed at most once an hour. Bulk imports and bulk edits beyond the hour's
+allowance wait for the next half hour or hour. A function that needs more than the allowance can pay for
+gets an error with the numbers, not a partial result.
+
+A new site builds its index once, at the pace the allowance permits: about 840 work items per hour for
+the sprint history on a busy site, so a project of 10,000 work items takes about 12 hours. Until the
+index is ready, the sprint, comment and attachment functions answer "Index is building: n of m issues".
 
 ### Getting started
 

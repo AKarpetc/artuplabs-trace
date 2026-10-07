@@ -2,8 +2,7 @@
 
 Exactly 3 highlights; title ≤ 50 characters, summary ≤ 220 (limits as found for the other apps —
 re-check). Each maps to a row of brief §4 (`../25_app5_jql.md`). Wording follows the live site (Tier 1).
-Only measured numbers appear; freshness figures are marked `<!-- refresh after gates run 2 -->` and are
-filled in after the gate measurements.
+Only measured numbers appear (second run of the points budget gates, 2026-10-07, Tier 1).
 
 ## Highlight 1 — Complete
 
@@ -20,11 +19,9 @@ return any values"; completeness runs M1, M2, M3. **Screenshot:** error in the J
 
 **Title:** Kept up to date from Jira events
 
-**Summary:** Edits reach results through Jira's change events. Small subqueries answer quickly; large results and bulk imports update later, within Jira's API allowance for apps.
-<!-- refresh after gates run 2: measured freshness and the subquery size it holds for -->
+**Summary:** With room in the hourly allowance a label or link change showed in about 15 s; with about 100 functions in use the 90th percentile was about 277 s. Bulk edits over the hour's allowance wait for the next half hour.
 
-**Source:** brief §4 row "30+ minutes for a filter to synch"; freshness runs to be repeated on the
-Tier 1 allowance (gates run 2). **Screenshot:** `screenshots/` status page.
+**Source:** brief §4 row "30+ minutes for a filter to synch"; gates run 2 (2026-10-07, G5a/G5b). **Screenshot:** `screenshots/` status page.
 
 ## Highlight 3 — Runs on Atlassian
 
