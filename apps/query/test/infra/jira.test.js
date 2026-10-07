@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@forge/api', () => ({ default: { asApp: () => ({ requestJira: vi.fn() }) }, assumeTrustedRoute: (p) => p }));
 const { createJira, currentPoints, JiraError, PointsError, RateLimitError, withDeadline, withPoints } = await import('../../src/infra/jira.js');
-const { FIELD_RANGES, FIELDS_PAGE, NEAR_LIMIT_MS, POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS } = await import('../../src/core/limits.js');
+const { FIELD_RANGES, FIELDS_PAGE, NEAR_LIMIT_MS, POINTS_PAGE_MIN, ID_PAGE, BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, FUNCTION_BUDGET_MS, JQL_CHECK_MS, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_MAX_MS, WORKER_RETRY_MAX_MS, LEASE_MS, PCS_RECENT_PAGES } = await import('../../src/core/limits.js');
 
 const reply = (status, body, headers = {}) => ({ status, headers: { get: (n) => headers[n.toLowerCase()] ?? null }, text: async () => (body === undefined ? '' : JSON.stringify(body)) });
 
@@ -88,6 +88,23 @@ describe('reads', () => {
     const { request, calls } = scripted([reply(200, { values: [{ id: 'a' }], isLast: false }), reply(200, { values: [{ id: 'b' }], isLast: true })]);
     expect(await createJira(request).precomputations()).toEqual([{ id: 'a' }, { id: 'b' }]);
     expect(calls.map((c) => c.path)).toEqual(['/rest/api/3/jql/function/computation?startAt=0&maxResults=100', '/rest/api/3/jql/function/computation?startAt=1&maxResults=100']);
+  });
+  it('reads precomputations by the latest use until one was last used before the given time', async () => {
+    const { request, calls } = scripted([
+      reply(200, { values: [{ id: 'a', used: '2026-10-07T03:10:00.000+0000' }], isLast: false }),
+      reply(200, { values: [{ id: 'b', used: '2026-10-07T03:05:00.000+0000' }, { id: 'c', used: '2026-10-07T02:00:00.000+0000' }], isLast: false }),
+    ]);
+    const recent = await createJira(request).recentPrecomputations(Date.parse('2026-10-07T03:00:00Z'));
+    expect([recent.map((p) => p.id), calls.map((c) => c.path)]).toEqual([['a', 'b'], [
+      '/rest/api/3/jql/function/computation?orderBy=-used&startAt=0&maxResults=100',
+      '/rest/api/3/jql/function/computation?orderBy=-used&startAt=1&maxResults=100',
+    ]]);
+  });
+  it('reads at most PCS_RECENT_PAGES pages of recently used precomputations', async () => {
+    const page = (i) => reply(200, { values: [{ id: `p${i}`, used: '2026-10-07T03:10:00.000+0000' }], isLast: false });
+    const { request, calls } = scripted(Array.from({ length: PCS_RECENT_PAGES + 2 }, (_, i) => page(i)));
+    const recent = await createJira(request).recentPrecomputations(Date.parse('2026-10-07T03:00:00Z'));
+    expect([recent.length, calls.length]).toEqual([PCS_RECENT_PAGES, PCS_RECENT_PAGES]);
   });
   it('writes precomputations in batches of 50', async () => {
     const { request, calls } = scripted([reply(204), reply(204), reply(204)]);

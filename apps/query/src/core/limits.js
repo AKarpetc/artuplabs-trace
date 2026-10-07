@@ -168,6 +168,10 @@ export const FIELDS_CACHE_MAX_BYTES = 200 * 1024;
 export const LIGHT_GROUP_SHARE = 0.05;
 /** How long the cached list of precomputations (`q:pcs:*`) is used before Jira is asked again. */
 export const PCS_CACHE_MS = 60 * 60 * 1000;
+/** Pages of precomputations by latest use read over a cached list, so a group used again joins the used window before the list is read again. */
+export const PCS_RECENT_PAGES = 3;
+/** Margin before the cached list's read time from which recently used precomputations are read (clock difference to Jira). */
+export const PCS_RECENT_SKEW_MS = 60 * 1000;
 /** Largest value Forge KVS stores, in bytes of its JSON. */
 export const KVS_VALUE_MAX_BYTES = 240 * 1024;
 /** Largest `q:pcs:<gen>:<i>` chunk of the cached precomputation list, in bytes of its JSON, with room below the KVS value limit. */

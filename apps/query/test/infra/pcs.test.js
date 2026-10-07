@@ -2,20 +2,53 @@ import { describe, expect, it } from 'vitest';
 import { beginsWith, createFakeKvs } from '../fakeKvs.js';
 import { createPcsCache } from '../../src/infra/pcs.js';
 import { ERR } from '../../src/core/errors.js';
-import { KVS_VALUE_MAX_BYTES, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES } from '../../src/core/limits.js';
+import { KVS_VALUE_MAX_BYTES, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES, PCS_RECENT_SKEW_MS } from '../../src/core/limits.js';
 
 const pc = (i, extra = {}) => ({ id: `p${i}`, functionName: 'parentsOf', arguments: ['q'], operator: 'in', used: '2026-10-05T07:00:00Z', updated: '2026-10-05T06:00:00Z', value: 'id in (1)', ...extra });
 
-function setup(list) {
+function setup(list, recent = null) {
   let now = 1000;
   const kvs = createFakeKvs({ pageSize: 100, maxBytes: KVS_VALUE_MAX_BYTES });
   const asked = [];
+  const askedRecent = [];
   const jira = { precomputations: async () => { asked.push(now); return list; } };
+  if (recent) jira.recentPrecomputations = async (since) => { askedRecent.push(since); return recent(); };
   const cache = createPcsCache({ kvs, jira, beginsWith, clock: () => now });
-  return { kvs, asked, cache, advance: (ms) => { now += ms; } };
+  return { kvs, asked, askedRecent, cache, advance: (ms) => { now += ms; } };
 }
 
 describe('precomputation list cache', () => {
+  it('lays the use times Jira reports since the cached list was read over that list', async () => {
+    const { cache, advance } = setup([pc(1), pc(2)], async () => [pc(2, { used: '2026-10-07T03:14:15.000+0000' })]);
+    await cache.list();
+    advance(10);
+    expect((await cache.list()).map((p) => [p.id, p.used])).toEqual([['p1', '2026-10-05T07:00:00Z'], ['p2', '2026-10-07T03:14:15.000+0000']]);
+  });
+  it('asks for the recently used precomputations since the cached list was read, less PCS_RECENT_SKEW_MS', async () => {
+    const { cache, askedRecent, advance } = setup([pc(1)], async () => []);
+    await cache.list();
+    advance(10);
+    await cache.list();
+    expect(askedRecent).toEqual([1000 - PCS_RECENT_SKEW_MS]);
+  });
+  it('adds a recently used precomputation the cached list lacks', async () => {
+    const { cache, advance } = setup([pc(1)], async () => [pc(9, { used: '2026-10-07T03:14:15.000+0000' })]);
+    await cache.list();
+    advance(10);
+    expect((await cache.list()).map((p) => p.id)).toEqual(['p1', 'p9']);
+  });
+  it('keeps the cached use times when Jira refuses the recently used read', async () => {
+    const { cache, advance } = setup([pc(1)], async () => { throw Object.assign(new Error('bad'), { name: 'JiraError', status: 400 }); });
+    await cache.list();
+    advance(10);
+    expect((await cache.list()).map((p) => p.used)).toEqual(['2026-10-05T07:00:00Z']);
+  });
+  it('passes on a rate limit met while reading the recently used precomputations', async () => {
+    const { cache, advance } = setup([pc(1)], async () => { throw Object.assign(new Error('429'), { name: 'RateLimitError', status: 429 }); });
+    await cache.list();
+    advance(10);
+    await expect(cache.list()).rejects.toMatchObject({ name: 'RateLimitError' });
+  });
   it('keeps each precomputation without its value or error text', async () => {
     const tooDear = ERR.tooExpensive('parentsOf', { n: null, points: null, limit: 9 });
     const { cache } = setup([pc(1), pc(2, { value: undefined, error: tooDear }), pc(3, { error: 'Computing' })]);

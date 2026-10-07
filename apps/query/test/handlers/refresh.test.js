@@ -1182,6 +1182,23 @@ describe('groups outside the used window', () => {
   });
 });
 
+describe('a group used again after a day without use', () => {
+  const longAgo = new Date(1000000 - 2 * 24 * 3600000).toISOString();
+  it('is recomputed on the next change once Jira reports the new use, before the cached list is read again', async () => {
+    const parentsOf = vi.fn(async () => ({ ids: ['3'], field: 'id', watch: ['9'] }));
+    const pc = { id: 'p', functionName: 'parentsOf', arguments: ['q'], value: 'id in (1)', used: longAgo };
+    const deps = makeDeps({ pcs: [pc], compute: { parentsOf } });
+    deps.jira.recentPrecomputations = async () => [];
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-updated'] }, 999500);
+    await refreshOnce(deps);
+    deps.advance(60000);
+    deps.jira.recentPrecomputations = async () => [{ ...pc, used: new Date(deps.now() - 1000).toISOString() }];
+    await deps.journal.append({ ids: ['9'], kinds: ['issue-updated'] }, deps.now() - 500);
+    await refreshOnce(deps);
+    expect(parentsOf.mock.calls.length).toEqual(1);
+  });
+});
+
 describe('a group that keeps failing', () => {
   it('goes to the heavy lane, so the pass drops its rows and reads the next ones', async () => {
     const pcs = [{ id: 'h', functionName: 'hasSubtasks', arguments: [], value: 'id in (1)', used: RECENT }];

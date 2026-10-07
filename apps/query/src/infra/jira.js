@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import api, { assumeTrustedRoute } from '@forge/api';
 import {
-  BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, FIELD_RANGES, FIELDS_PAGE, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
+  BULK_BATCH, BULK_CONCURRENCY, BULK_CONCURRENCY_NEAR, CHANGELOG_BATCH, FIELD_RANGES, FIELDS_PAGE, CHANGELOG_PAGE, ID_PAGE, JQL_CHECK_MS, LIST_PAGE, NEAR_LIMIT_MS, PCS_RECENT_PAGES, PRECOMPUTATION_BATCH, PRECOMPUTATION_PAGE,
   POINTS_PAGE_MIN, RECONCILE_MAX, REQUEST_ATTEMPTS, RETRY_BASE_MS, RETRY_MAX_MS, USER_SEARCH_MAX,
 } from '../core/limits.js';
 import { DEFAULT_LANE, pointsOf } from '../core/points.js';
@@ -400,6 +400,17 @@ export function createJira(request, { sleep = wait, attempts = REQUEST_ATTEMPTS,
     projects: async () => (await paged('/rest/api/3/project/search')).map((p) => ({ id: String(p.id), key: p.key })),
     sprints: (boardId) => paged(`/rest/agile/1.0/board/${enc(boardId)}/sprint?state=active,closed,future`),
     precomputations: () => paged('/rest/api/3/jql/function/computation', PRECOMPUTATION_PAGE),
+    recentPrecomputations: async (since) => {
+      const out = [];
+      for (let page = 0, startAt = 0; page < PCS_RECENT_PAGES; page += 1) {
+        const items = (await call('GET', `/rest/api/3/jql/function/computation?orderBy=-used&startAt=${startAt}&maxResults=${PRECOMPUTATION_PAGE}`))?.values ?? [];
+        const newer = items.filter((pc) => Date.parse(pc.used ?? '') >= since);
+        out.push(...newer);
+        startAt += items.length;
+        if (newer.length < items.length || !items.length) break;
+      }
+      return out;
+    },
     writePrecomputations: async (updates) => {
       for (const batch of chunks(updates, PRECOMPUTATION_BATCH)) await call('POST', '/rest/api/3/jql/function/computation?skipNotFoundPrecomputations=true', { values: batch });
     },

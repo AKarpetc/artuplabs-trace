@@ -1,5 +1,5 @@
 import { errorKindOf } from '../core/affected.js';
-import { KVS_PAGE, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES, PCS_LEGACY_CHUNK } from '../core/limits.js';
+import { KVS_PAGE, PCS_CACHE_MS, PCS_CHUNK_MAX_BYTES, PCS_LEGACY_CHUNK, PCS_RECENT_SKEW_MS } from '../core/limits.js';
 
 const META = 'q:pcs:m';
 const DIRTY = 'q:pcs:dirty';
@@ -99,11 +99,28 @@ export function createPcsCache({ kvs, jira, beginsWith, clock = Date.now }) {
     return list;
   }
 
+  async function recent(meta) {
+    if (!jira.recentPrecomputations) return [];
+    try {
+      return (await jira.recentPrecomputations(meta.at - PCS_RECENT_SKEW_MS)).map(slimRecord);
+    } catch (error) {
+      if (error?.name !== 'JiraError') throw error;
+      console.error(`recently used precomputations not read: ${error.status ?? ''}`);
+      return [];
+    }
+  }
+
   return {
-    /** The precomputation list: the cached chunks while they are fresh (else Jira's), with the records function calls added over them. */
+    /**
+     * The precomputation list: the cached chunks while they are fresh, with the precomputations Jira used since they were read laid over
+     * them (else Jira's whole list), and the records function calls added over that.
+     */
     async list() {
       const meta = await kvs.get(META);
-      const base = (await stored(meta)) ?? (await fresh(meta));
+      const cached = await stored(meta);
+      const newer = new Map((cached ? await recent(meta) : []).map((pc) => [pc.id, pc]));
+      const known = new Set((cached ?? []).map((pc) => pc.id));
+      const base = cached ? [...cached.map((pc) => newer.get(pc.id) ?? pc), ...[...newer.values()].filter((pc) => !known.has(pc.id))] : await fresh(meta);
       const extra = new Map((await added()).map((row) => [row.value.id, row.value.record]));
       return [...base.filter((pc) => !extra.has(pc.id)), ...extra.values()];
     },
