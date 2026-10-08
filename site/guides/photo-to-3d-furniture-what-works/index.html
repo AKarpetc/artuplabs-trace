@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en" data-listing-live="false">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photo to 3D for furniture: what works and what fails | ArtUp Labs</title>
+  <meta name="description" content="Honest limits of turning one furniture photo into a 3D model: what generates well, where fabric, glass, thin legs and reflective finishes fail, and how to shoot a photo that works.">
+  <link rel="canonical" href="https://artuplabs.com/guides/photo-to-3d-furniture-what-works/">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="ArtUp Labs">
+  <meta property="og:title" content="Photo to 3D for furniture: what works and what fails">
+  <meta property="og:description" content="Honest limits of turning one furniture photo into a 3D model: what generates well, where fabric, glass, thin legs and reflective finishes fail, and how to shoot a photo that works.">
+  <meta property="og:url" content="https://artuplabs.com/guides/photo-to-3d-furniture-what-works/">
+  <meta property="og:image" content="https://artuplabs.com/shopify/flow-model.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/shopify/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/shopify/shopify.css">
+  <link rel="stylesheet" href="/assets/guides.css">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Photo to 3D for furniture: what works and what fails",
+  "description": "Honest limits of turning one furniture photo into a 3D model: what generates well, where fabric, glass, thin legs and reflective finishes fail, and how to shoot a photo that works.",
+  "datePublished": "2026-10-08",
+  "dateModified": "2026-10-08",
+  "inLanguage": "en",
+  "mainEntityOfPage": "https://artuplabs.com/guides/photo-to-3d-furniture-what-works/",
+  "image": "https://artuplabs.com/shopify/flow-model.webp",
+  "author": {
+    "@type": "Organization",
+    "name": "ArtUp Labs",
+    "url": "https://artuplabs.com/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ArtUp Labs",
+    "url": "https://artuplabs.com/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://artuplabs.com/assets/artuplabs-mark.svg"
+    }
+  }
+}
+  </script>
+  <script src="/assets/listing.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/"><img class="brand-mark" src="/assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/shopify/">AR Room for Shopify</a></li>
+          <li><a href="/guides/" aria-current="page">Guides</a></li>
+          <li><a href="/tools/photo-to-3d/">Free 3D preview</a></li>
+          <li><a href="https://app.artuplabs.com/support">Support</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="guide-hero">
+      <div class="container">
+        <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">ArtUp Labs</a></li><li><a href="/guides/">Guides</a></li><li aria-current="page">Photo to 3D for furniture: what works and what fails</li></ol></nav>
+        <p class="eyebrow">Guide · Photo to 3D</p>
+        <h1>Photo to 3D for furniture: what works and what fails</h1>
+        <p class="lead">Generating a 3D model from one product photo works well for most chairs, sofas, tables and lamps. Here is where it fails — glass, thin legs, detailed fabric, reflections — and how to shoot a photo that gives a good model.</p>
+      </div>
+    </section>
+
+    <div class="guide">
+      <article class="doc">
+        <p class="updated">Published 2026-10-08 · Last checked 2026-10-08</p>
+        <h2 id="how">What the generator has to guess</h2>
+        <p>A single product photo shows one side of the item. The generator builds the full shape and texture from that one view, so it has to infer the back, the underside and the thickness of every part. Most furniture is symmetric and made of solid parts, which is why it works well. Things that don't follow that pattern are where it struggles.</p>
+
+        <h2 id="test">What we measured</h2>
+        <p>Before building the app we ran a test (3 October 2026): the first product photo of 10 furniture items from public Shopify stores in the US — 3 chairs and armchairs, 3 tables, 2 sofas, a table lamp and a bookcase. One attempt each, no manual edits. <span class="tag-meas">Measured</span></p>
+        <div class="table-wrap"><table>
+          <thead><tr><th scope="col">Category</th><th scope="col">Accepted on review</th></tr></thead>
+          <tbody>
+            <tr><td>Chairs and armchairs</td><td>3 of 3</td></tr>
+            <tr><td>Tables</td><td>3 of 3</td></tr>
+            <tr><td>Sofas</td><td>2 of 2</td></tr>
+            <tr><td>Lamp and bookcase</td><td>2 of 2</td></tr>
+          </tbody>
+        </table></div>
+        <p>Read this honestly: it is a small sample, reviewed by eye on a desktop screen (not in AR on a phone), with an overall judgement rather than a score per detail. It says ordinary furniture photos usually work. It does not say every photo will. Generation took 135–209 seconds per model in our runs.</p>
+
+        <h2 id="limits">Where photo → 3D fails</h2>
+        <p>These limits come from how single-photo generation works; we haven't measured failure rates for each one.</p>
+        <ul>
+          <li><strong>Glass and mirrors.</strong> Transparent or mirrored surfaces have no visible colour of their own. Glass tabletops and cabinet doors come out opaque, tinted or smeared.</li>
+          <li><strong>Very thin legs, wire frames, rattan and cane.</strong> Thin parts are a few pixels wide in the photo. They can come out thicker, bent, merged with each other, or with gaps filled in.</li>
+          <li><strong>Detailed fabric.</strong> Bouclé loops, fine weave, quilting and pleats become a printed texture on a smooth surface, not real 3D detail. From a distance this looks right; close up it looks flat.</li>
+          <li><strong>Glossy and reflective finishes.</strong> Lacquer, chrome and polished stone reflect the room around them; those reflections get baked into the colour.</li>
+          <li><strong>Hidden parts.</strong> What the photo can't see — the back of a sofa, the inside of a drawer — is a plausible guess, not the real product.</li>
+          <li><strong>Size.</strong> A photo has no scale. The model's proportions follow the photo, but its real size has to be set from the product's dimensions before AR, otherwise a chair may appear doll-sized or huge.</li>
+        </ul>
+
+        <h2 id="example">Example</h2>
+        <p>A carved chair with turned legs from one museum photo. Look at the legs and the back when you rotate it: the front view is close to the photo, the back is inferred.</p>
+
+        <div class="demo-3d">
+          <figure class="p3d-tile">
+            <div class="p3d-stage"><img src="/ar-xr/photo-to-3d/chair.jpg" alt="The only source: one photo of a carved side chair" loading="lazy" decoding="async"></div>
+            <figcaption><b>Input: one photo</b><span>Photo: <a href="https://commons.wikimedia.org/wiki/File:Side_Chair_MET_ADA6428.jpg" target="_blank" rel="noopener">The Metropolitan Museum of Art</a>, public domain (CC0)</span></figcaption>
+          </figure>
+          <figure class="p3d-tile">
+            <div class="p3d-stage model">
+              <model-viewer data-src="/ar-xr/photo-to-3d/m-chair-realistic.glb" camera-controls auto-rotate rotation-per-second="16deg" interaction-prompt="none" ar ar-modes="webxr scene-viewer quick-look" shadow-intensity="1" exposure="1.05" alt="3D model of a carved side chair generated from the photo"><button slot="ar-button" class="ar-btn">View in your room</button></model-viewer>
+              <span class="ph">Loading the 3D model…</span>
+            </div>
+            <figcaption><b>Output: a 3D model</b><span>Generated from that single photo, no manual edits, compressed for the web. Drag to rotate; on a phone, “View in your room” opens AR.</span></figcaption>
+          </figure>
+        </div>
+
+        <h2 id="tips">How to shoot a photo that works</h2>
+        <ol>
+          <li><strong>One object in the frame.</strong> Remove the side table, plant, cushions that aren't part of the product, and people.</li>
+          <li><strong>Plain background.</strong> A white or evenly coloured wall, or a studio cut-out on white.</li>
+          <li><strong>The whole item.</strong> Nothing cropped at the edges; legs fully visible down to the floor.</li>
+          <li><strong>A three-quarter angle.</strong> Front and one side visible gives more shape than a straight front view.</li>
+          <li><strong>Soft, even light.</strong> No hard shadows across the item, no bright reflections.</li>
+          <li><strong>Sharp and large enough.</strong> A sharp photo where the item fills most of the frame; your existing catalog photo is usually fine.</li>
+        </ol>
+        <p>Then check the result before it goes live: rotate the model, look at the legs and the back, and regenerate or reject it if it isn't right. The app has an accept / regenerate / reject step for this reason.</p>
+        <p>Try it on your own photo: <a href="/tools/photo-to-3d/">free 3D preview</a>.</p>
+
+        <div class="cta-box">
+          <h3>Add 3D to every product, from the photos you already have</h3>
+          <p>ArtUp: 3D Models &amp; AR Room makes a 3D model from each product photo inside your Shopify admin, lets you accept or regenerate it, adds it to the product's media, and lets shoppers place several products together in their room.</p>
+          <div class="actions">
+            <a class="btn btn-grad" href="/shopify/" data-listing-cta>Add 3D to your whole Shopify catalog</a>
+            <a class="btn btn-secondary" href="/tools/photo-to-3d/">Try a free 3D preview</a>
+          </div>
+          <p class="soon" data-listing-soon>Coming to the Shopify App Store — until then the first button opens the app's page.</p>
+        </div>
+
+        <aside class="related" aria-labelledby="related-title">
+          <h2 id="related-title">More guides</h2>
+          <ul>
+            <li><a href="/guides/how-to-add-3d-models-and-ar-to-shopify/">How to add 3D models and AR to Shopify<span>GLB and USDZ in product media, step by step, and four ways to get a model</span></a></li>
+            <li><a href="/guides/ar-for-furniture-stores-shopify-cost/">AR for furniture stores on Shopify: what it costs<span>Shopify's built-in 3D, a 3D artist, or a photo → 3D app</span></a></li>
+            <li><a href="/guides/photo-to-3d-vs-3d-artist-vs-scan-apps/">Photo to 3D vs a 3D artist vs scan apps<span>Time, cost and quality, with our measured numbers</span></a></li>
+            <li><a href="/guides/shopify-3d-ar-apps-compared/">Shopify 3D and AR apps compared<span>What each app's listing shows, as of 8 October 2026</span></a></li>
+            <li><a href="/guides/free-3d-preview-from-a-photo/">Free 3D preview from a product photo<span>How the free tool works and what you get</span></a></li>
+            <li><a href="/tools/photo-to-3d/">Free 3D preview tool<span>Upload one product photo, get a 3D model to view in AR</span></a></li>
+          </ul>
+        </aside>
+      </article>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · App support: <a href="mailto:support@artuplabs.com">support@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="/shopify/">AR Room for Shopify</a></li>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/tools/photo-to-3d/">Free 3D preview</a></li>
+          <li><a href="https://app.artuplabs.com/privacy">AR Room privacy</a></li>
+          <li><a href="/">ArtUp Labs</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+  <script src="/assets/guides.js"></script>
+</body>
+</html>
