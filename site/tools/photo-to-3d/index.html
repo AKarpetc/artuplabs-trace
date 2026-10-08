@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en" data-listing-live="false">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Free 3D model from a product photo — try it on furniture | ArtUp Labs</title>
+  <meta name="description" content="Upload one photo of a furniture or decor product and get a free 3D preview in about 3–4 minutes: rotate it, view it in your room in AR on a phone, download the GLB. No sign-up.">
+  <link rel="canonical" href="https://artuplabs.com/tools/photo-to-3d/">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ArtUp Labs">
+  <meta property="og:title" content="Free 3D preview from a product photo">
+  <meta property="og:description" content="One furniture or decor photo in, a 3D model out in about 3–4 minutes. View it in AR on your phone and download the GLB.">
+  <meta property="og:url" content="https://artuplabs.com/tools/photo-to-3d/">
+  <meta property="og:image" content="https://artuplabs.com/shopify/flow-model.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/shopify/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/shopify/shopify.css">
+  <link rel="stylesheet" href="/assets/guides.css">
+  <link rel="stylesheet" href="p3d-tool.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Free 3D preview from a product photo",
+    "url": "https://artuplabs.com/tools/photo-to-3d/",
+    "applicationCategory": "DesignApplication",
+    "operatingSystem": "Any (web browser)",
+    "isAccessibleForFree": true,
+    "description": "Upload one photo of a furniture or decor product and get a 3D model preview (GLB) you can view in AR on a phone.",
+    "publisher": { "@type": "Organization", "name": "ArtUp Labs", "url": "https://artuplabs.com/" }
+  }
+  </script>
+  <script src="/assets/listing.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/"><img class="brand-mark" src="/assets/artuplabs-mark.svg" alt="" width="28" height="28">ArtUp Labs</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/shopify/">AR Room for Shopify</a></li>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/tools/photo-to-3d/" aria-current="page">Free 3D preview</a></li>
+          <li><a href="https://app.artuplabs.com/support">Support</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="guide-hero">
+      <div class="container">
+        <p class="eyebrow">Free tool · no sign-up</p>
+        <h1>Turn one product photo into a 3D model</h1>
+        <p class="lead">Upload a photo of a chair, sofa, table, lamp or decor piece. In about 3–4 minutes you get a 3D preview you can rotate, place in your room in AR on a phone, and download as a GLB file.</p>
+      </div>
+    </section>
+
+    <section class="container tool-wrap" aria-labelledby="tool-title">
+      <h2 id="tool-title" class="visually-hidden">Make a 3D preview</h2>
+      <div class="tool-card" id="tool">
+        <noscript><p class="tool-msg">This tool needs JavaScript. You can still read <a href="/guides/free-3d-preview-from-a-photo/">how the free 3D preview works</a>.</p></noscript>
+
+        <div class="tool-view" data-view="loading">
+          <p class="tool-msg" role="status">Checking that free previews are available…</p>
+        </div>
+
+        <div class="tool-view" data-view="closed" hidden>
+          <h3>Free previews are used up</h3>
+          <p>Free previews are used up — install the app to add 3D to your whole catalog.</p>
+          <div class="actions">
+            <a class="btn btn-grad" href="/shopify/" data-listing-cta>Add 3D to your whole Shopify catalog</a>
+          </div>
+          <p class="soon" data-listing-soon>Coming to the Shopify App Store — the link opens the app's page for now.</p>
+        </div>
+
+        <form class="tool-view" data-view="form" id="p3d-form" novalidate hidden>
+          <label class="drop" id="drop" for="photo">
+            <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp" aria-describedby="photo-hint">
+            <span class="drop-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/><path d="M12 4v12M7 9l5-5 5 5"/></svg>
+              <strong>Choose a product photo</strong>
+              <span>or drop it here</span>
+            </span>
+            <img class="drop-preview" id="photo-preview" alt="The photo you chose" hidden>
+          </label>
+          <p class="hint" id="photo-hint">JPEG, PNG or WebP up to 5 MB. One item, plain background, the whole item in the frame. Upload only photos you have the right to use.</p>
+
+          <label class="field" for="email">Email <span class="opt">(optional)</span></label>
+          <input class="input" type="email" id="email" name="email" autocomplete="email" inputmode="email" placeholder="you@store.com" aria-describedby="email-note">
+          <p class="hint" id="email-note">Send me the link to this preview. We use your email only for that link; the photo and the model are deleted after 7 days.</p>
+
+          <p class="tool-error" id="form-error" role="alert" hidden></p>
+          <div class="actions">
+            <button class="btn btn-grad" type="submit" id="submit" disabled>Make my 3D preview</button>
+          </div>
+          <p class="hint" id="remaining" hidden></p>
+          <p class="hint" id="last-preview" hidden></p>
+        </form>
+
+        <div class="tool-view" data-view="working" hidden>
+          <h3>Making your 3D model</h3>
+          <ol class="progress-steps" id="steps">
+            <li data-step="1">In the queue</li>
+            <li data-step="2">Generating the 3D model</li>
+            <li data-step="3">Optimizing for the web and AR</li>
+          </ol>
+          <p class="elapsed"><span class="visually-hidden">Elapsed time: </span><span id="elapsed" aria-hidden="false">0:00</span></p>
+          <p class="tool-msg" id="working-status" role="status" aria-live="polite">Waiting in the queue</p>
+          <p class="hint">It usually takes 3–4 minutes. You can keep this tab open, or copy the link below and come back later — it works for 7 days.</p>
+          <div class="permalink">
+            <label for="permalink-working" class="visually-hidden">Link to this preview</label>
+            <input class="input" id="permalink-working" readonly>
+            <button class="btn btn-secondary" type="button" data-copy="permalink-working">Copy link</button>
+          </div>
+          <p class="tool-error" id="working-error" role="alert" hidden></p>
+        </div>
+
+        <div class="tool-view" data-view="ready" hidden>
+          <h3>Your 3D preview is ready</h3>
+          <div class="result-stage">
+            <model-viewer id="result-model" camera-controls auto-rotate rotation-per-second="18deg" shadow-intensity="1" exposure="1.05" interaction-prompt="auto" ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto" alt="3D model made from your photo">
+              <button slot="ar-button" class="ar-btn">View in your room</button>
+            </model-viewer>
+            <p class="result-loading" id="result-loading">Loading the model…</p>
+          </div>
+          <p class="hint">Drag to rotate, pinch or scroll to zoom. On a phone, “View in your room” opens AR (Android with ARCore, iPhone and iPad with AR Quick Look). The size in AR is approximate: a single photo doesn't tell the real dimensions — in the app you set the item's real height.</p>
+          <div class="actions">
+            <a class="btn btn-secondary" id="download" href="#" download>Download GLB</a>
+          </div>
+          <div class="permalink">
+            <label for="permalink-ready" class="field">Link to this preview</label>
+            <div class="permalink-row">
+              <input class="input" id="permalink-ready" readonly>
+              <button class="btn btn-secondary" type="button" data-copy="permalink-ready">Copy link</button>
+            </div>
+            <p class="hint" id="expiry"></p>
+          </div>
+          <div class="cta-box">
+            <h3>Want this for every product?</h3>
+            <p>The ArtUp: 3D Models &amp; AR Room app makes a model from each product photo inside your Shopify admin, adds it to the product's media, and lets shoppers place several products together in their room.</p>
+            <div class="actions">
+              <a class="btn btn-grad" href="/shopify/" data-listing-cta>Add 3D to your whole Shopify catalog</a>
+            </div>
+            <p class="soon" data-listing-soon>Coming to the Shopify App Store — the link opens the app's page for now.</p>
+          </div>
+        </div>
+
+        <div class="tool-view" data-view="failed" hidden>
+          <h3>This photo didn't work</h3>
+          <p id="failed-text">The generator couldn't make a model from this photo. Photos with glass, mirrors, very thin legs or several items in the frame fail more often.</p>
+          <p><a href="/guides/photo-to-3d-furniture-what-works/">What works and what fails in photo → 3D</a></p>
+          <div class="actions">
+            <a class="btn btn-secondary" href="/tools/photo-to-3d/">Try another photo</a>
+          </div>
+        </div>
+
+        <div class="tool-view" data-view="expired" hidden>
+          <h3>This preview is no longer available</h3>
+          <p>Previews and their links are kept for 7 days, then the photo and the model are deleted.</p>
+          <div class="actions">
+            <a class="btn btn-secondary" href="/tools/photo-to-3d/">Make a new preview</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="guide">
+      <div class="doc">
+        <h2 id="tips">Photo tips that make a better model</h2>
+        <ul>
+          <li><strong>One object.</strong> Only the item you want in 3D — no second chair, no plant, no person in the frame.</li>
+          <li><strong>Plain background.</strong> A white or evenly coloured wall or a studio cut-out works best; a busy room scene confuses the shape.</li>
+          <li><strong>The whole item is visible.</strong> Nothing cropped at the edges, legs and arms not hidden behind other things.</li>
+          <li><strong>A three-quarter view.</strong> A slight angle that shows the front and one side gives the generator more shape to work with than a straight front shot.</li>
+          <li><strong>Even light.</strong> Avoid hard shadows and strong reflections.</li>
+        </ul>
+
+        <h2 id="limits">Honest limits</h2>
+        <p>One photo shows one side of the item, so the generator has to guess the back. That works well for most chairs, sofas, tables, lamps and cabinets. It works worse for:</p>
+        <ul>
+          <li><strong>Glass and mirrors</strong> — transparent and mirrored surfaces come out opaque or smeared.</li>
+          <li><strong>Very thin legs and wire frames</strong> — thin parts can come out thicker, bent or merged.</li>
+          <li><strong>Detailed fabric</strong> — fine weave, bouclé loops and pleats come out as a flat texture, not real geometry.</li>
+          <li><strong>Glossy and reflective finishes</strong> — reflections of the room get baked into the colour.</li>
+        </ul>
+        <p>More detail and examples: <a href="/guides/photo-to-3d-furniture-what-works/">Photo to 3D for furniture: what works and what fails</a>.</p>
+
+        <h2 id="next">What you can do with the model</h2>
+        <ol>
+          <li><strong>Add it to a Shopify product.</strong> In your Shopify admin, open the product and drop the GLB file into <em>Media</em>. Shopify shows 3D models on product pages in Online Store 2.0 themes. Step by step: <a href="/guides/how-to-add-3d-models-and-ar-to-shopify/">How to add 3D models and AR to Shopify</a>.</li>
+          <li><strong>Check it in AR.</strong> Open this page's link on your phone and tap “View in your room”.</li>
+          <li><strong>Do it for the whole catalog.</strong> The app does the same from product photos in bulk, inside your admin, with a preview to accept or regenerate before anything reaches your store.</li>
+        </ol>
+
+        <h2 id="faq">Questions</h2>
+        <div class="faq">
+          <details><summary>Is it really free?</summary><div><p>Yes. One free preview per person per day, while the free previews last. No sign-up and no card.</p></div></details>
+          <details><summary>What happens to my photo?</summary><div><p>It is used only to make this preview. The photo and the model are deleted after 7 days. If you leave an email, we use it only to send you the link.</p></div></details>
+          <details><summary>Can I use the GLB file in my store?</summary><div><p>Yes — the model is made from your photo for you. Check that it looks right before you publish it, and use photos you have the right to use.</p></div></details>
+          <details><summary>Why does it take minutes, not seconds?</summary><div><p>The generator builds a full textured 3D model. In our tests one model took 135–209 seconds to generate, plus a short step that makes the file small enough for phones.</p></div></details>
+        </div>
+
+        <aside class="related" aria-labelledby="related-title">
+          <h2 id="related-title">Guides</h2>
+          <ul>
+            <li><a href="/guides/how-to-add-3d-models-and-ar-to-shopify/">How to add 3D models and AR to Shopify<span>GLB and USDZ in product media, step by step</span></a></li>
+            <li><a href="/guides/photo-to-3d-furniture-what-works/">Photo to 3D for furniture: what works<span>Fabric, glass, thin legs and how to shoot</span></a></li>
+            <li><a href="/guides/">All guides<span>Costs, comparisons and how-tos</span></a></li>
+          </ul>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div>
+        <p><strong>ArtUp Labs</strong> — trade name of Artyom Karpets, individual entrepreneur, Republic of Kazakhstan.</p>
+        <p>Contact: <a href="mailto:hello@artuplabs.com">hello@artuplabs.com</a> · App support: <a href="mailto:support@artuplabs.com">support@artuplabs.com</a></p>
+      </div>
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="/shopify/">AR Room for Shopify</a></li>
+          <li><a href="/guides/">Guides</a></li>
+          <li><a href="/tools/photo-to-3d/">Free 3D preview</a></li>
+          <li><a href="https://app.artuplabs.com/privacy">AR Room privacy</a></li>
+          <li><a href="/">ArtUp Labs</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+  <script src="p3d-core.js"></script>
+  <script src="p3d-tool.js"></script>
+</body>
+</html>
