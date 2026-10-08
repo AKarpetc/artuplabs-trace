@@ -72,3 +72,9 @@
   .guide-hero { padding-top: 2rem; }
   .site-nav ul { gap: 0.25rem 0.8rem; }
 }
+
+/* Screenshots in the theme compatibility guide */
+.theme-shots { display: grid; gap: 1.25rem; margin: 1.5rem 0; }
+.theme-shots figure { margin: 0; }
+.theme-shots img { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 8px; }
+.theme-shots figcaption { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.4rem; }

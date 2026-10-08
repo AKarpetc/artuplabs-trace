@@ -18,6 +18,7 @@ URLS=(
   "https://artuplabs.com/guides/photo-to-3d-vs-3d-artist-vs-scan-apps/"
   "https://artuplabs.com/guides/shopify-3d-ar-apps-compared/"
   "https://artuplabs.com/guides/free-3d-preview-from-a-photo/"
+  "https://artuplabs.com/guides/shopify-theme-compatibility/"
   "https://artuplabs.com/shopify/"
   "https://artuplabs.com/"
 )
