@@ -95,7 +95,7 @@
             <tr><td>Horizon</td><td>4.2.0</td><td>2026-10-08</td><td>Works (block lands under the gallery by default)</td></tr>
             <tr><td>Prestige</td><td>11.4.1</td><td>2026-10-08</td><td>Works</td></tr>
             <tr><td>Impulse</td><td>9.2.0</td><td>2026-10-08</td><td>Works (block at the bottom of the product column)</td></tr>
-            <tr><td>Broadcast</td><td>8.1.1</td><td>2026-10-08</td><td id="broadcast-result">Fix in progress — the theme blocks placeholder links; update coming</td></tr>
+            <tr><td>Broadcast</td><td>8.1.1</td><td>2026-10-08</td><td id="broadcast-result">Works (fixed in app version 7, re-tested 2026-10-08)</td></tr>
           </tbody>
         </table></div>
         <p>Dawn, Refresh, Sense, Craft, Studio and Horizon are free Shopify themes. Prestige, Impulse and Broadcast are paid themes; we tested them as theme trials.</p>
@@ -133,7 +133,7 @@
         <ul>
           <li><strong>Horizon:</strong> the block is placed under the product gallery by default, across the page. Drag it into the product information column in the theme editor if you want it next to the buy buttons.</li>
           <li><strong>Impulse:</strong> the block is added at the bottom of the product column, below the collapsible tabs. Move it up in the theme editor if you want it closer to Add to cart.</li>
-          <li><strong>Broadcast:</strong> the block shows, but the theme cancels clicks on links whose address is a placeholder “#”, and our button used one until the page script filled in the room address. The fix renders the real room link in the page itself; we will re-test Broadcast after the app update and change this page.</li>
+          <li><strong>Broadcast:</strong> the block shows, but the theme cancels clicks on links whose address is a placeholder “#”, and our button used one until the page script filled in the room address. Since app version 7 the block renders the real room link in the page itself, and “View in my room” opens the room in Broadcast too (re-tested 2026-10-08).</li>
           <li><strong>Paid themes</strong> (Prestige, Impulse, Broadcast) were tested as theme trials, not on a live store using them.</li>
           <li><strong>Performance:</strong> the block adds 3 requests, about 5.3 KB transferred (a 386-byte stylesheet and two scripts of 2.2 KB and 2.7 KB); both scripts load with <code>defer</code>. We have not yet measured the effect on LCP or CLS.</li>
           <li>Your theme not listed? The block uses Shopify's standard app block, so most Online Store 2.0 themes should show it. If it doesn't work in yours, write to <a href="mailto:support@artuplabs.com">support@artuplabs.com</a> with the theme name and version.</li>
